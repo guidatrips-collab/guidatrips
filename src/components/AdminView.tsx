@@ -7,7 +7,7 @@ import React, { useState } from "react";
 import { 
   TrendingUp, Users, Compass, BarChart3, Settings, ShieldAlert,
   Globe, Plus, Trash2, Edit3, Eye, FileText, CheckCircle, 
-  X, AlertTriangle, Play, HelpCircle, Save, Phone, MessageSquare
+  X, AlertTriangle, Play, HelpCircle, Save, Phone, MessageSquare, Image
 } from "lucide-react";
 import { Experience, Lead, BlogPost, GlobalSettings, ExperienceCategory } from "../types";
 
@@ -1119,7 +1119,7 @@ export default function AdminView({
                     <Globe className="w-4 h-4" /> 2. Hero & Cabeçalho da Home
                   </h4>
                   <div className="space-y-1.5">
-                    <label className="font-accent text-[9px] text-white tracking-widest uppercase">Título Principal do Diferencial</label>
+                    <label className="font-accent text-[9px] text-white tracking-widest uppercase">Título Secundário da Home (Hero)</label>
                     <input
                       type="text"
                       value={tempSettings.diferencialTitle || ""}
@@ -1129,11 +1129,21 @@ export default function AdminView({
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="font-accent text-[9px] text-white tracking-widest uppercase">Descrição Curta do Diferencial</label>
+                    <label className="font-accent text-[9px] text-white tracking-widest uppercase">Descrição Curta (Hero)</label>
                     <textarea
                       rows={3}
                       value={tempSettings.diferencialDescription || ""}
                       onChange={(e) => setTempSettings({ ...tempSettings, diferencialDescription: e.target.value })}
+                      className="w-full bg-[#0D1B2A] border border-white/5 p-3 text-xs text-white text-sans"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="font-accent text-[9px] text-white tracking-widest uppercase">URL da Imagem da Home (Ao lado do texto)</label>
+                    <input
+                      type="text"
+                      value={tempSettings.homeHeroImgUrl || ""}
+                      onChange={(e) => setTempSettings({ ...tempSettings, homeHeroImgUrl: e.target.value })}
                       className="w-full bg-[#0D1B2A] border border-white/5 p-3 text-xs text-white text-sans"
                     />
                   </div>
@@ -1232,6 +1242,17 @@ export default function AdminView({
                               onChange={(e) => {
                                 const updated = [...(tempSettings.homeFilosofiaPillars || [])];
                                 updated[idx] = { ...pil, desc: e.target.value };
+                                setTempSettings({ ...tempSettings, homeFilosofiaPillars: updated });
+                              }}
+                              className="w-full bg-[#0D1B2A] border border-white/10 p-2 text-xs text-white"
+                            />
+                            <input
+                              type="text"
+                              placeholder="URL da Imagem"
+                              value={pil.img || ""}
+                              onChange={(e) => {
+                                const updated = [...(tempSettings.homeFilosofiaPillars || [])];
+                                updated[idx] = { ...pil, img: e.target.value };
                                 setTempSettings({ ...tempSettings, homeFilosofiaPillars: updated });
                               }}
                               className="w-full bg-[#0D1B2A] border border-white/10 p-2 text-xs text-white"
@@ -1509,6 +1530,16 @@ export default function AdminView({
                     />
                   </div>
 
+                  <div className="space-y-1.5">
+                    <label className="font-accent text-[9px] text-white tracking-widest uppercase">URL da Imagem da Logística</label>
+                    <input
+                      type="text"
+                      value={tempSettings.homeLogisticaImgUrl || ""}
+                      onChange={(e) => setTempSettings({ ...tempSettings, homeLogisticaImgUrl: e.target.value })}
+                      className="w-full bg-[#0D1B2A] border border-white/5 p-3 text-xs text-white text-sans"
+                    />
+                  </div>
+
                   {/* 3 Logistic Points Dynamic Form */}
                   <div className="border-t border-white/5 pt-4 space-y-4">
                     <span className="font-accent text-[9px] text-[#E8711A] tracking-wider uppercase block">As 3 Dicas Logísticas</span>
@@ -1690,6 +1721,48 @@ export default function AdminView({
                         className="w-full bg-[#0D1B2A] border border-white/5 p-3 text-xs text-white"
                       />
                     </div>
+                  </div>
+                </div>
+
+                {/* SETTINGS CARD 9: IMAGENS SECUNDÁRIAS DA HOME (MAPA, POUSADAS, REVISTA) */}
+                <div className="bg-[#0D1B2A]/40 border border-white/5 p-5 rounded space-y-4">
+                  <h4 className="font-serif text-sm font-bold text-[#E8711A] flex items-center gap-1.5 border-b border-white/5 pb-2">
+                    <Image className="w-4 h-4" /> 9. Substituição Geração de Imagens
+                  </h4>
+                  <p className="font-sans text-xs text-zinc-400">Aqui você pode trocar as imagens que vêm como padrão no Mapa da Bússola, Recomendações de Pousadas e Posts do Blog na página Inicial.</p>
+
+                  <div className="space-y-3">
+                    {[
+                      { key: "map-0", label: "Mapa: Praia do Farol" },
+                      { key: "map-1", label: "Mapa: Prainhas do Pontal" },
+                      { key: "map-2", label: "Mapa: Mirante do Pontal" },
+                      { key: "map-3", label: "Mapa: Fenda de Nossa Senhora" },
+                      { key: "map-4", label: "Mapa: Bistrô Praia dos Anjos" },
+                      { key: "pousada-timoneiro", label: "Pousada: Timoneiro" },
+                      { key: "pousada-caminho-mar", label: "Pousada: Caminho do Mar" },
+                      { key: "ohana-pousada", label: "Pousada: Ohana Boutique" },
+                      { key: "blog-0", label: "Blog: O que fazer em Arraial..." },
+                      { key: "blog-1", label: "Blog: Prainhas do Pontal..." },
+                      { key: "blog-2", label: "Blog: Baleias-Jubarte..." },
+                      { key: "exp-0", label: "Roteiro Inteligente: Premium" },
+                      { key: "exp-1", label: "Roteiro Inteligente: Buggy" },
+                      { key: "exp-2", label: "Roteiro Inteligente: Baleias" }
+                    ].map((overrideItem) => (
+                      <div key={overrideItem.key} className="flex flex-col space-y-1">
+                        <label className="font-accent text-[8px] text-white tracking-widest uppercase">{overrideItem.label} (URL)</label>
+                        <input
+                          type="text"
+                          placeholder="Ex: https://images.unsplash..."
+                          value={(tempSettings.homeImageOverrides || {})[overrideItem.key] || ""}
+                          onChange={(e) => {
+                            const overrides = { ...(tempSettings.homeImageOverrides || {}) };
+                            overrides[overrideItem.key] = e.target.value;
+                            setTempSettings({ ...tempSettings, homeImageOverrides: overrides });
+                          }}
+                          className="w-full bg-[#0D1B2A] border border-white/10 p-2 text-xs text-white"
+                        />
+                      </div>
+                    ))}
                   </div>
                 </div>
 

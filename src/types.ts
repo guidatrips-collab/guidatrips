@@ -94,6 +94,10 @@ export interface GlobalSettings {
   diferencialDescription?: string;
 
   // New customizable Home Page fields
+  homeHeroImgUrl?: string;
+  homeHeroTitle?: string;
+  homeHeroDesc?: string;
+
   homeFilosofiaTag?: string;
   homeFilosofiaTitle?: string;
   homeFilosofiaDesc?: string;
@@ -102,6 +106,7 @@ export interface GlobalSettings {
     title: string;
     desc: string;
     badge: string;
+    img?: string;
   }[];
   homeFilosofiaVideoTitle?: string;
   homeFilosofiaVideoSub?: string;
@@ -111,8 +116,17 @@ export interface GlobalSettings {
   homeCompassDesc?: string;
   homeCategories?: {
     id: string;
-    label: string;
+    name: string;
     count: string;
+    font: string;
+  }[];
+  homeMapPoints?: {
+    id: number;
+    name: string;
+    category: string;
+    desc: string;
+    coords: { top: string; left: string };
+    img: string;
   }[];
 
   homeBannerTag?: string;
@@ -126,7 +140,6 @@ export interface GlobalSettings {
   homeMimosDesc?: string;
   homeMimosTabs?: {
     key: string;
-    label: string;
     badge: string;
     title: string;
     text: string;
@@ -136,10 +149,31 @@ export interface GlobalSettings {
   homeLogisticaTag?: string;
   homeLogisticaTitle?: string;
   homeLogisticaDesc?: string;
+  homeLogisticaImgUrl?: string;
   homeLogisticaPoints?: {
     title: string;
     desc: string;
   }[];
+
+  homeHospedagens?: {
+    id: string;
+    name: string;
+    location: string;
+    rating: number;
+    desc: string;
+    img: string;
+    whatsappMessage: string;
+  }[];
+
+  homePosts?: {
+    title: string;
+    slug: string;
+    excerpt: string;
+    img: string;
+    date: string;
+  }[];
+
+  homeImageOverrides?: { [key: string]: string };
 
   homeFeedbackTag?: string;
   homeFeedbackTitle?: string;

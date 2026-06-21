@@ -197,7 +197,10 @@ export default function HomeView({
       coords: { top: "38%", left: "68%" },
       img: "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?auto=format&fit=crop&w=400&q=80"
     }
-  ];
+  ].map((pt, idx) => ({
+    ...pt,
+    img: settings?.homeImageOverrides?.[`map-${idx}`] || pt.img
+  }));
 
   const testimonials = (settings?.homeFeedbackList?.length ? settings.homeFeedbackList : [
     {
@@ -439,7 +442,7 @@ export default function HomeView({
             {/* Elegant visual stack */}
             <div className="relative w-full max-w-md aspect-[4/5] sm:aspect-square md:aspect-[4/5] rounded-lg overflow-hidden border border-white/10 shadow-[0_15px_40px_rgba(0,0,0,0.5)] group">
               <img 
-                src="https://images.unsplash.com/photo-1517400508447-f8dd518b86db?auto=format&fit=crop&w=850&q=80" 
+                src={settings?.homeHeroImgUrl || "https://images.unsplash.com/photo-1517400508447-f8dd518b86db?auto=format&fit=crop&w=850&q=80"} 
                 alt="Moça rindo no pôr do sol em lancha no Pontal" 
                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-103 filter contrast-105 brightness-90"
               />
@@ -647,12 +650,17 @@ export default function HomeView({
                     } as unknown as Experience
                   ];
 
-              return activeExps.map((item) => {
+              return activeExps.map((item, index) => {
                 const isConfiguring = activeConfigId === item.id;
                 const showSuccess = successNotifId === item.id;
                 const itemSchedules = item.schedules && item.schedules.length > 0 ? item.schedules : ["08:00", "14:00"];
                 const itemBadgeText = item.badge === "mais-vendido" ? "🔥 Mais Vendido" : item.badge === "novidade" ? "✨ Novidade" : item.badge === "temporada" ? "🐋 Temporada" : item.badge || "Recomendado";
-                const itemPhoto = item.photos && item.photos.length > 0 ? item.photos[0] : "https://images.unsplash.com/photo-1505118380757-91f5f5632de0?auto=format&fit=crop&w=600&q=80";
+                let itemPhoto = item.photos && item.photos.length > 0 ? item.photos[0] : "https://images.unsplash.com/photo-1505118380757-91f5f5632de0?auto=format&fit=crop&w=600&q=80";
+                
+                // Allow overriding the image based on its index
+                if (settings?.homeImageOverrides?.[`exp-${index}`]) {
+                  itemPhoto = settings.homeImageOverrides[`exp-${index}`];
+                }
 
                 return (
                   <div 
@@ -1203,7 +1211,7 @@ export default function HomeView({
             {/* Esquerda: Flat Lay composition */}
             <div className="lg:col-span-5 relative h-[38vh] sm:h-[50vh] rounded-lg overflow-hidden border border-zinc-200 shadow-md">
               <img 
-                src="https://images.unsplash.com/photo-1509114397022-ed747cca3f65?auto=format&fit=crop&w=800&q=80" 
+                src={settings?.homeLogisticaImgUrl || "https://images.unsplash.com/photo-1509114397022-ed747cca3f65?auto=format&fit=crop&w=800&q=80"} 
                 alt="Chapéu de palha, conchas e óculos de sol na areia de Arraial" 
                 className="w-full h-full object-cover filter brightness-95 text-center"
               />
@@ -1601,7 +1609,7 @@ export default function HomeView({
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 text-left">
-            {[
+            {(settings?.homeHospedagens?.length ? settings.homeHospedagens : [
               {
                 id: "pousada-timoneiro",
                 name: "Pousada do Timoneiro",
@@ -1629,8 +1637,9 @@ export default function HomeView({
                 img: "https://images.unsplash.com/photo-1584132967334-10e028bd69f7?auto=format&fit=crop&w=600&q=80",
                 whatsappMessage: "Olá, Guida Trips! Gostaria de consultar tarifas com benefícios na Ohana Pousada Boutique."
               }
-            ].map((pousada) => {
+            ]).map((pousada) => {
               const isSelected = selectedHotelId === pousada.id;
+              const currentImg = settings?.homeImageOverrides?.[pousada.id] || pousada.img;
               
               return (
                 <div 
@@ -1641,7 +1650,7 @@ export default function HomeView({
                 >
                   <div className="h-48 overflow-hidden relative">
                     <img 
-                      src={pousada.img} 
+                      src={currentImg} 
                       alt={pousada.name} 
                       className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-500 filter brightness-95"
                     />
@@ -1752,14 +1761,16 @@ export default function HomeView({
                 img: "https://images.unsplash.com/photo-1549488344-1f9b8d2bd1f3?auto=format&fit=crop&w=650&q=80",
                 date: "15 Jun, 2026"
               }
-            ].map((post, idx) => (
+            ].map((post, idx) => {
+              const currentImg = settings?.homeImageOverrides?.[`blog-${idx}`] || post.img;
+              return (
               <div 
                 key={idx}
                 className="bg-white border border-zinc-200 rounded-lg overflow-hidden flex flex-col justify-between hover:shadow-lg transition-all duration-300 text-left group"
               >
                 <div className="h-44 overflow-hidden relative">
                   <img 
-                    src={post.img} 
+                    src={currentImg} 
                     alt={post.title} 
                     className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-500 filter brightness-95"
                   />
@@ -1796,7 +1807,8 @@ export default function HomeView({
                   </button>
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
 
         </div>
