@@ -77,6 +77,12 @@ export default function AdminView({
     { name: "Letícia Amaral", city: "Brasília - DF", quote: "Atendimento caloroso incrível. Não somos tratadas como meros bilhetes de turismo. Guida nos pegou na porta da pousada, nos deu dicas preciosas sobre horários e nos levou para jantar lulas na brasa. Esse afeto é o verdadeiro ouro!", role: "Aventura Curada", avatar: "L" }
   ];
 
+  const defaultHeroStats = [
+    { value: "5★", label: "Acolhimento Humano" },
+    { value: "100%", label: "Lanchas Privativas" },
+    { value: "Nativo", label: "Amor pelo Território" }
+  ];
+
   // Active submodule
   const [activeTab, setActiveTab] = useState<"overview" | "experiences" | "leads" | "blog" | "settings">("overview");
 
@@ -98,7 +104,8 @@ export default function AdminView({
     homeCategories: settings.homeCategories || defaultCategories,
     homeMimosTabs: settings.homeMimosTabs || defaultMimosTabs,
     homeLogisticaPoints: settings.homeLogisticaPoints || defaultLogisticaPoints,
-    homeFeedbackList: settings.homeFeedbackList || defaultFeedbackList
+    homeFeedbackList: settings.homeFeedbackList || defaultFeedbackList,
+    homeHeroStats: settings.homeHeroStats || defaultHeroStats
   });
 
   React.useEffect(() => {
@@ -108,7 +115,8 @@ export default function AdminView({
       homeCategories: settings.homeCategories || defaultCategories,
       homeMimosTabs: settings.homeMimosTabs || defaultMimosTabs,
       homeLogisticaPoints: settings.homeLogisticaPoints || defaultLogisticaPoints,
-      homeFeedbackList: settings.homeFeedbackList || defaultFeedbackList
+      homeFeedbackList: settings.homeFeedbackList || defaultFeedbackList,
+      homeHeroStats: settings.homeHeroStats || defaultHeroStats
     });
   }, [settings]);
 
@@ -1146,6 +1154,53 @@ export default function AdminView({
                       onChange={(e) => setTempSettings({ ...tempSettings, homeHeroImgUrl: e.target.value })}
                       className="w-full bg-[#0D1B2A] border border-white/5 p-3 text-xs text-white text-sans"
                     />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="font-accent text-[9px] text-white tracking-widest uppercase">Texto do Botão Principal (WhatsApp)</label>
+                    <input
+                      type="text"
+                      value={tempSettings.homeHeroBtnText || ""}
+                      onChange={(e) => setTempSettings({ ...tempSettings, homeHeroBtnText: e.target.value })}
+                      placeholder="Ex: Fale com nossa Equipe"
+                      className="w-full bg-[#0D1B2A] border border-white/5 p-3 text-xs text-white text-sans"
+                    />
+                  </div>
+
+                  {/* Estatísticas Hero */}
+                  <div className="border-t border-white/5 pt-4 space-y-4">
+                    <span className="font-accent text-[9px] text-[#E8711A] tracking-wider uppercase block">Os 3 Indicadores da Home</span>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      {(tempSettings.homeHeroStats || defaultHeroStats).map((stat, idx) => (
+                        <div key={idx} className="bg-[#0D1B2A]/70 border border-white/5 p-3 rounded space-y-2">
+                          <span className="font-serif text-xs font-bold text-white block">Indicador #{idx + 1}</span>
+                          <input
+                            type="text"
+                            placeholder="Valor (Ex: 5★)"
+                            value={stat.value}
+                            onChange={(e) => {
+                              const updated = [...(tempSettings.homeHeroStats || [])];
+                              if (!updated[idx]) updated[idx] = { value: "", label: "" };
+                              updated[idx] = { ...updated[idx], value: e.target.value };
+                              setTempSettings({ ...tempSettings, homeHeroStats: updated });
+                            }}
+                            className="w-full bg-[#0D1B2A] border border-white/10 p-2 text-xs text-white uppercase"
+                          />
+                          <input
+                            type="text"
+                            placeholder="Legenda"
+                            value={stat.label}
+                            onChange={(e) => {
+                              const updated = [...(tempSettings.homeHeroStats || [])];
+                              if (!updated[idx]) updated[idx] = { value: "", label: "" };
+                              updated[idx] = { ...updated[idx], label: e.target.value };
+                              setTempSettings({ ...tempSettings, homeHeroStats: updated });
+                            }}
+                            className="w-full bg-[#0D1B2A] border border-white/10 p-2 text-xs text-white uppercase"
+                          />
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
 

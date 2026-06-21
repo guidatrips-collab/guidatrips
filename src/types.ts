@@ -97,6 +97,11 @@ export interface GlobalSettings {
   homeHeroImgUrl?: string;
   homeHeroTitle?: string;
   homeHeroDesc?: string;
+  homeHeroBtnText?: string;
+  homeHeroStats?: {
+    value: string;
+    label: string;
+  }[];
 
   homeFilosofiaTag?: string;
   homeFilosofiaTitle?: string;
