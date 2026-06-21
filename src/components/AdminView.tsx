@@ -39,6 +39,44 @@ export default function AdminView({
 
   const DEFAULT_PASSPHRASE = "admin"; // Easy to demo bypass!
 
+  // Safe defaults for customizable arrays
+  const defaultFilosofiaPillars = [
+    { id: 1, badge: "01 / AFETO NATIVO", title: "Ouro do Acolhimento", desc: "Guias locais diplomados com paixão para contar histórias e cuidar de sua segurança mística." },
+    { id: 2, badge: "02 / FLUIDEZ CRISTAL", title: "Roteiros sem Fila", desc: "Cálculos matemáticos de vento, ressurgência e fluxo para atracar antes da invasão comercial." },
+    { id: 3, badge: "03 / MIMOS DE MARÉ", title: "Cortejos de Charme", desc: "Frutas geladas selecionadas, espumantes artesanais e toalhas secas sob medida para você." },
+    { id: 4, badge: "04 / ZERO POLUIÇÃO", title: "Compromisso Ecológico", desc: "Zelo ativo integral com lixo zero e motores silenciosos de baixíssimo atrito químico." }
+  ];
+
+  const defaultCategories = [
+    { id: "praias", name: "Praias & Costas", count: "8 paragens", font: "font-serif text-[13px]" },
+    { id: "mirantes", name: "Mirantes Rústicos", count: "4 refúgios", font: "font-serif text-[13px]" },
+    { id: "vibe", name: "Vibe de Afeto", count: "Experiências", font: "font-serif text-[13px]" },
+    { id: "embarcacoes", name: "Embarcações", count: "Peixes & Veleiros", font: "font-serif text-[12px]" },
+    { id: "gastronomia", name: "Gastronomia", count: "6 quintais", font: "font-serif text-[13px]" },
+    { id: "hospedagem", name: "Pousadas Boutique", count: "8 seleções", font: "font-serif text-[12px]" },
+    { id: "aventura", name: "Cultura & Trilhas", count: "10 rotas", font: "font-serif text-[12px]" },
+    { id: "logistica", name: "Logística Completa", count: "Dicas nativas", font: "font-serif text-[11px]" }
+  ];
+
+  const defaultMimosTabs = [
+    { key: "sabores", badge: "🍽️ COMPOSIÇÃO ARTESANAL", title: "Sabores Que Unem E Celebram", text: "A nossa gastronomia abraça o seu paladar com frescor incomparável. Desfrute de espumantes selecionados de vinícolas de selo premiado, tábuas de frios rústicas, ceviche preparado na hora e deliciosos mimos regionais servidos sob a brisa morna do oceano.", img: "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80" },
+    { key: "lounges", badge: "✨ INSTALAÇÃO PRIVADA", title: "Piqueniques Sob a Luz Dourada", text: "Montamos lounges boutique com tapetes rústicos, almofadas macias e iluminação minimalista quente diretamente em mirantes ou praias reservadas. Uma experiência mágica de cinema para conversar, provar iguarias e desfrutar da melhor hora do pôr do sol com quem você mais ama.", img: "https://images.unsplash.com/photo-1510798831971-661eb04b3739?auto=format&fit=crop&w=800&q=80" },
+    { key: "noite", badge: "🌙 ENCONTROS NO DECK", title: "Luau Intimista & Noite sob Velas", text: "Ao entardecer, as estrelas tomam conta do cabo. Projetamos jantares privativos aconchegantes sob velas aromáticas flutuantes nas areias, harmonizados com vinhos finos de selo orgânico e o som rítmico das ondas quebrando suavemente na orla.", img: "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?auto=format&fit=crop&w=800&q=80" },
+    { key: "nativismo", badge: "🤝 CONEXÃO VERDADEIRA", title: "A Hospitalidade de Pura Alma", text: "Liderados por Guida, nossa equipe é composta por moradores apaixonados que respiram o destino. Nosso diferencial é a conexão humana verdadeira: recebemos você com sorrisos sinceros de braços abertos, contando causos divertidos de pescadores, lendas marítimas e segredos fascinantes.", img: "https://images.unsplash.com/photo-1472289065668-ce650ac443d2?auto=format&fit=crop&w=800&q=80" }
+  ];
+
+  const defaultLogisticaPoints = [
+    { title: "Como Chegar em Conforto", desc: "Arraial fica a 165km do Rio. Oferecemos opções sob medida de transfer executivo corporativo porta-a-porta partindo dos aeroportos rústicos da capital diretamente para a sua pousada curada." },
+    { title: "A Melhor Época de Ventos", desc: "O sol brilha o ano todo. Para águas com nitidez mística extrema de reflexos azulados, indicamos os meses de Março a Junho, onde a calmaria de ventos sintoniza mar cristalino." },
+    { title: "O Que Trazer na Mochila", desc: "Traga bonés leves, protetor solar mineral (pelo zelo ecológico da fauna de restinga) e claro: óculos de mergulho para fitar cavalos-marinhos e siris coloridos." }
+  ];
+
+  const defaultFeedbackList = [
+    { name: "Daniela Pinheiro & Noivo", city: "Rio de Janeiro - RJ", quote: "Eu queria um pedido de casamento surpresa perfeito nas dunas e a equipe da Guida estruturou TUDO. Montaram um lounge maravilhoso com velas, queijos e champanhe maravilhoso no Pontal e até contrataram fotógrafo para se disfarçar de turista! Sensacional!", role: "Momentos Especiais", avatar: "D" },
+    { name: "Ricardo e Cláudia Lemos", city: "Campinas - SP", quote: "Viajamos com as crianças de 5 e 8 anos. O barco é limpíssimo, o colete das crianças coube perfeitamente e os marinheiros prepararam cortes de melancia bem gelada que as crianças devoraram após o mergulho. Foi o dia mais feliz de nossas férias!", role: "Fórmula de Família", avatar: "R" },
+    { name: "Letícia Amaral", city: "Brasília - DF", quote: "Atendimento caloroso incrível. Não somos tratadas como meros bilhetes de turismo. Guida nos pegou na porta da pousada, nos deu dicas preciosas sobre horários e nos levou para jantar lulas na brasa. Esse afeto é o verdadeiro ouro!", role: "Aventura Curada", avatar: "L" }
+  ];
+
   // Active submodule
   const [activeTab, setActiveTab] = useState<"overview" | "experiences" | "leads" | "blog" | "settings">("overview");
 
@@ -54,10 +92,24 @@ export default function AdminView({
   // Forms / Modals States
   const [editingExperience, setEditingExperience] = useState<Partial<Experience> | null>(null);
   const [editingPost, setEditingPost] = useState<Partial<BlogPost> | null>(null);
-  const [tempSettings, setTempSettings] = useState<GlobalSettings>({ ...settings });
+  const [tempSettings, setTempSettings] = useState<GlobalSettings>({
+    ...settings,
+    homeFilosofiaPillars: settings.homeFilosofiaPillars || defaultFilosofiaPillars,
+    homeCategories: settings.homeCategories || defaultCategories,
+    homeMimosTabs: settings.homeMimosTabs || defaultMimosTabs,
+    homeLogisticaPoints: settings.homeLogisticaPoints || defaultLogisticaPoints,
+    homeFeedbackList: settings.homeFeedbackList || defaultFeedbackList
+  });
 
   React.useEffect(() => {
-    setTempSettings({ ...settings });
+    setTempSettings({
+      ...settings,
+      homeFilosofiaPillars: settings.homeFilosofiaPillars || defaultFilosofiaPillars,
+      homeCategories: settings.homeCategories || defaultCategories,
+      homeMimosTabs: settings.homeMimosTabs || defaultMimosTabs,
+      homeLogisticaPoints: settings.homeLogisticaPoints || defaultLogisticaPoints,
+      homeFeedbackList: settings.homeFeedbackList || defaultFeedbackList
+    });
   }, [settings]);
 
   // Action log pre-seeding
@@ -1147,12 +1199,7 @@ export default function AdminView({
                   <div className="border-t border-white/5 pt-4 space-y-4">
                     <span className="font-accent text-[9px] text-[#E8711A] tracking-wider uppercase block">Os Quatro Pilares de Cuidado</span>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {(tempSettings.homeFilosofiaPillars || [
-                        { id: 1, badge: "01 / AFETO NATIVO", title: "Ouro do Acolhimento", desc: "Guias locais diplomados com paixão para contar histórias e cuidar de sua segurança mística." },
-                        { id: 2, badge: "02 / FLUIDEZ CRISTAL", title: "Roteiros sem Fila", desc: "Cálculos matemáticos de vento, ressurgência e fluxo para atracar antes da invasão comercial." },
-                        { id: 3, badge: "03 / MIMOS DE MARÉ", title: "Cortejos de Charme", desc: "Frutas geladas selecionadas, espumantes artesanais e toalhas secas sob medida para você." },
-                        { id: 4, badge: "04 / ZERO POLUIÇÃO", title: "Compromisso Ecológico", desc: "Zelo ativo integral com lixo zero e motores silenciosos de baixíssimo atrito químico." }
-                      ]).map((pil, idx) => (
+                      {(tempSettings.homeFilosofiaPillars || defaultFilosofiaPillars).map((pil, idx) => (
                         <div key={pil.id} className="bg-[#0D1B2A]/70 border border-white/5 p-4 rounded space-y-2">
                           <span className="font-serif text-xs font-bold text-white block">Pilar #{pil.id}</span>
                           <div className="space-y-2">
@@ -1235,16 +1282,7 @@ export default function AdminView({
                   <div className="border-t border-white/5 pt-4 space-y-4">
                     <span className="font-accent text-[9px] text-[#E8711A] tracking-wider uppercase block">As 8 Categorias da Bússola Bento</span>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                      {(tempSettings.homeCategories || [
-                        { id: "praias", name: "Praias & Costas", count: "8 paragens", font: "font-serif text-[13px]" },
-                        { id: "mirantes", name: "Mirantes Rústicos", count: "4 refúgios", font: "font-serif text-[13px]" },
-                        { id: "vibe", name: "Vibe de Afeto", count: "Experiências", font: "font-serif text-[13px]" },
-                        { id: "embarcacoes", name: "Embarcações", count: "Peixes & Veleiros", font: "font-serif text-[12px]" },
-                        { id: "gastronomia", name: "Gastronomia", count: "6 quintais", font: "font-serif text-[13px]" },
-                        { id: "hospedagem", name: "Pousadas Boutique", count: "8 seleções", font: "font-serif text-[12px]" },
-                        { id: "aventura", name: "Cultura & Trilhas", count: "10 rotas", font: "font-serif text-[12px]" },
-                        { id: "logistica", name: "Logística Completa", count: "Dicas nativas", font: "font-serif text-[11px]" }
-                      ]).map((cat, idx) => (
+                      {(tempSettings.homeCategories || defaultCategories).map((cat, idx) => (
                         <div key={cat.id} className="bg-[#0D1B2A]/70 border border-white/5 p-3 rounded space-y-2">
                           <span className="font-accent text-[8px] text-zinc-400 block uppercase">ID: {cat.id}</span>
                           <input
@@ -1369,12 +1407,7 @@ export default function AdminView({
                   <div className="border-t border-white/5 pt-4 space-y-4">
                     <span className="font-accent text-[9px] text-[#E8711A] tracking-wider uppercase block">As 4 Abas de Experiência</span>
                     <div className="space-y-4 pb-2">
-                      {(tempSettings.homeMimosTabs || [
-                        { key: "sabores", badge: "🍽️ COMPOSIÇÃO ARTESANAL", title: "Sabores Que Unem E Celebram", text: "A nossa gastronomia abraça o seu paladar com frescor incomparável. Desfrute de espumantes selecionados de vinícolas de selo premiado, tábuas de frios rústicas, ceviche preparado na hora e deliciosos mimos regionais servidos sob a brisa morna do oceano.", img: "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80" },
-                        { key: "lounges", badge: "✨ INSTALAÇÃO PRIVADA", title: "Piqueniques Sob a Luz Dourada", text: "Montamos lounges boutique com tapetes rústicos, almofadas macias e iluminação minimalista quente diretamente em mirantes ou praias reservadas. Uma experiência mágica de cinema para conversar, provar iguarias e desfrutar da melhor hora do pôr do sol com quem você mais ama.", img: "https://images.unsplash.com/photo-1510798831971-661eb04b3739?auto=format&fit=crop&w=800&q=80" },
-                        { key: "noite", badge: "🌙 ENCONTROS NO DECK", title: "Luau Intimista & Noite sob Velas", text: "Ao entardecer, as estrelas tomam conta do cabo. Projetamos jantares privativos aconchegantes sob velas aromáticas flutuantes nas areias, harmonizados com vinhos finos de selo orgânico e o som rítmico das ondas quebrando suavemente na orla.", img: "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?auto=format&fit=crop&w=800&q=80" },
-                        { key: "nativismo", badge: "🤝 CONEXÃO VERDADEIRA", title: "A Hospitalidade de Pura Alma", text: "Liderados por Guida, nossa equipe é composta por moradores apaixonados que respiram o destino. Nosso diferencial é a conexão humana verdadeira: recebemos você com sorrisos sinceros de braços abertos, contando causos divertidos de pescadores, lendas marítimas e segredos fascinantes.", img: "https://images.unsplash.com/photo-1472289065668-ce650ac443d2?auto=format&fit=crop&w=800&q=80" }
-                      ]).map((tab, idx) => (
+                      {(tempSettings.homeMimosTabs || defaultMimosTabs).map((tab, idx) => (
                         <div key={tab.key} className="bg-[#0D1B2A]/70 border border-white/5 p-4 rounded space-y-3">
                           <div className="flex justify-between items-center border-b border-white/5 pb-1">
                             <span className="font-accent text-[9px] text-[#E8711A] font-bold">Aba: {tab.key.toUpperCase()}</span>
@@ -1480,11 +1513,7 @@ export default function AdminView({
                   <div className="border-t border-white/5 pt-4 space-y-4">
                     <span className="font-accent text-[9px] text-[#E8711A] tracking-wider uppercase block">As 3 Dicas Logísticas</span>
                     <div className="space-y-3">
-                      {(tempSettings.homeLogisticaPoints || [
-                        { title: "Como Chegar em Conforto", desc: "Arraial fica a 165km do Rio. Oferecemos opções sob medida de transfer executivo corporativo porta-a-porta partindo dos aeroportos rústicos da capital diretamente para a sua pousada curada." },
-                        { title: "A Melhor Época de Ventos", desc: "O sol brilha o ano todo. Para águas com nitidez mística extrema de reflexos azulados, indicamos os meses de Março a Junho, onde a calmaria de ventos sintoniza mar cristalino." },
-                        { title: "O Que Trazer na Mochila", desc: "Traga bonés leves, protetor solar mineral (pelo zelo ecológico da fauna de restinga) e claro: óculos de mergulho para fitar cavalos-marinhos e siris coloridos." }
-                      ]).map((pt, idx) => (
+                      {(tempSettings.homeLogisticaPoints || defaultLogisticaPoints).map((pt, idx) => (
                         <div key={idx} className="bg-[#0D1B2A]/70 border border-white/5 p-3 rounded space-y-2">
                           <span className="font-serif text-xs font-bold text-white block">Ponto Logístico #{idx + 1}</span>
                           <input
@@ -1554,11 +1583,7 @@ export default function AdminView({
                   <div className="border-t border-white/5 pt-4 space-y-4">
                     <span className="font-accent text-[9px] text-[#E8711A] tracking-wider uppercase block">Os 3 Depoimentos Coletados</span>
                     <div className="space-y-4">
-                      {(tempSettings.homeFeedbackList || [
-                        { name: "Daniela Pinheiro & Noivo", city: "Rio de Janeiro - RJ", quote: "Eu queria um pedido de casamento surpresa perfeito nas dunas e a equipe da Guida estruturou TUDO. Montaram um lounge maravilhoso com velas, queijos e champanhe maravilhoso no Pontal e até contrataram fotógrafo para se disfarçar de turista! Sensacional!", role: "Momentos Especiais", avatar: "D" },
-                        { name: "Ricardo e Cláudia Lemos", city: "Campinas - SP", quote: "Viajamos com as crianças de 5 e 8 anos. O barco é limpíssimo, o colete das crianças coube perfeitamente e os marinheiros prepararam cortes de melancia bem gelada que as crianças devoraram após o mergulho. Foi o dia mais feliz de nossas férias!", role: "Fórmula de Família", avatar: "R" },
-                        { name: "Letícia Amaral", city: "Brasília - DF", quote: "Atendimento caloroso incrível. Não somos tratadas como meros bilhetes de turismo. Guida nos pegou na porta da pousada, nos deu dicas preciosas sobre horários e nos levou para jantar lulas na brasa. Esse afeto é o verdadeiro ouro!", role: "Aventura Curada", avatar: "L" }
-                      ]).map((item, idx) => (
+                      {(tempSettings.homeFeedbackList || defaultFeedbackList).map((item, idx) => (
                         <div key={idx} className="bg-[#0D1B2A]/70 border border-white/5 p-4 rounded space-y-3">
                           <span className="font-serif text-xs font-bold text-white block">Depoimento #{idx + 1}</span>
                           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">

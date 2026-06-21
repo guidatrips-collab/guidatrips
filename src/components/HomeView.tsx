@@ -118,7 +118,7 @@ export default function HomeView({
     { id: "trilhas", label: "TRILHAS", count: "4 segredos" },
     { id: "mergulho", label: "MERGULHO", count: "Capital Nacional" },
     { id: "sobre", label: "CULTURA LOCAL", count: "Nativismo puro" }
-  ]).map((cat) => ({
+  ]).filter((c: any) => c && c.id).map((cat: any) => ({
     ...cat,
     color: categoryColors[cat.id] || "bg-[#E8711A]"
   }));
@@ -221,7 +221,7 @@ export default function HomeView({
       role: "Aventura Curada",
       avatar: "L"
     }
-  ]).map((t) => ({
+  ]).filter((t: any) => t && t.name).map((t: any) => ({
     name: t.name,
     origin: t.city,
     text: t.quote,
@@ -262,7 +262,7 @@ export default function HomeView({
       return defaultMimosTabs;
     }
     const tabsObj: any = {};
-    settings.homeMimosTabs.forEach((tab) => {
+    settings.homeMimosTabs.filter((tab: any) => tab && tab.key).forEach((tab: any) => {
       tabsObj[tab.key] = {
         title: tab.title,
         text: tab.text,
@@ -516,7 +516,7 @@ export default function HomeView({
             </div>
 
             <div className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-8 text-left">
-              {pillars.map((pil) => (
+              {pillars.filter((pil: any) => pil && pil.title).map((pil: any) => (
                 <div 
                   key={pil.id} 
                   className="bg-[#FBF9F7] border border-zinc-200 rounded p-6 shadow-sm hover:shadow-md hover:border-[#0D1B2A]/20 transition-all duration-300 space-y-3"
@@ -1239,7 +1239,7 @@ export default function HomeView({
                     title: "O Que Trazer na Mochila",
                     desc: "Traga bonés leves, protetor solar mineral (pelo zelo ecológico da fauna de restinga) e claro: óculos de mergulho para fitar cavalos-marinhos e siris coloridos."
                   }
-                ]).map((item, idx) => (
+                ]).filter((item: any) => item && item.title).map((item: any, idx: number) => (
                   <div key={idx} className="flex gap-4 items-start border-b border-zinc-200 pb-4 last:border-0 last:pb-0">
                     <span className="font-serif text-lg font-bold text-[#E8711A] bg-zinc-100 h-8 w-8 rounded-full flex items-center justify-center shrink-0">
                       {idx + 1}
