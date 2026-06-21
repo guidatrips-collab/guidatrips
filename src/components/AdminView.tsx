@@ -119,6 +119,7 @@ export default function AdminView({
         status: editingExperience.status || "active",
         featured: editingExperience.featured || false,
         badge: editingExperience.badge || "",
+        location: editingExperience.location || "Arraial do Cabo",
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       };
@@ -441,7 +442,10 @@ export default function AdminView({
                             <img src={exp.photos[0]} className="w-10 h-10 object-cover rounded" alt="Thumb" />
                           </td>
                           <td className="p-4 font-bold text-white">{exp.name}</td>
-                          <td className="p-4 opacity-75">{exp.category}</td>
+                          <td className="p-4 opacity-75">
+                            {exp.category}
+                            <div className="text-[10px] text-[#8A96A3] mt-0.5">📍 {exp.location || "Arraial do Cabo"}</div>
+                          </td>
                           <td className="p-4 font-bold text-[#E8711A]">R$ {exp.priceFrom}</td>
                           <td className="p-4">
                             <span className={`px-2 py-0.5 rounded text-[10px] font-accent uppercase ${
@@ -630,6 +634,21 @@ export default function AdminView({
                       >
                         <option value="active">✅ Ativo no site</option>
                         <option value="paused">⏸️ Pausado/Rascunho</option>
+                      </select>
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="font-accent text-[9px] text-[#ffefe6]/90 tracking-widest uppercase">Cidade / Região (Localidade)</label>
+                      <select
+                        value={editingExperience.location || "Arraial do Cabo"}
+                        onChange={(e) => setEditingExperience({ ...editingExperience, location: e.target.value })}
+                        className="w-full bg-[#0D1B2A] border border-white/5 p-3 text-xs text-white"
+                      >
+                        <option value="Arraial do Cabo font-bold">Arraial do Cabo (Principal)</option>
+                        <option value="Cabo Frio">Cabo Frio</option>
+                        <option value="Búzios">Búzios</option>
+                        <option value="Rio de Janeiro">Rio de Janeiro</option>
+                        <option value="Angra dos Reis">Angra dos Reis</option>
+                        <option value="Paraty">Paraty</option>
                       </select>
                     </div>
                     <div className="space-y-1.5 flex items-center pt-5">

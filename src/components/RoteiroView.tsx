@@ -69,20 +69,29 @@ export default function RoteiroView({
   // Find conflicts
   const findConflicts = () => {
     const conflictsList: string[] = [];
-    const seen = new Map<string, BookingCartItem>();
+    const seenDaySchedule = new Map<string, BookingCartItem>(); // key: dayIndex_schedule
+    const seenDateSchedule = new Map<string, BookingCartItem>(); // key: date_schedule
     
-    cart.forEach((item, idx) => {
+    cart.forEach((item) => {
       const exp = experiences.find(e => e.id === item.experienceId);
       const name = exp ? exp.name : "Passeio";
-      const key = `${item.date}_${item.schedule}`;
+      const keyDay = `${item.dayIndex || 1}_${item.schedule}`;
+      const keyDate = `${item.date}_${item.schedule}`;
       
-      if (seen.has(key)) {
-        const other = seen.get(key)!;
-        const otherExp = experiences.find(e => e.id === other.experienceId);
+      let conflictedItem: BookingCartItem | null = null;
+      if (seenDaySchedule.has(keyDay)) {
+        conflictedItem = seenDaySchedule.get(keyDay)!;
+      } else if (seenDateSchedule.has(keyDate)) {
+        conflictedItem = seenDateSchedule.get(keyDate)!;
+      }
+      
+      if (conflictedItem) {
+        const otherExp = experiences.find(e => e.id === conflictedItem.experienceId);
         const otherName = otherExp ? otherExp.name : "Outro passeio";
-        conflictsList.push(`Atenção: "${name}" e "${otherName}" estão no mesmo horário (${item.schedule} em ${item.date.split("-").reverse().join("/")}).`);
+        conflictsList.push(`⚠️ Atenção: Os passeios "${name}" e "${otherName}" foram agendados para o mesmo dia (Dia ${item.dayIndex || 1}) e horário (${item.schedule}). Sugerimos alterar um deles para evitar sobreposições!`);
       } else {
-        seen.set(key, item);
+        seenDaySchedule.set(keyDay, item);
+        seenDateSchedule.set(keyDate, item);
       }
     });
     return conflictsList;
@@ -248,8 +257,8 @@ export default function RoteiroView({
                   </div>
                   
                   {/* High legibility stayDays selection circles - Very rounded and tactile */}
-                  <div className="flex flex-wrap items-center gap-3 bg-[#FBF9F6] p-2.5 rounded-2xl border border-zinc-200/50">
-                    {Array.from({ length: 6 }).map((_, i) => {
+                  <div className="flex flex-wrap items-center gap-2.5 bg-[#FBF9F6] p-2.5 rounded-2xl border border-zinc-200/50">
+                    {Array.from({ length: 8 }).map((_, i) => {
                       const num = i + 1;
                       const isSelected = stayDays === num;
                       return (
@@ -259,14 +268,14 @@ export default function RoteiroView({
                           onClick={() => {
                             onUpdateStayDays(num);
                           }}
-                          className={`flex-1 min-w-[50px] aspect-square sm:aspect-auto sm:py-3 px-3 flex flex-col items-center justify-center rounded-xl transition-all duration-200 cursor-pointer ${
+                          className={`flex-1 min-w-[50px] aspect-square flex flex-col items-center justify-center rounded-xl transition-all duration-200 cursor-pointer ${
                             isSelected
                               ? "bg-[#0D1B2A] text-white shadow-md font-bold scale-[1.03]"
                               : "text-zinc-700 bg-white border border-zinc-200 hover:bg-zinc-100 hover:text-[#0D1B2A]"
                           }`}
                         >
-                          <span className="text-base sm:text-lg leading-none font-bold">{num}</span>
-                          <span className="text-[9px] uppercase tracking-wider text-zinc-400 font-bold font-accent mt-0.5">
+                          <span className="text-sm font-bold leading-none">{num}</span>
+                          <span className="text-[8px] uppercase tracking-wider text-zinc-400 font-bold font-accent mt-0.5">
                             {num === 1 ? "Dia" : "Dias"}
                           </span>
                         </button>

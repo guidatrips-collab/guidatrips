@@ -273,7 +273,11 @@ export default function App() {
   const handleChangeItemDay = (index: number, day: number) => {
     const updated = cart.map((item, idx) => {
       if (idx === index) {
-        return { ...item, dayIndex: day };
+        const today = new Date();
+        const targetDate = new Date(today);
+        targetDate.setDate(today.getDate() + (day - 1));
+        const dateStr = targetDate.toISOString().split("T")[0];
+        return { ...item, dayIndex: day, date: dateStr };
       }
       return item;
     });
@@ -305,20 +309,29 @@ export default function App() {
   // Conflict state warning calculation helper
   const findCartConflicts = () => {
     const conflicts: string[] = [];
-    const seen = new Map<string, BookingCartItem>(); // key: date_schedule
+    const seenDaySchedule = new Map<string, BookingCartItem>(); // key: dayIndex_schedule
+    const seenDateSchedule = new Map<string, BookingCartItem>(); // key: date_schedule
     
     cart.forEach((item) => {
       const exp = experiences.find(e => e.id === item.experienceId);
       const name = exp ? exp.name : "Passeio";
-      const key = `${item.date}_${item.schedule}`;
+      const keyDay = `${item.dayIndex || 1}_${item.schedule}`;
+      const keyDate = `${item.date}_${item.schedule}`;
       
-      if (seen.has(key)) {
-        const other = seen.get(key)!;
-        const otherExp = experiences.find(e => e.id === other.experienceId);
+      let conflictedItem: BookingCartItem | null = null;
+      if (seenDaySchedule.has(keyDay)) {
+        conflictedItem = seenDaySchedule.get(keyDay)!;
+      } else if (seenDateSchedule.has(keyDate)) {
+        conflictedItem = seenDateSchedule.get(keyDate)!;
+      }
+      
+      if (conflictedItem) {
+        const otherExp = experiences.find(e => e.id === conflictedItem.experienceId);
         const otherName = otherExp ? otherExp.name : "Outro passeio";
-        conflicts.push(`⚠️ ATENÇÃO: Os passeios "${name}" e "${otherName}" foram marcados para o mesmo dia e horário (${item.schedule} em ${item.date.split("-").reverse().join("/")}). Sugerimos alterar um deles para evitar sobreposição de agendas!`);
+        conflicts.push(`⚠️ ATENÇÃO: Os passeios "${name}" e "${otherName}" foram marcados para o mesmo dia (Dia ${item.dayIndex || 1}) e horário (${item.schedule}). Sugerimos alterar um deles para evitar sobreposição de agendas!`);
       } else {
-        seen.set(key, item);
+        seenDaySchedule.set(keyDay, item);
+        seenDateSchedule.set(keyDate, item);
       }
     });
     return conflicts;
@@ -403,10 +416,21 @@ export default function App() {
       }
     }
 
+    const uniqueLocationsSet = new Set<string>();
+    cart.forEach(item => {
+      const exp = experiences.find(e => e.id === item.experienceId);
+      if (exp) {
+        uniqueLocationsSet.add(exp.location || "Arraial do Cabo");
+      } else {
+        uniqueLocationsSet.add("Arraial do Cabo");
+      }
+    });
+    const locationsString = Array.from(uniqueLocationsSet).join(", ");
+
     const finalName = clientName.trim() || "[Insira o Nome]";
     const finalCity = clientCity.trim() || "[Insira a Cidade]";
 
-    textMessage += `👤 Solicitante: *${finalName}*\n🏡 Cidade de Origem: *${finalCity}*\n\nPor favor, confirmem se há disponibilidade destas vagas e os valores totais! Obrigado!`;
+    textMessage += `👤 Solicitante: *${finalName}*\n🏡 Cidade de Origem: *${finalCity}*\n📍 Locais/Destinos: *${locationsString}*\n\nPor favor, confirmem se há disponibilidade destas vagas e os valores totais! Obrigado!`;
 
     // Also register this WhatsApp click event as a Lead in our Admin Dashboard CRM to keep metrics active!
     const waLead: Lead = {

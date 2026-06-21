@@ -26,6 +26,7 @@ export default function ExperiencesView({
   whatsappNumber
 }: ExperiencesViewProps) {
   const [selectedCategory, setSelectedCategory] = useState<string>("todos");
+  const [selectedLocation, setSelectedLocation] = useState<string>("todos");
   const [searchQuery, setSearchQuery] = useState("");
   const [activeExperience, setActiveExperience] = useState<Experience | null>(null);
 
@@ -42,7 +43,7 @@ export default function ExperiencesView({
 
   // Category list
   const categories = [
-    { id: "todos", label: "Todos" },
+    { id: "todos", label: "Todas Categorias" },
     { id: ExperienceCategory.NAUTICO, label: "🚤 Náutico" },
     { id: ExperienceCategory.OFF_ROAD, label: "🚙 Off-Road" },
     { id: ExperienceCategory.CULTURA, label: "🏛️ Cultura" },
@@ -50,12 +51,25 @@ export default function ExperiencesView({
     { id: ExperienceCategory.TEMPORADA, label: "🐋 Temporada" },
   ];
 
+  // Dynamically group unique locations with active status
+  const availableLocations = [
+    { id: "todos", label: "🗺️ Todos os Destinos" },
+    ...Array.from(
+      new Set(
+        experiences
+          .filter((exp) => exp.status === "active")
+          .map((exp) => exp.location || "Arraial do Cabo")
+      )
+    ).map((loc) => ({ id: loc, label: `📍 ${loc}` })),
+  ];
+
   const filteredExperiences = experiences.filter((exp) => {
     const matchesCategory = selectedCategory === "todos" || exp.category === selectedCategory;
+    const matchesLocation = selectedLocation === "todos" || (exp.location || "Arraial do Cabo") === selectedLocation;
     const matchesSearch =
       exp.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       exp.shortDescription.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesSearch && exp.status === "active";
+    return matchesCategory && matchesLocation && matchesSearch && exp.status === "active";
   });
 
   const handleOpenDetails = (exp: Experience) => {
@@ -113,17 +127,49 @@ export default function ExperiencesView({
         </div>
 
         {/* INPUT DE PESQUISA & FILTROS DE CATEGORIA */}
-        <div className="flex flex-col lg:flex-row items-center justify-between gap-6 mb-12 border-b border-white/5 pb-8">
-          
-          {/* Pill buttons para categoria */}
-          <div className="flex flex-wrap items-center gap-2 justify-center lg:justify-start">
+        <div className="space-y-6 mb-12 border-b border-white/5 pb-8">
+          {/* Linha 1: Destinos */}
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="font-accent text-[10px] text-[#8A96A3] uppercase tracking-wider mr-2 font-bold">Destino:</span>
+              {availableLocations.map((loc) => (
+                <button
+                  key={loc.id}
+                  onClick={() => setSelectedLocation(loc.id)}
+                  className={`px-3.5 py-1.5 rounded-sm font-accent text-[10px] font-bold tracking-wider uppercase transition-all duration-200 cursor-pointer ${
+                    selectedLocation === loc.id
+                      ? "bg-[#E8711A] text-[#0D1B2A] shadow-sm"
+                      : "bg-[#132033] text-[#8A96A3] border border-white/5 hover:border-white/20 hover:text-white"
+                  }`}
+                >
+                  {loc.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Campo de Busca layout elegante */}
+            <div className="relative w-full md:w-80">
+              <Search className="absolute left-3.5 top-3.5 w-4 h-4 text-[#8A96A3]" />
+              <input
+                type="text"
+                placeholder="Buscar passeio..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-3 bg-[#132033] border border-white/5 rounded-sm text-xs text-[#F4EFE6] placeholder-[#8A96A3] focus:outline-none focus:border-[#E8711A] focus:ring-1 focus:ring-[#E8711A]"
+              />
+            </div>
+          </div>
+
+          {/* Linha 2: Categorias */}
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="font-accent text-[10px] text-[#8A96A3] uppercase tracking-wider mr-2 font-bold">Categoria:</span>
             {categories.map((cat) => (
               <button
                 key={cat.id}
                 onClick={() => setSelectedCategory(cat.id)}
-                className={`px-4 py-2.5 rounded-full font-accent text-[11px] font-bold tracking-wider uppercase transition-all duration-200 cursor-pointer ${
+                className={`px-3.5 py-1.5 rounded-full font-accent text-[10px] font-bold tracking-wider uppercase transition-all duration-200 cursor-pointer ${
                   selectedCategory === cat.id
-                    ? "bg-[#E8711A] text-[#0D1B2A]"
+                    ? "bg-[#F4EFE6]/95 text-[#0D1B2A]"
                     : "bg-[#132033] text-[#8A96A3] border border-white/5 hover:border-white/20 hover:text-white"
                 }`}
               >
@@ -131,19 +177,6 @@ export default function ExperiencesView({
               </button>
             ))}
           </div>
-
-          {/* Campo de Busca layout elegante */}
-          <div className="relative w-full lg:w-80">
-            <Search className="absolute left-3.5 top-3.5 w-4 h-4 text-[#8A96A3]" />
-            <input
-              type="text"
-              placeholder="Buscar experiência..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 bg-[#132033] border border-white/5 rounded-sm text-xs text-[#F4EFE6] placeholder-[#8A96A3] focus:outline-none focus:border-[#E8711A] focus:ring-1 focus:ring-[#E8711A]"
-            />
-          </div>
-
         </div>
 
         {/* LISTAGEM DE CARDS */}
@@ -196,11 +229,14 @@ export default function ExperiencesView({
                   <div className="space-y-4 pt-2">
                     {/* Linha de Specs em Mono/Accent */}
                     <div className="flex items-center justify-between border-t border-b border-white/5 py-3 font-accent text-[10px] text-[#8A96A3]">
-                      <div className="flex items-center gap-1">
-                        <span>⏱</span> {exp.duration}
+                      <div className="flex items-center gap-1 shrink-0">
+                        <span className="text-[#E8711A]">⏱</span> {exp.duration}
                       </div>
-                      <div className="flex items-center gap-1 border-l border-r border-white/5 px-4 font-bold text-[#F4EFE6]">
-                        <span>💰</span> A partir de R$ {exp.priceFrom}
+                      <div className="flex items-center gap-1 shrink-0 font-bold text-[#F4EFE6]">
+                        <span className="text-[#E8711A]">💰</span> R$ {exp.priceFrom}
+                      </div>
+                      <div className="flex items-center gap-0.5 shrink-0 border-l border-white/5 pl-2 text-[9px] uppercase tracking-wider text-[#E8711A] font-bold">
+                        <span>📍</span> {exp.location || "Arraial"}
                       </div>
                     </div>
 

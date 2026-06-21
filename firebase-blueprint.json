@@ -21,6 +21,7 @@
         "status": "string",
         "featured": "boolean",
         "badge": "string",
+        "location": "string",
         "schedules": "array",
         "recommendations": "array",
         "faqs": "array",

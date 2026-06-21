@@ -865,11 +865,14 @@ export default function WizardView({
                                   onRemoveFromCart(idxToRemove);
                                 }
                               } else {
-                                // Add to cart
-                                const todayStr = new Date().toISOString().split("T")[0];
+                                // Add to cart with progressive dynamic sequence date matching dayIndex
+                                const today = new Date();
+                                const targetDate = new Date(today);
+                                targetDate.setDate(today.getDate() + (config.dayIndex - 1));
+                                const dateStr = targetDate.toISOString().split("T")[0];
                                 onAddToCart({
                                   experienceId: exp.id,
-                                  date: todayStr,
+                                  date: dateStr,
                                   schedule: exp.schedules && exp.schedules.length > 0 ? exp.schedules[0] : "08:00",
                                   adults: config.adults,
                                   children: config.children,

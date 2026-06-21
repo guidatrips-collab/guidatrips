@@ -50,6 +50,7 @@ Nossa embarcação conta com infraestrutura premium, marinheiro experiente e ser
     status: "active",
     featured: true,
     badge: "mais-vendido",
+    location: "Arraial do Cabo",
     schedules: ["08:00", "11:30", "15:00"],
     recommendations: ["buggy-massambaba", "batismo-mergulho-autonomo"],
     faqs: [
@@ -105,6 +106,7 @@ Guiados por profissionais credenciados que respiram o destino, cruzaremos as inc
     status: "active",
     featured: true,
     badge: "mais-vendido",
+    location: "Arraial do Cabo",
     schedules: ["09:00", "14:00", "16:30"],
     recommendations: ["sunset-pontal-cultural", "passeio-barco-premium"],
     faqs: [
@@ -160,6 +162,7 @@ Nossa operação é estritamente ecológica, seguindo portarias internacionais d
     status: "active",
     featured: true,
     badge: "temporada",
+    location: "Arraial do Cabo",
     schedules: ["07:30", "12:30"],
     recommendations: ["batismo-mergulho-autonomo", "sunset-pontal-cultural"],
     faqs: [
@@ -213,6 +216,7 @@ No nosso Batismo de Mergulho, você não precisa de curso ou experiência prévi
     status: "active",
     featured: false,
     badge: "novidade",
+    location: "Arraial do Cabo",
     schedules: ["08:00", "11:30", "14:30"],
     recommendations: ["passeio-barco-premium", "gourmet-praia-dos-anjos"],
     faqs: [
@@ -266,6 +270,7 @@ Mapeado de forma exclusiva, o nosso guia cultural conduzirá você a pé por cam
     status: "active",
     featured: false,
     badge: "",
+    location: "Arraial do Cabo",
     schedules: ["16:00"],
     recommendations: ["gourmet-praia-dos-anjos", "buggy-massambaba"],
     faqs: [
@@ -319,6 +324,7 @@ Montamos uma mesa privativa diretamente na areia ou no deck de madeira de um bis
     status: "active",
     featured: false,
     badge: "",
+    location: "Arraial do Cabo",
     schedules: ["19:30", "21:00"],
     recommendations: ["sunset-pontal-cultural", "passeio-barco-premium"],
     faqs: [
