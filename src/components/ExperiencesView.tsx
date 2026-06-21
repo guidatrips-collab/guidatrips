@@ -270,18 +270,18 @@ export default function ExperiencesView({
       {/* DETAIL MODAL LIGHTBOX */}
       <AnimatePresence>
         {activeExperience && (
-          <div className="fixed inset-0 bg-black/85 z-50 flex items-center justify-center p-4 overflow-y-auto">
+          <div className="fixed inset-0 bg-black/75 z-50 flex items-center justify-center p-4 overflow-y-auto backdrop-blur-xs">
             <motion.div 
               initial={{ opacity: 0, scale: 0.96 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.96 }}
               id="details-modal"
-              className="bg-[#132033] border border-white/10 rounded-sm w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl relative"
+              className="bg-white border border-zinc-200/90 rounded-3xl w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl relative"
             >
               {/* Botão fechar */}
               <button 
                 onClick={() => setActiveExperience(null)}
-                className="absolute top-4 right-4 z-50 p-2 rounded-full bg-black/50 text-[#F4EFE6] hover:text-[#E8711A] hover:bg-black/90 transition-all font-bold text-xs"
+                className="absolute top-4 right-4 z-50 p-2.5 rounded-full bg-zinc-100 hover:bg-[#E8711A]/10 text-zinc-700 hover:text-[#E8711A] transition-all font-bold text-sm cursor-pointer shadow-xs"
               >
                 ✕
               </button>
@@ -290,13 +290,13 @@ export default function ExperiencesView({
                 
                 {/* Lado Esquerdo: Imagem / Galeria (7 colunas) */}
                 <div className="md:col-span-7 p-6 space-y-6 text-left">
-                  <div className="relative h-64 md:h-[350px] overflow-hidden select-none border border-white/5">
+                  <div className="relative h-64 md:h-[350px] overflow-hidden select-none border border-zinc-200">
                     <img 
                       src={activeExperience.photos[0]} 
                       alt={activeExperience.name} 
-                      className="w-full h-full object-cover filter brightness-95"
+                      className="w-full h-full object-cover filter brightness-98"
                     />
-                    <div className="absolute top-4 left-4 font-accent text-[9px] font-bold tracking-widest text-[#E8711A] bg-[#0D1B2A] px-2.5 py-1 uppercase rounded-sm">
+                    <div className="absolute top-4 left-4 font-accent text-[9px] font-bold tracking-widest text-[#E8711A] bg-white border border-[#E8711A]/20 shadow-xs px-2.5 py-1 uppercase rounded-lg">
                       {activeExperience.category.toUpperCase()}
                     </div>
                   </div>
@@ -313,61 +313,71 @@ export default function ExperiencesView({
                   )}
 
                   {/* Descrição em Markdown Formatada */}
-                  <div className="space-y-4 border-t border-white/5 pt-6">
-                    <h3 className="font-serif text-lg font-bold text-[#F4EFE6]">A Jornada:</h3>
-                    <div className="font-sans text-xs sm:text-sm text-[#8A96A3] leading-relaxed whitespace-pre-line space-y-3">
+                  <div className="space-y-4 border-t border-zinc-200/60 pt-6">
+                    <h3 className="font-serif text-lg font-extrabold text-[#0D1B2A]">A Jornada:</h3>
+                    <div className="font-sans text-xs sm:text-sm text-zinc-650 leading-relaxed whitespace-pre-line space-y-3">
                       {activeExperience.fullDescription}
                     </div>
                     
                     {/* Itens incluídos / não incluídos */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-4">
-                      <div className="bg-[#0D1B2A]/50 p-4 border border-white/5 space-y-2">
-                        <span className="font-accent text-[10px] text-[#E8711A] font-bold tracking-widest uppercase">✓ O que Inclui</span>
-                        <ul className="space-y-1 font-sans text-xs text-[#8A96A3]">
+                      <div className="bg-zinc-50/50 p-5 border border-zinc-200/60 rounded-2xl space-y-3">
+                        <span className="font-accent text-[10px] text-[#E8711A] font-black tracking-widest uppercase flex items-center gap-1">
+                          ✨ O que Inclui
+                        </span>
+                        <ul className="space-y-1.5 font-sans text-xs text-zinc-600">
                           {activeExperience.included.map((item, idx) => (
-                            <li key={idx}>&middot; {item}</li>
+                            <li key={idx} className="flex items-start gap-1.5">
+                              <span className="text-[#E8711A] select-none">✓</span>
+                              <span>{item}</span>
+                            </li>
                           ))}
                         </ul>
                       </div>
-                      <div className="bg-[#0D1B2A]/50 p-4 border border-white/5 space-y-2">
-                        <span className="font-accent text-[10px] text-zinc-400 font-bold tracking-widest uppercase">✕ Não Inclui</span>
-                        <ul className="space-y-1 font-sans text-xs text-[#8A96A3]">
+                      <div className="bg-zinc-50/50 p-5 border border-zinc-200/60 rounded-2xl space-y-3">
+                        <span className="font-accent text-[10px] text-zinc-500 font-extrabold tracking-widest uppercase flex items-center gap-1">
+                          🚫 Não Inclui
+                        </span>
+                        <ul className="space-y-1.5 font-sans text-xs text-zinc-600">
                           {activeExperience.notIncluded.map((item, idx) => (
-                            <li key={idx}>&middot; {item}</li>
+                            <li key={idx} className="flex items-start gap-1.5">
+                              <span className="text-zinc-400 select-none">✕</span>
+                              <span>{item}</span>
+                            </li>
                           ))}
                         </ul>
                       </div>
                     </div>
 
                     {/* Ponto de encontro */}
-                    <div className="flex items-start gap-2 pt-2 text-xs font-sans text-[#8A96A3]">
-                      <MapPin className="w-4 h-4 text-[#E8711A] shrink-0" />
+                    <div className="flex items-start gap-2.5 pt-3 text-xs font-sans text-zinc-600 bg-[#FAF8F5] p-3.5 border border-zinc-200/50 rounded-xl">
+                      <MapPin className="w-4 h-4 text-[#E8711A] shrink-0 mt-0.5" />
                       <div>
-                        <span className="font-bold text-[#F4EFE6]">Ponto de encontro:</span> {activeExperience.meetingPoint}
+                        <span className="font-extrabold text-[#0D1B2A]">Ponto de encontro:</span> {activeExperience.meetingPoint}
                       </div>
                     </div>
 
                     {/* FAQ ACCORDION SECTION */}
                     {activeExperience.faqs && activeExperience.faqs.length > 0 && (
-                      <div className="border-t border-white/5 pt-6 space-y-3">
-                        <h3 className="font-serif text-lg font-bold text-[#F4EFE6] flex items-center gap-1">
+                      <div className="border-t border-zinc-200/60 pt-6 space-y-3">
+                        <h3 className="font-serif text-lg font-extrabold text-[#0D1B2A] flex items-center gap-1">
                           ❓ Perguntas Frequentes do Passeio
                         </h3>
-                        <div className="space-y-2">
+                        <div className="space-y-2.5">
                           {activeExperience.faqs.map((faq, idx) => {
                             const isFaqOpen = openFaqIndex === idx;
                             return (
-                              <div key={idx} className="border border-white/5 bg-[#0D1B2A]/35 rounded">
+                              <div key={idx} className="border border-zinc-200 bg-zinc-50/40 rounded-xl overflow-hidden">
                                 <button
                                   type="button"
                                   onClick={() => setOpenFaqIndex(isFaqOpen ? null : idx)}
-                                  className="w-full p-3 text-left font-serif text-xs font-bold text-[#F4EFE6] hover:text-[#E8711A] transition-colors flex justify-between items-center"
+                                  className="w-full p-4 text-left font-serif text-xs sm:text-sm font-bold text-zinc-800 hover:text-[#E8711A] transition-colors flex justify-between items-center bg-white cursor-pointer"
                                 >
                                   <span>{faq.question}</span>
-                                  <span>{isFaqOpen ? "▲" : "▼"}</span>
+                                  <span className="text-zinc-400 text-xs">{isFaqOpen ? "▲" : "▼"}</span>
                                 </button>
                                 {isFaqOpen && (
-                                  <div className="px-3 pb-3 text-xs text-[#8A96A3] leading-relaxed border-t border-white/5 pt-2">
+                                  <div className="px-4 pb-4 text-xs sm:text-sm text-zinc-650 leading-relaxed border-t border-zinc-150 pt-3 bg-zinc-50/30">
                                     {faq.answer}
                                   </div>
                                 )}
@@ -380,8 +390,8 @@ export default function ExperiencesView({
 
                     {/* COMPANION INTELLIGENT RECOMMENDATIONS SECTION */}
                     {activeExperience.recommendations && activeExperience.recommendations.length > 0 && (
-                      <div className="border-t border-white/5 pt-6 space-y-3">
-                        <h3 className="font-serif text-base font-bold text-[#F4EFE6]">
+                      <div className="border-t border-zinc-200/60 pt-6 space-y-3.5">
+                        <h3 className="font-serif text-base font-extrabold text-[#0D1B2A]">
                           💡 Quem faz este passeio também costuma amar:
                         </h3>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -392,18 +402,18 @@ export default function ExperiencesView({
                               <div 
                                 key={recId}
                                 onClick={() => handleOpenDetails(recExp)}
-                                className="p-3 bg-[#132033] border border-white/5 rounded flex gap-3 hover:border-[#E8711A] transition-all cursor-pointer items-center justify-between"
+                                className="p-3 bg-zinc-50 border border-zinc-200 rounded-2xl flex gap-3 hover:border-[#E8711A] hover:bg-white transition-all cursor-pointer items-center justify-between shadow-xs hover:shadow-sm"
                               >
-                                <div className="flex items-center gap-2">
-                                  <div className="h-10 w-10 shrink-0 bg-zinc-800 rounded overflow-hidden">
+                                <div className="flex items-center gap-3">
+                                  <div className="h-12 w-12 shrink-0 bg-zinc-200 rounded-xl overflow-hidden border border-zinc-150">
                                     <img src={recExp.photos[0]} alt={recExp.name} className="h-full w-full object-cover" />
                                   </div>
                                   <div className="text-left">
-                                    <h4 className="font-serif text-xs font-bold text-[#F4EFE6] line-clamp-1">{recExp.name}</h4>
-                                    <span className="font-accent text-[9px] text-[#E8711A]">A partir de R$ {recExp.priceFrom}</span>
+                                    <h4 className="font-serif text-xs font-bold text-[#0D1B2A] line-clamp-1">{recExp.name}</h4>
+                                    <span className="font-accent text-[9px] text-[#E8711A] font-black">A partir de R$ {recExp.priceFrom}</span>
                                   </div>
                                 </div>
-                                <span className="text-xs text-[#E8711A]">&rarr;</span>
+                                <span className="text-xs text-[#E8711A] font-bold">&rarr;</span>
                               </div>
                             );
                           })}
@@ -415,36 +425,36 @@ export default function ExperiencesView({
                 </div>
 
                 {/* Lado Direito: Formulário de Reserva / Carrinho (5 colunas) */}
-                <div className="md:col-span-5 bg-[#0D1B2A] p-6 border-l border-white/5 flex flex-col justify-between text-left">
+                <div className="md:col-span-5 bg-[#FAF8F5] p-6 sm:p-8 border-l border-zinc-200 flex flex-col justify-between text-left rounded-r-3xl">
                   <div className="space-y-6">
                     <div>
-                      <span className="font-accent text-[#E8711A] text-[9px] font-bold tracking-widest uppercase">Ficha técnica de interesse</span>
-                      <h2 className="font-serif text-xl font-bold text-[#F4EFE6] mt-2 leading-tight">
+                      <span className="font-accent text-[#E8711A] text-[9px] font-extrabold tracking-widest uppercase">Ficha técnica de interesse</span>
+                      <h2 className="font-serif text-xl font-black text-[#0D1B2A] mt-2 leading-tight">
                         {activeExperience.name}
                       </h2>
                     </div>
 
-                    <div className="space-y-3 font-sans text-xs text-[#8A96A3] bg-[#132033] p-4 border border-white/5">
-                      <div className="flex justify-between">
+                    <div className="space-y-3 font-sans text-xs text-zinc-650 bg-white p-4.5 rounded-2xl border border-zinc-200 shadow-xs">
+                      <div className="flex justify-between items-center pb-2 border-b border-zinc-100">
                         <span>Preço básico de referência:</span>
-                        <span className="font-bold text-[#F4EFE6]">R$ {activeExperience.priceFrom} / pessoa</span>
+                        <span className="font-extrabold text-[#0D1B2A]">R$ {activeExperience.priceFrom} / pessoa</span>
                       </div>
-                      <div className="flex justify-between">
+                      <div className="flex justify-between items-center pb-2 border-b border-zinc-100">
                         <span>Duração estimada:</span>
-                        <span className="font-bold text-[#F4EFE6]">{activeExperience.duration}</span>
+                        <span className="font-extrabold text-[#0D1B2A]">{activeExperience.duration}</span>
                       </div>
-                      <div className="flex justify-between">
+                      <div className="flex justify-between items-center">
                         <span>Lotação de segurança:</span>
-                        <span className="font-bold text-[#F4EFE6]">até {activeExperience.capacity} pessoas</span>
+                        <span className="font-extrabold text-[#0D1B2A]">até {activeExperience.capacity} pessoas</span>
                       </div>
                     </div>
 
                     {/* FORM DE FILIAÇÃO DE ROTEIRO */}
-                    <form onSubmit={handleAddCartItem} className="space-y-4 border-t border-white/5 pt-6">
+                    <form onSubmit={handleAddCartItem} className="space-y-4 border-t border-zinc-200/60 pt-6">
                       
                       {/* Data de preferência */}
-                      <div className="space-y-1.5">
-                        <label className="font-accent text-[10px] text-white tracking-widest uppercase flex items-center gap-1.5">
+                      <div className="space-y-1.5 text-left">
+                        <label className="font-accent text-[10px] text-zinc-700 tracking-widest uppercase flex items-center gap-1.5 font-extrabold">
                           <Calendar className="w-3.5 h-3.5 text-[#E8711A]" />
                           Data desejada
                         </label>
@@ -453,24 +463,24 @@ export default function ExperiencesView({
                           required
                           value={bookingDate}
                           onChange={(e) => setBookingDate(e.target.value)}
-                          className="w-full bg-[#132033] border border-white/10 p-3 text-xs text-[#F4EFE6] focus:outline-none focus:border-[#E8711A]"
+                          className="w-full bg-white border border-zinc-300 p-3 text-xs text-zinc-800 rounded-xl focus:outline-none focus:border-[#E8711A] focus:ring-1 focus:ring-[#E8711A] font-sans shadow-2xs"
                         />
                       </div>
 
                       {/* Horário (Selected from active available schedules of the experience) */}
-                      <div className="space-y-1.5">
-                        <label className="font-accent text-[10px] text-white tracking-widest uppercase flex items-center gap-1.5">
+                      <div className="space-y-1.5 text-left">
+                        <label className="font-accent text-[10px] text-zinc-700 tracking-widest uppercase flex items-center gap-1.5 font-extrabold">
                           <span>⏱</span> Escolha o Horário
                         </label>
                         <select
                           required
                           value={bookingSchedule}
                           onChange={(e) => setBookingSchedule(e.target.value)}
-                          className="w-full bg-[#132033] border border-white/10 p-3 text-xs text-[#F4EFE6] focus:outline-none focus:border-[#E8711A] font-sans"
+                          className="w-full bg-white border border-zinc-300 p-3 text-xs text-zinc-800 rounded-xl focus:outline-none focus:border-[#E8711A] focus:ring-1 focus:ring-[#E8711A] font-sans shadow-2xs"
                         >
                           {activeExperience.schedules && activeExperience.schedules.length > 0 ? (
                             activeExperience.schedules.map((time) => (
-                              <option key={time} value={time} className="bg-[#132033]">
+                              <option key={time} value={time} className="bg-white text-zinc-850">
                                 {time} {time >= "16:00" ? "(Pôr do sol/Noite)" : "(Manhã/Tarde)"}
                               </option>
                             ))
@@ -485,32 +495,32 @@ export default function ExperiencesView({
                       </div>
 
                       {/* AGE CATEGORIES BLOCK (PRD: ADULTOS, CRIANÇAS, BEBÊS) */}
-                      <div className="space-y-3.5 border-y border-white/5 py-4">
-                        <span className="font-accent text-[10px] text-white tracking-widest uppercase block mb-1">
+                      <div className="space-y-3.5 border-y border-zinc-200/60 py-4">
+                        <span className="font-accent text-[10px] text-zinc-700 tracking-widest uppercase block mb-1 font-extrabold text-left">
                           👥 Integrantes do Passeio
                         </span>
 
                         {/* 1. Adultos */}
                         <div className="flex items-center justify-between">
                           <div className="text-left">
-                            <span className="text-xs font-bold text-[#F4EFE6] block">Adultos</span>
-                            <span className="text-[10px] text-[#8A96A3]">Preço regular</span>
+                            <span className="text-xs font-bold text-zinc-800 block">Adultos</span>
+                            <span className="text-[10px] text-zinc-500">Preço regular</span>
                           </div>
                           <div className="flex items-center gap-2">
                             <button
                               type="button"
                               onClick={() => setBookingAdults(Math.max(1, bookingAdults - 1))}
-                              className="bg-[#132033] border border-white/5 w-8 h-8 flex items-center justify-center rounded font-bold text-[#F4EFE6] hover:bg-[#E8711A] hover:text-[#0D1B2A] transition-colors"
+                              className="bg-white border border-zinc-300 w-8 h-8 flex items-center justify-center rounded-lg font-bold text-zinc-700 hover:bg-[#E8711A] hover:text-[#0D1B2A] hover:border-[#E8711A] transition-colors cursor-pointer"
                             >
                               -
                             </button>
-                            <span className="w-8 text-center font-accent text-xs font-bold text-[#F4EFE6]">
+                            <span className="w-8 text-center font-accent text-xs font-extrabold text-zinc-850">
                               {bookingAdults}
                             </span>
                             <button
                               type="button"
                               onClick={() => setBookingAdults(Math.min(activeExperience.capacity, bookingAdults + 1))}
-                              className="bg-[#132033] border border-white/5 w-8 h-8 flex items-center justify-center rounded font-bold text-[#F4EFE6] hover:bg-[#E8711A] hover:text-[#0D1B2A] transition-colors"
+                              className="bg-white border border-zinc-300 w-8 h-8 flex items-center justify-center rounded-lg font-bold text-zinc-700 hover:bg-[#E8711A] hover:text-[#0D1B2A] hover:border-[#E8711A] transition-colors cursor-pointer"
                             >
                               +
                             </button>
@@ -520,24 +530,24 @@ export default function ExperiencesView({
                         {/* 2. Crianças */}
                         <div className="flex items-center justify-between">
                           <div className="text-left">
-                            <span className="text-xs font-bold text-[#F4EFE6] block">Crianças</span>
-                            <span className="text-[10px] text-[#8A96A3]">De 4 a 10 anos (Sugerido 50%)</span>
+                            <span className="text-xs font-bold text-zinc-800 block">Crianças</span>
+                            <span className="text-[10px] text-zinc-500">De 4 a 10 anos (Sugerido 50%)</span>
                           </div>
                           <div className="flex items-center gap-2">
                             <button
                               type="button"
                               onClick={() => setBookingChildren(Math.max(0, bookingChildren - 1))}
-                              className="bg-[#132033] border border-white/5 w-8 h-8 flex items-center justify-center rounded font-bold text-[#F4EFE6] hover:bg-[#E8711A] hover:text-[#0D1B2A] transition-colors"
+                              className="bg-white border border-zinc-300 w-8 h-8 flex items-center justify-center rounded-lg font-bold text-zinc-700 hover:bg-[#E8711A] hover:text-[#0D1B2A] hover:border-[#E8711A] transition-colors cursor-pointer"
                             >
                               -
                             </button>
-                            <span className="w-8 text-center font-accent text-xs font-bold text-[#F4EFE6]">
+                            <span className="w-8 text-center font-accent text-xs font-extrabold text-zinc-850">
                               {bookingChildren}
                             </span>
                             <button
                               type="button"
                               onClick={() => setBookingChildren(Math.min(activeExperience.capacity - bookingAdults, bookingChildren + 1))}
-                              className="bg-[#132033] border border-white/5 w-8 h-8 flex items-center justify-center rounded font-bold text-[#F4EFE6] hover:bg-[#E8711A] hover:text-[#0D1B2A] transition-colors"
+                              className="bg-white border border-zinc-300 w-8 h-8 flex items-center justify-center rounded-lg font-bold text-zinc-700 hover:bg-[#E8711A] hover:text-[#0D1B2A] hover:border-[#E8711A] transition-colors cursor-pointer"
                             >
                               +
                             </button>
@@ -547,24 +557,24 @@ export default function ExperiencesView({
                         {/* 3. Bebês / Colo */}
                         <div className="flex items-center justify-between">
                           <div className="text-left">
-                            <span className="text-xs font-bold text-[#F4EFE6] block">Bebês / Colo</span>
-                            <span className="text-[10px] text-[#8A96A3]">Até 3 anos (Isento/Gratuito)</span>
+                            <span className="text-xs font-bold text-zinc-800 block">Bebês / Colo</span>
+                            <span className="text-[10px] text-zinc-500 font-sans">Até 3 anos (Isento)</span>
                           </div>
                           <div className="flex items-center gap-2">
                             <button
                               type="button"
                               onClick={() => setBookingInfants(Math.max(0, bookingInfants - 1))}
-                              className="bg-[#132033] border border-white/5 w-8 h-8 flex items-center justify-center rounded font-bold text-[#F4EFE6] hover:bg-[#E8711A] hover:text-[#0D1B2A] transition-colors"
+                              className="bg-white border border-zinc-300 w-8 h-8 flex items-center justify-center rounded-lg font-bold text-zinc-700 hover:bg-[#E8711A] hover:text-[#0D1B2A] hover:border-[#E8711A] transition-colors cursor-pointer"
                             >
                               -
                             </button>
-                            <span className="w-8 text-center font-accent text-xs font-bold text-[#F4EFE6]">
+                            <span className="w-8 text-center font-accent text-xs font-extrabold text-zinc-850">
                               {bookingInfants}
                             </span>
                             <button
                               type="button"
                               onClick={() => setBookingInfants(Math.min(activeExperience.capacity - (bookingAdults + bookingChildren), bookingInfants + 1))}
-                              className="bg-[#132033] border border-white/5 w-8 h-8 flex items-center justify-center rounded font-bold text-[#F4EFE6] hover:bg-[#E8711A] hover:text-[#0D1B2A] transition-colors"
+                              className="bg-white border border-zinc-300 w-8 h-8 flex items-center justify-center rounded-lg font-bold text-zinc-700 hover:bg-[#E8711A] hover:text-[#0D1B2A] hover:border-[#E8711A] transition-colors cursor-pointer"
                             >
                               +
                             </button>
@@ -572,17 +582,17 @@ export default function ExperiencesView({
                         </div>
 
                         {/* Total Count Warn */}
-                        <div className="flex justify-between items-center text-[10px] text-[#8A96A3] font-mono">
+                        <div className="flex justify-between items-center text-[10px] text-zinc-500 font-mono">
                           <span>Total de passageiros:</span>
-                          <span className={bookingAdults + bookingChildren + bookingInfants > activeExperience.capacity ? "text-red-500 font-bold" : "text-[#F4EFE6]"}>
+                          <span className={bookingAdults + bookingChildren + bookingInfants > activeExperience.capacity ? "text-red-500 font-bold" : "text-zinc-800 font-bold"}>
                             {bookingAdults + bookingChildren + bookingInfants} / {activeExperience.capacity} vagas
                           </span>
                         </div>
                       </div>
 
                       {/* OBSERVATIONS INPUT */}
-                      <div className="space-y-1.5">
-                        <label className="font-accent text-[10px] text-[#8A96A3] tracking-widest uppercase block">
+                      <div className="space-y-1.5 text-left">
+                        <label className="font-accent text-[10px] text-zinc-500 tracking-widest uppercase block font-bold">
                           📝 Observações especiais / Alergias / Mimos
                         </label>
                         <textarea
@@ -590,19 +600,19 @@ export default function ExperiencesView({
                           value={bookingObservations}
                           onChange={(e) => setBookingObservations(e.target.value)}
                           rows={2}
-                          className="w-full bg-[#132033] border border-white/10 p-3.5 text-xs text-[#F4EFE6] focus:outline-none focus:border-[#E8711A] font-sans resize-none"
+                          className="w-full bg-white border border-zinc-300 p-3.5 text-xs text-zinc-800 focus:outline-none focus:border-[#E8711A] focus:ring-1 focus:ring-[#E8711A] rounded-xl font-sans resize-none shadow-2xs"
                         />
                       </div>
 
                       {/* ESTIMATED Cost Calculation */}
-                      <div className="bg-[#E8711A]/5 p-3.5 border border-[#E8711A]/20 space-y-1 mt-6">
+                      <div className="bg-[#E8711A]/5 p-4 border border-[#E8711A]/15 rounded-2xl space-y-1 mt-6 shadow-2xs">
                         <div className="flex justify-between items-baseline font-sans text-xs">
-                          <span className="text-white">Estimativa do Roteiro:</span>
-                          <span className="font-bold text-lg text-[#E8711A] font-accent">
+                          <span className="text-zinc-750 font-medium">Estimativa do Roteiro:</span>
+                          <span className="font-extrabold text-xl text-[#E8711A] font-accent">
                             R$ {(activeExperience.priceFrom * bookingAdults) + (activeExperience.priceFrom * 0.5 * bookingChildren)}
                           </span>
                         </div>
-                        <p className="text-[10px] text-[#8A96A3] font-sans">
+                        <p className="text-[10px] text-zinc-500 font-sans leading-relaxed">
                           *Apenas estimativa. Crianças sugerido 50%; bebês isentos. Pagamento acordado no atendimento.
                         </p>
                       </div>
@@ -610,18 +620,18 @@ export default function ExperiencesView({
                       <button
                         type="submit"
                         disabled={bookingAdults + bookingChildren + bookingInfants > activeExperience.capacity}
-                        className={`w-full py-4 text-xs font-accent font-bold tracking-[0.12em] uppercase rounded shadow-lg transition-all flex items-center justify-center gap-1.5 ${
+                        className={`w-full py-4 text-xs font-accent font-extrabold tracking-[0.12em] uppercase rounded-xl shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                           bookingAdults + bookingChildren + bookingInfants > activeExperience.capacity
-                            ? "bg-zinc-700 text-zinc-400 cursor-not-allowed"
-                            : "bg-[#E8711A] hover:bg-[#C45E12] text-[#0D1B2A] cursor-pointer"
+                            ? "bg-zinc-200 text-zinc-400 cursor-not-allowed"
+                            : "bg-[#E8711A] hover:bg-[#C45E12] text-[#0D1B2A]"
                         }`}
                       >
-                        <Plus className="w-4 h-4" /> ADICIONAR AO MEU ROTEIRO
+                        <Plus className="w-4 h-4" /> INCLUIR NO MEU ROTEIRO
                       </button>
                     </form>
                   </div>
 
-                  <p className="font-sans text-[10px] text-[#8A96A3]/65 text-center mt-6">
+                  <p className="font-sans text-[10px] text-zinc-500/80 text-center mt-6 leading-relaxed">
                     A seleção será salva no carrinho para você enviar no WhatsApp simultaneamente de forma agregada!
                   </p>
                 </div>

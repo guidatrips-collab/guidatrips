@@ -6,7 +6,8 @@
 import React, { useState } from "react";
 import { 
   Compass, Check, ArrowRight, Play, Star, Sparkles, MapPin, 
-  Smile, Heart, Gift, Users, Calendar, Trophy, ChevronRight, Send, HelpCircle, BookOpen, Hotel, Map, Coffee, Clipboard, Waves, Camera
+  Smile, Heart, Gift, Users, Calendar, Trophy, ChevronRight, Send, HelpCircle, BookOpen, Hotel, Map, Coffee, Clipboard, Waves, Camera,
+  Palmtree, Utensils, Moon
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { Experience, BookingCartItem, GlobalSettings } from "../types";
@@ -85,6 +86,17 @@ export default function HomeView({
       badge: "🤫 PRIVACIDADE"
     }
   ];
+
+  const categoryIcons: Record<string, React.ComponentType<{ className?: string }>> = {
+    praias: Palmtree,
+    gastronomia: Utensils,
+    experiencias: Compass,
+    hospedagens: Hotel,
+    noite: Moon,
+    trilhas: Map,
+    mergulho: Waves,
+    sobre: BookOpen,
+  };
 
   const categories = [
     { id: "praias", label: "PRAIAS", count: "8 praias", color: "bg-[#0A2540]" },
@@ -499,30 +511,36 @@ export default function HomeView({
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {categories.map((cat, idx) => (
-              <div
-                key={cat.id}
-                onClick={() => onNavigate(cat.id)}
-                className="group relative h-40 bg-white border border-zinc-200 rounded-lg p-6 flex flex-col justify-between items-start cursor-pointer transition-all duration-300 hover:border-[#E8711A] hover:shadow-[0_8px_25px_rgba(232,113,26,0.06)] hover:-translate-y-0.5 text-left"
-              >
-                <div className="flex justify-between items-start w-full">
-                  <span className="font-accent text-[10px] text-zinc-400 font-bold">0{idx + 1}</span>
-                  <span className="w-6 h-6 rounded-full bg-zinc-50 border border-zinc-200 text-[#0D1B2A] flex items-center justify-center text-xs font-bold group-hover:bg-[#E8711A] group-hover:text-[#0D1B2A] group-hover:border-[#E8711A] transition-colors">
-                    &rarr;
-                  </span>
+          <div className="grid grid-cols-3 gap-2.5 sm:gap-6">
+            {categories.map((cat, idx) => {
+              const IconComponent = categoryIcons[cat.id] || Compass;
+              return (
+                <div
+                  key={cat.id}
+                  onClick={() => onNavigate(cat.id)}
+                  className="group relative bg-white border border-zinc-200 rounded-xl sm:rounded-2xl p-2.5 xs:p-4 sm:p-6 flex flex-col justify-between items-start cursor-pointer transition-all duration-300 hover:border-[#E8711A] hover:shadow-[0_12px_30px_rgba(232,113,26,0.06)] hover:-translate-y-1 text-left h-28 xs:h-32 sm:h-40 md:h-44"
+                >
+                  <div className="flex justify-between items-center w-full">
+                    <div className="p-1.5 xs:p-2 sm:p-3.5 bg-[#FAF8F5] text-zinc-700 group-hover:bg-[#E8711A]/10 group-hover:text-[#E8711A] rounded-lg sm:rounded-xl transition-all duration-300">
+                      <IconComponent className="w-3.5 h-3.5 xs:w-4 xs:h-4 sm:w-5 sm:h-5 stroke-[2]" />
+                    </div>
+                    <span className="w-5 h-5 xs:w-6 h-6 sm:w-7 h-7 rounded-full bg-zinc-50 border border-zinc-200 text-zinc-650 flex items-center justify-center text-[8px] xs:text-xs font-bold group-hover:bg-[#E8711A] group-hover:text-white group-hover:border-[#E8711A] transition-all duration-300">
+                      &rarr;
+                    </span>
+                  </div>
+                  
+                  <div className="w-full">
+                    <span className="font-accent text-[8px] sm:text-[9px] text-zinc-400 font-bold block mb-0.5 sm:mb-1">0{idx + 1}</span>
+                    <h3 className="font-serif text-[10px] xs:text-xs sm:text-base md:text-lg font-extrabold text-[#0D1B2A] tracking-tight group-hover:text-[#E8711A] transition-colors leading-tight truncate sm:whitespace-normal">
+                      {cat.label}
+                    </h3>
+                    <span className="font-sans text-[8px] xs:text-[9px] sm:text-xs text-zinc-400 block mt-0.5 sm:mt-1 tracking-wide">
+                      {cat.count} Curados
+                    </span>
+                  </div>
                 </div>
-                
-                <div>
-                  <h3 className="font-serif text-lg font-bold text-[#0D1B2A] tracking-tight group-hover:text-[#E8711A] transition-colors">
-                    {cat.label}
-                  </h3>
-                  <span className="font-sans text-[11px] text-zinc-400 block mt-0.5">
-                    {cat.count} Curados
-                  </span>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
         </div>
@@ -816,10 +834,10 @@ export default function HomeView({
                               setConfigAdults(2);
                               setActiveConfigId(item.id);
                             }}
-                            className="flex-1 sm:flex-initial px-4 py-2 bg-white hover:bg-zinc-50 text-[#0D1B2A] border border-zinc-200 font-accent text-[10px] font-extrabold tracking-widest uppercase transition-colors rounded-sm flex items-center justify-center gap-1.5 cursor-pointer"
+                            className="flex-1 sm:flex-initial px-4 py-2.5 bg-white hover:bg-zinc-50 text-[#0D1B2A] border border-zinc-200 font-accent text-[10px] font-extrabold tracking-widest uppercase transition-colors rounded-xl flex items-center justify-center gap-1.5 cursor-pointer"
                             title="Personalize e inclua no seu roteiro inteligente do site"
                           >
-                            <span>➕</span> ADD AO ROTEIRO
+                            <span>➕</span> Incluir no meu Roteiro
                           </button>
 
                           {/* Option 2: Direct book via WhatsApp (Skips the smart itinerary) */}
@@ -827,10 +845,13 @@ export default function HomeView({
                             href={`https://wa.me/${(settings?.whatsappNumber || "552299887766").replace(/\D/g, "")}?text=${encodeURIComponent(`Olá, Guida Trips! Gostaria de agendar o passeio *${item.name}* diretamente de forma avulsa, sem utilizar o roteiro inteligente. Quais datas e horários vocês recomendam?`)}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="flex-1 sm:flex-initial px-3.5 py-2 bg-[#0D1B2A] hover:bg-[#E8711A] text-white hover:text-[#0D1B2A] font-accent text-[10px] font-extrabold tracking-widest uppercase transition-colors rounded-sm flex items-center justify-center gap-1"
+                            className="flex-1 sm:flex-initial px-4 py-2.5 bg-[#25D366] hover:bg-[#20ba59] text-white font-accent text-[10px] font-extrabold tracking-widest uppercase transition-all duration-300 rounded-xl flex items-center justify-center gap-1.5 shadow-xs hover:shadow-sm"
                             title="Agende diretamente via WhatsApp sem passar pelo roteiro"
                           >
-                            <span>💬</span> AVULSUR/DIRETO
+                            <svg className="w-3.5 h-3.5 fill-current shrink-0" viewBox="0 0 24 24">
+                              <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.513 2.263 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.717-1.455L0 24zm6.59-4.846c1.642.974 3.255 1.511 4.75 1.516 5.31.002 9.533-4.223 9.536-9.426.002-2.522-.98-4.893-2.766-6.679A9.324 9.324 0 0 0 12.009 1.83C6.702 1.83 2.38 6.155 2.378 11.46c0 1.637.451 3.232 1.309 4.63l-.994 3.635 3.73-.978l-.376-.233zm11.536-5.183c-.303-.151-1.792-.883-2.073-.984-.282-.102-.487-.151-.692.151-.204.303-.79.984-.968 1.186-.179.203-.358.227-.661.076-1.554-.778-2.656-1.353-3.714-3.172-.279-.481.279-.446.797-1.478.087-.179.044-.336-.022-.487-.066-.151-.57-1.373-.78-1.88-.204-.492-.448-.423-.615-.432-.158-.008-.34-.01-.522-.01s-.477.068-.727.342c-.25.274-.954.933-.954 2.274s.974 2.637 1.11 2.822c.137.185 1.917 2.927 4.644 4.103 1.648.71 2.503.784 3.298.666.864-.13 1.792-.733 2.043-1.41.25-.677.25-1.258.175-1.41-.074-.153-.28-.25-.583-.4z"/>
+                            </svg>
+                            Reservar Direto
                           </a>
                         </div>
                       )}

@@ -793,7 +793,7 @@ export default function RoteiroView({
                           }}
                           className="w-full text-center py-2 bg-[#0D1B2A] text-white hover:bg-[#E8711A] hover:text-[#0D1B2A] text-[11px] font-semibold rounded-xl transition-colors cursor-pointer"
                         >
-                          + Incluir no Roteiro
+                          + Incluir no meu Roteiro
                         </button>
                       </div>
                     ))}
