@@ -1,0 +1,78 @@
+{
+  "collections": {
+    "experiences": {
+      "schema": {
+        "id": "string",
+        "name": "string",
+        "slug": "string",
+        "category": "string",
+        "shortDescription": "string",
+        "fullDescription": "string",
+        "duration": "string",
+        "capacity": "number",
+        "priceFrom": "number",
+        "included": "array",
+        "notIncluded": "array",
+        "meetingPoint": "string",
+        "coordinates": "map",
+        "photos": "array",
+        "videoEmbed": "string",
+        "whatsappMessage": "string",
+        "status": "string",
+        "featured": "boolean",
+        "badge": "string",
+        "schedules": "array",
+        "recommendations": "array",
+        "faqs": "array",
+        "seo": "map",
+        "createdAt": "string",
+        "updatedAt": "string"
+      }
+    },
+    "posts": {
+      "schema": {
+        "id": "string",
+        "title": "string",
+        "slug": "string",
+        "category": "string",
+        "tags": "array",
+        "coverImage": "string",
+        "excerpt": "string",
+        "body": "string",
+        "seo": "map",
+        "status": "string",
+        "publishedAt": "string",
+        "views": "number",
+        "readTime": "number"
+      }
+    },
+    "leads": {
+      "schema": {
+        "id": "string",
+        "name": "string",
+        "phone": "string",
+        "email": "string",
+        "experienceInterest": "array",
+        "preferredDate": "string",
+        "groupSize": "number",
+        "origin": "string",
+        "status": "string",
+        "notes": "array",
+        "createdAt": "string",
+        "updatedAt": "string"
+      }
+    },
+    "settings": {
+      "schema": {
+        "whatsappNumber": "string",
+        "whatsappGreeting": "string",
+        "businessHours": "string",
+        "googleAnalyticsId": "string",
+        "metaPixelId": "string",
+        "socialLinks": "map",
+        "diferencialTitle": "string",
+        "diferencialDescription": "string"
+      }
+    }
+  }
+}

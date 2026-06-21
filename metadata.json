@@ -1,0 +1,6 @@
+{
+  "name": "Guida Trips",
+  "description": "Curadoria de experiências de viagem premium em Arraial do Cabo. Roteiros náuticos, off-road, temporada de baleias e concierge exclusivo de viagens.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

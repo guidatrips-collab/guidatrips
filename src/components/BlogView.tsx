@@ -1,0 +1,294 @@
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+import React, { useState, useEffect } from "react";
+import { BookOpen, Search, Calendar, Clock, ArrowLeft, ArrowUpRight, Share2, MessageCircle } from "lucide-react";
+import { BlogPost } from "../types";
+import { motion } from "motion/react";
+
+interface BlogViewProps {
+  posts: BlogPost[];
+  onNavigateToContact: () => void;
+  selectedSlug: string | null;
+  onSelectPost: (slug: string | null) => void;
+}
+
+export default function BlogView({ posts, onNavigateToContact, selectedSlug, onSelectPost }: BlogViewProps) {
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const activePost = posts.find((p) => p.slug === selectedSlug && p.status === "published");
+
+  // Increment view count simulated when post opens
+  useEffect(() => {
+    if (activePost) {
+      activePost.views += 1;
+      window.scrollTo(0, 0);
+    }
+  }, [selectedSlug]);
+
+  const filteredPosts = posts.filter((post) => {
+    const matchesSearch =
+      post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      post.excerpt.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      post.body.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesSearch && post.status === "published";
+  });
+
+  const formatDate = (dateStr: string) => {
+    const d = new Date(dateStr);
+    return d.toLocaleDateString("pt-BR", {
+      day: "2-digit",
+      month: "long",
+      year: "numeric",
+    });
+  };
+
+  // Render focused article details
+  if (activePost) {
+    const relatedPosts = posts
+      .filter((p) => p.id !== activePost.id && p.status === "published")
+      .slice(0, 2);
+
+    return (
+      <div id="blog-reading-view" className="py-24 bg-[#0D1B2A]">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
+          
+          {/* Breadcrumb de Navegação */}
+          <nav className="flex items-center gap-2 text-[10px] font-accent text-[#8A96A3] uppercase tracking-wider mb-8">
+            <button onClick={() => onSelectPost(null)} className="hover:text-[#E8711A]">Início/Revista</button>
+            <span>&gt;</span>
+            <span className="text-[#8A96A3]">{activePost.category}</span>
+            <span>&gt;</span>
+            <span className="text-[#F4EFE6] truncate max-w-[200px]">{activePost.title}</span>
+          </nav>
+
+          {/* Botão de Retrocesso */}
+          <button 
+            onClick={() => onSelectPost(null)}
+            className="flex items-center gap-2 text-xs font-accent font-bold text-[#E8711A] hover:text-[#F4EFE6] uppercase tracking-widest mb-6"
+          >
+            <ArrowLeft className="w-4 h-4" /> Voltar para a Revista
+          </button>
+
+          {/* Cabeçalho do Post */}
+          <div className="space-y-4 mb-8">
+            <span className="bg-[#E8711A]/10 border border-[#E8711A]/20 text-[#E8711A] font-accent text-[9px] font-bold tracking-widest px-2.5 py-1 uppercase rounded-sm inline-block">
+              {activePost.category}
+            </span>
+            
+            <h1 className="font-serif text-3xl sm:text-4xl md:text-5xl font-extrabold text-[#F4EFE6] tracking-tight leading-tight">
+              {activePost.title}
+            </h1>
+
+            <div className="flex flex-wrap items-center gap-4 text-xs font-sans text-[#8A96A3] border-t border-b border-white/5 py-4 mt-6">
+              <div className="flex items-center gap-1.5">
+                <Calendar className="w-3.5 h-3.5 text-[#E8711A]" />
+                <span>{formatDate(activePost.publishedAt)}</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <Clock className="w-3.5 h-3.5 text-[#E8711A]" />
+                <span>{activePost.readTime} min de leitura</span>
+              </div>
+              <div className="sm:ml-auto flex items-center gap-2 bg-[#132033]/60 px-3 py-1 rounded border border-white/5 font-accent text-[10px]">
+                <span>👁 {activePost.views} visualizações</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Banner de Capa */}
+          <div className="relative h-64 sm:h-[450px] overflow-hidden rounded-sm border border-white/5 mb-10 select-none">
+            <img 
+              src={activePost.coverImage} 
+              className="w-full h-full object-cover filter brightness-90" 
+              alt={activePost.title} 
+            />
+          </div>
+
+          {/* Corpo do Artigo e Tabela de Conteúdo Sticking Lateral */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+            
+            {/* Outline Guia (Sidebar 4 colunas) */}
+            <div className="lg:col-span-4 space-y-6 lg:sticky lg:top-24 h-fit">
+              <div className="bg-[#132033] border border-white/5 rounded-sm p-6 space-y-4">
+                <h4 className="font-accent text-xs font-bold text-white tracking-widest uppercase">CONTEÚDO DA VIAGEM</h4>
+                <ul className="space-y-4 font-sans text-xs text-[#8A96A3]">
+                  <li className="flex items-center gap-2 hover:text-[#E8711A] cursor-pointer">
+                    <span className="w-1.5 h-1.5 bg-[#E8711A] rounded-full"></span>
+                    <span>Análise do Cenário</span>
+                  </li>
+                  <li className="flex items-center gap-2 hover:text-[#E8711A] cursor-pointer">
+                    <span className="w-1.5 h-1.5 bg-neutral-600 rounded-full"></span>
+                    <span>Planejamento tático</span>
+                  </li>
+                  <li className="flex items-center gap-2 hover:text-[#E8711A] cursor-pointer">
+                    <span className="w-1.5 h-1.5 bg-neutral-600 rounded-full"></span>
+                    <span>O Roteiro Secreto</span>
+                  </li>
+                </ul>
+              </div>
+
+              {/* Botão de Destaque para conversão direta */}
+              <div className="bg-[#E8711A]/5 border border-[#E8711A]/20 p-6 rounded-sm space-y-4 text-center">
+                <span className="font-accent text-[9px] text-[#E8711A] font-bold tracking-widest uppercase block">CONVERSA CURADA</span>
+                <p className="font-sans text-xs text-[#8A96A3]">
+                  Deseja montar um roteiro em cima das dicas deste artigo com guias exclusivos?
+                </p>
+                <button
+                  onClick={onNavigateToContact}
+                  className="w-full py-3 bg-[#E8711A] hover:bg-[#C45E12] text-[#0D1B2A] font-accent text-xs font-bold tracking-widest uppercase rounded-sm cursor-pointer transition-colors flex items-center justify-center gap-1.5"
+                >
+                  <MessageCircle className="w-4 h-4" /> FALAR COM CONCIERGE
+                </button>
+              </div>
+            </div>
+
+            {/* Texto Editorial (8 colunas) */}
+            <div className="lg:col-span-8 space-y-8">
+              <article className="prose prose-invert max-w-none text-left">
+                {/* Process text paragraphs beautifully */}
+                <div className="font-sans text-xs sm:text-base text-[#8A96A3] leading-relaxed whitespace-pre-line space-y-6">
+                  {activePost.body}
+                </div>
+              </article>
+              
+              {/* Box Compartilhar */}
+              <div className="border-t border-b border-white/5 py-4 flex items-center justify-between text-xs font-sans text-[#8A96A3]">
+                <span>Curtiu as referências de Arraial?</span>
+                <button
+                  onClick={() => alert("Link de compartilhamento copiado para a área de transferência!")}
+                  className="flex items-center gap-1 hover:text-[#E8711A] font-accent font-bold uppercase tracking-wider text-[10px]"
+                >
+                  <Share2 className="w-3.5 h-3.5" /> Compartilhar roteiro
+                </button>
+              </div>
+            </div>
+
+          </div>
+
+          {/* MATÉRIAS RELACIONADAS */}
+          {relatedPosts.length > 0 && (
+            <div className="mt-20 pt-12 border-t border-white/5 space-y-8 text-left">
+              <h3 className="font-serif text-xl font-bold text-[#F4EFE6]">Outros Diários de Viagem Recomendados</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+                {relatedPosts.map((post) => (
+                  <div 
+                    key={post.id}
+                    onClick={() => onSelectPost(post.slug)}
+                    className="group bg-[#132033] border border-white/5 rounded-sm overflow-hidden p-4 flex gap-4 cursor-pointer hover:border-[#E8711A] transition-colors"
+                  >
+                    <div className="w-20 h-20 shrink-0 rounded overflow-hidden">
+                      <img src={post.coverImage} className="w-full h-full object-cover" alt={post.title} />
+                    </div>
+                    <div className="space-y-1">
+                      <span className="font-accent text-[8px] text-[#E8711A] uppercase tracking-wider block">{post.category}</span>
+                      <h4 className="font-serif text-xs sm:text-sm font-bold text-[#F4EFE6] group-hover:text-[#E8711A] line-clamp-2 transition-colors">
+                        {post.title}
+                      </h4>
+                      <span className="font-accent text-[9px] text-[#8A96A3]">{post.readTime} min read</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+        </div>
+      </div>
+    );
+  }
+
+  // Render grid list
+  return (
+    <div id="blog-magazine-view" className="py-24 bg-[#0D1B2A]">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
+        
+        {/* HEADER */}
+        <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
+          <span className="font-accent text-[#E8711A] text-xs font-bold tracking-widest uppercase">
+            Revista de Bordo Digital
+          </span>
+          <h1 className="font-serif text-3xl sm:text-5xl font-extrabold text-[#F4EFE6] tracking-tight leading-tight">
+            Diários, trilhas e segredos do mar.
+          </h1>
+          <p className="font-sans text-xs sm:text-sm text-[#8A96A3] leading-relaxed max-w-lg mx-auto">
+            Textos autorais escritos por nossos curadores, pescadores locais e biólogos para subsidiar seu planejamento.
+          </p>
+        </div>
+
+        {/* PESQUISA */}
+        <div className="flex items-center justify-between border-b border-white/5 pb-6 mb-12 gap-4">
+          <span className="font-accent text-[#8A96A3] text-xs font-bold tracking-widest uppercase">Artigos de Capa ({filteredPosts.length})</span>
+          <div className="relative w-72 h-10">
+            <Search className="absolute left-3 top-3 w-4 h-4 text-[#8A96A3]" />
+            <input
+              type="text"
+              placeholder="Pesquisar boletins de viagem..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-9 pr-3 py-2 bg-[#132033] border border-white/5 rounded-sm text-xs text-[#F4EFE6] focus:outline-none focus:border-[#E8711A] focus:ring-1 focus:ring-[#E8711A]"
+            />
+          </div>
+        </div>
+
+        {/* GRID PRINCIPAL DE MATÉRIAS */}
+        {filteredPosts.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {filteredPosts.map((post) => (
+              <div 
+                key={post.id}
+                onClick={() => onSelectPost(post.slug)}
+                className="group bg-[#132033] border border-white/5 rounded-sm overflow-hidden hover:border-[#E8711A] transition-all duration-300 flex flex-col justify-between cursor-pointer h-full shadow-md"
+              >
+                <div>
+                  {/* Capa */}
+                  <div className="h-52 relative overflow-hidden select-none mb-4">
+                    <img src={post.coverImage} className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-300 filter brightness-95" alt={post.title} />
+                    <span className="absolute bottom-4 left-4 font-accent text-[9px] font-bold tracking-widest text-[#E8711A] bg-black/60 px-2 py-0.5 uppercase">
+                      {post.category}
+                    </span>
+                  </div>
+
+                  {/* Conteúdo */}
+                  <div className="px-6 pb-2 space-y-3">
+                    <h3 className="font-serif text-lg font-bold text-[#F4EFE6] group-hover:text-[#E8711A] transition-colors line-clamp-2">
+                      {post.title}
+                    </h3>
+                    <p className="font-sans text-xs text-[#8A96A3] leading-relaxed line-clamp-3 select-none">
+                      {post.excerpt}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Footer specs */}
+                <div className="px-6 pb-6 pt-4 border-t border-white/[0.03] mt-4 flex items-center justify-between text-[10px] font-accent text-[#8A96A3] uppercase tracking-wider">
+                  <div className="flex items-center gap-1">
+                    <Calendar className="w-3.5 h-3.5 text-[#E8711A]" />
+                    <span>{formatDate(post.publishedAt)}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Clock className="w-3.5 h-3.5 text-[#E8711A]" />
+                    <span>{post.readTime} min read</span>
+                  </div>
+                </div>
+
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-20 bg-[#132033]/30 border border-white/5 rounded-sm">
+            <p className="font-sans text-xs text-[#8A96A3] mb-4">Sem artigos com esses filtros.</p>
+            <button
+              onClick={() => setSearchQuery("")}
+              className="px-6 py-2 bg-transparent border border-[#E8711A] text-[#E8711A] hover:bg-[#E8711A] hover:text-[#0D1B2A] font-accent text-xs font-bold uppercase transition-colors"
+            >
+              Resetar busca
+            </button>
+          </div>
+        )}
+
+      </div>
+    </div>
+  );
+}

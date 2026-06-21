@@ -1,0 +1,21 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Playfair Display", ui-serif, "Georgia", serif;
+  --font-accent: "Space Grotesk", sans-serif;
+
+  --color-navy: #0D1B2A;
+  --color-navy-mid: #132033;
+  --color-cream: #F4EFE6;
+  --color-orange: #E8711A;
+  --color-orange-dim: #C45E12;
+  --color-muted-text: #8A96A3;
+  --color-glass: rgba(255, 255, 255, 0.04);
+}
+
+/* Animations and transitions custom styles if needed */
+.editorial-text-shadow {
+  text-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+

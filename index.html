@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Guida Trips | Curadoria de Viagens e Experiências em Arraial do Cabo</title>
+    <!-- Preconnect Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- Load Playfair Display (Serif), Inter (Sans-serif), Space Grotesk (Accent-tech) -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,800;1,400&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+      /* Smooth transitions and scroll behavior globally */
+      html {
+        scroll-behavior: smooth;
+        background-color: #0d1b2a;
+        color: #f4efe6;
+      }
+      /* Custom fine scrollbar to match high-end magazine styles */
+      ::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #0d1b2a;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #1e3d59;
+        border-radius: 3px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #e8711a;
+      }
+    </style>
+  </head>
+  <body class="bg-[#0D1B2A] text-[#F4EFE6] min-h-screen overflow-x-hidden antialiased">
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+
