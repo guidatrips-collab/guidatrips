@@ -28,6 +28,8 @@ interface RoteiroViewProps {
   onSetClientCity: (city: string) => void;
   onTriggerWhatsapp: () => void;
   onNavigate: (view: string) => void;
+  selectedHotelId?: string | null;
+  onChangeHotelId?: (id: string | null) => void;
 }
 
 export default function RoteiroView({
@@ -45,7 +47,9 @@ export default function RoteiroView({
   onSetClientName,
   onSetClientCity,
   onTriggerWhatsapp,
-  onNavigate
+  onNavigate,
+  selectedHotelId = null,
+  onChangeHotelId
 }: RoteiroViewProps) {
   const [expandedIntercuso, setExpandedIntercuso] = useState<Record<string, boolean>>({});
   const [expandedPhotos, setExpandedPhotos] = useState<Record<string, boolean>>({});
@@ -143,7 +147,7 @@ export default function RoteiroView({
   };
 
   const totalEstimate = computeTotalCost();
-  const hasItems = cart.length > 0;
+  const hasItems = cart.length > 0 || selectedHotelId !== null;
 
   // Helpler to format date elegantly in Portuguese
   const formatFriendlyDate = (dateString: string) => {
@@ -300,6 +304,78 @@ export default function RoteiroView({
 
               {/* Day-by-Day Timeline Itinerary */}
               <div className="space-y-6">
+                {selectedHotelId && (() => {
+                  const hotelData = [
+                    {
+                      id: "pousada-timoneiro",
+                      name: "Pousada do Timoneiro",
+                      location: "Praia Grande",
+                      rating: 4.9,
+                      desc: "Acolhimento tátil excepcional, a poucos metros do pico para ver o pôr do sol nos Anjos.",
+                      img: "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=600&q=80"
+                    },
+                    {
+                      id: "pousada-caminho-mar",
+                      name: "Pousada Caminho do Mar",
+                      location: "Praia dos Anjos",
+                      rating: 4.8,
+                      desc: "Conectividade estratégica de embarque. Perfeito para noites sossegadas ao som de mar.",
+                      img: "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?auto=format&fit=crop&w=600&q=80"
+                    },
+                    {
+                      id: "ohana-pousada",
+                      name: "Ohana Pousada Boutique",
+                      location: "Pontal do Atalaia",
+                      rating: 5.0,
+                      desc: "Erguida nos despenhadeiros míticos com jacuzzi e bar flutuante olhando a imensidão costeira.",
+                      img: "https://images.unsplash.com/photo-1584132967334-10e028bd69f7?auto=format&fit=crop&w=600&q=80"
+                    }
+                  ].find(h => h.id === selectedHotelId);
+
+                  if (!hotelData) return null;
+
+                  return (
+                    <div className="bg-white border-2 border-[#E8711A] rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow text-left flex flex-col md:flex-row">
+                      <div className="md:w-1/3 relative h-48 md:h-auto min-h-[160px]">
+                        <img 
+                          src={hotelData.img} 
+                          alt={hotelData.name} 
+                          className="w-full h-full object-cover"
+                        />
+                        <span className="absolute bottom-3 left-3 bg-[#E8711A] text-white text-[9px] font-accent tracking-widest uppercase px-2.5 py-1 rounded-sm font-extrabold">
+                          🏨 HOSPEDAGEM VINCULADA
+                        </span>
+                      </div>
+                      <div className="p-6 md:w-2/3 flex flex-col justify-between space-y-4">
+                        <div className="space-y-1.5">
+                          <div className="flex items-center gap-1.5 text-xs text-[#E8711A] font-bold uppercase tracking-wider font-accent">
+                            <span>⭐ {hotelData.rating}</span>
+                            <span>•</span>
+                            <span>📍 {hotelData.location}</span>
+                          </div>
+                          <h3 className="font-serif text-xl font-bold text-[#0D1B2A] leading-tight">
+                            {hotelData.name}
+                          </h3>
+                          <p className="font-sans text-xs text-[#5C6874] leading-relaxed">
+                            {hotelData.desc}
+                          </p>
+                        </div>
+                        <div className="pt-3 border-t border-zinc-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                          <span className="font-sans text-[11px] text-zinc-500 italic">
+                            Benefícios exclusivos Guida Trips inclusos para a sua reserva!
+                          </span>
+                          <button
+                            onClick={() => onChangeHotelId && onChangeHotelId(null)}
+                            className="px-3 py-1.5 border border-zinc-200 hover:border-red-200 text-zinc-500 hover:text-red-500 rounded text-[10px] font-accent uppercase tracking-widest transition-colors cursor-pointer"
+                          >
+                            Remover ×
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
+
                 {Array.from({ length: stayDays }).map((_, dIdx) => {
                   const dayNum = dIdx + 1;
                   const dayItems = cart.filter(item => item.dayIndex === dayNum);

@@ -9,17 +9,36 @@ import {
   Smile, Heart, Gift, Users, Calendar, Trophy, ChevronRight, Send, HelpCircle, BookOpen, Hotel, Map, Coffee, Clipboard, Waves, Camera
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
-import { GlobalSettings } from "../types";
+import { Experience, BookingCartItem, GlobalSettings } from "../types";
 
 interface HomeViewProps {
   onNavigate: (view: string) => void;
-  onAddToCart?: (item: { experienceId: string; date: string; people: number }) => void;
+  onAddToCart?: (item: BookingCartItem) => void;
   settings?: GlobalSettings;
+  experiences?: Experience[];
+  selectedHotelId?: string | null;
+  onChangeHotelId?: (id: string | null) => void;
+  stayDays?: number;
 }
 
-export default function HomeView({ onNavigate, onAddToCart, settings }: HomeViewProps) {
+export default function HomeView({ 
+  onNavigate, 
+  onAddToCart, 
+  settings, 
+  experiences = [], 
+  selectedHotelId = null, 
+  onChangeHotelId,
+  stayDays = 3
+}: HomeViewProps) {
   const [activeCultureTab, setActiveCultureTab] = useState<"sabores" | "lounges" | "noite" | "nativismo">("sabores");
   const [showVideoLightbox, setShowVideoLightbox] = useState(false);
+
+  // States of the micro-itinerary configurator drawer inside the homepage cards
+  const [activeConfigId, setActiveConfigId] = useState<string | null>(null);
+  const [configDay, setConfigDay] = useState<number>(1);
+  const [configSchedule, setConfigSchedule] = useState<string>("");
+  const [configAdults, setConfigAdults] = useState<number>(2);
+  const [successNotifId, setSuccessNotifId] = useState<string | null>(null);
 
   // ALQUIMISTA DE ROTEIRO STATE (PREMIUM UX TOOL)
   const [alchemyStep, setAlchemyStep] = useState(1);
@@ -256,7 +275,13 @@ export default function HomeView({ onNavigate, onAddToCart, settings }: HomeView
         onAddToCart({
           experienceId: exp.id,
           date: today,
-          people: 2
+          schedule: "08:30",
+          adults: 2,
+          children: 0,
+          infants: 0,
+          people: 2,
+          observations: "Adicionado via Alquimista de Roteiro ✨",
+          dayIndex: 1
         });
       });
       setAlchemyShowSuccess(true);
@@ -520,64 +545,300 @@ export default function HomeView({ onNavigate, onAddToCart, settings }: HomeView
             
             <button
               onClick={() => onNavigate("experiencias")}
-              className="px-5 py-3 border border-[#0D1B2A] hover:bg-[#0D1B2A] hover:text-white text-[#0D1B2A] font-accent text-xs font-bold tracking-widest uppercase transition-colors rounded"
+              className="px-5 py-3 border border-[#0D1B2A] hover:bg-[#0D1B2A] hover:text-white text-[#0D1B2A] font-accent text-xs font-bold tracking-widest uppercase transition-colors rounded cursor-pointer"
             >
               Ver Todas as Experiências &rarr;
             </button>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {indexExperiences.map((item) => (
-              <div 
-                key={item.id}
-                className="bg-white border border-zinc-200 rounded-lg overflow-hidden flex flex-col justify-between hover:shadow-[0_12px_30px_rgba(13,27,42,0.04)] hover:border-[#E8711A]/20 transition-all duration-300 group"
-              >
-                {/* Image Composition */}
-                <div className="h-60 relative overflow-hidden">
-                  <img 
-                    src={item.img} 
-                    alt={item.name} 
-                    className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-500 filter brightness-95"
-                  />
-                  {item.badge && (
-                    <span className="absolute top-4 left-4 bg-[#E8711A] text-[#0D1B2A] font-accent text-[9px] font-extrabold tracking-widest uppercase px-2.5 py-1.5 rounded-sm">
-                      {item.badge}
-                    </span>
-                  )}
-                  <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm text-[#0D1B2A] font-accent text-[10px] font-bold px-2.5 py-1.5 rounded-sm flex items-center gap-1 shadow">
-                    <Star className="w-3.5 h-3.5 fill-[#E8711A] text-[#E8711A]" />
-                    <span>{item.rating}</span>
-                  </div>
-                </div>
+            {(() => {
+              const activeExps = experiences && experiences.length > 0
+                ? experiences.filter((e) => e.status === "active").slice(0, 3)
+                : [
+                    {
+                      id: "passeio-barco-premium",
+                      name: "Cruzeiro Náutico Premium — Ilha do Farol & Pontal",
+                      priceFrom: 120,
+                      duration: "4 horas",
+                      shortDescription: "Navegação silenciosa com catering de bordo requintado, desembarque antecipado controlado e atenção calorosa.",
+                      photos: ["https://images.unsplash.com/photo-1505118380757-91f5f5632de0?auto=format&fit=crop&w=600&q=80"],
+                      badge: "O Mais Querido",
+                      location: "Arraial do Cabo",
+                      schedules: ["08:00", "12:30"]
+                    } as unknown as Experience,
+                    {
+                      id: "buggy-massambaba",
+                      name: "Expedição Buggy Off-Road — Dunas de Massambaba",
+                      priceFrom: 180,
+                      duration: "3h30",
+                      shortDescription: "Aventura pelas areias puras desbravando dunas gigantes, restingas protegidas e um pôr do sol inesquecível.",
+                      photos: ["https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=600&q=80"],
+                      badge: "Adrenalina Segura",
+                      location: "Arraial do Cabo",
+                      schedules: ["09:00", "14:00"]
+                    } as unknown as Experience,
+                    {
+                      id: "temporada-baleias-avistamento",
+                      name: "Safári Costeiro — Avistamento de Baleias Jubarte",
+                      priceFrom: 220,
+                      duration: "3 horas",
+                      shortDescription: "Navegação respeitosa guiada por nossa bióloga marinha nas rotas migratórias entre Junho e Outubro.",
+                      photos: ["https://images.unsplash.com/photo-1502082553048-f009c37129b9?auto=format&fit=crop&w=600&q=80"],
+                      badge: "De Temporada",
+                      location: "Arraial do Cabo",
+                      schedules: ["07:30", "11:30"]
+                    } as unknown as Experience
+                  ];
 
-                {/* Info Text */}
-                <div className="p-6 text-left flex-grow space-y-3">
-                  <h3 className="font-serif text-lg font-bold text-[#0D1B2A] hover:text-[#E8711A] transition-colors leading-snug">
-                    {item.name}
-                  </h3>
-                  <p className="font-sans text-xs text-[#5C6874] leading-relaxed">
-                    {item.desc}
-                  </p>
-                </div>
+              return activeExps.map((item) => {
+                const isConfiguring = activeConfigId === item.id;
+                const showSuccess = successNotifId === item.id;
+                const itemSchedules = item.schedules && item.schedules.length > 0 ? item.schedules : ["08:00", "14:00"];
+                const itemBadgeText = item.badge === "mais-vendido" ? "🔥 Mais Vendido" : item.badge === "novidade" ? "✨ Novidade" : item.badge === "temporada" ? "🐋 Temporada" : item.badge || "Recomendado";
+                const itemPhoto = item.photos && item.photos.length > 0 ? item.photos[0] : "https://images.unsplash.com/photo-1505118380757-91f5f5632de0?auto=format&fit=crop&w=600&q=80";
 
-                {/* Lower pricing & button */}
-                <div className="p-6 border-t border-zinc-100 bg-zinc-50 flex items-center justify-between">
-                  <div className="text-left">
-                    <span className="font-accent text-[8px] text-zinc-400 uppercase tracking-widest block font-bold">VALOR DO PIQUENIQUE/TICKET</span>
-                    <span className="font-serif text-sm font-bold text-[#0D1B2A]">
-                      A partir de <strong className="text-base text-[#E8711A]">R$ {item.price}</strong>
-                    </span>
-                  </div>
-
-                  <button
-                    onClick={() => onNavigate("experiencias")}
-                    className="px-4 py-2.5 bg-[#0D1B2A] hover:bg-[#E8711A] text-white hover:text-[#0D1B2A] font-accent text-[10px] font-bold tracking-widest uppercase transition-colors rounded-sm flex items-center gap-1"
+                return (
+                  <div 
+                    key={item.id}
+                    className="bg-white border border-zinc-200 rounded-lg overflow-hidden flex flex-col justify-between hover:shadow-[0_12px_30px_rgba(13,27,42,0.04)] hover:border-[#E8711A]/20 transition-all duration-300 group relative"
                   >
-                    MONTAR ROTEIRO &rarr;
-                  </button>
-                </div>
-              </div>
-            ))}
+                    {/* Upper content */}
+                    <div>
+                      {/* Image Composition */}
+                      <div className="h-60 relative overflow-hidden">
+                        <img 
+                          src={itemPhoto} 
+                          alt={item.name} 
+                          className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-500 filter brightness-95"
+                        />
+                        {itemBadgeText && (
+                          <span className="absolute top-4 left-4 bg-[#E8711A] text-[#0D1B2A] font-accent text-[9px] font-extrabold tracking-widest uppercase px-2.5 py-1.5 rounded-sm shadow">
+                            {itemBadgeText}
+                          </span>
+                        )}
+                        <span className="absolute bottom-4 left-4 bg-[#0D1B2A]/90 backdrop-blur-xs text-white font-accent text-[9px] px-2.5 py-1.5 rounded-sm font-bold shadow">
+                          📍 {item.location || "Arraial do Cabo"}
+                        </span>
+                        <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm text-[#0D1B2A] font-accent text-[10px] font-bold px-2.5 py-1.5 rounded-sm flex items-center gap-1 shadow">
+                          <Star className="w-3.5 h-3.5 fill-[#E8711A] text-[#E8711A]" />
+                          <span>5.0</span>
+                        </div>
+                      </div>
+
+                      {/* Info and State Pane toggles */}
+                      <div className="p-6 text-left min-h-[160px] relative">
+                        <AnimatePresence mode="wait">
+                          {showSuccess ? (
+                            <motion.div 
+                              key="success"
+                              initial={{ opacity: 0, y: 10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              className="space-y-3 py-2 text-center"
+                            >
+                              <div className="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-full border border-emerald-200 flex items-center justify-center mx-auto">
+                                <Check className="w-5 h-5 stroke-[3]" />
+                              </div>
+                              <h4 className="font-serif text-sm font-bold text-[#0D1B2A]">Sua felicidade está agendada!</h4>
+                              <p className="font-sans text-[11px] text-[#5C6874]">
+                                O roteiro inteligente reservou a experiência com sucesso.
+                              </p>
+                              <div className="flex gap-2 pt-1 justify-center">
+                                <button 
+                                  onClick={() => onNavigate("roteiro")}
+                                  className="px-3 py-1.5 bg-[#0D1B2A] text-white text-[9px] font-accent font-extrabold tracking-wider uppercase rounded-sm cursor-pointer hover:bg-[#E8711A]"
+                                >
+                                  Ver Meu Roteiro
+                                </button>
+                                <button 
+                                  onClick={() => setSuccessNotifId(null)}
+                                  className="px-3 py-1.5 bg-zinc-100 text-zinc-500 text-[9px] font-accent font-extrabold tracking-wider uppercase rounded-sm cursor-pointer hover:bg-zinc-200"
+                                >
+                                  Fechar
+                                </button>
+                              </div>
+                            </motion.div>
+                          ) : isConfiguring ? (
+                            <motion.div 
+                              key="config"
+                              initial={{ opacity: 0, scale: 0.98 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              className="space-y-3 py-1 text-left"
+                            >
+                              <span className="font-accent text-[8px] text-[#E8711A] font-extrabold tracking-widest uppercase block mb-1">
+                                📝 CONFIGURAÇÃO DETALHADA NO ROTEIRO:
+                              </span>
+                              
+                              {/* Selection of day */}
+                              <div>
+                                <label className="font-accent text-[8px] font-bold text-zinc-400 uppercase tracking-wider block mb-1.5">
+                                  Qual Dia Curado?
+                                </label>
+                                <div className="flex flex-wrap gap-1.5">
+                                  {Array.from({ length: stayDays }).map((_, i) => {
+                                    const dNum = i + 1;
+                                    return (
+                                      <button
+                                        key={dNum}
+                                        type="button"
+                                        onClick={() => setConfigDay(dNum)}
+                                        className={`w-6 h-6 rounded font-sans text-xs font-bold transition-all flex items-center justify-center cursor-pointer ${
+                                          configDay === dNum 
+                                            ? "bg-[#0D1B2A] text-white" 
+                                            : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200"
+                                        }`}
+                                      >
+                                        D{dNum}
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+
+                              {/* Selection of schedule & people */}
+                              <div className="grid grid-cols-2 gap-3 pt-1">
+                                <div>
+                                  <label className="font-accent text-[8px] font-bold text-zinc-400 uppercase tracking-wider block mb-1">
+                                    Horário de Início:
+                                  </label>
+                                  <select
+                                    value={configSchedule || itemSchedules[0]}
+                                    onChange={(e) => setConfigSchedule(e.target.value)}
+                                    className="w-full bg-zinc-50 border border-zinc-250 p-1.5 text-[11px] font-sans font-medium text-[#0D1B2A] rounded focus:outline-none"
+                                  >
+                                    {itemSchedules.map((sch) => (
+                                      <option key={sch} value={sch}>{sch}</option>
+                                    ))}
+                                  </select>
+                                </div>
+
+                                <div>
+                                  <label className="font-accent text-[8px] font-bold text-zinc-400 uppercase tracking-wider block mb-1">
+                                    Integrantes (Pax):
+                                  </label>
+                                  <div className="flex items-center gap-2 border border-zinc-250 rounded bg-zinc-50 p-1">
+                                    <button 
+                                      type="button"
+                                      onClick={() => setConfigAdults(Math.max(1, configAdults - 1))}
+                                      className="px-1.5 py-0.5 bg-white border border-zinc-200 font-bold hover:bg-zinc-100 text-[#0D1B2A] rounded-sm text-xs cursor-pointer"
+                                    >
+                                      -
+                                    </button>
+                                    <span className="text-xs font-sans font-bold text-[#0D1B2A] flex-grow text-center">{configAdults}</span>
+                                    <button 
+                                      type="button"
+                                      onClick={() => setConfigAdults(configAdults + 1)}
+                                      className="px-1.5 py-0.5 bg-white border border-zinc-200 font-bold hover:bg-zinc-100 text-[#0D1B2A] rounded-sm text-xs cursor-pointer"
+                                    >
+                                      +
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Form submit/cancel actions */}
+                              <div className="flex gap-2 pt-2 scroll-mt-2 font-accent text-[9px] font-bold">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const today = new Date();
+                                    const targetDate = new Date(today);
+                                    targetDate.setDate(today.getDate() + (configDay - 1));
+                                    const dateStr = targetDate.toISOString().split("T")[0];
+
+                                    onAddToCart?.({
+                                      experienceId: item.id,
+                                      date: dateStr,
+                                      schedule: configSchedule || itemSchedules[0],
+                                      adults: configAdults,
+                                      children: 0,
+                                      infants: 0,
+                                      people: configAdults,
+                                      observations: "Adicionado via Home rápida",
+                                      dayIndex: configDay
+                                    });
+
+                                    setSuccessNotifId(item.id);
+                                    setActiveConfigId(null);
+                                  }}
+                                  className="flex-1 py-1.5 bg-[#E8711A] text-[#0D1B2A] hover:bg-[#0D1B2A] hover:text-white uppercase tracking-wider transition-colors rounded-sm cursor-pointer"
+                                >
+                                  CONFIRMAR ✔
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setActiveConfigId(null)}
+                                  className="px-3 py-1.5 bg-zinc-100 text-zinc-500 hover:bg-zinc-200 hover:text-zinc-700 uppercase tracking-wider transition-colors rounded-sm cursor-pointer"
+                                >
+                                  CANCELAR
+                                </button>
+                              </div>
+                            </motion.div>
+                          ) : (
+                            <motion.div 
+                              key="default"
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                              className="space-y-2 text-left"
+                            >
+                              <div className="flex items-center justify-between text-[10px] font-accent text-zinc-400 font-bold uppercase tracking-wider">
+                                <span>⏱ Duração: {item.duration || "3-4 horas"}</span>
+                                <span className="text-[#E8711A]">⭐ Altíssima Nível</span>
+                              </div>
+                              <h3 className="font-serif text-lg font-bold text-[#0D1B2A] hover:text-[#E8711A] transition-colors leading-snug">
+                                {item.name}
+                              </h3>
+                              <p className="font-sans text-xs text-[#5C6874] leading-relaxed line-clamp-3">
+                                {item.shortDescription || item.fullDescription}
+                              </p>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
+                    </div>
+
+                    {/* Lower pricing & customized dual bookings option action bar */}
+                    <div className="p-6 border-t border-zinc-150 bg-[#FBFBFB] flex flex-col sm:flex-row items-center justify-between gap-4 font-accent">
+                      <div className="text-left w-full sm:w-auto">
+                        <span className="font-accent text-[8px] text-zinc-400 uppercase tracking-widest block font-bold">VALOR DO PASSEIO</span>
+                        <span className="font-serif text-sm font-bold text-[#0D1B2A]">
+                          A partir de <strong className="text-[#E8711A] text-base">R$ {item.priceFrom}</strong>
+                        </span>
+                      </div>
+
+                      {!isConfiguring && !showSuccess && (
+                        <div className="flex w-full sm:w-auto gap-2">
+                          {/* Option 1: Adicionar ao Roteiro */}
+                          <button
+                            onClick={() => {
+                              setConfigDay(1);
+                              setConfigSchedule(itemSchedules[0]);
+                              setConfigAdults(2);
+                              setActiveConfigId(item.id);
+                            }}
+                            className="flex-1 sm:flex-initial px-4 py-2 bg-white hover:bg-zinc-50 text-[#0D1B2A] border border-zinc-200 font-accent text-[10px] font-extrabold tracking-widest uppercase transition-colors rounded-sm flex items-center justify-center gap-1.5 cursor-pointer"
+                            title="Personalize e inclua no seu roteiro inteligente do site"
+                          >
+                            <span>➕</span> ADD AO ROTEIRO
+                          </button>
+
+                          {/* Option 2: Direct book via WhatsApp (Skips the smart itinerary) */}
+                          <a
+                            href={`https://wa.me/${(settings?.whatsappNumber || "552299887766").replace(/\D/g, "")}?text=${encodeURIComponent(`Olá, Guida Trips! Gostaria de agendar o passeio *${item.name}* diretamente de forma avulsa, sem utilizar o roteiro inteligente. Quais datas e horários vocês recomendam?`)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex-1 sm:flex-initial px-3.5 py-2 bg-[#0D1B2A] hover:bg-[#E8711A] text-white hover:text-[#0D1B2A] font-accent text-[10px] font-extrabold tracking-widest uppercase transition-colors rounded-sm flex items-center justify-center gap-1"
+                            title="Agende diretamente via WhatsApp sem passar pelo roteiro"
+                          >
+                            <span>💬</span> AVULSUR/DIRETO
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              });
+            })()}
           </div>
 
         </div>
@@ -1272,7 +1533,7 @@ export default function HomeView({ onNavigate, onAddToCart, settings }: HomeView
             
             <button
               onClick={() => onNavigate("hospedagens")}
-              className="px-5 py-3 border border-[#0D1B2A] hover:bg-[#0D1B2A] hover:text-white text-[#0D1B2A] font-accent text-xs font-bold tracking-widest uppercase transition-colors rounded"
+              className="px-5 py-3 border border-[#0D1B2A] hover:bg-[#0D1B2A] hover:text-white text-[#0D1B2A] font-accent text-xs font-bold tracking-widest uppercase transition-colors rounded cursor-pointer"
             >
               Consultar Todas Hospedagens &rarr;
             </button>
@@ -1281,57 +1542,110 @@ export default function HomeView({ onNavigate, onAddToCart, settings }: HomeView
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 text-left">
             {[
               {
+                id: "pousada-timoneiro",
                 name: "Pousada do Timoneiro",
                 location: "Praia Grande",
                 rating: 4.9,
                 desc: "Acolhimento tátil excepcional, a poucos metros do pico para ver o pôr do sol nos Anjos.",
-                img: "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=600&q=80"
+                img: "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=600&q=80",
+                whatsappMessage: "Olá, Guida Trips! Gostaria de consultar tarifas com benefícios exclusivos para a Pousada do Timoneiro."
               },
               {
+                id: "pousada-caminho-mar",
                 name: "Pousada Caminho do Mar",
                 location: "Praia dos Anjos",
                 rating: 4.8,
                 desc: "Conectividade estratégica de embarque. Perfeito para noites sossegadas ao som de mar.",
-                img: "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?auto=format&fit=crop&w=600&q=80"
+                img: "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?auto=format&fit=crop&w=600&q=80",
+                whatsappMessage: "Olá, Guida Trips! Gostaria de consultar tarifas com benefícios para a Pousada Caminho do Mar."
               },
               {
+                id: "ohana-pousada",
                 name: "Ohana Pousada Boutique",
                 location: "Pontal do Atalaia",
                 rating: 5.0,
                 desc: "Erguida nos despenhadeiros míticos com jacuzzi e bar flutuante olhando a imensidão costeira.",
-                img: "https://images.unsplash.com/photo-1584132967334-10e028bd69f7?auto=format&fit=crop&w=600&q=80"
+                img: "https://images.unsplash.com/photo-1584132967334-10e028bd69f7?auto=format&fit=crop&w=600&q=80",
+                whatsappMessage: "Olá, Guida Trips! Gostaria de consultar tarifas com benefícios na Ohana Pousada Boutique."
               }
-            ].map((pousada, idx) => (
-              <div 
-                key={idx}
-                className="bg-[#FBF9F7] border border-zinc-200 rounded-lg overflow-hidden flex flex-col justify-between hover:shadow-lg hover:border-[#E8711A]/20 transition-all duration-300 group cursor-pointer"
-                onClick={() => onNavigate("hospedagens")}
-              >
-                <div className="h-48 overflow-hidden relative">
-                  <img 
-                    src={pousada.img} 
-                    alt={pousada.name} 
-                    className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-500 filter brightness-95"
-                  />
-                  <span className="absolute bottom-3 left-3 bg-[#0D1B2A] text-white text-[9px] font-accent tracking-widest uppercase px-2 py-1 rounded">
-                    📍 {pousada.location.toUpperCase()}
-                  </span>
-                  <div className="absolute top-3 right-3 bg-white/95 text-[#0D1B2A] font-accent text-[9px] font-bold px-2 py-1 rounded shadow flex items-center gap-0.5">
-                    <Star className="w-3 h-3 fill-[#E8711A] text-[#E8711A]" />
-                    <span>{pousada.rating}</span>
+            ].map((pousada) => {
+              const isSelected = selectedHotelId === pousada.id;
+              
+              return (
+                <div 
+                  key={pousada.id}
+                  className={`bg-[#FBF9F7] border rounded-lg overflow-hidden flex flex-col justify-between hover:shadow-lg transition-all duration-300 group ${
+                    isSelected ? "border-[#E8711A] shadow-md ring-1 ring-[#E8711A]/20" : "border-zinc-200 hover:border-[#E8711A]/30"
+                  }`}
+                >
+                  <div className="h-48 overflow-hidden relative">
+                    <img 
+                      src={pousada.img} 
+                      alt={pousada.name} 
+                      className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-500 filter brightness-95"
+                    />
+                    <span className="absolute bottom-3 left-3 bg-[#0D1B2A] text-white text-[9px] font-accent tracking-widest uppercase px-2 py-1 rounded">
+                      📍 {pousada.location.toUpperCase()}
+                    </span>
+                    <div className="absolute top-3 right-3 bg-white/95 text-[#0D1B2A] font-accent text-[9px] font-bold px-2 py-1 rounded shadow flex items-center gap-0.5">
+                      <Star className="w-3 h-3 fill-[#E8711A] text-[#E8711A]" />
+                      <span>{pousada.rating}</span>
+                    </div>
+                  </div>
+
+                  <div className="p-6 space-y-4 flex-grow flex flex-col justify-between">
+                    <div className="space-y-2">
+                      <h3 className="font-serif text-lg font-bold text-[#0D1B2A] group-hover:text-[#E8711A] transition-colors leading-snug">
+                        {pousada.name}
+                      </h3>
+                      <p className="font-sans text-xs text-[#5C6874] leading-relaxed">
+                        {pousada.desc}
+                      </p>
+                    </div>
+
+                    {/* Interactive lodging actions (Itinerary select & direct reservation check) */}
+                    <div className="pt-4 border-t border-zinc-200/50 space-y-2">
+                      <div className="flex flex-col sm:flex-row gap-2">
+                        {/* 1. Add/Lock to itinerary */}
+                        <button
+                          onClick={() => {
+                            if (onChangeHotelId) {
+                              onChangeHotelId(isSelected ? null : pousada.id);
+                            }
+                          }}
+                          className={`flex-1 py-2.5 rounded-sm font-accent text-[9px] font-extrabold tracking-widest uppercase transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                            isSelected 
+                              ? "bg-[#E8711A] text-[#0D1B2A] border border-[#E8711A] font-bold" 
+                              : "bg-white text-[#0D1B2A] border border-zinc-200 hover:border-[#0D1B2A]/30"
+                          }`}
+                        >
+                          {isSelected ? (
+                            <>
+                              <Check className="w-3 h-3 stroke-[3]" />
+                              NO MEU ROTEIRO ✔
+                            </>
+                          ) : (
+                            <>
+                              <span>🏨</span> VINCULAR AO ROTEIRO
+                            </>
+                          )}
+                        </button>
+
+                        {/* 2. Direct book via WhatsApp */}
+                        <a
+                          href={`https://wa.me/${(settings?.whatsappNumber || "552299887766").replace(/\D/g, "")}?text=${encodeURIComponent(pousada.whatsappMessage)}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex-1 py-2.5 bg-[#0D1B2A] hover:bg-[#E8711A] text-white hover:text-[#0D1B2A] font-accent text-[9px] font-extrabold tracking-widest uppercase transition-colors rounded-sm flex items-center justify-center gap-1"
+                        >
+                          <span>💬</span> AGENDAR DIRETO
+                        </a>
+                      </div>
+                    </div>
                   </div>
                 </div>
-
-                <div className="p-6 space-y-2">
-                  <h3 className="font-serif text-lg font-bold text-[#0D1B2A] group-hover:text-[#E8711A] transition-colors leading-snug">
-                    {pousada.name}
-                  </h3>
-                  <p className="font-sans text-xs text-[#5C6874] leading-relaxed">
-                    {pousada.desc}
-                  </p>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
         </div>
@@ -1435,7 +1749,7 @@ export default function HomeView({ onNavigate, onAddToCart, settings }: HomeView
             <div className="flex flex-col items-center">
               <div className="flex items-baseline mb-0.5">
                 <span className="font-serif text-3xl font-extrabold text-[#F4EFE6] tracking-tight">
-                  GUID<span className="relative">A<span className="absolute bottom-0 right-0 w-5 h-[4px] bg-[#E8711A] rounded-full transform rotate-[-12deg] translate-y-[3px]"></span></span>
+                  GUID<span className="relative">A<span className="absolute bottom-0 left-0 w-5 h-[4px] bg-[#E8711A] rounded-full transform rotate-[-12deg] translate-y-[3px]"></span></span>
                 </span>
                 <span className="font-accent text-[#E8711A] text-sm font-bold tracking-[0.2em] ml-1.5 uppercase">
                   &mdash; TRIPS &mdash;

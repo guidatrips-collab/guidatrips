@@ -45,6 +45,24 @@ export default function App() {
   const [clientName, setClientName] = useState("");
   const [clientCity, setClientCity] = useState("");
 
+  // Selected hotel in the itinerary
+  const [selectedHotelId, setSelectedHotelId] = useState<string | null>(() => {
+    try {
+      return localStorage.getItem("guidatrips_selected_hotel_id") || null;
+    } catch {
+      return null;
+    }
+  });
+
+  const handleUpdateHotelId = (id: string | null) => {
+    setSelectedHotelId(id);
+    if (id) {
+      localStorage.setItem("guidatrips_selected_hotel_id", id);
+    } else {
+      localStorage.removeItem("guidatrips_selected_hotel_id");
+    }
+  };
+
   // Stay duration persistence (default to 3 days)
   const [stayDays, setStayDays] = useState<number>(() => {
     try {
@@ -378,9 +396,20 @@ export default function App() {
 
   // Build beautiful WhatsApp message according to spec section 7, day-by-day sequence
   const handleTriggerWhatsapp = () => {
-    if (cart.length === 0) return;
+    if (cart.length === 0 && !selectedHotelId) return;
 
     let textMessage = `Olá, Guida Trips! 👋\n\nGostaria de montar meu roteiro personalizado de *${stayDays} dias* com vocês!\n\n`;
+
+    // Add lodging summary if selected
+    if (selectedHotelId) {
+      const hotelNames: Record<string, string> = {
+        "pousada-timoneiro": "Pousada do Timoneiro 🛌",
+        "pousada-caminho-mar": "Pousada Caminho do Mar 🛌",
+        "ohana-pousada": "Ohana Pousada Boutique 🛌"
+      };
+      const hName = hotelNames[selectedHotelId] || "Hospedagem Selecionada";
+      textMessage += `🏨 *HOSPEDAGEM COORDENADA:*\n   • *${hName}*\n\n`;
+    }
 
     // Group cart by dayIndex (1 to stayDays)
     for (let d = 1; d <= stayDays; d++) {
@@ -425,6 +454,10 @@ export default function App() {
         uniqueLocationsSet.add("Arraial do Cabo");
       }
     });
+    // Add default location Arraial do Cabo if no experiences
+    if (uniqueLocationsSet.size === 0) {
+      uniqueLocationsSet.add("Arraial do Cabo");
+    }
     const locationsString = Array.from(uniqueLocationsSet).join(", ");
 
     const finalName = clientName.trim() || "[Insira o Nome]";
@@ -475,7 +508,15 @@ export default function App() {
       {/* Main viewport state selector */}
       <main className="flex-grow">
         {currentView === "home" && (
-          <HomeView settings={settings} onNavigate={setCurrentView} onAddToCart={handleAddToCart} />
+          <HomeView 
+            settings={settings} 
+            onNavigate={setCurrentView} 
+            onAddToCart={handleAddToCart} 
+            experiences={experiences}
+            selectedHotelId={selectedHotelId}
+            onChangeHotelId={handleUpdateHotelId}
+            stayDays={stayDays}
+          />
         )}
         {currentView === "experiencias" && (
           <ExperiencesView 
@@ -554,6 +595,8 @@ export default function App() {
             onSetClientCity={setClientCity}
             onTriggerWhatsapp={handleTriggerWhatsapp}
             onNavigate={setCurrentView}
+            selectedHotelId={selectedHotelId}
+            onChangeHotelId={handleUpdateHotelId}
           />
         )}
       </main>
@@ -561,14 +604,14 @@ export default function App() {
       <Footer onNavigate={setCurrentView} whatsappNumber={settings.whatsappNumber} />
 
       {/* COMPONENTE FLOATING ROTERIO (TRIGGER DRAWERS) */}
-      {cart.length > 0 && currentView !== "roteiro" && (
+      {(cart.length > 0 || selectedHotelId) && currentView !== "roteiro" && (
         <button
           onClick={() => { setCurrentView("roteiro"); }}
           className="fixed bottom-6 right-6 z-40 bg-gradient-to-r from-[#E8711A] to-[#FF8A3F] text-white px-6 py-4 rounded-full font-sans text-sm font-bold tracking-normal flex items-center gap-2.5 shadow-[0_10px_30px_rgba(232,113,26,0.35)] hover:shadow-[0_12px_35px_rgba(232,113,26,0.5)] hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer select-none border border-white/20"
         >
           <span>🗺️ MEU ROTEIRO</span>
           <span className="bg-[#0D1B2A] text-white h-5.5 w-5.5 rounded-full flex items-center justify-center font-sans font-extrabold text-[10px] shadow-sm">
-            {cart.length}
+            {cart.length + (selectedHotelId ? 1 : 0)}
           </span>
         </button>
       )}

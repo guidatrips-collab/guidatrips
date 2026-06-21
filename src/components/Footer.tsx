@@ -22,7 +22,7 @@ export default function Footer({ onNavigate, whatsappNumber }: FooterProps) {
             <div className="flex flex-col select-none">
               <div className="flex items-baseline mb-0.5">
                 <span className="font-serif text-2xl font-extrabold text-[#F4EFE6] tracking-tight">
-                  GUID<span className="relative text-[#F4EFE6]">A<span className="absolute bottom-0 right-0 w-4 h-[3px] bg-[#E8711A] rounded-full transform rotate-[-12deg] translate-y-[2px]"></span></span>
+                  GUID<span className="relative text-[#F4EFE6]">A<span className="absolute bottom-0 left-0 w-4 h-[3px] bg-[#E8711A] rounded-full transform rotate-[-12deg] translate-y-[2px]"></span></span>
                 </span>
                 <span className="font-accent text-[#E8711A] text-xs font-bold tracking-[0.2em] ml-1.5 uppercase">
                   &mdash; TRIPS &mdash;
