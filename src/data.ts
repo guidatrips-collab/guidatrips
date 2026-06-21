@@ -507,5 +507,146 @@ export const INITIAL_SETTINGS: GlobalSettings = {
     whatsapp: "https://wa.me/552299887766"
   },
   diferencialTitle: "Arraial merece ser vivido, não apenas visitado.",
-  diferencialDescription: "Conectamos você ao melhor da Região dos Lagos através de experiências customizadas, hospitalidade de nativos e sorrisos reais que viram lembranças douradas de felicidade."
+  diferencialDescription: "Conectamos você ao melhor da Região dos Lagos através de experiências customizadas, hospitalidade de nativos e sorrisos reais que viram lembranças douradas de felicidade.",
+
+  // Default Home Page configurations
+  homeFilosofiaTag: "01 / FILOSOFIA DE EXPERIÊNCIA",
+  homeFilosofiaTitle: "A felicidade não está na pressa. Está no afeto.",
+  homeFilosofiaDesc: "As agências tradicionais empilham dezenas de turistas em barcos barulhentos para paradas rápidas e frias. A Guida Trips preza pelo valor do seu tempo. Desenhagemos cada trajeto para ser uma sutil partilha de sentimentos, risos e sossego real.",
+  homeFilosofiaPillars: [
+    {
+      id: "brinde",
+      title: "Catering Gourmet a Bordo",
+      desc: "Nossos barcos privativos contam com espumante gelado, tábua de queijos artesanais e frutas selecionadas para brindar os momentos dourados de felicidade.",
+      badge: "🥂 CELEBRAÇÃO"
+    },
+    {
+      id: "direcao",
+      title: "Direção de Fotografia",
+      desc: "Nossa equipe domina as marés, as melhores horas de luz e os ângulos secretos. Você foca em sorrir e sentir; nós eternizamos cada fração de segundo.",
+      badge: "📸 RENDERIZAR AFETO"
+    },
+    {
+      id: "concierge",
+      title: "Concierge Individualizado",
+      desc: "Decoramos suas preferências com antecedência: restrições de alimentação, mimos favoritos das crianças e assessoria fina para surpresas românticas ou aniversários.",
+      badge: "✨ CARINHO HUMANO"
+    },
+    {
+      id: "exclusividade",
+      title: "Sossego Sem Aglomerações",
+      desc: "Rotas táticas e saídas antecipadas programadas milimetricamente para aportar nas praias antes dos grandes barcos de massa barulhentos.",
+      badge: "🤫 PRIVACIDADE"
+    }
+  ],
+  homeFilosofiaVideoTitle: "ASSISTA O DOCUMENTÁRIO",
+  homeFilosofiaVideoSub: "Sinta o clima real de nossos passeios (3 min)",
+
+  homeCompassTag: "02 / COMPASS MAP",
+  homeCompassTitle: "Descubra Arraial de todos os ângulos",
+  homeCompassDesc: "Clique em nossas gavetas de curadoria para desbravar o cabo de acordo com a sua preferência pessoal.",
+  homeCategories: [
+    { id: "praias", label: "PRAIAS", count: "8 praias" },
+    { id: "gastronomia", label: "GASTRONOMIA", count: "12 locais" },
+    { id: "experiencias", label: "PASSEIOS", count: "6 aventuras" },
+    { id: "hospedagens", label: "HOSPEDAGENS", count: "3 parceiras" },
+    { id: "noite", label: "VIDA NOTURNA", count: "5 luas e bares" },
+    { id: "trilhas", label: "TRILHAS", count: "4 segredos" },
+    { id: "mergulho", label: "MERGULHO", count: "Capital Nacional" },
+    { id: "sobre", label: "CULTURA LOCAL", count: "Nativismo puro" }
+  ],
+
+  homeBannerTag: "📍 PONTO RETRO-ACLAMADO",
+  homeBannerTitle: "Mergulhe no silêncio da Praia do Forno.",
+  homeBannerDesc: "Abraçada por mata virgem e penhascos de pedra, as águas esmeraldas dão abrigo natural a tartarugas gigantes e corais ornamentais. Nossos barcos aportam na orla silenciosamente para que você nade em pura sintonia.",
+  homeBannerBtnText: "Ler Guia de Praias",
+  homeBannerImgUrl: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80",
+
+  homeMimosTag: "04 / Detalhes Que Tornam Único",
+  homeMimosTitle: "Os mimos que você só encontra aqui.",
+  homeMimosDesc: "Não fazemos turismo padrão de massa. Fornecemos encontros customizados regados a carinho e mimos artesanais.",
+  homeMimosTabs: [
+    {
+      key: "sabores",
+      label: "Sabores do Afeto",
+      badge: "🍽️ COMPOSIÇÃO ARTESANAL",
+      title: "Sabores Que Unem E Celebram",
+      text: "A nossa gastronomia abraça o seu paladar com frescor incomparável. Desfrute de espumantes selecionados de vinícolas de selo premiado, tábuas de frios rústicas, ceviche preparado na hora e deliciosos mimos regionais servidos sob a brisa morna do oceano.",
+      img: "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80"
+    },
+    {
+      key: "lounges",
+      label: "Lounges Exclusivos",
+      badge: "✨ INSTALAÇÃO PRIVADA",
+      title: "Piqueniques Sob a Luz Dourada",
+      text: "Montamos lounges boutique com tapetes rústicos, almofadas macias e iluminação minimalista quente diretamente em mirantes ou praias reservadas. Uma experiência mágica de cinema para conversar, provar iguarias e desfrutar da melhor hora do pôr do sol com quem você mais ama.",
+      img: "https://images.unsplash.com/photo-1510798831971-661eb04b3739?auto=format&fit=crop&w=800&q=80"
+    },
+    {
+      key: "noite",
+      label: "Luau Sob As Estrelas",
+      badge: "🌙 ENCONTROS NO DECK",
+      title: "Luau Intimista & Noite sob Velas",
+      text: "Ao entardecer, as estrelas tomam conta do cabo. Projetamos jantares privativos aconchegantes sob velas aromáticas flutuantes nas areias, harmonizados com vinhos finos de selo orgânico e o som rítmico das ondas quebrando suavemente na orla.",
+      img: "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?auto=format&fit=crop&w=800&q=80"
+    },
+    {
+      key: "nativismo",
+      label: "Acolhimento Amigo",
+      badge: "🤝 CONEXÃO VERDADEIRA",
+      title: "A Hospitalidade de Pura Alma",
+      text: "Liderados por Guida, nossa equipe é composta por moradores apaixonados que respiram o destino. Nosso diferencial é a conexão humana verdadeira: recebemos você com sorrisos sinceros de braços abertos, contando causos divertidos de pescadores, lendas marítimas e segredos fascinantes.",
+      img: "https://images.unsplash.com/photo-1472289065668-ce650ac443d2?auto=format&fit=crop&w=800&q=80"
+    }
+  ],
+
+  homeLogisticaTag: "05 / GUIA DE LOGÍSTICA COMPLETA",
+  homeLogisticaTitle: "Planeje sem imprevistos.",
+  homeLogisticaDesc: "Reunimos as coordenadas mais estratégicas de quem é nascido e criado no mar de Arraial. Entenda as marés, distâncias e como tirar 100% proveito de suas memórias douradas.",
+  homeLogisticaPoints: [
+    {
+      title: "Como Chegar em Conforto",
+      desc: "Arraial fica a 165km do Rio. Oferecemos opções sob medida de transfer executivo corporativo porta-a-porta partindo dos aeroportos rústicos da capital diretamente para a sua pousada curada."
+    },
+    {
+      title: "A Melhor Época de Ventos",
+      desc: "O sol brilha o ano todo. Para águas com nitidez mística extrema de reflexos azulados, indicamos os meses de Março a Junho, onde a calmaria de ventos sintoniza mar cristalino."
+    },
+    {
+      title: "O Que Trazer na Mochila",
+      desc: "Traga bonés leves, protetor solar mineral (pelo zelo ecológico da fauna de restinga) e claro: óculos de mergulho para fitar cavalos-marinhos e siris coloridos."
+    }
+  ],
+
+  homeFeedbackTag: "07 / LAZER & CONEXÕES DE ALMA",
+  homeFeedbackTitle: "Histórias que nos inspiram.",
+  homeFeedbackDesc: "Não vendemos apenas passeios. Criamos lembranças afetivas duradouras que dão cor aos sorrisos mais sinceros do mundo.",
+  homeFeedbackList: [
+    {
+      name: "Daniela Pinheiro & Noivo",
+      city: "Rio de Janeiro - RJ",
+      quote: "Eu queria um pedido de casamento surpresa perfeito nas dunas e a equipe da Guida estruturou TUDO. Montaram um lounge maravilhoso com velas, queijos e champanhe maravilhoso no Pontal e até contrataram fotógrafo para se disfarçar de turista! Sensacional!",
+      role: "Momentos Especiais",
+      avatar: "D"
+    },
+    {
+      name: "Ricardo e Cláudia Lemos",
+      city: "Campinas - SP",
+      quote: "Viajamos com as crianças de 5 e 8 anos. O barco é limpíssimo, o colete das crianças coube perfeitamente e os marinheiros prepararam cortes de melancia bem gelada que as crianças devoraram após o mergulho. Foi o dia mais feliz de nossas férias!",
+      role: "Fórmula de Família",
+      avatar: "R"
+    },
+    {
+      name: "Letícia Amaral",
+      city: "Brasília - DF",
+      quote: "Atendimento caloroso incrível. Não somos tratadas como meros bilhetes de turismo. Guida nos pegou na porta da pousada, nos deu dicas preciosas sobre horários e nos levou para jantar lulas na brasa. Esse afeto é o verdadeiro ouro!",
+      role: "Aventura Curada",
+      avatar: "L"
+    }
+  ],
+
+  homeGuideTag: "📖 DOWNLOAD GRATUITO",
+  homeGuideTitle: "Guia Digital Secreto de Arraial do Cabo",
+  homeGuideDesc: "Preparamos um guia interativo com praias secretas, melhores marés de recifes, contatos de nativos para peixes frescos e o melhor roteiro desimpedido para as suas férias.",
+  homeGuideBtnText: "Receber Guia no E-mail"
 };

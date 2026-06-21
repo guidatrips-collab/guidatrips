@@ -92,6 +92,70 @@ export interface GlobalSettings {
   };
   diferencialTitle?: string;
   diferencialDescription?: string;
+
+  // New customizable Home Page fields
+  homeFilosofiaTag?: string;
+  homeFilosofiaTitle?: string;
+  homeFilosofiaDesc?: string;
+  homeFilosofiaPillars?: {
+    id: string;
+    title: string;
+    desc: string;
+    badge: string;
+  }[];
+  homeFilosofiaVideoTitle?: string;
+  homeFilosofiaVideoSub?: string;
+
+  homeCompassTag?: string;
+  homeCompassTitle?: string;
+  homeCompassDesc?: string;
+  homeCategories?: {
+    id: string;
+    label: string;
+    count: string;
+  }[];
+
+  homeBannerTag?: string;
+  homeBannerTitle?: string;
+  homeBannerDesc?: string;
+  homeBannerBtnText?: string;
+  homeBannerImgUrl?: string;
+
+  homeMimosTag?: string;
+  homeMimosTitle?: string;
+  homeMimosDesc?: string;
+  homeMimosTabs?: {
+    key: string;
+    label: string;
+    badge: string;
+    title: string;
+    text: string;
+    img: string;
+  }[];
+
+  homeLogisticaTag?: string;
+  homeLogisticaTitle?: string;
+  homeLogisticaDesc?: string;
+  homeLogisticaPoints?: {
+    title: string;
+    desc: string;
+  }[];
+
+  homeFeedbackTag?: string;
+  homeFeedbackTitle?: string;
+  homeFeedbackDesc?: string;
+  homeFeedbackList?: {
+    name: string;
+    role: string;
+    city: string;
+    quote: string;
+    avatar: string;
+  }[];
+
+  homeGuideTag?: string;
+  homeGuideTitle?: string;
+  homeGuideDesc?: string;
+  homeGuideBtnText?: string;
 }
 
 export interface BookingCartItem {

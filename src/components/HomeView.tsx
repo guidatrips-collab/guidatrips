@@ -56,7 +56,7 @@ export default function HomeView({
   const [mapCategory, setMapCategory] = useState<"todos" | "praias" | "mirantes" | "gastronomia">("todos");
   const [selectedMapPoint, setSelectedMapPoint] = useState<number | null>(0);
 
-  const pillars = [
+  const pillars = settings?.homeFilosofiaPillars?.length ? settings.homeFilosofiaPillars : [
     {
       id: "brinde",
       title: "Catering Gourmet a Bordo",
@@ -98,16 +98,30 @@ export default function HomeView({
     sobre: BookOpen,
   };
 
-  const categories = [
-    { id: "praias", label: "PRAIAS", count: "8 praias", color: "bg-[#0A2540]" },
-    { id: "gastronomia", label: "GASTRONOMIA", count: "12 locais", color: "bg-[#E8711A]" },
-    { id: "experiencias", label: "PASSEIOS", count: "6 aventuras", color: "bg-teal-700" },
-    { id: "hospedagens", label: "HOSPEDAGENS", count: "3 parceiras", color: "bg-[#0D1B2A]" },
-    { id: "noite", label: "VIDA NOTURNA", count: "5 luas e bares", color: "bg-indigo-950" },
-    { id: "trilhas", label: "TRILHAS", count: "4 segredos", color: "bg-emerald-800" },
-    { id: "mergulho", label: "MERGULHO", count: "Capital Nacional", color: "bg-blue-900" },
-    { id: "sobre", label: "CULTURA LOCAL", count: "Nativismo puro", color: "bg-amber-800" }
-  ];
+  const categoryColors: Record<string, string> = {
+    praias: "bg-[#0A2540]",
+    gastronomia: "bg-[#E8711A]",
+    experiencias: "bg-teal-700",
+    hospedagens: "bg-[#0D1B2A]",
+    noite: "bg-indigo-950",
+    trilhas: "bg-emerald-800",
+    mergulho: "bg-blue-900",
+    sobre: "bg-amber-800"
+  };
+
+  const categories = (settings?.homeCategories?.length ? settings.homeCategories : [
+    { id: "praias", label: "PRAIAS", count: "8 praias" },
+    { id: "gastronomia", label: "GASTRONOMIA", count: "12 locais" },
+    { id: "experiencias", label: "PASSEIOS", count: "6 aventuras" },
+    { id: "hospedagens", label: "HOSPEDAGENS", count: "3 parceiras" },
+    { id: "noite", label: "VIDA NOTURNA", count: "5 luas e bares" },
+    { id: "trilhas", label: "TRILHAS", count: "4 segredos" },
+    { id: "mergulho", label: "MERGULHO", count: "Capital Nacional" },
+    { id: "sobre", label: "CULTURA LOCAL", count: "Nativismo puro" }
+  ]).map((cat) => ({
+    ...cat,
+    color: categoryColors[cat.id] || "bg-[#E8711A]"
+  }));
 
   const indexExperiences = [
     {
@@ -185,34 +199,38 @@ export default function HomeView({
     }
   ];
 
-  const testimonials = [
+  const testimonials = (settings?.homeFeedbackList?.length ? settings.homeFeedbackList : [
     {
       name: "Daniela Pinheiro & Noivo",
-      origin: "Rio de Janeiro - RJ",
-      text: "Eu queria um pedido de casamento surpresa perfeito nas dunas e a equipe da Guida estruturou TUDO. Montaram um lounge maravilhoso com velas, queijos e champanhe maravilhoso no Pontal e até contrataram fotógrafo para se disfarçar de turista! Sensacional!",
+      city: "Rio de Janeiro - RJ",
+      quote: "Eu queria um pedido de casamento surpresa perfeito nas dunas e a equipe da Guida estruturou TUDO. Montaram um lounge maravilhoso com velas, queijos e champanhe maravilhoso no Pontal e até contrataram fotógrafo para se disfarçar de turista! Sensacional!",
       role: "Momentos Especiais",
-      stars: 5,
       avatar: "D"
     },
     {
       name: "Ricardo e Cláudia Lemos",
-      origin: "Campinas - SP",
-      text: "Viajamos com as crianças de 5 e 8 anos. O barco é limpíssimo, o colete das crianças coube perfeitamente e os marinheiros prepararam cortes de melancia bem gelada que as crianças devoraram após o mergulho. Foi o dia mais feliz de nossas férias!",
+      city: "Campinas - SP",
+      quote: "Viajamos com as crianças de 5 e 8 anos. O barco é limpíssimo, o colete das crianças coube perfeitamente e os marinheiros prepararam cortes de melancia bem gelada que as crianças devoraram após o mergulho. Foi o dia mais feliz de nossas férias!",
       role: "Fórmula de Família",
-      stars: 5,
       avatar: "R"
     },
     {
       name: "Letícia Amaral",
-      origin: "Brasília - DF",
-      text: "Atendimento caloroso incrível. Não somos tratadas como meros bilhetes de turismo. Guida nos pegou na porta da pousada, nos deu dicas preciosas sobre horários e nos levou para jantar lulas na brasa. Esse afeto é o verdadeiro ouro!",
+      city: "Brasília - DF",
+      quote: "Atendimento caloroso incrível. Não somos tratadas como meros bilhetes de turismo. Guida nos pegou na porta da pousada, nos deu dicas preciosas sobre horários e nos levou para jantar lulas na brasa. Esse afeto é o verdadeiro ouro!",
       role: "Aventura Curada",
-      stars: 5,
       avatar: "L"
     }
-  ];
+  ]).map((t) => ({
+    name: t.name,
+    origin: t.city,
+    text: t.quote,
+    role: t.role,
+    stars: 5,
+    avatar: t.avatar || t.name[0]
+  }));
 
-  const experienceTabsContent = {
+  const defaultMimosTabs = {
     sabores: {
       title: "Sabores Que Unem E Celebram",
       text: "A nossa gastronomia abraça o seu paladar com frescor incomparável. Desfrute de espumantes selecionados de vinícolas de selo premiado, tábuas de frios rústicas, ceviche preparado na hora e deliciosos mimos regionais servidos sob a brisa morna do oceano.",
@@ -238,6 +256,22 @@ export default function HomeView({
       img: "https://images.unsplash.com/photo-1472289065668-ce650ac443d2?auto=format&fit=crop&w=800&q=80",
     }
   };
+
+  const experienceTabsContent = (() => {
+    if (!settings?.homeMimosTabs?.length) {
+      return defaultMimosTabs;
+    }
+    const tabsObj: any = {};
+    settings.homeMimosTabs.forEach((tab) => {
+      tabsObj[tab.key] = {
+        title: tab.title,
+        text: tab.text,
+        badge: tab.badge,
+        img: tab.img
+      };
+    });
+    return tabsObj as typeof defaultMimosTabs;
+  })();
 
   // HELPER TO COMPUTE RECOMMENDED ENGINES FROM ALCHEMY
   const getAlchemyBundle = () => {
@@ -450,14 +484,14 @@ export default function HomeView({
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-baseline">
             <div className="lg:col-span-5 text-left space-y-4">
               <span className="font-accent text-[#E8711A] text-xs font-bold tracking-widest uppercase block">
-                01 / FILOSOFIA DE EXPERIÊNCIA
+                {settings?.homeFilosofiaTag || "01 / FILOSOFIA DE EXPERIÊNCIA"}
               </span>
               <h2 className="font-serif text-3xl sm:text-5xl font-extrabold text-[#0D1B2A] tracking-tight leading-tight">
-                A felicidade não está na pressa. <span className="text-[#E8711A]">Está no afeto.</span>
+                {settings?.homeFilosofiaTitle || "A felicidade não está na pressa. Está no afeto."}
               </h2>
               <div className="h-0.5 w-16 bg-[#E8711A] my-4"></div>
               <p className="font-sans text-sm text-[#5C6874] leading-relaxed">
-                As agências tradicionais empilham dezenas de turistas em barcos barulhentos para paradas rápidas e frias. A Guida Trips preza pelo valor do seu tempo. Desenhamos cada trajeto para ser uma sutil partilha de sentimentos, risos e sossego real.
+                {settings?.homeFilosofiaDesc || "As agências tradicionais empilham dezenas de turistas em barcos barulhentos para paradas rápidas e frias. A Guida Trips preza pelo valor do seu tempo. Desenhamos cada trajeto para ser uma sutil partilha de sentimentos, risos e sossego real."}
               </p>
               
               {/* Video play badge */}
@@ -470,8 +504,12 @@ export default function HomeView({
                     <Play className="w-4 h-4 fill-current ml-0.5" />
                   </span>
                   <div>
-                    <span className="font-accent text-[11px] font-bold text-[#0D1B2A] tracking-wider uppercase block group-hover:text-[#E8711A] transition-colors">ASSISTA O DOCUMENTÁRIO</span>
-                    <span className="font-sans text-[11px] text-zinc-400">Sinta o clima real de nossos passeios (3 min)</span>
+                    <span className="font-accent text-[11px] font-bold text-[#0D1B2A] tracking-wider uppercase block group-hover:text-[#E8711A] transition-colors">
+                      {settings?.homeFilosofiaVideoTitle || "ASSISTA O DOCUMENTÁRIO"}
+                    </span>
+                    <span className="font-sans text-[11px] text-zinc-400">
+                      {settings?.homeFilosofiaVideoSub || "Sinta o clima real de nossos passeios (3 min)"}
+                    </span>
                   </div>
                 </button>
               </div>
@@ -500,14 +538,14 @@ export default function HomeView({
           
           <div className="text-center max-w-2xl mx-auto mb-16 space-y-4">
             <span className="font-accent text-[#E8711A] text-xs font-bold tracking-widest uppercase block">
-              02 / COMPASS MAP
+              {settings?.homeCompassTag || "02 / COMPASS MAP"}
             </span>
             <h2 className="font-serif text-3xl sm:text-5xl font-extrabold text-[#0D1B2A] tracking-tight leading-tight">
-              Descubra Arraial de todos os ângulos
+              {settings?.homeCompassTitle || "Descubra Arraial de todos os ângulos"}
             </h2>
             <div className="h-0.5 w-16 bg-[#E8711A] mx-auto"></div>
             <p className="font-sans text-xs sm:text-sm text-[#5C6874] leading-relaxed">
-              Clique em nossas gavetas de curadoria para desbravar o cabo de acordo com a sua preferência pessoal.
+              {settings?.homeCompassDesc || "Clique em nossas gavetas de curadoria para desbravar o cabo de acordo com a sua preferência pessoal."}
             </p>
           </div>
 
@@ -1050,7 +1088,7 @@ export default function HomeView({
       <section id="forno-highlight" className="relative h-[80vh] flex items-center justify-center text-center overflow-hidden">
         <div className="absolute inset-0 z-0">
           <img 
-            src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80" 
+            src={settings?.homeBannerImgUrl || "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80"} 
             alt="Praia do Forno, águas límpidas de ressurgência" 
             className="w-full h-full object-cover object-center filter brightness-[0.35]"
           />
@@ -1059,13 +1097,13 @@ export default function HomeView({
 
         <div className="relative z-10 max-w-2xl px-4 space-y-4 text-white">
           <span className="font-accent text-[#E8711A] text-xs font-extrabold tracking-[0.25em] uppercase block">
-            📍 PONTO RETRO-ACLAMADO
+            {settings?.homeBannerTag || "📍 PONTO RETRO-ACLAMADO"}
           </span>
           <h2 className="font-serif text-3xl sm:text-5xl font-extrabold text-[#F4EFE6] tracking-tight leading-tight">
-            Mergulhe no silêncio da Praia do Forno.
+            {settings?.homeBannerTitle || "Mergulhe no silêncio da Praia do Forno."}
           </h2>
           <p className="font-sans text-xs sm:text-sm text-zinc-300 leading-relaxed max-w-lg mx-auto">
-            Abraçada por mata virgem e penhascos de pedra, as águas esmeraldas dão abrigo natural a tartarugas gigantes e corais ornamentais. Nossos barcos aportam na orla silenciosamente para que você nade em pura sintonia.
+            {settings?.homeBannerDesc || "Abraçada por mata virgem e penhascos de pedra, as águas esmeraldas dão abrigo natural a tartarugas gigantes e corais ornamentais. Nossos barcos aportam na orla silenciosamente para que você nade em pura sintonia."}
           </p>
           
           <div className="pt-4">
@@ -1073,7 +1111,7 @@ export default function HomeView({
               onClick={() => onNavigate("destino")}
               className="px-6 py-3 bg-[#E8711A] text-[#0D1B2A] font-accent text-xs font-bold tracking-widest uppercase hover:bg-white rounded transition-colors shadow-lg"
             >
-              Ler Guia de Praias &rarr;
+              {settings?.homeBannerBtnText || "Ler Guia de Praias"} &rarr;
             </button>
           </div>
         </div>
@@ -1085,14 +1123,14 @@ export default function HomeView({
           
           <div className="text-center max-w-3xl mx-auto mb-16">
             <span className="font-accent text-[#0D1B2A]/60 text-xs font-bold tracking-widest uppercase block mb-1">
-              04 / Detalhes Que Tornam Único
+              {settings?.homeMimosTag || "04 / Detalhes Que Tornam Único"}
             </span>
             <h2 className="font-serif text-3xl sm:text-5xl font-extrabold text-[#0D1B2A] tracking-tight">
-              Os mimos que você só encontra aqui.
+              {settings?.homeMimosTitle || "Os mimos que você só encontra aqui."}
             </h2>
             <div className="h-0.5 w-16 bg-[#E8711A] mx-auto mt-4"></div>
             <p className="font-sans text-sm text-[#5C6874] mt-3">
-              Não fazemos turismo padrão de massa. Fornecemos encontros customizados regados a carinho e mimos artesanais.
+              {settings?.homeMimosDesc || "Não fazemos turismo padrão de massa. Fornecemos encontros customizados regados a carinho e mimos artesanais."}
             </p>
           </div>
 
@@ -1178,17 +1216,17 @@ export default function HomeView({
             {/* Direita: Essential guide points */}
             <div className="lg:col-span-7 text-left space-y-6">
               <span className="font-accent text-[#E8711A] text-xs font-bold tracking-widest uppercase block">
-                05 / GUIA DE LOGÍSTICA COMPLETA
+                {settings?.homeLogisticaTag || "05 / GUIA DE LOGÍSTICA COMPLETA"}
               </span>
               <h2 className="font-serif text-3xl sm:text-5xl font-extrabold text-[#0D1B2A] tracking-tight leading-tight">
-                Planeje sem imprevistos.
+                {settings?.homeLogisticaTitle || "Planeje sem imprevistos."}
               </h2>
               <p className="font-sans text-sm text-[#5C6874] leading-relaxed">
-                Reunimos as coordenadas mais estratégicas de quem é nascido e criado no mar de Arraial. Entenda as marés, distâncias e como tirar 100% proveito de suas memórias douradas.
+                {settings?.homeLogisticaDesc || "Reunimos as coordenadas mais estratégicas de quem é nascido e criado no mar de Arraial. Entenda as marés, distâncias e como tirar 100% proveito de suas memórias douradas."}
               </p>
 
               <div className="space-y-4">
-                {[
+                {(settings?.homeLogisticaPoints?.length ? settings.homeLogisticaPoints : [
                   {
                     title: "Como Chegar em Conforto",
                     desc: "Arraial fica a 165km do Rio. Oferecemos opções sob medida de transfer executivo corporativo porta-a-porta partindo dos aeroportos rústicos da capital diretamente para a sua pousada curada."
@@ -1201,7 +1239,7 @@ export default function HomeView({
                     title: "O Que Trazer na Mochila",
                     desc: "Traga bonés leves, protetor solar mineral (pelo zelo ecológico da fauna de restinga) e claro: óculos de mergulho para fitar cavalos-marinhos e siris coloridos."
                   }
-                ].map((item, idx) => (
+                ]).map((item, idx) => (
                   <div key={idx} className="flex gap-4 items-start border-b border-zinc-200 pb-4 last:border-0 last:pb-0">
                     <span className="font-serif text-lg font-bold text-[#E8711A] bg-zinc-100 h-8 w-8 rounded-full flex items-center justify-center shrink-0">
                       {idx + 1}
@@ -1389,14 +1427,14 @@ export default function HomeView({
           
           <div className="text-center max-w-3xl mx-auto mb-16">
             <span className="font-accent text-[#E8711A] text-xs font-bold tracking-widest uppercase block mb-1">
-              07 / LAZER & CONEXÕES DE ALMA
+              {settings?.homeFeedbackTag || "07 / LAZER & CONEXÕES DE ALMA"}
             </span>
             <h2 className="font-serif text-3xl sm:text-5xl font-extrabold text-[#0D1B2A] tracking-tight">
-              Histórias que nos inspiram.
+              {settings?.homeFeedbackTitle || "Histórias que nos inspiram."}
             </h2>
             <div className="h-0.5 w-16 bg-[#E8711A] mx-auto mt-4"></div>
             <p className="font-sans text-sm text-[#5C6874] mt-3">
-              Não vendemos tickets automáticos. Colecionamos sorrisos e relatos de quem se conectou ao cabo com total afeto.
+              {settings?.homeFeedbackDesc || "Não vendemos tickets automáticos. Colecionamos sorrisos e relatos de quem se conectou ao cabo com total afeto."}
             </p>
           </div>
 
@@ -1455,15 +1493,17 @@ export default function HomeView({
                     </span>
                   </div>
                   <h3 className="font-serif text-2xl font-extrabold text-white leading-tight">
-                    O Guia Digital de Arraial do Cabo
+                    {settings?.homeGuideTitle || "O Guia Digital de Arraial do Cabo"}
                   </h3>
                   <p className="font-sans text-[10px] text-zinc-100/90 tracking-wide">
-                    Dicas, marés, coordenadas de nativos e gastronomia de ressurgência. Edição 2026.
+                    {settings?.homeGuideDesc || "Dicas, marés, coordenadas de nativos e gastronomia de ressurgência. Edição 2026."}
                   </p>
                 </div>
 
                 <div className="flex items-center justify-between border-t border-white/10 pt-4">
-                  <span className="font-accent text-[8px] tracking-widest text-[#0D1B2A] font-extrabold uppercase">DOWNLOAD GRATUITO</span>
+                  <span className="font-accent text-[8px] tracking-widest text-[#0D1B2A] font-extrabold uppercase">
+                    {settings?.homeGuideTag || "DOWNLOAD GRATUITO"}
+                  </span>
                   <BookOpen className="w-5 h-5 text-white" />
                 </div>
               </div>
@@ -1472,13 +1512,13 @@ export default function HomeView({
             {/* Right Box: Lead conversion form */}
             <div className="lg:col-span-7 text-left space-y-6">
               <span className="font-accent text-[#E8711A] text-xs font-bold tracking-widest uppercase block">
-                08 / ACESSO INSTANTÂNEO & CURADO
+                {settings?.homeGuideTag || "08 / ACESSO INSTANTÂNEO & CURADO"}
               </span>
               <h2 className="font-serif text-3xl sm:text-5xl font-extrabold text-white tracking-tight leading-tight">
-                Baixe o Guia Digital Oficial
+                {settings?.homeGuideTitle || "Baixe o Guia Digital Oficial"}
               </h2>
               <p className="font-sans text-sm text-zinc-300 leading-relaxed">
-                Preparamos um livreto completo compilando os melhores horários para passear, locais secretos para se alimentar, fujas extraordinárias das marés cheias e muito mais! Forneça seu contato e o enviaremos de graça no seu e-mail instantly.
+                {settings?.homeGuideDesc || "Preparamos um livreto completo compilando os melhores horários para passear, locais secretos para se alimentar, fujas extraordinárias das marés cheias e muito mais! Forneça seu contato e o enviaremos de graça no seu e-mail instantly."}
               </p>
 
               <AnimatePresence mode="wait">
@@ -1525,7 +1565,7 @@ export default function HomeView({
                         type="submit"
                         className="w-full py-4 text-center bg-[#E8711A] hover:bg-white text-[#0D1B2A] hover:text-[#0D1B2A] font-accent text-xs font-bold tracking-widest uppercase rounded shadow transition-all duration-300 hover:scale-[1.01]"
                       >
-                        BAIXAR MEU LIVRETO DIGITAL DA GUIDA &rarr;
+                        {settings?.homeGuideBtnText || "BAIXAR MEU LIVRETO DIGITAL DA GUIDA"} &rarr;
                       </button>
                     </div>
                   </form>

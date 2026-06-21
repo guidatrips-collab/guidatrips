@@ -56,6 +56,10 @@ export default function AdminView({
   const [editingPost, setEditingPost] = useState<Partial<BlogPost> | null>(null);
   const [tempSettings, setTempSettings] = useState<GlobalSettings>({ ...settings });
 
+  React.useEffect(() => {
+    setTempSettings({ ...settings });
+  }, [settings]);
+
   // Action log pre-seeding
   const [activityLog, setActivityLog] = useState<string[]>([
     "Hoje 11h45 · Clique WhatsApp: Passeio de Barco Premium &mdash; João V.",
@@ -994,68 +998,74 @@ export default function AdminView({
         {activeTab === "settings" && (
           <div className="space-y-6 text-left">
             <div className="bg-[#132033] border border-white/5 p-6 rounded-sm space-y-6">
-              <h3 className="font-serif text-lg font-bold">Diretivas do Operador e WhatsApp Business</h3>
               
-              <form onSubmit={handleUpdateSettings} className="space-y-6">
+              <form onSubmit={handleUpdateSettings} className="space-y-8">
                 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                {/* SETTINGS CARD 1: CONTATO & TRAFEGO */}
+                <div className="bg-[#0D1B2A]/40 border border-white/5 p-5 rounded space-y-4">
+                  <h4 className="font-serif text-sm font-bold text-[#E8711A] flex items-center gap-1.5 border-b border-white/5 pb-2">
+                    <Phone className="w-4 h-4" /> 1. Ajustes de Contato & Tráfego
+                  </h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    <div className="space-y-1.5">
+                      <label className="font-accent text-[9px] text-white tracking-widest uppercase">WhatsApp para Leads (Somente Números c/ DDI + DDD) *</label>
+                      <input
+                        type="text"
+                        required
+                        value={tempSettings.whatsappNumber}
+                        onChange={(e) => setTempSettings({ ...tempSettings, whatsappNumber: e.target.value })}
+                        className="w-full bg-[#0D1B2A] border border-white/5 p-3 text-xs text-white"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="font-accent text-[9px] text-white tracking-widest uppercase">Horário de Atendimento Comercial</label>
+                      <input
+                        type="text"
+                        required
+                        value={tempSettings.businessHours}
+                        onChange={(e) => setTempSettings({ ...tempSettings, businessHours: e.target.value })}
+                        className="w-full bg-[#0D1B2A] border border-white/5 p-3 text-xs text-white"
+                      />
+                    </div>
+                  </div>
+
                   <div className="space-y-1.5">
-                    <label className="font-accent text-[9px] text-white tracking-widest uppercase">WhatsApp para Leads (Somente Números c/ DDI + DDD) *</label>
-                    <input
-                      type="text"
-                      required
-                      value={tempSettings.whatsappNumber}
-                      onChange={(e) => setTempSettings({ ...tempSettings, whatsappNumber: e.target.value })}
+                    <label className="font-accent text-[9px] text-white tracking-widest uppercase">Mensagem Padrão de Whatsapp (Template de Boas-Vindas)</label>
+                    <textarea
+                      rows={3}
+                      value={tempSettings.whatsappGreeting}
+                      onChange={(e) => setTempSettings({ ...tempSettings, whatsappGreeting: e.target.value })}
                       className="w-full bg-[#0D1B2A] border border-white/5 p-3 text-xs text-white"
                     />
                   </div>
-                  <div className="space-y-1.5">
-                    <label className="font-accent text-[9px] text-white tracking-widest uppercase">Horário de Atendimento Comercial</label>
-                    <input
-                      type="text"
-                      required
-                      value={tempSettings.businessHours}
-                      onChange={(e) => setTempSettings({ ...tempSettings, businessHours: e.target.value })}
-                      className="w-full bg-[#0D1B2A] border border-white/5 p-3 text-xs text-white"
-                    />
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 pt-2">
+                    <div className="space-y-1.5">
+                      <label className="font-accent text-[9px] text-white tracking-widest uppercase">Google Analytics GA4 - Measurement ID</label>
+                      <input
+                        type="text"
+                        value={tempSettings.googleAnalyticsId}
+                        onChange={(e) => setTempSettings({ ...tempSettings, googleAnalyticsId: e.target.value })}
+                        className="w-full bg-[#0D1B2A] border border-white/5 p-3 text-xs text-white text-sans"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="font-accent text-[9px] text-white tracking-widest uppercase">Meta Pixel ID (Facebook Ads)</label>
+                      <input
+                        type="text"
+                        value={tempSettings.metaPixelId}
+                        onChange={(e) => setTempSettings({ ...tempSettings, metaPixelId: e.target.value })}
+                        className="w-full bg-[#0D1B2A] border border-white/5 p-3 text-xs text-white text-sans"
+                      />
+                    </div>
                   </div>
                 </div>
 
-                <div className="space-y-1.5">
-                  <label className="font-accent text-[9px] text-white tracking-widest uppercase">Mensagem Padrão de Whatsapp (Template de Boas-Vindas)</label>
-                  <textarea
-                    rows={3}
-                    value={tempSettings.whatsappGreeting}
-                    onChange={(e) => setTempSettings({ ...tempSettings, whatsappGreeting: e.target.value })}
-                    className="w-full bg-[#0D1B2A] border border-white/5 p-3 text-xs text-white"
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 border-t border-white/5 pt-6">
-                  <div className="space-y-1.5">
-                    <label className="font-accent text-[9px] text-white tracking-widest uppercase">Google Analytics GA4 - Measurement ID</label>
-                    <input
-                      type="text"
-                      value={tempSettings.googleAnalyticsId}
-                      onChange={(e) => setTempSettings({ ...tempSettings, googleAnalyticsId: e.target.value })}
-                      className="w-full bg-[#0D1B2A] border border-white/5 p-3 text-xs text-white text-sans"
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="font-accent text-[9px] text-white tracking-widest uppercase">Meta Pixel ID (Facebook Ads)</label>
-                    <input
-                      type="text"
-                      value={tempSettings.metaPixelId}
-                      onChange={(e) => setTempSettings({ ...tempSettings, metaPixelId: e.target.value })}
-                      className="w-full bg-[#0D1B2A] border border-white/5 p-3 text-xs text-white text-sans"
-                    />
-                  </div>
-                </div>
-
-                {/* O Diferencial Customizable Text Section */}
-                <div className="border-t border-white/5 pt-6 space-y-4">
-                  <h4 className="font-serif text-sm font-bold text-[#E8711A]">O Diferencial Guida Trips (Landing Page)</h4>
-                  
+                {/* SETTINGS CARD 2: HERO / LANDING */}
+                <div className="bg-[#0D1B2A]/40 border border-white/5 p-5 rounded space-y-4">
+                  <h4 className="font-serif text-sm font-bold text-[#E8711A] flex items-center gap-1.5 border-b border-white/5 pb-2">
+                    <Globe className="w-4 h-4" /> 2. Hero & Cabeçalho da Home
+                  </h4>
                   <div className="space-y-1.5">
                     <label className="font-accent text-[9px] text-white tracking-widest uppercase">Título Principal do Diferencial</label>
                     <input
@@ -1063,7 +1073,6 @@ export default function AdminView({
                       value={tempSettings.diferencialTitle || ""}
                       onChange={(e) => setTempSettings({ ...tempSettings, diferencialTitle: e.target.value })}
                       className="w-full bg-[#0D1B2A] border border-white/5 p-3 text-xs text-white text-sans"
-                      placeholder="Arraial merece ser vivido, não apenas visitado."
                     />
                   </div>
 
@@ -1074,17 +1083,598 @@ export default function AdminView({
                       value={tempSettings.diferencialDescription || ""}
                       onChange={(e) => setTempSettings({ ...tempSettings, diferencialDescription: e.target.value })}
                       className="w-full bg-[#0D1B2A] border border-white/5 p-3 text-xs text-white text-sans"
-                      placeholder="Conectamos você ao melhor da Região dos Lagos através de experiências..."
                     />
                   </div>
                 </div>
 
+                {/* SETTINGS CARD 3: FILOSOFIA DE EXPERIENCIA & 4 PILLARS */}
+                <div className="bg-[#0D1B2A]/40 border border-white/5 p-5 rounded space-y-5">
+                  <h4 className="font-serif text-sm font-bold text-[#E8711A] flex items-center gap-1.5 border-b border-white/5 pb-2">
+                    <Compass className="w-4 h-4" /> 3. Seção: Filosofia & 4 Pilares
+                  </h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <label className="font-accent text-[9px] text-white tracking-widest uppercase">Etiqueta da Seção (Tag)</label>
+                      <input
+                        type="text"
+                        value={tempSettings.homeFilosofiaTag || ""}
+                        onChange={(e) => setTempSettings({ ...tempSettings, homeFilosofiaTag: e.target.value })}
+                        className="w-full bg-[#0D1B2A] border border-white/5 p-3 text-xs text-white"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="font-accent text-[9px] text-white tracking-widest uppercase">Título Principal</label>
+                      <input
+                        type="text"
+                        value={tempSettings.homeFilosofiaTitle || ""}
+                        onChange={(e) => setTempSettings({ ...tempSettings, homeFilosofiaTitle: e.target.value })}
+                        className="w-full bg-[#0D1B2A] border border-white/5 p-3 text-xs text-white"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="font-accent text-[9px] text-white tracking-widest uppercase">Descrição Longa</label>
+                    <textarea
+                      rows={3}
+                      value={tempSettings.homeFilosofiaDesc || ""}
+                      onChange={(e) => setTempSettings({ ...tempSettings, homeFilosofiaDesc: e.target.value })}
+                      className="w-full bg-[#0D1B2A] border border-white/5 p-3 text-xs text-white"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 border-t border-white/5 pt-4">
+                    <div className="space-y-1.5">
+                      <label className="font-accent text-[9px] text-white tracking-widest uppercase">Título do Botão de Vídeo</label>
+                      <input
+                        type="text"
+                        value={tempSettings.homeFilosofiaVideoTitle || ""}
+                        onChange={(e) => setTempSettings({ ...tempSettings, homeFilosofiaVideoTitle: e.target.value })}
+                        className="w-full bg-[#0D1B2A] border border-white/5 p-3 text-xs text-white"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="font-accent text-[9px] text-white tracking-widest uppercase">Subtítulo de Detalhes do Vídeo</label>
+                      <input
+                        type="text"
+                        value={tempSettings.homeFilosofiaVideoSub || ""}
+                        onChange={(e) => setTempSettings({ ...tempSettings, homeFilosofiaVideoSub: e.target.value })}
+                        className="w-full bg-[#0D1B2A] border border-white/5 p-3 text-xs text-white"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Pillars Edit Array */}
+                  <div className="border-t border-white/5 pt-4 space-y-4">
+                    <span className="font-accent text-[9px] text-[#E8711A] tracking-wider uppercase block">Os Quatro Pilares de Cuidado</span>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {(tempSettings.homeFilosofiaPillars || [
+                        { id: 1, badge: "01 / AFETO NATIVO", title: "Ouro do Acolhimento", desc: "Guias locais diplomados com paixão para contar histórias e cuidar de sua segurança mística." },
+                        { id: 2, badge: "02 / FLUIDEZ CRISTAL", title: "Roteiros sem Fila", desc: "Cálculos matemáticos de vento, ressurgência e fluxo para atracar antes da invasão comercial." },
+                        { id: 3, badge: "03 / MIMOS DE MARÉ", title: "Cortejos de Charme", desc: "Frutas geladas selecionadas, espumantes artesanais e toalhas secas sob medida para você." },
+                        { id: 4, badge: "04 / ZERO POLUIÇÃO", title: "Compromisso Ecológico", desc: "Zelo ativo integral com lixo zero e motores silenciosos de baixíssimo atrito químico." }
+                      ]).map((pil, idx) => (
+                        <div key={pil.id} className="bg-[#0D1B2A]/70 border border-white/5 p-4 rounded space-y-2">
+                          <span className="font-serif text-xs font-bold text-white block">Pilar #{pil.id}</span>
+                          <div className="space-y-2">
+                            <input
+                              type="text"
+                              placeholder="Badge (Ex: 01 / AFETO)"
+                              value={pil.badge}
+                              onChange={(e) => {
+                                const updated = [...(tempSettings.homeFilosofiaPillars || [])];
+                                updated[idx] = { ...pil, badge: e.target.value };
+                                setTempSettings({ ...tempSettings, homeFilosofiaPillars: updated });
+                              }}
+                              className="w-full bg-[#0D1B2A] border border-white/10 p-2 text-xs text-white"
+                            />
+                            <input
+                              type="text"
+                              placeholder="Título"
+                              value={pil.title}
+                              onChange={(e) => {
+                                const updated = [...(tempSettings.homeFilosofiaPillars || [])];
+                                updated[idx] = { ...pil, title: e.target.value };
+                                setTempSettings({ ...tempSettings, homeFilosofiaPillars: updated });
+                              }}
+                              className="w-full bg-[#0D1B2A] border border-white/10 p-2 text-xs text-white"
+                            />
+                            <textarea
+                              rows={2}
+                              placeholder="Descrição resumida"
+                              value={pil.desc}
+                              onChange={(e) => {
+                                const updated = [...(tempSettings.homeFilosofiaPillars || [])];
+                                updated[idx] = { ...pil, desc: e.target.value };
+                                setTempSettings({ ...tempSettings, homeFilosofiaPillars: updated });
+                              }}
+                              className="w-full bg-[#0D1B2A] border border-white/10 p-2 text-xs text-white"
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* SETTINGS CARD 4: COMPASS MAP BENTO NAVIGATOR */}
+                <div className="bg-[#0D1B2A]/40 border border-white/5 p-5 rounded space-y-4">
+                  <h4 className="font-serif text-sm font-bold text-[#E8711A] flex items-center gap-1.5 border-b border-white/5 pb-2">
+                    <TrendingUp className="w-4 h-4" /> 4. Seção: Bento Grid - Bússola
+                  </h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div className="space-y-1.5">
+                      <label className="font-accent text-[9px] text-white tracking-widest uppercase">Etiqueta (Tag)</label>
+                      <input
+                        type="text"
+                        value={tempSettings.homeCompassTag || ""}
+                        onChange={(e) => setTempSettings({ ...tempSettings, homeCompassTag: e.target.value })}
+                        className="w-full bg-[#0D1B2A] border border-white/5 p-3 text-xs text-white"
+                      />
+                    </div>
+                    <div className="space-y-1.5 sm:col-span-2">
+                      <label className="font-accent text-[9px] text-white tracking-widest uppercase">Título Principal</label>
+                      <input
+                        type="text"
+                        value={tempSettings.homeCompassTitle || ""}
+                        onChange={(e) => setTempSettings({ ...tempSettings, homeCompassTitle: e.target.value })}
+                        className="w-full bg-[#0D1B2A] border border-white/5 p-3 text-xs text-white"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="font-accent text-[9px] text-white tracking-widest uppercase">Descrição Curta</label>
+                    <input
+                      type="text"
+                      value={tempSettings.homeCompassDesc || ""}
+                      onChange={(e) => setTempSettings({ ...tempSettings, homeCompassDesc: e.target.value })}
+                      className="w-full bg-[#0D1B2A] border border-white/5 p-3 text-xs text-white"
+                    />
+                  </div>
+
+                  {/* Categories list builder */}
+                  <div className="border-t border-white/5 pt-4 space-y-4">
+                    <span className="font-accent text-[9px] text-[#E8711A] tracking-wider uppercase block">As 8 Categorias da Bússola Bento</span>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                      {(tempSettings.homeCategories || [
+                        { id: "praias", name: "Praias & Costas", count: "8 paragens", font: "font-serif text-[13px]" },
+                        { id: "mirantes", name: "Mirantes Rústicos", count: "4 refúgios", font: "font-serif text-[13px]" },
+                        { id: "vibe", name: "Vibe de Afeto", count: "Experiências", font: "font-serif text-[13px]" },
+                        { id: "embarcacoes", name: "Embarcações", count: "Peixes & Veleiros", font: "font-serif text-[12px]" },
+                        { id: "gastronomia", name: "Gastronomia", count: "6 quintais", font: "font-serif text-[13px]" },
+                        { id: "hospedagem", name: "Pousadas Boutique", count: "8 seleções", font: "font-serif text-[12px]" },
+                        { id: "aventura", name: "Cultura & Trilhas", count: "10 rotas", font: "font-serif text-[12px]" },
+                        { id: "logistica", name: "Logística Completa", count: "Dicas nativas", font: "font-serif text-[11px]" }
+                      ]).map((cat, idx) => (
+                        <div key={cat.id} className="bg-[#0D1B2A]/70 border border-white/5 p-3 rounded space-y-2">
+                          <span className="font-accent text-[8px] text-zinc-400 block uppercase">ID: {cat.id}</span>
+                          <input
+                            type="text"
+                            placeholder="Nome de Exibição"
+                            value={cat.name}
+                            onChange={(e) => {
+                              const updated = [...(tempSettings.homeCategories || [])];
+                              updated[idx] = { ...cat, name: e.target.value };
+                              setTempSettings({ ...tempSettings, homeCategories: updated });
+                            }}
+                            className="w-full bg-[#0D1B2A] border border-white/10 p-1.5 text-xs text-white font-sans"
+                          />
+                          <input
+                            type="text"
+                            placeholder="Contagem/Marcas"
+                            value={cat.count}
+                            onChange={(e) => {
+                              const updated = [...(tempSettings.homeCategories || [])];
+                              updated[idx] = { ...cat, count: e.target.value };
+                              setTempSettings({ ...tempSettings, homeCategories: updated });
+                            }}
+                            className="w-full bg-[#0D1B2A] border border-white/10 p-1.5 text-[11px] text-zinc-300 font-sans"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* SETTINGS CARD 5: PRAIA DO FORNO HIGHLIGHT BANNER & MIMOS BOUTIQUE */}
+                <div className="bg-[#0D1B2A]/40 border border-white/5 p-5 rounded space-y-5">
+                  <h4 className="font-serif text-sm font-bold text-[#E8711A] flex items-center gap-1.5 border-b border-white/5 pb-2">
+                    <Globe className="w-4 h-4" /> 5. Seção: Banner Forno & Mimos Boutique
+                  </h4>
+                  <div className="space-y-4">
+                    <span className="font-accent text-[9px] text-[#E8711A] tracking-wider uppercase block">Banner Praia do Forno Highlight</span>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-1.5">
+                        <label className="font-accent text-[8px] text-zinc-400 uppercase tracking-widest block">ETIQUETA (TAG)</label>
+                        <input
+                          type="text"
+                          value={tempSettings.homeBannerTag || ""}
+                          onChange={(e) => setTempSettings({ ...tempSettings, homeBannerTag: e.target.value })}
+                          className="w-full bg-[#0D1B2A] border border-white/5 p-2 text-xs text-white"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="font-accent text-[8px] text-zinc-400 uppercase tracking-widest block">TÍTULO PRINCIPAL</label>
+                        <input
+                          type="text"
+                          value={tempSettings.homeBannerTitle || ""}
+                          onChange={(e) => setTempSettings({ ...tempSettings, homeBannerTitle: e.target.value })}
+                          className="w-full bg-[#0D1B2A] border border-white/5 p-2 text-xs text-white"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="font-accent text-[8px] text-zinc-400 uppercase tracking-widest block">TEXTO DO BOTÃO</label>
+                        <input
+                          type="text"
+                          value={tempSettings.homeBannerBtnText || ""}
+                          onChange={(e) => setTempSettings({ ...tempSettings, homeBannerBtnText: e.target.value })}
+                          className="w-full bg-[#0D1B2A] border border-white/5 p-2 text-xs text-white"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="font-accent text-[8px] text-zinc-400 uppercase tracking-widest block">URL DA IMAGEM DE FUNDO</label>
+                        <input
+                          type="text"
+                          value={tempSettings.homeBannerImgUrl || ""}
+                          onChange={(e) => setTempSettings({ ...tempSettings, homeBannerImgUrl: e.target.value })}
+                          className="w-full bg-[#0D1B2A] border border-white/5 p-2 text-xs text-white text-sans"
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="font-accent text-[8px] text-zinc-400 uppercase tracking-widest block">DESCRIÇÃO CURTA</label>
+                      <textarea
+                        rows={2}
+                        value={tempSettings.homeBannerDesc || ""}
+                        onChange={(e) => setTempSettings({ ...tempSettings, homeBannerDesc: e.target.value })}
+                        className="w-full bg-[#0D1B2A] border border-white/5 p-2 text-xs text-white"
+                      />
+                    </div>
+                  </div>
+
+                  {/* MIMOS BOUTIQUE INTRO HERO */}
+                  <div className="border-t border-white/5 pt-4 space-y-4">
+                    <span className="font-accent text-[9px] text-[#E8711A] tracking-wider uppercase block">Cabeçalho dos Mimos Boutique (Além do Óbvio)</span>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-1.5">
+                        <label className="font-accent text-[8px] text-zinc-400 uppercase tracking-widest block">ETIQUETA (TAG)</label>
+                        <input
+                          type="text"
+                          value={tempSettings.homeMimosTag || ""}
+                          onChange={(e) => setTempSettings({ ...tempSettings, homeMimosTag: e.target.value })}
+                          className="w-full bg-[#0D1B2A] border border-white/5 p-2 text-xs text-white"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="font-accent text-[8px] text-zinc-400 uppercase tracking-widest block">TÍTULO PRINCIPAL</label>
+                        <input
+                          type="text"
+                          value={tempSettings.homeMimosTitle || ""}
+                          onChange={(e) => setTempSettings({ ...tempSettings, homeMimosTitle: e.target.value })}
+                          className="w-full bg-[#0D1B2A] border border-white/5 p-2 text-xs text-white"
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="font-accent text-[8px] text-zinc-400 uppercase tracking-widest block">DESCRIÇÃO CURTA</label>
+                      <input
+                        type="text"
+                        value={tempSettings.homeMimosDesc || ""}
+                        onChange={(e) => setTempSettings({ ...tempSettings, homeMimosDesc: e.target.value })}
+                        className="w-full bg-[#0D1B2A] border border-white/5 p-2 text-xs text-white"
+                      />
+                    </div>
+                  </div>
+
+                  {/* 4 Interactive Tabs List */}
+                  <div className="border-t border-white/5 pt-4 space-y-4">
+                    <span className="font-accent text-[9px] text-[#E8711A] tracking-wider uppercase block">As 4 Abas de Experiência</span>
+                    <div className="space-y-4 pb-2">
+                      {(tempSettings.homeMimosTabs || [
+                        { key: "sabores", badge: "🍽️ COMPOSIÇÃO ARTESANAL", title: "Sabores Que Unem E Celebram", text: "A nossa gastronomia abraça o seu paladar com frescor incomparável. Desfrute de espumantes selecionados de vinícolas de selo premiado, tábuas de frios rústicas, ceviche preparado na hora e deliciosos mimos regionais servidos sob a brisa morna do oceano.", img: "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80" },
+                        { key: "lounges", badge: "✨ INSTALAÇÃO PRIVADA", title: "Piqueniques Sob a Luz Dourada", text: "Montamos lounges boutique com tapetes rústicos, almofadas macias e iluminação minimalista quente diretamente em mirantes ou praias reservadas. Uma experiência mágica de cinema para conversar, provar iguarias e desfrutar da melhor hora do pôr do sol com quem você mais ama.", img: "https://images.unsplash.com/photo-1510798831971-661eb04b3739?auto=format&fit=crop&w=800&q=80" },
+                        { key: "noite", badge: "🌙 ENCONTROS NO DECK", title: "Luau Intimista & Noite sob Velas", text: "Ao entardecer, as estrelas tomam conta do cabo. Projetamos jantares privativos aconchegantes sob velas aromáticas flutuantes nas areias, harmonizados com vinhos finos de selo orgânico e o som rítmico das ondas quebrando suavemente na orla.", img: "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?auto=format&fit=crop&w=800&q=80" },
+                        { key: "nativismo", badge: "🤝 CONEXÃO VERDADEIRA", title: "A Hospitalidade de Pura Alma", text: "Liderados por Guida, nossa equipe é composta por moradores apaixonados que respiram o destino. Nosso diferencial é a conexão humana verdadeira: recebemos você com sorrisos sinceros de braços abertos, contando causos divertidos de pescadores, lendas marítimas e segredos fascinantes.", img: "https://images.unsplash.com/photo-1472289065668-ce650ac443d2?auto=format&fit=crop&w=800&q=80" }
+                      ]).map((tab, idx) => (
+                        <div key={tab.key} className="bg-[#0D1B2A]/70 border border-white/5 p-4 rounded space-y-3">
+                          <div className="flex justify-between items-center border-b border-white/5 pb-1">
+                            <span className="font-accent text-[9px] text-[#E8711A] font-bold">Aba: {tab.key.toUpperCase()}</span>
+                          </div>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div className="space-y-1.5">
+                              <label className="font-accent text-[8px] text-zinc-400">EMBLEMA / BADGE</label>
+                              <input
+                                type="text"
+                                value={tab.badge}
+                                onChange={(e) => {
+                                  const updated = [...(tempSettings.homeMimosTabs || [])];
+                                  updated[idx] = { ...tab, badge: e.target.value };
+                                  setTempSettings({ ...tempSettings, homeMimosTabs: updated });
+                                }}
+                                className="w-full bg-[#0D1B2A] border border-white/10 p-2 text-xs text-white"
+                              />
+                            </div>
+                            <div className="space-y-1.5">
+                              <label className="font-accent text-[8px] text-zinc-400">TÍTULO DA ABA</label>
+                              <input
+                                type="text"
+                                value={tab.title}
+                                onChange={(e) => {
+                                  const updated = [...(tempSettings.homeMimosTabs || [])];
+                                  updated[idx] = { ...tab, title: e.target.value };
+                                  setTempSettings({ ...tempSettings, homeMimosTabs: updated });
+                                }}
+                                className="w-full bg-[#0D1B2A] border border-white/10 p-2 text-xs text-white"
+                              />
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            <div className="sm:col-span-2 space-y-1.5">
+                              <label className="font-accent text-[8px] text-zinc-400">TEXTO DESCRITIVO</label>
+                              <textarea
+                                rows={2.5}
+                                value={tab.text}
+                                onChange={(e) => {
+                                  const updated = [...(tempSettings.homeMimosTabs || [])];
+                                  updated[idx] = { ...tab, text: e.target.value };
+                                  setTempSettings({ ...tempSettings, homeMimosTabs: updated });
+                                }}
+                                className="w-full bg-[#0D1B2A] border border-white/10 p-2 text-xs text-white"
+                              />
+                            </div>
+                            <div className="space-y-1.5">
+                              <label className="font-accent text-[8px] text-zinc-400">URL DA IMAGEM</label>
+                              <textarea
+                                rows={2.5}
+                                value={tab.img}
+                                onChange={(e) => {
+                                  const updated = [...(tempSettings.homeMimosTabs || [])];
+                                  updated[idx] = { ...tab, img: e.target.value };
+                                  setTempSettings({ ...tempSettings, homeMimosTabs: updated });
+                                }}
+                                className="w-full bg-[#0D1B2A] border border-white/10 p-2 text-xs text-white text-sans"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* SETTINGS CARD 6: GUIA REVERSO DE LOGISTICA */}
+                <div className="bg-[#0D1B2A]/40 border border-white/5 p-5 rounded space-y-4">
+                  <h4 className="font-serif text-sm font-bold text-[#E8711A] flex items-center gap-1.5 border-b border-white/5 pb-2">
+                    <FileText className="w-4 h-4" /> 6. Seção: Guia de Logística Completa
+                  </h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <label className="font-accent text-[9px] text-white tracking-widest uppercase">Etiqueta da Seção (Tag)</label>
+                      <input
+                        type="text"
+                        value={tempSettings.homeLogisticaTag || ""}
+                        onChange={(e) => setTempSettings({ ...tempSettings, homeLogisticaTag: e.target.value })}
+                        className="w-full bg-[#0D1B2A] border border-white/5 p-3 text-xs text-white"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="font-accent text-[9px] text-white tracking-widest uppercase">Título Principal</label>
+                      <input
+                        type="text"
+                        value={tempSettings.homeLogisticaTitle || ""}
+                        onChange={(e) => setTempSettings({ ...tempSettings, homeLogisticaTitle: e.target.value })}
+                        className="w-full bg-[#0D1B2A] border border-white/5 p-3 text-xs text-white"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="font-accent text-[9px] text-white tracking-widest uppercase">Descrição Curta</label>
+                    <textarea
+                      rows={2}
+                      value={tempSettings.homeLogisticaDesc || ""}
+                      onChange={(e) => setTempSettings({ ...tempSettings, homeLogisticaDesc: e.target.value })}
+                      className="w-full bg-[#0D1B2A] border border-white/5 p-3 text-xs text-white"
+                    />
+                  </div>
+
+                  {/* 3 Logistic Points Dynamic Form */}
+                  <div className="border-t border-white/5 pt-4 space-y-4">
+                    <span className="font-accent text-[9px] text-[#E8711A] tracking-wider uppercase block">As 3 Dicas Logísticas</span>
+                    <div className="space-y-3">
+                      {(tempSettings.homeLogisticaPoints || [
+                        { title: "Como Chegar em Conforto", desc: "Arraial fica a 165km do Rio. Oferecemos opções sob medida de transfer executivo corporativo porta-a-porta partindo dos aeroportos rústicos da capital diretamente para a sua pousada curada." },
+                        { title: "A Melhor Época de Ventos", desc: "O sol brilha o ano todo. Para águas com nitidez mística extrema de reflexos azulados, indicamos os meses de Março a Junho, onde a calmaria de ventos sintoniza mar cristalino." },
+                        { title: "O Que Trazer na Mochila", desc: "Traga bonés leves, protetor solar mineral (pelo zelo ecológico da fauna de restinga) e claro: óculos de mergulho para fitar cavalos-marinhos e siris coloridos." }
+                      ]).map((pt, idx) => (
+                        <div key={idx} className="bg-[#0D1B2A]/70 border border-white/5 p-3 rounded space-y-2">
+                          <span className="font-serif text-xs font-bold text-white block">Ponto Logístico #{idx + 1}</span>
+                          <input
+                            type="text"
+                            placeholder="Título do Ponto"
+                            value={pt.title}
+                            onChange={(e) => {
+                              const updated = [...(tempSettings.homeLogisticaPoints || [])];
+                              updated[idx] = { ...pt, title: e.target.value };
+                              setTempSettings({ ...tempSettings, homeLogisticaPoints: updated });
+                            }}
+                            className="w-full bg-[#0D1B2A] border border-white/10 p-2 text-xs text-white"
+                          />
+                          <textarea
+                            rows={2}
+                            placeholder="Descrição completa"
+                            value={pt.desc}
+                            onChange={(e) => {
+                              const updated = [...(tempSettings.homeLogisticaPoints || [])];
+                              updated[idx] = { ...pt, desc: e.target.value };
+                              setTempSettings({ ...tempSettings, homeLogisticaPoints: updated });
+                            }}
+                            className="w-full bg-[#0D1B2A] border border-white/10 p-2 text-xs text-white"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* SETTINGS CARD 7: TESTIMONIALS / DEPONIMENTOS */}
+                <div className="bg-[#0D1B2A]/40 border border-white/5 p-5 rounded space-y-4">
+                  <h4 className="font-serif text-sm font-bold text-[#E8711A] flex items-center gap-1.5 border-b border-white/5 pb-2">
+                    <Users className="w-4 h-4" /> 7. Seção: Depoimentos & Histórias Reais
+                  </h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <label className="font-accent text-[9px] text-white tracking-widest uppercase">Etiqueta da Seção (Tag)</label>
+                      <input
+                        type="text"
+                        value={tempSettings.homeFeedbackTag || ""}
+                        onChange={(e) => setTempSettings({ ...tempSettings, homeFeedbackTag: e.target.value })}
+                        className="w-full bg-[#0D1B2A] border border-white/5 p-3 text-xs text-white"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="font-accent text-[9px] text-white tracking-widest uppercase">Título Principal</label>
+                      <input
+                        type="text"
+                        value={tempSettings.homeFeedbackTitle || ""}
+                        onChange={(e) => setTempSettings({ ...tempSettings, homeFeedbackTitle: e.target.value })}
+                        className="w-full bg-[#0D1B2A] border border-white/5 p-3 text-xs text-white"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="font-accent text-[9px] text-white tracking-widest uppercase">Descrição Opcional</label>
+                    <textarea
+                      rows={2}
+                      value={tempSettings.homeFeedbackDesc || ""}
+                      onChange={(e) => setTempSettings({ ...tempSettings, homeFeedbackDesc: e.target.value })}
+                      className="w-full bg-[#0D1B2A] border border-white/5 p-3 text-xs text-white"
+                    />
+                  </div>
+
+                  {/* Feedback items list builder */}
+                  <div className="border-t border-white/5 pt-4 space-y-4">
+                    <span className="font-accent text-[9px] text-[#E8711A] tracking-wider uppercase block">Os 3 Depoimentos Coletados</span>
+                    <div className="space-y-4">
+                      {(tempSettings.homeFeedbackList || [
+                        { name: "Daniela Pinheiro & Noivo", city: "Rio de Janeiro - RJ", quote: "Eu queria um pedido de casamento surpresa perfeito nas dunas e a equipe da Guida estruturou TUDO. Montaram um lounge maravilhoso com velas, queijos e champanhe maravilhoso no Pontal e até contrataram fotógrafo para se disfarçar de turista! Sensacional!", role: "Momentos Especiais", avatar: "D" },
+                        { name: "Ricardo e Cláudia Lemos", city: "Campinas - SP", quote: "Viajamos com as crianças de 5 e 8 anos. O barco é limpíssimo, o colete das crianças coube perfeitamente e os marinheiros prepararam cortes de melancia bem gelada que as crianças devoraram após o mergulho. Foi o dia mais feliz de nossas férias!", role: "Fórmula de Família", avatar: "R" },
+                        { name: "Letícia Amaral", city: "Brasília - DF", quote: "Atendimento caloroso incrível. Não somos tratadas como meros bilhetes de turismo. Guida nos pegou na porta da pousada, nos deu dicas preciosas sobre horários e nos levou para jantar lulas na brasa. Esse afeto é o verdadeiro ouro!", role: "Aventura Curada", avatar: "L" }
+                      ]).map((item, idx) => (
+                        <div key={idx} className="bg-[#0D1B2A]/70 border border-white/5 p-4 rounded space-y-3">
+                          <span className="font-serif text-xs font-bold text-white block">Depoimento #{idx + 1}</span>
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            <div className="space-y-1">
+                              <label className="font-accent text-[8px] text-zinc-400">NOME DO CLIENTE</label>
+                              <input
+                                type="text"
+                                value={item.name}
+                                onChange={(e) => {
+                                  const updated = [...(tempSettings.homeFeedbackList || [])];
+                                  updated[idx] = { ...item, name: e.target.value };
+                                  setTempSettings({ ...tempSettings, homeFeedbackList: updated });
+                                }}
+                                className="w-full bg-[#0D1B2A] border border-white/10 p-2 text-xs text-white"
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <label className="font-accent text-[8px] text-zinc-400">CIDADE - UF</label>
+                              <input
+                                type="text"
+                                value={item.city}
+                                onChange={(e) => {
+                                  const updated = [...(tempSettings.homeFeedbackList || [])];
+                                  updated[idx] = { ...item, city: e.target.value };
+                                  setTempSettings({ ...tempSettings, homeFeedbackList: updated });
+                                }}
+                                className="w-full bg-[#0D1B2A] border border-white/10 p-2 text-xs text-white"
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <label className="font-accent text-[8px] text-zinc-400">CATEGORIA / PERFIL DO CLIENTE</label>
+                              <input
+                                type="text"
+                                value={item.role}
+                                onChange={(e) => {
+                                  const updated = [...(tempSettings.homeFeedbackList || [])];
+                                  updated[idx] = { ...item, role: e.target.value };
+                                  setTempSettings({ ...tempSettings, homeFeedbackList: updated });
+                                }}
+                                className="w-full bg-[#0D1B2A] border border-white/10 p-2 text-xs text-white"
+                              />
+                            </div>
+                          </div>
+                          <div className="space-y-1.5">
+                            <label className="font-accent text-[8px] text-zinc-400">DEPOIMENTO COMPLETO</label>
+                            <textarea
+                              rows={2.5}
+                              value={item.quote}
+                              onChange={(e) => {
+                                const updated = [...(tempSettings.homeFeedbackList || [])];
+                                updated[idx] = { ...item, quote: e.target.value };
+                                setTempSettings({ ...tempSettings, homeFeedbackList: updated });
+                              }}
+                              className="w-full bg-[#0D1B2A] border border-white/10 p-2 text-xs text-white"
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* SETTINGS CARD 8: DOWNLOAD LIVRETE / GUIA DIGITAL */}
+                <div className="bg-[#0D1B2A]/40 border border-white/5 p-5 rounded space-y-4">
+                  <h4 className="font-serif text-sm font-bold text-[#E8711A] flex items-center gap-1.5 border-b border-white/5 pb-2">
+                    <FileText className="w-4 h-4" /> 8. Seção: Guia Digital do Livrete
+                  </h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <label className="font-accent text-[9px] text-white tracking-widest uppercase">Etiqueta do Livrete (Tag)</label>
+                      <input
+                        type="text"
+                        value={tempSettings.homeGuideTag || ""}
+                        onChange={(e) => setTempSettings({ ...tempSettings, homeGuideTag: e.target.value })}
+                        className="w-full bg-[#0D1B2A] border border-white/5 p-3 text-xs text-white"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="font-accent text-[9px] text-white tracking-widest uppercase">Título do Livrete</label>
+                      <input
+                        type="text"
+                        value={tempSettings.homeGuideTitle || ""}
+                        onChange={(e) => setTempSettings({ ...tempSettings, homeGuideTitle: e.target.value })}
+                        className="w-full bg-[#0D1B2A] border border-white/5 p-3 text-xs text-white"
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <label className="font-accent text-[9px] text-white tracking-widest uppercase">Texto do Botão de Submit</label>
+                      <input
+                        type="text"
+                        value={tempSettings.homeGuideBtnText || ""}
+                        onChange={(e) => setTempSettings({ ...tempSettings, homeGuideBtnText: e.target.value })}
+                        className="w-full bg-[#0D1B2A] border border-white/5 p-3 text-xs text-white"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="font-accent text-[9px] text-white tracking-widest uppercase">Descrição do Livrete</label>
+                      <textarea
+                        rows={1}
+                        value={tempSettings.homeGuideDesc || ""}
+                        onChange={(e) => setTempSettings({ ...tempSettings, homeGuideDesc: e.target.value })}
+                        className="w-full bg-[#0D1B2A] border border-white/5 p-3 text-xs text-white"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* SUBMIT ACTIONS GLOBALS */}
                 <div className="flex gap-3 justify-end border-t border-white/5 pt-6">
                   <button
                     type="submit"
-                    className="px-8 py-3 bg-[#E8711A] text-[#0D1B2A] hover:bg-[#C45E12] font-accent text-xs font-bold uppercase rounded-sm cursor-pointer shadow-md flex items-center gap-1"
+                    className="px-8 py-3.5 bg-[#E8711A] text-[#0D1B2A] hover:bg-[#C45E12] font-accent text-xs font-bold uppercase rounded-sm cursor-pointer shadow-lg flex items-center gap-1.5"
                   >
-                    <Save className="w-4 h-4" /> Salvar Ajustes Globais
+                    <Save className="w-4 h-4 animate-pulse" /> Salvar Ajustes Globais da Home e Contatos
                   </button>
                 </div>
 
