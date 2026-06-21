@@ -24,6 +24,8 @@ interface WizardViewProps {
   onNavigate: (view: string) => void;
   onSetClientName?: (name: string) => void;
   onSetClientCity?: (city: string) => void;
+  selectedHotelId?: string | null;
+  onChangeHotelId?: (id: string | null) => void;
 }
 
 interface DestinationHub {
@@ -47,7 +49,9 @@ export default function WizardView({
   onRemoveFromCart,
   onNavigate,
   onSetClientName,
-  onSetClientCity
+  onSetClientCity,
+  selectedHotelId = null,
+  onChangeHotelId
 }: WizardViewProps) {
   // Wizard master steps: 1 = Profile, 2 = Destination & Days, 3 = Experiences Selection
   const [step, setStep] = useState(1);
@@ -75,6 +79,10 @@ export default function WizardView({
   // Form states for local validation
   const [tempName, setTempName] = useState(clientName);
   const [tempCity, setTempCity] = useState(clientCity);
+
+  const [hasHotelAnswer, setHasHotelAnswer] = useState<"no" | "yes" | null>(() => {
+    return selectedHotelId ? "no" : null;
+  });
 
   // Destination Hub list
   const destinations: DestinationHub[] = [
@@ -671,6 +679,174 @@ export default function WizardView({
                 >
                   ⚙️ Alterar Estadia
                 </button>
+              </div>
+
+              {/* Upsell Hospedagem Question */}
+              <div className="bg-[#FAF8F5] border border-[#E8711A]/20 rounded-2xl p-6 max-w-2xl mx-auto shadow-sm space-y-6 text-left">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
+                  <div className="flex items-start gap-4">
+                    <div className="p-2.5 bg-[#E8711A]/10 text-[#E8711A] rounded-xl font-bold text-2xl select-none">
+                      🏨
+                    </div>
+                    <div className="space-y-1">
+                      <h4 className="font-serif text-sm sm:text-base font-bold text-[#0D1B2A]">
+                        Você gostaria de adicionar uma de nossas Hospedagens Parceiras com tarifas secretas e mimos ao seu roteiro?
+                      </h4>
+                      <p className="font-sans text-xs text-zinc-500 leading-relaxed">
+                        Selecione "Sim" para abrir as indicações prioritárias da nossa plataforma, ou "Não" para fechar a janela.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2 self-start sm:self-center">
+                    <button
+                      type="button"
+                      onClick={() => setHasHotelAnswer("yes")}
+                      className={`px-4 py-2 rounded-lg font-accent text-[10px] font-extrabold tracking-widest uppercase transition-all cursor-pointer ${
+                        hasHotelAnswer === "yes"
+                          ? "bg-[#E8711A] text-[#0D1B2A] font-black scale-102"
+                          : "bg-white hover:bg-zinc-100 border border-zinc-200 text-zinc-700"
+                      }`}
+                    >
+                      Sim 👍
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setHasHotelAnswer("no")}
+                      className={`px-4 py-2 rounded-lg font-accent text-[10px] font-extrabold tracking-widest uppercase transition-all cursor-pointer ${
+                        hasHotelAnswer === "no"
+                          ? "bg-[#0D1B2A] text-white scale-102"
+                          : "bg-white hover:bg-zinc-100 border border-zinc-200 text-zinc-700"
+                      }`}
+                    >
+                      Não ❌
+                    </button>
+                  </div>
+                </div>
+
+                {hasHotelAnswer === "yes" && (
+                  <div className="space-y-5 pt-3 border-t border-zinc-200/60">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[#E8711A] text-base">⭐</span>
+                      <h5 className="font-accent text-[10px] font-black tracking-widest text-[#E8711A] uppercase">
+                        Nossas Indicações Disponíveis (Benefícios Inclusos)
+                      </h5>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                      {[
+                        {
+                          id: "ohana-pousada",
+                          name: "Ohana Pousada Boutique",
+                          location: "Pontal do Atalaia",
+                          rating: 5.0,
+                          tag: "VISTA LENDÁRIA",
+                          desc: "Jacuzzi infinita debruçada sobre as encostas místicas.",
+                          img: "https://images.unsplash.com/photo-1584132967334-10e028bd69f7?auto=format&fit=crop&w=600&q=80",
+                          whatsappMessage: "Olá, Guida Trips! Gostaria de consultar tarifas com benefícios na Ohana Pousada Boutique."
+                        },
+                        {
+                          id: "pousada-timoneiro",
+                          name: "Pousada do Timoneiro",
+                          location: "Praia Grande",
+                          rating: 4.9,
+                          tag: "CONFORTO CLÁSSICO",
+                          desc: "Piscina climatizada perto da beira da Praia Grande.",
+                          img: "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=600&q=80",
+                          whatsappMessage: "Olá, Guida Trips! Gostaria de consultar tarifas com benefícios exclusivos para a Pousada do Timoneiro."
+                        },
+                        {
+                          id: "pousada-caminho-mar",
+                          name: "Pousada Caminho do Mar",
+                          location: "Praia dos Anjos",
+                          rating: 4.8,
+                          tag: "EMBARQUE PRÁTICO",
+                          desc: "Conforto moderno pertinho do cais de embarque.",
+                          img: "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?auto=format&fit=crop&w=600&q=80",
+                          whatsappMessage: "Olá, Guida Trips! Gostaria de consultar tarifas com benefícios para a Pousada Caminho do Mar."
+                        }
+                      ].map((pousada) => {
+                        const isSelected = selectedHotelId === pousada.id;
+
+                        return (
+                          <div
+                            key={pousada.id}
+                            className={`bg-white border rounded-xl overflow-hidden shadow-xs hover:shadow-sm transition-all flex flex-col justify-between group ${
+                              isSelected ? "border-[#E8711A] ring-1 ring-[#E8711A]/20" : "border-zinc-200"
+                            }`}
+                          >
+                            <div className="h-24 overflow-hidden relative select-none">
+                              <img
+                                src={pousada.img}
+                                alt={pousada.name}
+                                className="w-full h-full object-cover group-hover:scale-103 transition-transform duration-500"
+                              />
+                              <span className="absolute bottom-1 left-1.5 bg-[#0D1B2A]/90 text-white text-[7px] font-accent tracking-widest px-1 py-0.5 rounded-xs">
+                                {pousada.tag}
+                              </span>
+                              <div className="absolute top-1 right-1 bg-white/95 text-[#0D1B2A] text-[8px] font-bold px-1.5 py-0.5 rounded shadow-xs flex items-center gap-0.5">
+                                <span className="text-yellow-500">★</span>
+                                <span>{pousada.rating}</span>
+                              </div>
+                            </div>
+
+                            <div className="p-3 space-y-3 flex-grow flex flex-col justify-between">
+                              <div className="space-y-1 text-left">
+                                <h6 className="font-serif text-xs font-extrabold text-[#0D1B2A] leading-tight group-hover:text-[#E8711A] transition-colors line-clamp-1">
+                                  {pousada.name}
+                                </h6>
+                                <p className="font-sans text-[10px] text-zinc-500 leading-snug line-clamp-2">
+                                  {pousada.desc}
+                                </p>
+                              </div>
+
+                              <div className="space-y-1 pt-1.5 border-t border-zinc-100">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    if (onChangeHotelId) {
+                                      onChangeHotelId(isSelected ? null : pousada.id);
+                                    }
+                                  }}
+                                  className={`w-full py-1.5 rounded font-accent text-[8px] font-extrabold tracking-wider uppercase transition-all flex items-center justify-center gap-1 cursor-pointer ${
+                                    isSelected
+                                      ? "bg-[#E8711A] text-[#0D1B2A] font-black"
+                                      : "bg-white border border-zinc-200 hover:border-zinc-300 text-zinc-700"
+                                  }`}
+                                >
+                                  {isSelected ? "✨ NO MEU ROTEIRO" : "🏨 VINCULAR"}
+                                </button>
+                                <a
+                                  href={`https://wa.me/552299887766?text=${encodeURIComponent(pousada.whatsappMessage)}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="w-full py-1.5 bg-[#0D1B2A] hover:bg-[#E8711A] text-white hover:text-[#0D1B2A] font-accent text-[8px] font-extrabold tracking-wider uppercase transition-all rounded flex items-center justify-center gap-1"
+                                >
+                                  💬 CONSULTAR
+                                </a>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {hasHotelAnswer === "no" && (
+                  <div className="p-4 bg-zinc-100 rounded-xl flex items-center justify-between text-left">
+                    <p className="font-sans text-xs text-[#5C6874]">
+                      🔒 Perfeito! Seu roteiro de experiências sugeridas continuará listado abaixo. Temos certeza de que você terá uma ótima estadia.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => setHasHotelAnswer(null)}
+                      className="text-xs text-[#E8711A] hover:underline font-bold whitespace-nowrap ml-3"
+                    >
+                      Mudar de ideia
+                    </button>
+                  </div>
+                )}
               </div>
 
               {/* EXPERIENCES LIST GRID - Rounded aesthetics, responsive */}

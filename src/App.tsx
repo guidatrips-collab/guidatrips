@@ -544,6 +544,8 @@ export default function App() {
             onNavigate={setCurrentView}
             onSetClientName={setClientName}
             onSetClientCity={setClientCity}
+            selectedHotelId={selectedHotelId}
+            onChangeHotelId={handleUpdateHotelId}
           />
         )}
         {currentView === "hospedagens" && (
