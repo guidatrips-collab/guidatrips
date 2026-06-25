@@ -85,7 +85,7 @@ export default function Navbar({ currentView, onNavigate, cartCount, onOpenCart 
           </div>
 
           {/* Desktop Navigation Links */}
-          <div className="hidden md:flex items-center space-x-1 lg:space-x-2">
+          <div className="hidden lg:flex items-center space-x-1 lg:space-x-2">
             {navItems.map((item) => {
               const isActive = currentView === item.id || (item.id === "blog" && currentView.startsWith("blog"));
               return (
@@ -124,6 +124,18 @@ export default function Navbar({ currentView, onNavigate, cartCount, onOpenCart 
               title="Acesso Privado Backoffice"
             >
               <ShieldCheck className="w-5 h-5" />
+            </button>
+
+            {/* Painel do Cliente */}
+            <button
+              onClick={() => handleLinkClick("cliente")}
+              className={`flex items-center gap-1.5 border px-4 py-2.5 rounded-full text-xs font-bold uppercase transition-all duration-300 hover:scale-105 ${
+                isThemeDarkHero
+                  ? "border-white/20 text-white hover:bg-white/10"
+                  : "border-[#0D1B2A]/20 text-[#0D1B2A] hover:bg-[#0D1B2A]/5"
+              }`}
+            >
+              Área do Cliente
             </button>
 
             {/* CTA do Whatsapp */}
@@ -185,6 +197,14 @@ export default function Navbar({ currentView, onNavigate, cartCount, onOpenCart 
               }`}
             >
               <span>Backoffice</span>
+            </button>
+            <button
+              onClick={() => handleLinkClick("cliente")}
+              className={`flex items-center space-x-4 py-3 border-b border-zinc-100 text-left font-sans text-sm tracking-widest uppercase transition-all ${
+                currentView.startsWith("cliente") ? "text-[#E8711A] font-bold" : "text-[#0D1B2A] font-bold"
+              }`}
+            >
+              <span>Área do Cliente</span>
             </button>
           </div>
 

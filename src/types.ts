@@ -208,3 +208,49 @@ export interface BookingCartItem {
   observations: string; // Optional client observations
   dayIndex?: number; // Manual sequence organizer (Day 1, Day 2 etc)
 }
+
+// Client Area / Viagem Entities
+export interface ClientUser {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  photoUrl?: string;
+  preferences?: string[];
+  favorites?: string[]; // IDs of experiences, partners, posts
+}
+
+export interface ClientReservation {
+  id: string;
+  userId: string;
+  experienceId: string;
+  date: string;
+  time: string;
+  status: "confirmed" | "completed" | "cancelled";
+  pax: number;
+  voucherCode: string;
+  meetingPoint: string;
+  rules: string[];
+  bringItems: string[];
+  avoidItems: string[];
+}
+
+export interface ClientPartner {
+  id: string;
+  category: "restaurantes" | "cafeterias" | "fotografos" | "buggy" | "mergulho" | "hospedagem";
+  name: string;
+  description: string;
+  benefit: string;
+  couponCode: string;
+  img: string;
+}
+
+export interface ClientReview {
+  id: string;
+  userId: string;
+  experienceId: string;
+  rating: number;
+  comment: string;
+  photos: string[];
+  date: string;
+}

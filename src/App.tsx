@@ -16,6 +16,7 @@ import AdminView from "./components/AdminView";
 import HospedagensView from "./components/HospedagensView";
 import RoteiroView from "./components/RoteiroView";
 import WizardView from "./components/WizardView";
+import ClientPanelView from "./components/ClientPanelView";
 
 import { 
   Experience, BlogPost, Lead, GlobalSettings, BookingCartItem 
@@ -578,6 +579,13 @@ export default function App() {
             onUpdatePosts={updatePosts}
             onUpdateLeads={updateLeads}
             onUpdateSettings={updateSettings}
+          />
+        )}
+        {currentView === "cliente" && (
+          <ClientPanelView 
+            experiences={experiences}
+            posts={posts}
+            onNavigate={setCurrentView}
           />
         )}
         {currentView === "roteiro" && (
