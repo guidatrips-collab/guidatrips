@@ -99,15 +99,19 @@ export default function App() {
         setCart(updated);
         localStorage.setItem("guidatrips_cart", JSON.stringify(updated));
         
-        // Redirect to Client Dashboard (Dashboard do Cliente)
-        setCurrentView("cliente");
+        // Mantém o usuário no fluxo de planejamento (Roteiro Inteligente ou Experiências)
+        // para dar continuidade de onde ele estava, sem quebrar o fluxo de compra!
       } else if (pendingAuthAction.type === "online_booking") {
         pendingAuthAction.callback();
       }
       setPendingAuthAction(null);
     } else {
-      // If no specific action was pending, just direct to client panel dashboard
-      setCurrentView("cliente");
+      // Se não havia ação pendente e o usuário já estava em uma view ativa de planejamento,
+      // mantemos ele onde ele estava para não quebrar o fluxo de navegação do cliente.
+      const viewsToKeep = ["wizard", "experiencias", "roteiro", "hospedagens"];
+      if (!viewsToKeep.includes(currentView)) {
+        setCurrentView("cliente");
+      }
     }
   };
 
@@ -428,7 +432,18 @@ export default function App() {
     const people = adults + children + infants;
     const schedule = item.schedule ?? "08:00";
     const observations = item.observations ?? "";
-    const dayIndex = item.dayIndex ?? 1;
+    
+    const savedDay = localStorage.getItem("guidatrips_current_planning_day");
+    const dayIndex = item.dayIndex ?? (savedDay ? parseInt(savedDay, 10) : 1);
+
+    // If day index was loaded from localStorage, let's also update the date accordingly
+    let finalDate = item.date;
+    if (!item.dayIndex && savedDay) {
+      const today = new Date();
+      const targetDate = new Date(today);
+      targetDate.setDate(today.getDate() + (dayIndex - 1));
+      finalDate = targetDate.toISOString().split("T")[0];
+    }
 
     const normalizedItem: BookingCartItem = {
       ...item,
@@ -439,6 +454,7 @@ export default function App() {
       schedule,
       observations,
       dayIndex,
+      date: finalDate,
     };
 
     const updated = [...cart, normalizedItem];

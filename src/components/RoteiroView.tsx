@@ -8,7 +8,8 @@ import { motion, AnimatePresence } from "motion/react";
 import { 
   Check, Trash2, Calendar, Clock, ArrowLeft, 
   Send, Compass, Heart, MapPin, 
-  ChevronDown, ChevronUp, Star, Gift, Coffee, Sparkles, Users, Info, ArrowUpRight
+  ChevronDown, ChevronUp, Star, Gift, Coffee, Sparkles, Users, Info, ArrowUpRight,
+  ChevronLeft, ChevronRight
 } from "lucide-react";
 import { BookingCartItem, Experience } from "../types";
 
@@ -53,6 +54,38 @@ export default function RoteiroView({
 }: RoteiroViewProps) {
   const [expandedIntercuso, setExpandedIntercuso] = useState<Record<string, boolean>>({});
   const [expandedPhotos, setExpandedPhotos] = useState<Record<string, boolean>>({});
+
+  // Guided wizard step states
+  const [isStepMode, setIsStepMode] = useState(() => {
+    // If some day is empty, start in step mode by default to guide the user.
+    // If all days have items, show the complete view directly.
+    const hasEmptyDay = Array.from({ length: stayDays }).some((_, i) => {
+      const dayNum = i + 1;
+      return cart.filter(item => item.dayIndex === dayNum).length === 0;
+    });
+    return hasEmptyDay;
+  });
+
+  const [activeStepDay, setActiveStepDay] = useState<number>(() => {
+    const saved = localStorage.getItem("guidatrips_current_planning_day");
+    if (saved) {
+      const parsed = parseInt(saved, 10);
+      if (parsed >= 1 && parsed <= stayDays) {
+        return parsed;
+      }
+    }
+    return 1;
+  });
+
+  const changeStepDay = (dayNum: number) => {
+    setActiveStepDay(dayNum);
+    localStorage.setItem("guidatrips_current_planning_day", dayNum.toString());
+  };
+
+  const handleAddPasseio = (dayNum: number) => {
+    localStorage.setItem("guidatrips_current_planning_day", dayNum.toString());
+    onNavigate("experiencias");
+  };
 
   // Inline editing state for passengers
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
@@ -317,6 +350,38 @@ export default function RoteiroView({
                       );
                     })}
                   </div>
+
+                  {/* View Mode Switcher tabs */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-t border-zinc-100 pt-4 mt-2">
+                    <span className="text-xs font-bold text-zinc-500">Formato de Planejamento:</span>
+                    <div className="flex p-1 bg-zinc-100 rounded-xl border border-zinc-200">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsStepMode(true);
+                          setActiveStepDay(1);
+                        }}
+                        className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                          isStepMode
+                            ? "bg-white text-[#0D1B2A] shadow-sm"
+                            : "text-zinc-500 hover:text-[#0D1B2A]"
+                        }`}
+                      >
+                        Passo a Passo 🗺️
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setIsStepMode(false)}
+                        className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                          !isStepMode
+                            ? "bg-white text-[#0D1B2A] shadow-sm"
+                            : "text-zinc-500 hover:text-[#0D1B2A]"
+                        }`}
+                      >
+                        Cronograma Completo 📅
+                      </button>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Conflict Warnings with pleasant, clean layout */}
@@ -407,15 +472,66 @@ export default function RoteiroView({
                   );
                 })()}
 
-                {Array.from({ length: stayDays }).map((_, dIdx) => {
-                  const dayNum = dIdx + 1;
-                  const dayItems = cart.filter(item => item.dayIndex === dayNum);
+                {/* Guided Stepper Navigation for Step Mode */}
+                {isStepMode && (
+                  <div className="bg-[#FCFBF9] border border-zinc-150 rounded-3xl p-5 shadow-sm space-y-4 text-left">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-200/60 pb-3">
+                      <div>
+                        <span className="font-accent text-[9px] text-[#E8711A] font-black tracking-widest uppercase block mb-0.5">PLANEJAMENTO PASSO A PASSO</span>
+                        <h3 className="font-serif text-base font-bold text-[#0D1B2A]">Dia {activeStepDay} de {stayDays}</h3>
+                      </div>
+                      
+                      <button
+                        type="button"
+                        onClick={() => setIsStepMode(false)}
+                        className="px-4 py-1.5 bg-zinc-100 hover:bg-zinc-200 text-[#0D1B2A] rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 self-start sm:self-center"
+                      >
+                        <span>Ver roteiro completo</span>
+                        <Check className="w-3.5 h-3.5 text-emerald-600" />
+                      </button>
+                    </div>
 
-                  return (
-                    <div 
-                      key={dayNum}
-                      className="bg-white border border-zinc-150 rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-shadow text-left"
-                    >
+                    <div className="flex flex-wrap items-center gap-2">
+                      {Array.from({ length: stayDays }).map((_, i) => {
+                        const dayNum = i + 1;
+                        const isCurrent = activeStepDay === dayNum;
+                        const dayItems = cart.filter(item => item.dayIndex === dayNum);
+                        const isPlanned = dayItems.length > 0;
+                        return (
+                          <button
+                            key={dayNum}
+                            type="button"
+                            onClick={() => changeStepDay(dayNum)}
+                            className={`flex-1 min-w-[55px] aspect-square flex flex-col items-center justify-center rounded-2xl transition-all duration-200 cursor-pointer relative ${
+                              isCurrent
+                                ? "bg-[#0D1B2A] text-[#FCFBF9] shadow-md font-bold scale-[1.03] border-2 border-[#E8711A]"
+                                : isPlanned
+                                  ? "bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100/80"
+                                  : "text-zinc-500 bg-white border border-zinc-200 hover:bg-zinc-50"
+                            }`}
+                          >
+                            <span className="text-sm font-extrabold leading-none">{dayNum}</span>
+                            <span className="text-[7.5px] uppercase tracking-wider text-zinc-400 font-bold font-accent mt-1 leading-none">
+                              {isPlanned ? "Planejado ✓" : "Vazio ⏰"}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {Array.from({ length: stayDays })
+                  .map((_, idx) => idx + 1)
+                  .filter((dayNum) => !isStepMode || activeStepDay === dayNum)
+                  .map((dayNum) => {
+                    const dayItems = cart.filter(item => item.dayIndex === dayNum);
+
+                    return (
+                      <div key={dayNum} className="space-y-6">
+                        <div 
+                          className="bg-white border border-zinc-150 rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-shadow text-left"
+                        >
                       {/* Premium Accent Day Bar */}
                       <div className="bg-[#0D1B2A] text-[#FCFBF9] px-6 sm:px-8 py-4 sm:py-5 flex items-center justify-between">
                         <div className="space-y-0.5">
@@ -432,17 +548,42 @@ export default function RoteiroView({
 
                       {/* Day Experiences */}
                       {dayItems.length === 0 ? (
-                        <div className="p-8 sm:p-12 text-center text-zinc-400 font-sans text-sm flex flex-col items-center justify-center gap-2 border-t border-zinc-100 bg-zinc-50/20">
-                          <Coffee className="w-7 h-7 text-zinc-300" />
-                          <p className="text-zinc-500 font-medium text-xs sm:text-sm">Nenhuma atividade agendada para este dia.</p>
-                          <p className="text-[11px] text-zinc-400">Um ótimo momento para explorar restaurantes tradicionais ou caminhar na areia.</p>
-                          <button
-                            onClick={() => onNavigate("experiencias")}
-                            className="text-[#E8711A] hover:text-[#0D1B2A] font-semibold text-xs mt-3 inline-flex items-center gap-1.5 bg-[#E8711A]/5 px-4.5 py-2 rounded-full border border-[#E8711A]/10 cursor-pointer hover:bg-[#E8711A]/10 transition-colors"
-                          >
-                            + Escolher um Passeio para o Dia {dayNum}
-                          </button>
-                        </div>
+                        isStepMode ? (
+                          /* Guided Step empty state with big button */
+                          <div className="p-8 sm:p-14 text-center text-zinc-400 font-sans text-sm flex flex-col items-center justify-center gap-4 border-t border-zinc-100 bg-zinc-50/20">
+                            <div className="p-4 bg-[#E8711A]/8 text-[#E8711A] rounded-full">
+                              <Compass className="w-8 h-8 animate-spin-slow" />
+                            </div>
+                            <div className="space-y-1">
+                              <p className="text-zinc-800 font-bold text-sm sm:text-base">Adicione um passeio para o Dia {dayNum}</p>
+                              <p className="text-xs text-zinc-500 max-w-sm mx-auto leading-relaxed">
+                                Escolha uma aventura náutica, um tour de buggy ou mergulho autêntico para preencher este dia de forma extraordinária!
+                              </p>
+                            </div>
+                            
+                            <button
+                              type="button"
+                              onClick={() => handleAddPasseio(dayNum)}
+                              className="w-full sm:w-auto px-8 py-4 bg-[#E8711A] text-[#0D1B2A] hover:bg-[#0D1B2A] hover:text-[#FCFBF9] font-accent font-black tracking-widest uppercase rounded-2xl shadow-md transition-all duration-300 cursor-pointer text-xs"
+                            >
+                              + Adicionar passeio ao Dia {dayNum}
+                            </button>
+                          </div>
+                        ) : (
+                          /* Normal view empty state */
+                          <div className="p-8 sm:p-12 text-center text-zinc-400 font-sans text-sm flex flex-col items-center justify-center gap-2 border-t border-zinc-100 bg-zinc-50/20">
+                            <Coffee className="w-7 h-7 text-zinc-300" />
+                            <p className="text-zinc-500 font-medium text-xs sm:text-sm">Nenhuma atividade agendada para este dia.</p>
+                            <p className="text-[11px] text-zinc-400">Um ótimo momento para explorar restaurantes tradicionais ou caminhar na areia.</p>
+                            <button
+                              type="button"
+                              onClick={() => handleAddPasseio(dayNum)}
+                              className="text-[#E8711A] hover:text-[#0D1B2A] font-semibold text-xs mt-3 inline-flex items-center gap-1.5 bg-[#E8711A]/5 px-4.5 py-2 rounded-full border border-[#E8711A]/10 cursor-pointer hover:bg-[#E8711A]/10 transition-colors"
+                            >
+                              + Escolher um Passeio para o Dia {dayNum}
+                            </button>
+                          </div>
+                        )
                       ) : (
                         <div className="divide-y divide-zinc-100 bg-white">
                           {dayItems.map((item, localIdx) => {
@@ -801,11 +942,51 @@ export default function RoteiroView({
                         </div>
                       )}
                     </div>
-                  );
-                })}
-              </div>
 
-              {/* RECOMMENDED CROSS SELL - MODERN SLIDER BENTO CARD */}
+                    {/* Post-addition CTA Box (only in step-by-step mode when this day has items) */}
+                    {isStepMode && dayItems.length > 0 && (
+                      <div className="bg-[#FCFBF9] border border-zinc-150 rounded-3xl p-6 shadow-sm text-center space-y-4 animate-fadeIn">
+                        <div className="space-y-1">
+                          <h4 className="font-serif text-base font-bold text-zinc-800">Dia {dayNum} preenchido com sucesso! 🎉</h4>
+                          <p className="text-xs text-zinc-500">Continue construindo sua jornada perfeita dia a dia ou finalize quando desejar.</p>
+                        </div>
+                        
+                        <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+                          {dayNum < stayDays ? (
+                            <button
+                              type="button"
+                              onClick={() => changeStepDay(dayNum + 1)}
+                              className="w-full sm:w-auto px-8 py-4 bg-[#E8711A] text-[#0D1B2A] hover:bg-[#0D1B2A] hover:text-white font-accent font-black tracking-widest uppercase rounded-2xl shadow-md transition-all duration-300 cursor-pointer text-xs flex items-center justify-center gap-2"
+                            >
+                              <span>{cart.filter(item => item.dayIndex === dayNum + 1).length > 0 ? `Continuar para o Dia ${dayNum + 1}` : `Adicionar passeio ao Dia ${dayNum + 1}`}</span>
+                              <span>&rarr;</span>
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => setIsStepMode(false)}
+                              className="w-full sm:w-auto px-8 py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-accent font-black tracking-widest uppercase rounded-2xl shadow-md transition-all duration-300 cursor-pointer text-xs flex items-center justify-center gap-1.5"
+                            >
+                              <span>Finalizar e Ver Roteiro Completo ✓</span>
+                            </button>
+                          )}
+
+                          <button
+                            type="button"
+                            onClick={() => setIsStepMode(false)}
+                            className="w-full sm:w-auto px-6 py-4 bg-zinc-100 hover:bg-zinc-250 text-zinc-700 rounded-2xl text-xs font-bold transition-all cursor-pointer border border-zinc-200"
+                          >
+                            Finalizar meu roteiro
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* RECOMMENDED CROSS SELL - MODERN SLIDER BENTO CARD */}
               {recommendations.length > 0 && (
                 <div className="bg-white border border-zinc-150 rounded-3xl p-6 sm:p-8 text-left shadow-sm space-y-6">
                   <div className="space-y-1">
