@@ -10,7 +10,7 @@ import {
   Palmtree, Utensils, Moon
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
-import { Experience, BookingCartItem, GlobalSettings } from "../types";
+import { Experience, BookingCartItem, GlobalSettings, getBrazilLocalDate, addDaysToBrazilDate } from "../types";
 
 interface HomeViewProps {
   onNavigate: (view: string) => void;
@@ -319,7 +319,7 @@ export default function HomeView({
 
   const handleApplyAlchemyBundle = () => {
     if (onAddToCart) {
-      const today = new Date().toISOString().split("T")[0];
+      const today = getBrazilLocalDate();
       currentBundle.exps.forEach((exp) => {
         onAddToCart({
           experienceId: exp.id,
@@ -357,7 +357,7 @@ export default function HomeView({
         phone: "Não fornecido (Guia Digital)",
         email: guideEmail,
         experienceInterest: ["guia-digital"],
-        preferredDate: new Date().toISOString().split("T")[0],
+        preferredDate: getBrazilLocalDate(),
         groupSize: 1,
         origin: "formulario" as const,
         status: "novo" as const,
@@ -810,10 +810,7 @@ export default function HomeView({
                                 <button
                                   type="button"
                                   onClick={() => {
-                                    const today = new Date();
-                                    const targetDate = new Date(today);
-                                    targetDate.setDate(today.getDate() + (configDay - 1));
-                                    const dateStr = targetDate.toISOString().split("T")[0];
+                                    const dateStr = addDaysToBrazilDate(getBrazilLocalDate(), configDay - 1);
 
                                     onAddToCart?.({
                                       experienceId: item.id,

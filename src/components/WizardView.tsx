@@ -11,7 +11,7 @@ import {
   Compass, X, ArrowRight, Home, MessageSquare, Hotel, Trash2, 
   CheckCircle2, Bed, Baby, User, ShieldCheck, Map
 } from "lucide-react";
-import { Experience, BookingCartItem, checkSchedulingConflict, getTourScheduleDetails } from "../types";
+import { Experience, BookingCartItem, checkSchedulingConflict, getTourScheduleDetails, getBrazilLocalDate, addDaysToBrazilDate } from "../types";
 import { firestoreService } from "../firebase";
 import ExperienceMediaGallery from "./ExperienceMediaGallery";
 
@@ -72,14 +72,10 @@ export default function WizardView({
 
   // Date picker states (Step 2)
   const [arrivalDate, setArrivalDate] = useState<string>(() => {
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    return tomorrow.toISOString().split("T")[0];
+    return addDaysToBrazilDate(getBrazilLocalDate(), 1);
   });
   const [departureDate, setDepartureDate] = useState<string>(() => {
-    const future = new Date();
-    future.setDate(future.getDate() + 5);
-    return future.toISOString().split("T")[0];
+    return addDaysToBrazilDate(getBrazilLocalDate(), 5);
   });
 
   // Passenger state counts (Step 3)
@@ -289,11 +285,7 @@ export default function WizardView({
     const targetExp = experiences.find(e => e.id === currentExpId);
     if (targetExp) {
       const schedule = currentSchedule || (targetExp.schedules && targetExp.schedules[0]) || "08:00";
-      const today = new Date();
-      today.setDate(today.getDate() + 1);
-      const targetDate = new Date(today);
-      targetDate.setDate(today.getDate() + (dayNum - 1));
-      const computedDate = targetDate.toISOString().split("T")[0];
+      const computedDate = addDaysToBrazilDate(arrivalDate, dayNum - 1);
 
       const tempItem: BookingCartItem = {
         experienceId: currentExpId,
@@ -389,7 +381,7 @@ export default function WizardView({
           id: reservationId,
           userId: userToSave.id,
           experienceId: item.experienceId,
-          date: item.date || new Date().toISOString().split("T")[0],
+          date: item.date || getBrazilLocalDate(),
           time: item.schedule || "08:00",
           adults: item.adults ?? 2,
           children: item.children ?? 0,
@@ -920,16 +912,14 @@ export default function WizardView({
                         <div className="relative">
                           <input
                             type="date"
-                            min={new Date().toISOString().split("T")[0]}
+                            min={getBrazilLocalDate()}
                             className="w-full bg-zinc-50 border border-zinc-200 rounded-xl p-3 text-sm text-[#0D1B2A] focus:outline-none focus:border-[#E8711A] focus:bg-white cursor-pointer"
                             value={arrivalDate}
                             onChange={(e) => {
                               setArrivalDate(e.target.value);
                               // Ensure departure is after arrival
                               if (new Date(e.target.value) >= new Date(departureDate)) {
-                                const newDep = new Date(e.target.value);
-                                newDep.setDate(newDep.getDate() + 3);
-                                setDepartureDate(newDep.toISOString().split("T")[0]);
+                                setDepartureDate(addDaysToBrazilDate(e.target.value, 3));
                               }
                             }}
                           />
@@ -1455,9 +1445,7 @@ export default function WizardView({
                       const feedback = getSmartRecommendations(currentPlanningDay, exp.id, chosenSchedule);
 
                       // Date matching calculation
-                      const targetDate = new Date(arrivalDate + "T00:00:00");
-                      targetDate.setDate(targetDate.getDate() + (currentPlanningDay - 1));
-                      const targetDateStr = targetDate.toISOString().split("T")[0];
+                      const targetDateStr = addDaysToBrazilDate(arrivalDate, currentPlanningDay - 1);
 
                       // Stable dynamic rating hash
                       let hash = 0;

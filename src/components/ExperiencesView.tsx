@@ -4,7 +4,7 @@ import {
   Search, Info, Plus, ChevronLeft, ChevronRight, CreditCard, Shield, 
   Send, Sparkles, CheckCircle, Smartphone, Trash2 
 } from "lucide-react";
-import { Experience, ExperienceCategory, BookingCartItem, GlobalSettings, ClientReservation, ClientUser, checkSchedulingConflict } from "../types";
+import { Experience, ExperienceCategory, BookingCartItem, GlobalSettings, ClientReservation, ClientUser, checkSchedulingConflict, getBrazilLocalDate, addDaysToBrazilDate } from "../types";
 import { motion, AnimatePresence } from "motion/react";
 import { firestoreService } from "../firebase";
 import ExperienceMediaGallery from "./ExperienceMediaGallery";
@@ -1328,11 +1328,7 @@ export default function ExperiencesView({
                   const isPlanned = dayItems.length > 0;
 
                   // Create the temporary item to check for conflicts
-                  const today = new Date();
-                  today.setDate(today.getDate() + 1); // Start from tomorrow
-                  const targetDate = new Date(today);
-                  targetDate.setDate(today.getDate() + (dayNum - 1));
-                  const computedDate = targetDate.toISOString().split("T")[0];
+                  const computedDate = addDaysToBrazilDate(getBrazilLocalDate(), dayNum);
 
                   const tempItem: BookingCartItem = {
                     ...pendingCartItem as BookingCartItem,

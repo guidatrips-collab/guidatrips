@@ -20,7 +20,8 @@ import ClientPanelView from "./components/ClientPanelView";
 import ClientAuthModal from "./components/ClientAuthModal";
 
 import { 
-  Experience, BlogPost, Lead, GlobalSettings, BookingCartItem, ClientUser, ClientReservation 
+  Experience, BlogPost, Lead, GlobalSettings, BookingCartItem, ClientUser, ClientReservation,
+  getBrazilLocalDate, addDaysToBrazilDate
 } from "./types";
 import { 
   INITIAL_EXPERIENCES, INITIAL_BLOG_POSTS, INITIAL_LEADS, INITIAL_SETTINGS 
@@ -439,10 +440,7 @@ export default function App() {
     // If day index was loaded from localStorage, let's also update the date accordingly
     let finalDate = item.date;
     if (!item.dayIndex && savedDay) {
-      const today = new Date();
-      const targetDate = new Date(today);
-      targetDate.setDate(today.getDate() + (dayIndex - 1));
-      finalDate = targetDate.toISOString().split("T")[0];
+      finalDate = addDaysToBrazilDate(getBrazilLocalDate(), dayIndex - 1);
     }
 
     const normalizedItem: BookingCartItem = {
@@ -471,10 +469,7 @@ export default function App() {
   const handleChangeItemDay = (index: number, day: number) => {
     const updated = cart.map((item, idx) => {
       if (idx === index) {
-        const today = new Date();
-        const targetDate = new Date(today);
-        targetDate.setDate(today.getDate() + (day - 1));
-        const dateStr = targetDate.toISOString().split("T")[0];
+        const dateStr = addDaysToBrazilDate(getBrazilLocalDate(), day - 1);
         return { ...item, dayIndex: day, date: dateStr };
       }
       return item;

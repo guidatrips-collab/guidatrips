@@ -11,7 +11,7 @@ import {
   ChevronDown, ChevronUp, Star, Gift, Coffee, Sparkles, Users, Info, ArrowUpRight,
   ChevronLeft, ChevronRight
 } from "lucide-react";
-import { BookingCartItem, Experience, checkSchedulingConflict, getTourScheduleDetails } from "../types";
+import { BookingCartItem, Experience, checkSchedulingConflict, getTourScheduleDetails, getBrazilLocalDate, addDaysToBrazilDate } from "../types";
 
 interface RoteiroViewProps {
   cart: BookingCartItem[];
@@ -1187,11 +1187,7 @@ export default function RoteiroView({
                   const isPlanned = dayItems.length > 0;
 
                   // Create the temporary item to check for conflicts
-                  const today = new Date();
-                  today.setDate(today.getDate() + 1); // Start from tomorrow
-                  const targetDate = new Date(today);
-                  targetDate.setDate(today.getDate() + (dayNum - 1));
-                  const computedDate = targetDate.toISOString().split("T")[0];
+                  const computedDate = addDaysToBrazilDate(getBrazilLocalDate(), dayNum);
 
                   const tempItem: BookingCartItem = {
                     ...pendingCartItem as BookingCartItem,

@@ -773,6 +773,42 @@ export default function AdminView({
                         />
                         <p className="text-[10px] text-zinc-500 mt-1">Horários de saída e capacidade são gerenciados aqui (Ex: 08:00, 10:00)</p>
                       </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 border-t border-white/5 pt-4">
+                        <div className="space-y-1.5">
+                          <label className="font-accent text-[9px] text-[#ffefe6]/90 tracking-widest uppercase">Antecedência Check-in (minutos)</label>
+                          <input
+                            type="number"
+                            placeholder="Padrão: 30"
+                            value={editingExperience.checkInMinutesBefore !== undefined && editingExperience.checkInMinutesBefore !== null ? editingExperience.checkInMinutesBefore : ""}
+                            onChange={(e) => setEditingExperience({ ...editingExperience, checkInMinutesBefore: e.target.value === "" ? undefined : parseInt(e.target.value) })}
+                            className="w-full bg-[#0D1B2A] border border-white/5 p-3 text-xs text-white"
+                          />
+                          <p className="text-[9px] text-zinc-500">Ex: 30 ou 60 minutos antes da saída.</p>
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="font-accent text-[9px] text-[#ffefe6]/90 tracking-widest uppercase">Duração Estimada (minutos)</label>
+                          <input
+                            type="number"
+                            placeholder="Padrão: 180 (3h)"
+                            value={editingExperience.durationMinutes !== undefined && editingExperience.durationMinutes !== null ? editingExperience.durationMinutes : ""}
+                            onChange={(e) => setEditingExperience({ ...editingExperience, durationMinutes: e.target.value === "" ? undefined : parseInt(e.target.value) })}
+                            className="w-full bg-[#0D1B2A] border border-white/5 p-3 text-xs text-white"
+                          />
+                          <p className="text-[9px] text-zinc-500">Ex: 240 minutos para passeios de 4h.</p>
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="font-accent text-[9px] text-[#ffefe6]/90 tracking-widest uppercase">Margem de Segurança (minutos)</label>
+                          <input
+                            type="number"
+                            placeholder="Padrão: 60 (1h)"
+                            value={editingExperience.safetyBufferMinutes !== undefined && editingExperience.safetyBufferMinutes !== null ? editingExperience.safetyBufferMinutes : ""}
+                            onChange={(e) => setEditingExperience({ ...editingExperience, safetyBufferMinutes: e.target.value === "" ? undefined : parseInt(e.target.value) })}
+                            className="w-full bg-[#0D1B2A] border border-white/5 p-3 text-xs text-white"
+                          />
+                          <p className="text-[9px] text-zinc-500">Margem mínima entre programações.</p>
+                        </div>
+                      </div>
                     </div>
                   </div>
 

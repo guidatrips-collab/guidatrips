@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Calendar, ChevronLeft, ChevronRight, Save, X, Edit, Copy, Trash2 } from 'lucide-react';
-import { Experience } from '../types';
+import { Experience, getBrazilLocalDate } from '../types';
 
 interface CalendarPricingViewProps {
   experiences: Experience[];
@@ -26,7 +26,7 @@ export function CalendarPricingView({ experiences, onUpdateExperience }: Calenda
 
   // Format date to YYYY-MM-DD for storage
   const formatDate = (date: Date) => {
-    return date.toISOString().split('T')[0];
+    return getBrazilLocalDate(date);
   };
 
   const getDaysInMonth = (year: number, month: number) => {

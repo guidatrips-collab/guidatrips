@@ -71,6 +71,9 @@ export interface Experience {
   recommendations?: string[]; // Suggested related experience ids
   itinerary?: string[]; // Optional itinerary property
   faqs?: { question: string; answer: string }[]; // List of custom FAQs
+  checkInMinutesBefore?: number; // Custom check-in lead time (minutes)
+  durationMinutes?: number; // Custom tour duration (minutes)
+  safetyBufferMinutes?: number; // Custom safety buffer before another tour (minutes)
   seo?: {
     metaTitle: string;
     metaDescription: string;
@@ -331,7 +334,9 @@ export function getTourScheduleDetails(exp: Experience, scheduleStr: string): To
   const departureMin = parseTimeToMinutes(schedule);
   
   let durationMinutes = 180; // default 3 hours
-  if (exp.duration) {
+  if (exp.durationMinutes !== undefined && exp.durationMinutes !== null) {
+    durationMinutes = exp.durationMinutes;
+  } else if (exp.duration) {
     const cleanDur = exp.duration.toLowerCase();
     if (cleanDur.includes("14")) durationMinutes = 14 * 60;
     else if (cleanDur.includes("4")) durationMinutes = 4 * 60;
@@ -344,7 +349,9 @@ export function getTourScheduleDetails(exp: Experience, scheduleStr: string): To
   }
   
   let checkInMinutesBefore = 30; // default 30 mins
-  if (exp.id.includes("barco") || exp.id.includes("mar") || exp.id.includes("lancha")) {
+  if (exp.checkInMinutesBefore !== undefined && exp.checkInMinutesBefore !== null) {
+    checkInMinutesBefore = exp.checkInMinutesBefore;
+  } else if (exp.id.includes("barco") || exp.id.includes("mar") || exp.id.includes("lancha")) {
     checkInMinutesBefore = 60; // boat tours need 1 hour check-in
   } else if (exp.id.includes("bate-volta")) {
     checkInMinutesBefore = 15;
@@ -372,8 +379,13 @@ export function checkSchedulingConflict(
   itemB: BookingCartItem,
   experiences: Experience[]
 ): { hasConflict: boolean; reason?: string } {
-  // Only same day/date can conflict
-  if (itemA.dayIndex !== itemB.dayIndex && itemA.date !== itemB.date) {
+  // 1. Separate Days Check: If both have different day indexes, they CANNOT conflict
+  if (itemA.dayIndex !== undefined && itemB.dayIndex !== undefined) {
+    if (itemA.dayIndex !== itemB.dayIndex) {
+      return { hasConflict: false };
+    }
+  } else if (itemA.date && itemB.date && itemA.date !== itemB.date) {
+    // Fallback date check if dayIndex is not defined
     return { hasConflict: false };
   }
   
@@ -390,16 +402,38 @@ export function checkSchedulingConflict(
   
   const gap = second.checkInStartMin - first.returnMin;
   
-  if (gap < 60) {
+  // Safety buffer before next tour: use max safetyBufferMinutes of the two experiences, or 60 mins default
+  const bufferA = expA.safetyBufferMinutes !== undefined && expA.safetyBufferMinutes !== null ? expA.safetyBufferMinutes : 60;
+  const bufferB = expB.safetyBufferMinutes !== undefined && expB.safetyBufferMinutes !== null ? expB.safetyBufferMinutes : 60;
+  const requiredBuffer = Math.max(bufferA, bufferB);
+  
+  if (gap < requiredBuffer) {
     const gapMin = gap;
     let reason = "";
     if (gapMin < 0) {
-      reason = `O passeio "${first.name}" (termina às ${first.returnTimeStr}) sobrepõe o horário de check-in de "${second.name}" (começa às ${second.checkInTimeStr}).`;
+      reason = `O passeio "${first.name}" (previsto até ${first.returnTimeStr}) se sobrepõe ao horário de check-in de "${second.name}" (que inicia às ${second.checkInTimeStr}).`;
     } else {
-      reason = `O intervalo entre "${first.name}" (termina às ${first.returnTimeStr}) e o check-in de "${second.name}" (inicia às ${second.checkInTimeStr}) é de apenas ${gapMin} minutos. É necessário pelo menos 1 hora de margem de segurança.`;
+      reason = `O intervalo entre "${first.name}" (término às ${first.returnTimeStr}) e o check-in de "${second.name}" (início às ${second.checkInTimeStr}) é de apenas ${gapMin} minutos. É necessária uma margem de segurança de pelo menos ${requiredBuffer} minutos.`;
     }
     return { hasConflict: true, reason };
   }
   
   return { hasConflict: false };
+}
+
+export function getBrazilLocalDate(date: Date = new Date()): string {
+  const formatter = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Sao_Paulo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit"
+  });
+  return formatter.format(date); // Always returns YYYY-MM-DD in Brasilia time
+}
+
+export function addDaysToBrazilDate(baseDateStr: string, daysToAdd: number): string {
+  const cleanBase = baseDateStr || getBrazilLocalDate();
+  const date = new Date(`${cleanBase}T12:00:00`);
+  date.setDate(date.getDate() + daysToAdd);
+  return getBrazilLocalDate(date);
 }
