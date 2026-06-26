@@ -120,13 +120,14 @@ export default function ExperiencesView({
 
   const filteredExperiences = experiences.filter((exp) => {
     const matchesCategory = selectedCategory === "todos" || exp.category === selectedCategory;
-    const matchesLocation = selectedLocation === "todos" || exp.destinationId === selectedLocation || (exp.location && exp.location === selectedLocation);
+    const expDestId = exp.destinationId || "arraial-do-cabo";
+    const matchesLocation = selectedLocation === "todos" || expDestId === selectedLocation || (exp.location && exp.location === selectedLocation);
     const matchesSearch =
       exp.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       exp.shortDescription.toLowerCase().includes(searchQuery.toLowerCase());
     
     // Default to only showing the globally selected destination unless "todos" or another destination is actively chosen in this view
-    const globalDestMatch = selectedLocation === "todos" ? (exp.destinationId === selectedDestinationId) : true;
+    const globalDestMatch = selectedLocation === "todos" ? (expDestId === selectedDestinationId) : true;
     
     return matchesCategory && matchesLocation && matchesSearch && exp.status === "active" && globalDestMatch;
   });
