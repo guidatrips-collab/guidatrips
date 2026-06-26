@@ -3,11 +3,59 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Experience, ExperienceCategory, BlogPost, GlobalSettings } from "./types";
+import { Experience, ExperienceCategory, BlogPost, GlobalSettings, Destination } from "./types";
+
+export const INITIAL_DESTINATIONS: Destination[] = [
+  {
+    id: "arraial-do-cabo",
+    name: "Arraial do Cabo",
+    slug: "arraial-do-cabo",
+    description: "O Caribe Brasileiro.",
+    shortDescription: "O Caribe Brasileiro.",
+    heroImage: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=600&q=80",
+    status: "active",
+    createdAt: "2026-06-25T12:00:00-03:00",
+    updatedAt: "2026-06-25T12:00:00-03:00"
+  },
+  {
+    id: "buzios",
+    name: "Búzios",
+    slug: "buzios",
+    description: "A charmosa península.",
+    shortDescription: "A charmosa península.",
+    heroImage: "https://images.unsplash.com/photo-1473186505569-9c61870c11f9?auto=format&fit=crop&w=600&q=80",
+    status: "inactive",
+    createdAt: "2026-06-25T12:00:00-03:00",
+    updatedAt: "2026-06-25T12:00:00-03:00"
+  },
+  {
+    id: "cabo-frio",
+    name: "Cabo Frio",
+    slug: "cabo-frio",
+    description: "Areias brancas e águas cristalinas.",
+    shortDescription: "Praias deslumbrantes.",
+    heroImage: "https://images.unsplash.com/photo-1502680390469-be75c86b636f?auto=format&fit=crop&w=600&q=80",
+    status: "inactive",
+    createdAt: "2026-06-25T12:00:00-03:00",
+    updatedAt: "2026-06-25T12:00:00-03:00"
+  },
+  {
+    id: "angra-dos-reis",
+    name: "Angra dos Reis",
+    slug: "angra-dos-reis",
+    description: "365 ilhas para explorar.",
+    shortDescription: "Ilhas paradisíacas.",
+    heroImage: "https://images.unsplash.com/photo-1510414842594-a61c69b5ae57?auto=format&fit=crop&w=600&q=80",
+    status: "inactive",
+    createdAt: "2026-06-25T12:00:00-03:00",
+    updatedAt: "2026-06-25T12:00:00-03:00"
+  }
+];
 
 export const INITIAL_EXPERIENCES: Experience[] = [
   {
     id: "bate-volta-arraial",
+    destinationId: "arraial-do-cabo",
     name: "Bate e Volta Arraial do Cabo: O Paraíso Saindo do Rio!",
     slug: "bate-volta-arraial-cabo-rio",
     category: ExperienceCategory.NAUTICO,
@@ -91,6 +139,7 @@ Em caso de condições adversas de mar que impeçam a navegação, garantimos o 
   },
   {
     id: "experiencia-gastronomica-mar",
+    destinationId: "arraial-do-cabo",
     name: "Experiência Gastronômica & Mar: Passeio de Barco Completo em Arraial do Cabo",
     slug: "experiencia-gastronomica-mar-barco-arraial",
     category: ExperienceCategory.GASTRONOMIA,
@@ -183,6 +232,7 @@ Visitamos os pontos mais icônicos da região, com tempo para relaxar e fotograf
   },
   {
     id: "passeio-barco-toboagua",
+    destinationId: "arraial-do-cabo",
     name: "Passeio de Barco em Arraial do Cabo (com Tobogã)",
     slug: "passeio-barco-toboagua-arraial",
     category: ExperienceCategory.NAUTICO,
@@ -246,6 +296,7 @@ Seja para relaxar, capturar momentos inesquecíveis ou aproveitar um dia repleto
   },
   {
     id: "passeio-lancha-cabo-frio",
+    destinationId: "cabo-frio",
     name: "Passeio de Lancha em Cabo Frio RJ RIO X CABO FRIO (DAY USE)",
     slug: "passeio-lancha-cabo-frio-day-use",
     category: ExperienceCategory.NAUTICO,
@@ -313,6 +364,7 @@ Relaxe, curta o dia e finalize sua experiência com conforto absoluto!`,
   },
   {
     id: "quadriciclo-arraial",
+    destinationId: "arraial-do-cabo",
     name: "Descubra Arraial do Cabo de Quadriciclo: Uma Aventura Off-Road Inesquecível!",
     slug: "passeio-quadriciclo-arraial",
     category: ExperienceCategory.OFF_ROAD,
@@ -360,6 +412,7 @@ Sinta a liberdade de pilotar seu próprio quadriciclo por rotas exclusivas que m
   },
   {
     id: "buggy-arraial-novo",
+    destinationId: "arraial-do-cabo",
     name: "Descubra Arraial do Cabo de Buggy: Uma Aventura Off-Road Inesquecível!",
     slug: "passeio-buggy-arraial-novo",
     category: ExperienceCategory.OFF_ROAD,
@@ -412,6 +465,7 @@ Escolha entre nossos horários de saída ao longo do dia e finalize a experiênc
   },
   {
     id: "mergulho-batismo-novo",
+    destinationId: "arraial-do-cabo",
     name: "Mergulho de Batismo em Arraial do Cabo",
     slug: "mergulho-batismo-arraial-novo",
     category: ExperienceCategory.NAUTICO,

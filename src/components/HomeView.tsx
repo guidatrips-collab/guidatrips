@@ -3,7 +3,7 @@ import {
   MapPin, Compass, Calendar, MessageCircle, Heart, Star, Check, ArrowRight, Sparkles, Plus, X
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
-import { Experience, BookingCartItem, GlobalSettings, getBrazilLocalDate, addDaysToBrazilDate } from "../types";
+import { Experience, BookingCartItem, GlobalSettings, getBrazilLocalDate, addDaysToBrazilDate, Destination } from "../types";
 
 interface HomeViewProps {
   onNavigate: (view: string) => void;
@@ -13,6 +13,9 @@ interface HomeViewProps {
   selectedHotelId?: string | null;
   onChangeHotelId?: (id: string | null) => void;
   stayDays?: number;
+  destinations: Destination[];
+  selectedDestinationId: string | null;
+  onUpdateSelectedDestinationId: (id: string) => void;
 }
 
 export default function HomeView({ 
@@ -20,7 +23,10 @@ export default function HomeView({
   onAddToCart, 
   settings, 
   experiences = [], 
-  stayDays = 3
+  stayDays = 3,
+  destinations,
+  selectedDestinationId,
+  onUpdateSelectedDestinationId
 }: HomeViewProps) {
 
   // States of the micro-itinerary configurator drawer inside the homepage cards
@@ -144,35 +150,39 @@ export default function HomeView({
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="group relative bg-white border border-zinc-200 rounded-2xl overflow-hidden cursor-pointer hover:border-[#E8711A] hover:shadow-lg transition-all" onClick={() => onNavigate("experiencias")}>
-              <div className="h-48 relative overflow-hidden">
-                 <img src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=600&q=80" alt="Arraial do Cabo" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
-                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
-                 <span className="absolute top-4 right-4 bg-emerald-500 text-white font-accent text-[9px] font-bold uppercase px-2.5 py-1 rounded shadow">Ativo</span>
-              </div>
-              <div className="p-6 bg-white text-left">
-                <h3 className="font-serif text-xl font-bold text-[#0D1B2A] mb-1">Arraial do Cabo</h3>
-                <p className="font-sans text-sm text-zinc-500">O Caribe Brasileiro.</p>
-              </div>
-            </div>
-
-            {[
-              { name: "Búzios", img: "https://images.unsplash.com/photo-1473186505569-9c61870c11f9?auto=format&fit=crop&w=600&q=80" },
-              { name: "Cabo Frio", img: "https://images.unsplash.com/photo-1502680390469-be75c86b636f?auto=format&fit=crop&w=600&q=80" },
-              { name: "Angra dos Reis", img: "https://images.unsplash.com/photo-1510414842594-a61c69b5ae57?auto=format&fit=crop&w=600&q=80" }
-            ].map((dest, idx) => (
-              <div key={idx} className="relative bg-zinc-100 border border-zinc-200 rounded-2xl overflow-hidden opacity-70 cursor-not-allowed">
-                <div className="h-48 relative overflow-hidden grayscale">
-                   <img src={dest.img} alt={dest.name} className="w-full h-full object-cover" />
-                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
-                   <span className="absolute top-4 right-4 bg-zinc-600 text-white font-accent text-[9px] font-bold uppercase px-2.5 py-1 rounded shadow">Em Breve</span>
+            {destinations.map((dest) => {
+              const isActive = dest.status === "active" || dest.id === "arraial-do-cabo"; // Temporary fallback
+              return (
+                <div 
+                  key={dest.id}
+                  className={`group relative rounded-2xl overflow-hidden transition-all ${
+                    isActive 
+                      ? "bg-white border border-zinc-200 cursor-pointer hover:border-[#E8711A] hover:shadow-lg" 
+                      : "bg-zinc-100 border border-zinc-200 opacity-70 cursor-not-allowed"
+                  }`}
+                  onClick={() => {
+                    if (isActive) {
+                      onUpdateSelectedDestinationId(dest.id);
+                      onNavigate("experiencias");
+                    }
+                  }}
+                >
+                  <div className={`h-48 relative overflow-hidden ${!isActive ? "grayscale" : ""}`}>
+                    <img src={dest.heroImage} alt={dest.name} className={`w-full h-full object-cover ${isActive ? "transition-transform duration-700 group-hover:scale-110" : ""}`} />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
+                    {isActive ? (
+                      <span className="absolute top-4 right-4 bg-emerald-500 text-white font-accent text-[9px] font-bold uppercase px-2.5 py-1 rounded shadow">Ativo</span>
+                    ) : (
+                      <span className="absolute top-4 right-4 bg-zinc-600 text-white font-accent text-[9px] font-bold uppercase px-2.5 py-1 rounded shadow">Em Breve</span>
+                    )}
+                  </div>
+                  <div className={`p-6 text-left ${isActive ? "bg-white" : "bg-zinc-50"}`}>
+                    <h3 className={`font-serif text-xl font-bold mb-1 ${isActive ? "text-[#0D1B2A]" : "text-zinc-600"}`}>{dest.name}</h3>
+                    <p className="font-sans text-sm text-zinc-500">{isActive ? dest.shortDescription : "Novas experiências chegando."}</p>
+                  </div>
                 </div>
-                <div className="p-6 bg-zinc-50 text-left">
-                  <h3 className="font-serif text-xl font-bold text-zinc-600 mb-1">{dest.name}</h3>
-                  <p className="font-sans text-sm text-zinc-500">Novas experiências chegando.</p>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </section>

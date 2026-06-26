@@ -4,7 +4,7 @@ import {
   Search, Info, Plus, ChevronLeft, ChevronRight, CreditCard, Shield, 
   Send, Sparkles, CheckCircle, Smartphone, Trash2 
 } from "lucide-react";
-import { Experience, ExperienceCategory, BookingCartItem, GlobalSettings, ClientReservation, ClientUser, checkSchedulingConflict, getBrazilLocalDate, addDaysToBrazilDate } from "../types";
+import { Experience, ExperienceCategory, BookingCartItem, GlobalSettings, ClientReservation, ClientUser, checkSchedulingConflict, getBrazilLocalDate, addDaysToBrazilDate, Destination } from "../types";
 import { motion, AnimatePresence } from "motion/react";
 import { firestoreService } from "../firebase";
 import ExperienceMediaGallery from "./ExperienceMediaGallery";
@@ -22,6 +22,9 @@ interface ExperiencesViewProps {
   currentUser: ClientUser | null;
   onTriggerAuthModal?: (action: { type: string; action: () => void }) => void;
   stayDays?: number;
+  destinations: Destination[];
+  selectedDestinationId: string | null;
+  onUpdateSelectedDestinationId: (id: string) => void;
 }
 
 export default function ExperiencesView({
@@ -36,7 +39,10 @@ export default function ExperiencesView({
   onNavigate,
   currentUser,
   onTriggerAuthModal,
-  stayDays = 4
+  stayDays = 4,
+  destinations,
+  selectedDestinationId,
+  onUpdateSelectedDestinationId
 }: ExperiencesViewProps) {
   const [selectedCategory, setSelectedCategory] = useState<string>("todos");
   const [selectedLocation, setSelectedLocation] = useState<string>("todos");
@@ -107,22 +113,22 @@ export default function ExperiencesView({
   // Dynamically group unique locations with active status
   const availableLocations = [
     { id: "todos", label: "🗺️ Todos os Destinos" },
-    ...Array.from(
-      new Set(
-        experiences
-          .filter((exp) => exp.status === "active")
-          .map((exp) => exp.location || "Arraial do Cabo")
-      )
-    ).map((loc) => ({ id: loc, label: `📍 ${loc}` })),
+    ...destinations.filter(d => d.status === "active" || d.id === selectedDestinationId).map(d => ({
+      id: d.id, label: `📍 ${d.name}`
+    }))
   ];
 
   const filteredExperiences = experiences.filter((exp) => {
     const matchesCategory = selectedCategory === "todos" || exp.category === selectedCategory;
-    const matchesLocation = selectedLocation === "todos" || (exp.location || "Arraial do Cabo") === selectedLocation;
+    const matchesLocation = selectedLocation === "todos" || exp.destinationId === selectedLocation || (exp.location && exp.location === selectedLocation);
     const matchesSearch =
       exp.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       exp.shortDescription.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesLocation && matchesSearch && exp.status === "active";
+    
+    // Default to only showing the globally selected destination unless "todos" or another destination is actively chosen in this view
+    const globalDestMatch = selectedLocation === "todos" ? (exp.destinationId === selectedDestinationId) : true;
+    
+    return matchesCategory && matchesLocation && matchesSearch && exp.status === "active" && globalDestMatch;
   });
 
   // Calculate dynamic price and blocked state based on admin-defined calendar settings

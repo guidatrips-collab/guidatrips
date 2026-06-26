@@ -3,6 +3,38 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+export interface Destination {
+  id: string;
+  name: string;
+  slug: string;
+  description: string;
+  shortDescription?: string;
+  heroImage: string;
+  gallery?: string[];
+  institutionalText?: string;
+  seo?: {
+    metaTitle: string;
+    metaDescription: string;
+    keywords: string[];
+  };
+  status: "active" | "inactive";
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Category {
+  id: string;
+  name: string;
+  slug: string;
+  description?: string;
+}
+
+export interface Tag {
+  id: string;
+  name: string;
+  slug: string;
+}
+
 export enum ExperienceCategory {
   NAUTICO = "nautico",
   OFF_ROAD = "off-road",
@@ -22,7 +54,9 @@ export interface Experience {
   id: string;
   name: string;
   slug: string;
-  category: ExperienceCategory;
+  destinationId?: string; // Link to Destination
+  category: ExperienceCategory | string; // Allow string for dynamic categories
+  tags?: string[]; // Array of tag IDs or strings
   shortDescription: string;
   fullDescription: string;
   duration: string;

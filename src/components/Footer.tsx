@@ -33,7 +33,7 @@ export default function Footer({ onNavigate, whatsappNumber }: FooterProps) {
               </span>
             </div>
             <p className="font-sans text-xs text-[#8A96A3] leading-relaxed max-w-sm">
-              Não vendemos pacotes nem replicamos passeios de massa. Desenhamos roteiros e aventuras personalizadas sob medida para conectar de verdade você com a natureza e as histórias de Arraial do Cabo.
+              Não vendemos pacotes nem replicamos passeios de massa. Desenhamos roteiros e aventuras personalizadas sob medida para conectar de verdade você com a natureza e as histórias de cada destino.
             </p>
             <div className="flex space-x-3 pt-2">
               <a

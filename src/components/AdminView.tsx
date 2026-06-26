@@ -9,7 +9,7 @@ import {
   Globe, Plus, Trash2, Edit3, Eye, FileText, CheckCircle, 
   X, AlertTriangle, Play, HelpCircle, Save, Phone, MessageSquare, Image, User, Calendar
 } from "lucide-react";
-import { Experience, Lead, BlogPost, GlobalSettings, ExperienceCategory } from "../types";
+import { Experience, Lead, BlogPost, GlobalSettings, ExperienceCategory, Destination } from "../types";
 import { CalendarPricingView } from "./CalendarPricingView";
 
 interface AdminViewProps {
@@ -17,10 +17,12 @@ interface AdminViewProps {
   leads: Lead[];
   posts: BlogPost[];
   settings: GlobalSettings;
+  destinations: Destination[];
   onUpdateExperiences: (exps: Experience[]) => void;
   onUpdatePosts: (posts: BlogPost[]) => void;
   onUpdateLeads: (leads: Lead[]) => void;
   onUpdateSettings: (settings: GlobalSettings) => void;
+  onUpdateDestinations: (destinations: Destination[]) => void;
 }
 
 export default function AdminView({
@@ -28,10 +30,12 @@ export default function AdminView({
   leads,
   posts,
   settings,
+  destinations,
   onUpdateExperiences,
   onUpdatePosts,
   onUpdateLeads,
-  onUpdateSettings
+  onUpdateSettings,
+  onUpdateDestinations
 }: AdminViewProps) {
   // Login State
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -85,7 +89,7 @@ export default function AdminView({
   ];
 
   // Active submodule
-  const [activeTab, setActiveTab] = useState<"overview" | "experiences" | "calendar" | "leads" | "blog" | "settings" | "client">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "destinations" | "experiences" | "calendar" | "leads" | "blog" | "settings" | "client">("overview");
 
   // CRM status labels
   const leadStatuses = [
@@ -99,6 +103,7 @@ export default function AdminView({
   // Forms / Modals States
   const [editingExperience, setEditingExperience] = useState<Partial<Experience> | null>(null);
   const [editingPost, setEditingPost] = useState<Partial<BlogPost> | null>(null);
+  const [editingDestination, setEditingDestination] = useState<Partial<Destination> | null>(null);
   const [tempSettings, setTempSettings] = useState<GlobalSettings>({
     ...settings,
     homeFilosofiaPillars: settings.homeFilosofiaPillars || defaultFilosofiaPillars,
@@ -158,6 +163,48 @@ export default function AdminView({
     }
   };
 
+  // Destinations CRUD Actions
+  const handleSaveDestination = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingDestination) return;
+
+    if (!editingDestination.id) {
+      // Create new one
+      const newId = `dest-${Date.now()}`;
+      const newDest: Destination = {
+        id: newId,
+        name: editingDestination.name || "Sem Nome",
+        slug: editingDestination.slug || `${editingDestination.name?.toLowerCase().replace(/\s+/g, "-")}`,
+        description: editingDestination.description || "",
+        shortDescription: editingDestination.shortDescription || "",
+        heroImage: editingDestination.heroImage || "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800",
+        status: editingDestination.status || "inactive",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+      onUpdateDestinations([...destinations, newDest]);
+      addLog(`Destino "${newDest.name}" adicionado.`);
+    } else {
+      // Update existing
+      const updated = destinations.map((d) => 
+        d.id === editingDestination.id 
+          ? { ...d, ...editingDestination, updatedAt: new Date().toISOString() } as Destination 
+          : d
+      );
+      onUpdateDestinations(updated);
+      addLog(`Destino "${editingDestination.name}" atualizado.`);
+    }
+    setEditingDestination(null);
+  };
+
+  const handleDeleteDestination = (id: string) => {
+    if (confirm("Confirmar exclusão deste destino?")) {
+      const filtered = destinations.filter((d) => d.id !== id);
+      onUpdateDestinations(filtered);
+      addLog(`Destino #${id} excluído.`);
+    }
+  };
+
   // Experiences CRUD Actions
   const handleSaveExperience = (e: React.FormEvent) => {
     e.preventDefault();
@@ -170,6 +217,7 @@ export default function AdminView({
         id: newId,
         name: editingExperience.name || "Sem Nome",
         slug: editingExperience.slug || `${editingExperience.name?.toLowerCase().replace(/\s+/g, "-")}`,
+        destinationId: editingExperience.destinationId || destinations[0]?.id || "",
         category: editingExperience.category || ExperienceCategory.NAUTICO,
         shortDescription: editingExperience.shortDescription || "",
         fullDescription: editingExperience.fullDescription || "",
@@ -380,6 +428,7 @@ export default function AdminView({
           <div className="flex flex-wrap items-center gap-1 bg-[#132033] p-1.5 border border-white/5 rounded">
             {[
               { id: "overview", label: "Visão Geral", icon: TrendingUp },
+              { id: "destinations", label: "Destinos", icon: MapPin },
               { id: "experiences", label: "Passeios", icon: Compass },
               { id: "calendar", label: "Tarifário", icon: Calendar },
               { id: "leads", label: "Leads CRM", icon: Users, alertCount: activeLeadsCount },
@@ -484,6 +533,174 @@ export default function AdminView({
 
             </div>
 
+          </div>
+        )}
+
+        {/* -------------------- TAB: DESTINATIONS CRUD -------------------- */}
+        {activeTab === "destinations" && (
+          <div className="space-y-6 text-left">
+            {!editingDestination ? (
+              <div className="space-y-4">
+                <div className="flex justify-between items-center bg-[#132033] border border-white/5 p-4 rounded-sm">
+                  <span className="font-accent text-xs font-bold text-[#8A96A3] uppercase">Controle de Destinos ({destinations.length})</span>
+                  <button
+                    onClick={() => setEditingDestination({})}
+                    className="flex items-center gap-1 bg-[#E8711A] text-[#0D1B2A] font-accent text-xs font-bold uppercase tracking-wider px-4 py-2.5 rounded-sm hover:bg-[#C45E12] cursor-pointer"
+                  >
+                    <Plus className="w-4 h-4" /> Novo Destino
+                  </button>
+                </div>
+
+                <div className="bg-[#132033]/60 border border-white/5 rounded-sm overflow-hidden">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="border-b border-white/5 bg-[#132033] font-accent text-[10px] text-[#8A96A3] uppercase tracking-widest">
+                        <th className="p-4">Capa</th>
+                        <th className="p-4">Nome do Destino</th>
+                        <th className="p-4">Slug</th>
+                        <th className="p-4">Status</th>
+                        <th className="p-4 text-right">Ações</th>
+                      </tr>
+                    </thead>
+                    <tbody className="font-sans text-xs">
+                      {destinations.map((dest) => (
+                        <tr key={dest.id} className="border-b border-white/5 hover:bg-white/[0.01]">
+                          <td className="p-4">
+                            <img src={dest.heroImage} className="w-12 h-8 object-cover rounded" alt="Thumb" />
+                          </td>
+                          <td className="p-4 font-bold text-white">{dest.name}</td>
+                          <td className="p-4 opacity-75">{dest.slug}</td>
+                          <td className="p-4">
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-accent uppercase ${
+                              dest.status === "active" ? "bg-emerald-500/20 text-emerald-400" : "bg-red-500/20 text-red-400"
+                            }`}>
+                              {dest.status === "active" ? "Ativo" : "Inativo"}
+                            </span>
+                          </td>
+                          <td className="p-4 text-right space-x-2">
+                            <button
+                              onClick={() => setEditingDestination(dest)}
+                              className="p-1.5 bg-white/5 hover:bg-[#E8711A] text-[#8A96A3] hover:text-[#0D1B2A] rounded transition-colors"
+                              title="Editar"
+                            >
+                              <Edit3 className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteDestination(dest.id)}
+                              className="p-1.5 bg-white/5 hover:bg-red-500 text-[#8A96A3] hover:text-white rounded transition-colors"
+                              title="Excluir"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  {destinations.length === 0 && (
+                    <div className="p-8 text-center text-[#8A96A3] text-sm">
+                      Nenhum destino cadastrado ainda.
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <form onSubmit={handleSaveDestination} className="bg-[#132033] border border-white/5 rounded-sm p-6 space-y-6">
+                <div className="flex justify-between items-center border-b border-white/5 pb-4">
+                  <h3 className="font-serif text-xl font-bold text-[#F4EFE6]">
+                    {editingDestination.id ? "Editar Destino" : "Novo Destino"}
+                  </h3>
+                  <button type="button" onClick={() => setEditingDestination(null)} className="text-[#8A96A3] hover:text-white">
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Basic Info */}
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-[10px] font-accent text-[#8A96A3] uppercase tracking-widest mb-1">Nome do Destino *</label>
+                      <input
+                        required
+                        type="text"
+                        value={editingDestination.name || ""}
+                        onChange={(e) => setEditingDestination({ ...editingDestination, name: e.target.value })}
+                        className="w-full bg-black/30 border border-white/10 rounded px-3 py-2 text-sm text-white focus:border-[#E8711A] outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-accent text-[#8A96A3] uppercase tracking-widest mb-1">Slug (URL amigável)</label>
+                      <input
+                        type="text"
+                        value={editingDestination.slug || ""}
+                        onChange={(e) => setEditingDestination({ ...editingDestination, slug: e.target.value })}
+                        className="w-full bg-black/30 border border-white/10 rounded px-3 py-2 text-sm text-white focus:border-[#E8711A] outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-accent text-[#8A96A3] uppercase tracking-widest mb-1">Status</label>
+                      <select
+                        value={editingDestination.status || "inactive"}
+                        onChange={(e) => setEditingDestination({ ...editingDestination, status: e.target.value as "active" | "inactive" })}
+                        className="w-full bg-black/30 border border-white/10 rounded px-3 py-2 text-sm text-white focus:border-[#E8711A] outline-none"
+                      >
+                        <option value="active">Ativo (Visível)</option>
+                        <option value="inactive">Inativo (Oculto)</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-accent text-[#8A96A3] uppercase tracking-widest mb-1">Imagem Principal (Hero)</label>
+                      <input
+                        required
+                        type="url"
+                        value={editingDestination.heroImage || ""}
+                        onChange={(e) => setEditingDestination({ ...editingDestination, heroImage: e.target.value })}
+                        className="w-full bg-black/30 border border-white/10 rounded px-3 py-2 text-sm text-white focus:border-[#E8711A] outline-none"
+                        placeholder="https://..."
+                      />
+                    </div>
+                  </div>
+
+                  {/* Descriptions */}
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-[10px] font-accent text-[#8A96A3] uppercase tracking-widest mb-1">Breve Descrição (Cards)</label>
+                      <textarea
+                        rows={2}
+                        value={editingDestination.shortDescription || ""}
+                        onChange={(e) => setEditingDestination({ ...editingDestination, shortDescription: e.target.value })}
+                        className="w-full bg-black/30 border border-white/10 rounded px-3 py-2 text-sm text-white focus:border-[#E8711A] outline-none resize-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-accent text-[#8A96A3] uppercase tracking-widest mb-1">Descrição Completa</label>
+                      <textarea
+                        rows={5}
+                        value={editingDestination.description || ""}
+                        onChange={(e) => setEditingDestination({ ...editingDestination, description: e.target.value })}
+                        className="w-full bg-black/30 border border-white/10 rounded px-3 py-2 text-sm text-white focus:border-[#E8711A] outline-none"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pt-4 border-t border-white/5 flex justify-end gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setEditingDestination(null)}
+                    className="px-4 py-2 border border-white/10 rounded text-xs font-bold uppercase tracking-wider text-[#8A96A3] hover:text-white"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-6 py-2 bg-[#E8711A] text-[#0D1B2A] rounded text-xs font-bold uppercase tracking-wider hover:bg-[#C45E12]"
+                  >
+                    Salvar Destino
+                  </button>
+                </div>
+              </form>
+            )}
           </div>
         )}
 
@@ -598,7 +815,20 @@ export default function AdminView({
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+                  <div className="grid grid-cols-1 sm:grid-cols-4 gap-5">
+                    <div className="space-y-1.5">
+                      <label className="font-accent text-[9px] text-[#ffefe6]/90 tracking-widest uppercase">Destino</label>
+                      <select
+                        value={editingExperience.destinationId || ""}
+                        onChange={(e) => setEditingExperience({ ...editingExperience, destinationId: e.target.value })}
+                        className="w-full bg-[#0D1B2A] border border-white/5 p-3 text-xs text-white"
+                      >
+                        <option value="">(Selecione)</option>
+                        {destinations.map(d => (
+                          <option key={d.id} value={d.id}>{d.name}</option>
+                        ))}
+                      </select>
+                    </div>
                     <div className="space-y-1.5">
                       <label className="font-accent text-[9px] text-[#ffefe6]/90 tracking-widest uppercase">Categoria</label>
                       <select

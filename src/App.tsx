@@ -21,10 +21,10 @@ import ClientAuthModal from "./components/ClientAuthModal";
 
 import { 
   Experience, BlogPost, Lead, GlobalSettings, BookingCartItem, ClientUser, ClientReservation,
-  getBrazilLocalDate, addDaysToBrazilDate
+  getBrazilLocalDate, addDaysToBrazilDate, Destination
 } from "./types";
 import { 
-  INITIAL_EXPERIENCES, INITIAL_BLOG_POSTS, INITIAL_LEADS, INITIAL_SETTINGS 
+  INITIAL_EXPERIENCES, INITIAL_BLOG_POSTS, INITIAL_LEADS, INITIAL_SETTINGS, INITIAL_DESTINATIONS
 } from "./data";
 import { 
   X, ShoppingBag, Send, ChevronRight, MessageSquare, AlertTriangle 
@@ -142,6 +142,7 @@ export default function App() {
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [leads, setLeads] = useState<Lead[]>([]);
   const [settings, setSettings] = useState<GlobalSettings>(INITIAL_SETTINGS);
+  const [destinations, setDestinations] = useState<Destination[]>(INITIAL_DESTINATIONS);
 
   // Roteiro (Shopping Cart) Drawer States
   const [cart, setCart] = useState<BookingCartItem[]>([]);
@@ -176,6 +177,19 @@ export default function App() {
       return 3;
     }
   });
+
+  const [selectedDestinationId, setSelectedDestinationId] = useState<string | null>(() => {
+    try {
+      return localStorage.getItem("guidatrips_selected_destination_id") || "arraial-do-cabo";
+    } catch {
+      return "arraial-do-cabo";
+    }
+  });
+
+  const updateSelectedDestinationId = (destId: string) => {
+    setSelectedDestinationId(destId);
+    localStorage.setItem("guidatrips_selected_destination_id", destId);
+  };
 
   const updateStayDays = (days: number) => {
     setStayDays(days);
@@ -404,6 +418,28 @@ export default function App() {
       }
     } catch (e) {
       console.error("Firestore leads update failed:", e);
+    }
+  };
+
+  const updateDestinations = async (newDestinations: Destination[]) => {
+    const oldDestinations = destinations;
+    setDestinations(newDestinations);
+    localStorage.setItem("guidatrips_destinations", JSON.stringify(newDestinations));
+
+    try {
+      const oldIds = oldDestinations.map(d => d.id);
+      const newIds = newDestinations.map(d => d.id);
+      const deletedIds = oldIds.filter(id => !newIds.includes(id));
+
+      for (const delId of deletedIds) {
+        await firestoreService.delete("destinations", delId);
+      }
+
+      for (const dest of newDestinations) {
+        await firestoreService.set("destinations", dest.id, dest);
+      }
+    } catch (e) {
+      console.error("Firestore destinations update failed:", e);
     }
   };
 
@@ -651,14 +687,18 @@ export default function App() {
     cart.forEach(item => {
       const exp = experiences.find(e => e.id === item.experienceId);
       if (exp) {
-        uniqueLocationsSet.add(exp.location || "Arraial do Cabo");
-      } else {
-        uniqueLocationsSet.add("Arraial do Cabo");
+        if (exp.destinationId) {
+           const dest = destinations.find(d => d.id === exp.destinationId);
+           if (dest) uniqueLocationsSet.add(dest.name);
+        } else if (exp.location) {
+           uniqueLocationsSet.add(exp.location);
+        }
       }
     });
-    // Add default location Arraial do Cabo if no experiences
+    // Add default location if none
     if (uniqueLocationsSet.size === 0) {
-      uniqueLocationsSet.add("Arraial do Cabo");
+      const defaultDest = destinations.find(d => d.id === selectedDestinationId) || destinations[0];
+      if (defaultDest) uniqueLocationsSet.add(defaultDest.name);
     }
     const locationsString = Array.from(uniqueLocationsSet).join(", ");
 
@@ -718,6 +758,9 @@ export default function App() {
             selectedHotelId={selectedHotelId}
             onChangeHotelId={handleUpdateHotelId}
             stayDays={stayDays}
+            destinations={destinations}
+            selectedDestinationId={selectedDestinationId}
+            onUpdateSelectedDestinationId={updateSelectedDestinationId}
           />
         )}
         {currentView === "experiencias" && (
@@ -757,6 +800,9 @@ export default function App() {
             whatsappNumber={settings.whatsappNumber}
             currentUser={currentUser}
             onTriggerAuthModal={handleTriggerAuthModalForCheckout}
+            destinations={destinations}
+            selectedDestinationId={selectedDestinationId}
+            onUpdateSelectedDestinationId={updateSelectedDestinationId}
           />
         )}
         {currentView === "hospedagens" && (
@@ -785,10 +831,12 @@ export default function App() {
             leads={leads}
             posts={posts}
             settings={settings}
+            destinations={destinations}
             onUpdateExperiences={updateExperiences}
             onUpdatePosts={updatePosts}
             onUpdateLeads={updateLeads}
             onUpdateSettings={updateSettings}
+            onUpdateDestinations={updateDestinations}
           />
         )}
         {currentView === "cliente" && (
@@ -800,6 +848,8 @@ export default function App() {
             currentUser={currentUser}
             onLogout={handleLogout}
             userReservations={userReservations}
+            destinations={destinations}
+            selectedDestinationId={selectedDestinationId}
           />
         )}
         {currentView === "roteiro" && (

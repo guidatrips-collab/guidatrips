@@ -11,7 +11,7 @@ import {
   Compass, X, ArrowRight, Home, MessageSquare, Hotel, Trash2, 
   CheckCircle2, Bed, Baby, User, ShieldCheck, Map
 } from "lucide-react";
-import { Experience, BookingCartItem, checkSchedulingConflict, getTourScheduleDetails, getBrazilLocalDate, addDaysToBrazilDate } from "../types";
+import { Experience, BookingCartItem, checkSchedulingConflict, getTourScheduleDetails, getBrazilLocalDate, addDaysToBrazilDate, Destination } from "../types";
 import { firestoreService } from "../firebase";
 import ExperienceMediaGallery from "./ExperienceMediaGallery";
 
@@ -32,14 +32,9 @@ interface WizardViewProps {
   whatsappNumber?: string;
   currentUser?: any;
   onTriggerAuthModal?: (action: { type: string; action: () => void }) => void;
-}
-
-interface DestinationHub {
-  id: string;
-  name: string;
-  tagline: string;
-  desc: string;
-  image: string;
+  destinations: Destination[];
+  selectedDestinationId: string | null;
+  onUpdateSelectedDestinationId: (id: string) => void;
 }
 
 export default function WizardView({
@@ -58,16 +53,20 @@ export default function WizardView({
   onChangeHotelId,
   whatsappNumber = "552299887766",
   currentUser,
-  onTriggerAuthModal
+  onTriggerAuthModal,
+  destinations,
+  selectedDestinationId,
+  onUpdateSelectedDestinationId
 }: WizardViewProps) {
   // Master steps of the custom flow:
+  // 0 = Escolha do Destino (Destination)
   // 1 = Perfil de Viagem (Profile)
   // 2 = Datas de Chegada/Saída (Dates)
   // 3 = Passageiros / Grupo (Group)
   // 4 = Hospedagem Recomendada (Hotel)
   // 5 = Construção do Roteiro Inteligente Dia a Dia (Day-by-Day planning)
   // 6 = Finalização (Checkout Choice)
-  const [step, setStep] = useState<number>(1);
+  const [step, setStep] = useState<number>(0);
   const [profile, setProfile] = useState<"casal" | "familia" | "grupo" | "solo">("casal");
 
   // Date picker states (Step 2)
@@ -159,6 +158,8 @@ export default function WizardView({
       observations: ""
     };
   };
+
+  const selectedDestObj = destinations.find(d => d.id === selectedDestinationId) || destinations[0];
 
   const updateBookingConfig = (expId: string, fields: Partial<typeof bookingConfigs[string]>) => {
     setBookingConfigs(prev => {
@@ -757,6 +758,62 @@ export default function WizardView({
 
         <AnimatePresence mode="wait">
           
+          {/* STEP 0: DESTINATION SELECTOR */}
+          {step === 0 && (
+            <motion.div
+              key="step0"
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -15 }}
+              className="space-y-8 text-left"
+            >
+              <div className="text-center space-y-2.5 max-w-2xl mx-auto">
+                <span className="font-accent text-[9px] text-[#E8711A] font-extrabold tracking-widest uppercase bg-[#E8711A]/8 px-3.5 py-1 rounded-full">
+                  Etapa Inicial
+                </span>
+                <h2 className="font-serif text-3xl sm:text-4.5xl font-extrabold text-[#0D1B2A] leading-tight text-center">
+                  Para qual destino você vai viajar?
+                </h2>
+                <p className="text-xs sm:text-sm text-zinc-500 leading-relaxed text-center">
+                  Escolha o destino principal da sua viagem para personalizarmos o seu roteiro.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 max-w-5xl mx-auto">
+                {destinations.filter(d => d.status === "active" || d.id === selectedDestinationId || d.id === "arraial-do-cabo" || d.id === "buzios" || d.id === "cabo-frio").map(dest => (
+                  <button
+                    key={dest.id}
+                    onClick={() => {
+                      onUpdateSelectedDestinationId(dest.id);
+                      setStep(1);
+                    }}
+                    className={`relative overflow-hidden rounded-2xl border-2 transition-all duration-300 text-left group ${
+                      selectedDestinationId === dest.id
+                        ? "border-[#E8711A] shadow-lg shadow-[#E8711A]/20"
+                        : "border-zinc-200 hover:border-zinc-300 hover:shadow-md"
+                    }`}
+                  >
+                    <div className="h-32 w-full relative">
+                      <img src={dest.heroImage} alt={dest.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
+                      <div className="absolute bottom-3 left-4">
+                        <h3 className="text-white font-bold text-lg">{dest.name}</h3>
+                      </div>
+                      {selectedDestinationId === dest.id && (
+                        <div className="absolute top-3 right-3 bg-[#E8711A] rounded-full p-1 shadow-md">
+                          <Check className="w-3.5 h-3.5 text-white" />
+                        </div>
+                      )}
+                    </div>
+                    <div className="p-4 bg-white">
+                      <p className="text-xs text-zinc-600 line-clamp-2">{dest.shortDescription}</p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </motion.div>
+          )}
+
           {/* STEP 1: TRAVEL PROFILE SELECTOR */}
           {step === 1 && (
             <motion.div
@@ -771,7 +828,7 @@ export default function WizardView({
                   Etapa 1 de 6: Estilo de Viagem
                 </span>
                 <h2 className="font-serif text-3xl sm:text-4.5xl font-extrabold text-[#0D1B2A] leading-tight text-center">
-                  Como será sua viagem por Arraial do Cabo?
+                  Como será sua viagem por {selectedDestObj?.name || "Arraial do Cabo"}?
                 </h2>
                 <p className="text-xs sm:text-sm text-zinc-500 leading-relaxed text-center">
                   Para adaptarmos perfeitamente as experiências sugeridas, o ritmo do passeio, cortesias a bordo e a curadoria de hotéis, selecione o seu perfil.
@@ -1274,7 +1331,7 @@ export default function WizardView({
                         </div>
                         <div>
                           <h4 className="font-serif text-base font-extrabold">Entendido perfeitamente!</h4>
-                          <p className="text-xs text-emerald-600/90 font-medium">Você já possui hospedagem garantida em Arraial do Cabo.</p>
+                          <p className="text-xs text-emerald-600/90 font-medium">Você já possui hospedagem garantida em {selectedDestObj?.name || "Arraial do Cabo"}.</p>
                         </div>
                       </div>
                       <p className="text-xs sm:text-sm text-zinc-650 leading-relaxed pl-1">

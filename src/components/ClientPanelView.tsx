@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Experience, BlogPost, ClientUser, ClientReservation, ClientPartner, GlobalSettings } from "../types";
+import { Experience, BlogPost, ClientUser, ClientReservation, ClientPartner, GlobalSettings, Destination } from "../types";
 import { 
   Compass, Map, Ticket, Star, User, Heart, ChevronRight, 
   MapPin, Clock, Calendar, CheckCircle, Info, Video, Gift, Search,
@@ -14,6 +14,8 @@ interface ClientPanelViewProps {
   currentUser: ClientUser | null;
   onLogout?: () => void;
   userReservations?: ClientReservation[];
+  destinations?: Destination[];
+  selectedDestinationId?: string | null;
 }
 
 export default function ClientPanelView({ 
@@ -23,7 +25,9 @@ export default function ClientPanelView({
   onNavigate,
   currentUser,
   onLogout,
-  userReservations
+  userReservations,
+  destinations = [],
+  selectedDestinationId
 }: ClientPanelViewProps) {
   const [activeTab, setActiveTab] = useState<"dashboard" | "viagem" | "dicas" | "beneficios" | "perfil">("dashboard");
   const [selectedReservationId, setSelectedReservationId] = useState<string | null>(null);
@@ -178,7 +182,7 @@ export default function ClientPanelView({
           <div className="space-y-10 animate-fade-in max-w-5xl mx-auto">
             <header className="space-y-2">
               <h1 className="font-serif text-3xl md:text-4xl font-bold text-[#0D1B2A]">Olá, {clientUser.name.split(" ")[0]}! 🌊</h1>
-              <p className="font-sans text-sm text-[#5C6874]">Faltam <strong className="text-[#E8711A]">12 dias</strong> para a sua experiência incrível em Arraial do Cabo começar.</p>
+              <p className="font-sans text-sm text-[#5C6874]">Faltam <strong className="text-[#E8711A]">12 dias</strong> para a sua experiência incrível em {destName} começar.</p>
             </header>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -191,18 +195,18 @@ export default function ClientPanelView({
                     className="w-full h-full object-cover filter brightness-95"
                   />
                   <div className="absolute top-3 left-3 bg-[#E8711A] text-white font-accent text-[8px] px-2 py-1 uppercase tracking-widest rounded-sm font-bold shadow-md">
-                    Seu Próximo Destino
+                    Seu Próximo Passeio
                   </div>
                 </div>
                 <div className="p-6 flex-1 flex flex-col justify-between">
                   <div>
                     <h3 className="font-serif text-xl font-bold text-[#0D1B2A] group-hover:text-[#E8711A] transition-colors">
-                      {currentExp?.name || "Cruzeiro Náutico Premium"}
+                      {currentExp?.name || "Sua Experiência Premium"}
                     </h3>
                     <div className="flex flex-col sm:flex-row gap-2 sm:gap-6 mt-4 text-[#5C6874] font-sans text-xs">
                       <div className="flex items-center gap-1.5"><Calendar className="w-4 h-4 text-[#E8711A]" /> {currentReservation?.date ? formatDate(currentReservation.date) : "A Definir"}</div>
                       <div className="flex items-center gap-1.5"><Clock className="w-4 h-4 text-[#E8711A]" /> {currentReservation?.time || "A Definir"}</div>
-                      <div className="flex items-center gap-1.5"><MapPin className="w-4 h-4 text-[#E8711A]" /> {currentReservation?.meetingPoint || "Cais"}</div>
+                      <div className="flex items-center gap-1.5"><MapPin className="w-4 h-4 text-[#E8711A]" /> {currentReservation?.meetingPoint || "A Combinar"}</div>
                     </div>
                   </div>
                   <div className="mt-6 flex justify-between items-center border-t border-zinc-100 pt-4">
@@ -215,12 +219,12 @@ export default function ClientPanelView({
               <div className="space-y-6">
                 <div className="bg-[#0D1B2A] rounded-xl p-6 text-white shadow-lg relative overflow-hidden">
                   <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-bl-full pointer-events-none"></div>
-                  <h4 className="font-accent text-[10px] uppercase tracking-widest text-zinc-400 mb-4">Previsão Arraial do Cabo</h4>
+                  <h4 className="font-accent text-[10px] uppercase tracking-widest text-zinc-400 mb-4">Previsão em {destName}</h4>
                   <div className="flex items-end gap-4">
                     <span className="text-5xl font-serif font-bold">28°</span>
                     <div className="pb-1">
                       <p className="font-sans text-sm font-medium">Sol com algumas nuvens</p>
-                      <p className="font-sans text-xs text-zinc-400">Água cristalina ideal para mergulho</p>
+                      <p className="font-sans text-xs text-zinc-400">Tempo ideal para explorar</p>
                     </div>
                   </div>
                 </div>
@@ -228,7 +232,7 @@ export default function ClientPanelView({
                 <div className="bg-[#FBF9F7] border border-zinc-200 rounded-xl p-6">
                   <h4 className="font-accent text-[10px] uppercase tracking-widest text-[#E8711A] mb-4">Dica da Guida</h4>
                   <p className="font-serif text-sm text-[#0D1B2A] leading-relaxed">
-                    "O sol do Caribe Brasileiro é forte! Lembre-se de beber muita água e aplicar o protetor ecológico antes de embarcar."
+                    "O sol é forte na região! Lembre-se de beber muita água e aplicar o protetor ecológico antes de embarcar."
                   </p>
                 </div>
               </div>
