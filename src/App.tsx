@@ -578,7 +578,40 @@ export default function App() {
   const handleTriggerWhatsapp = () => {
     if (cart.length === 0 && !selectedHotelId) return;
 
-    let textMessage = `Olá, Guida Trips! 👋\n\nGostaria de montar meu roteiro personalizado de *${stayDays} dias* com vocês!\n\n`;
+    // Calculate total estimate
+    let totalEstimate = 0;
+    cart.forEach(item => {
+      const exp = experiences.find(e => e.id === item.experienceId);
+      if (!exp) return;
+      
+      const baseAdult = exp.pricing?.adultPrice ?? exp.priceFrom;
+      const baseChild = exp.pricing?.childPrice ?? (exp.promotionalPrice || exp.priceFrom) * 0.5;
+      const baseBaby = exp.pricing?.babyPrice ?? 0;
+      
+      let tariff = { adultPrice: baseAdult, childPrice: baseChild, babyPrice: baseBaby };
+      if (item.date && exp.calendar?.[item.date]) {
+        const customData = exp.calendar[item.date];
+        tariff = {
+          adultPrice: customData.adultPrice,
+          childPrice: customData.childPrice,
+          babyPrice: customData.babyPrice
+        };
+      }
+      
+      const adultsCost = tariff.adultPrice * (item.adults || 2);
+      const kidsCost = tariff.childPrice * (item.children || 0);
+      const babiesCost = tariff.babyPrice * (item.infants || 0);
+      totalEstimate += (adultsCost + kidsCost + babiesCost);
+    });
+
+    const finalName = clientName.trim() || "[Nome do Cliente]";
+    const finalCity = clientCity.trim() || "[Cidade de Origem]";
+
+    let textMessage = `Olá, Guida Trips! 👋\n\n`;
+    textMessage += `Gostaria de solicitar o agendamento do meu roteiro personalizado!\n\n`;
+    textMessage += `👤 *Nome do Cliente:* ${finalName}\n`;
+    textMessage += `🏡 *Cidade de Origem:* ${finalCity}\n`;
+    textMessage += `📅 *Dias de Viagem:* ${stayDays} dias\n\n`;
 
     // Add lodging summary if selected
     if (selectedHotelId) {
@@ -588,8 +621,10 @@ export default function App() {
         "ohana-pousada": "Ohana Pousada Boutique 🛌"
       };
       const hName = hotelNames[selectedHotelId] || "Hospedagem Selecionada";
-      textMessage += `🏨 *HOSPEDAGEM COORDENADA:*\n   • *${hName}*\n\n`;
+      textMessage += `🏨 *Hospedagem Coordenada:* ${hName}\n\n`;
     }
+
+    textMessage += `📋 *PASSEIOS ESCOLHIDOS:*\n\n`;
 
     // Group cart by dayIndex (1 to stayDays)
     for (let d = 1; d <= stayDays; d++) {
@@ -612,13 +647,13 @@ export default function App() {
           textMessage += `      🕒 Horário: ${item.schedule}\n`;
           textMessage += `      📆 Data: ${formattedDate}\n`;
           
-          let paxString = `${item.adults} Ad.`;
-          if (item.children && item.children > 0) paxString += `, ${item.children} Cr.`;
+          let paxString = `${item.adults} Adulto(s)`;
+          if (item.children && item.children > 0) paxString += `, ${item.children} Criança(s)`;
           if (item.infants && item.infants > 0) paxString += `, ${item.infants} Bebê(s)`;
-          textMessage += `      👥 Integrantes: ${paxString}\n`;
+          textMessage += `      👥 Participantes: ${paxString}\n`;
           
           if (item.observations && item.observations.trim()) {
-            textMessage += `      ✍️ Obs/Mimos: _${item.observations.trim()}_\n`;
+            textMessage += `      ✍️ Observações: _${item.observations.trim()}_\n`;
           }
         });
         textMessage += `\n`;
@@ -640,10 +675,9 @@ export default function App() {
     }
     const locationsString = Array.from(uniqueLocationsSet).join(", ");
 
-    const finalName = clientName.trim() || "[Insira o Nome]";
-    const finalCity = clientCity.trim() || "[Insira a Cidade]";
-
-    textMessage += `👤 Solicitante: *${finalName}*\n🏡 Cidade de Origem: *${finalCity}*\n📍 Locais/Destinos: *${locationsString}*\n\nPor favor, confirmem se há disponibilidade destas vagas e os valores totais! Obrigado!`;
+    textMessage += `📍 *Destinos:* ${locationsString}\n`;
+    textMessage += `💰 *Valor Estimado do Roteiro:* R$ ${totalEstimate.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}\n\n`;
+    textMessage += `Por favor, confirmem a disponibilidade das vagas e os valores para finalizarmos! Obrigado!`;
 
     // Also register this WhatsApp click event as a Lead in our Admin Dashboard CRM to keep metrics active!
     const waLead: Lead = {
@@ -712,6 +746,7 @@ export default function App() {
             onNavigate={handleNavigate}
             currentUser={currentUser}
             onTriggerAuthModal={handleTriggerAuthModalForCheckout}
+            stayDays={stayDays}
           />
         )}
         {currentView === "destino" && (

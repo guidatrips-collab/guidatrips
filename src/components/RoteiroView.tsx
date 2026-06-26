@@ -206,7 +206,8 @@ export default function RoteiroView({
       const tariff = getCartItemTariff(exp, item.date);
       const adultsCost = tariff.adultPrice * (item.adults || 2);
       const kidsCost = tariff.childPrice * (item.children || 0);
-      return total + adultsCost + kidsCost;
+      const babiesCost = tariff.babyPrice * (item.infants || 0);
+      return total + adultsCost + kidsCost + babiesCost;
     }, 0);
   };
 
@@ -346,36 +347,7 @@ export default function RoteiroView({
                   </div>
                 </div>
 
-                {/* View Mode Switcher tabs */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-t border-zinc-100 pt-4">
-                  <span className="text-xs font-bold text-zinc-500 text-left">Formato de Visualização:</span>
-                  <div className="flex p-1 bg-zinc-100 rounded-xl border border-zinc-200 self-start sm:self-auto">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsStepMode(true);
-                      }}
-                      className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                        isStepMode
-                          ? "bg-white text-[#0D1B2A] shadow-sm"
-                          : "text-zinc-500 hover:text-[#0D1B2A]"
-                      }`}
-                    >
-                      Passo a Passo 🗺️
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setIsStepMode(false)}
-                      className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                        !isStepMode
-                          ? "bg-white text-[#0D1B2A] shadow-sm"
-                          : "text-zinc-500 hover:text-[#0D1B2A]"
-                      }`}
-                    >
-                      Cronograma Completo 📅
-                    </button>
-                  </div>
-                </div>
+
 
                 {/* Conflict Warnings with pleasant, clean layout */}
                 {conflicts.length > 0 && (
@@ -473,15 +445,6 @@ export default function RoteiroView({
                         <span className="font-accent text-[9px] text-[#E8711A] font-black tracking-widest uppercase block mb-0.5">ROTEIRO PASSO A PASSO</span>
                         <h3 className="font-serif text-base font-bold text-[#0D1B2A]">Dia Ativo: Dia {activeStepDay} de {stayDays}</h3>
                       </div>
-                      
-                      <button
-                        type="button"
-                        onClick={() => setIsStepMode(false)}
-                        className="px-4 py-2 bg-emerald-50 hover:bg-emerald-100/80 text-emerald-800 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 self-start sm:self-center border border-emerald-200/50"
-                      >
-                        <span>Ver Roteiro Completo</span>
-                        <Check className="w-3.5 h-3.5 text-emerald-600" />
-                      </button>
                     </div>
 
                     {/* Premium horizontal scrollable/flexible dynamic tabs */}
@@ -962,7 +925,7 @@ export default function RoteiroView({
                       <div className="bg-[#FCFBF9] border border-zinc-150 rounded-3xl p-6 shadow-sm text-center space-y-4 animate-fadeIn">
                         <div className="space-y-1">
                           <h4 className="font-serif text-base font-bold text-zinc-800">Dia {dayNum} preenchido com sucesso! 🎉</h4>
-                          <p className="text-xs text-zinc-500">Continue construindo sua jornada perfeita dia a dia ou finalize quando desejar.</p>
+                          <p className="text-xs text-zinc-500">Continue construindo sua jornada perfeita dia a dia ou preencha o formulário para finalizar.</p>
                         </div>
                         
                         <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
@@ -970,28 +933,16 @@ export default function RoteiroView({
                             <button
                               type="button"
                               onClick={() => changeStepDay(dayNum + 1)}
-                              className="w-full sm:w-auto px-8 py-4 bg-[#E8711A] text-[#0D1B2A] hover:bg-[#0D1B2A] hover:text-white font-accent font-black tracking-widest uppercase rounded-2xl shadow-md transition-all duration-300 cursor-pointer text-xs flex items-center justify-center gap-2"
+                              className="w-full sm:w-auto px-8 py-4 bg-[#E8711A] text-[#0D1B2A] hover:bg-[#0D1B2A] hover:text-white font-accent font-black tracking-widest uppercase rounded-2xl shadow-md transition-all duration-300 cursor-pointer text-xs flex items-center justify-center gap-2 font-bold"
                             >
-                              <span>{cart.filter(item => item.dayIndex === dayNum + 1).length > 0 ? `Continuar para o Dia ${dayNum + 1}` : `Adicionar passeio ao Dia ${dayNum + 1}`}</span>
+                              <span>{cart.filter(item => item.dayIndex === dayNum + 1).length > 0 ? `Continuar para o Dia ${dayNum + 1}` : `Escolher passeio para o Dia ${dayNum + 1}`}</span>
                               <span>&rarr;</span>
                             </button>
                           ) : (
-                            <button
-                              type="button"
-                              onClick={() => setIsStepMode(false)}
-                              className="w-full sm:w-auto px-8 py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-accent font-black tracking-widest uppercase rounded-2xl shadow-md transition-all duration-300 cursor-pointer text-xs flex items-center justify-center gap-1.5"
-                            >
-                              <span>Finalizar e Ver Roteiro Completo ✓</span>
-                            </button>
+                            <div className="text-zinc-500 text-xs font-semibold p-2.5 bg-emerald-50 text-emerald-800 rounded-xl border border-emerald-200/50">
+                              🎉 Roteiro de {stayDays} dias planejado! Preencha seus dados ao lado para finalizar o envio pelo WhatsApp.
+                            </div>
                           )}
-
-                          <button
-                            type="button"
-                            onClick={() => setIsStepMode(false)}
-                            className="w-full sm:w-auto px-6 py-4 bg-zinc-100 hover:bg-zinc-250 text-zinc-700 rounded-2xl text-xs font-bold transition-all cursor-pointer border border-zinc-200"
-                          >
-                            Finalizar meu roteiro
-                          </button>
                         </div>
                       </div>
                     )}
@@ -1151,7 +1102,7 @@ export default function RoteiroView({
                       <span className="text-zinc-500 block font-semibold">Valor Estimado do Roteiro</span>
                       <span className="text-[10px] text-zinc-400 italic">Preço base dos passeios adicionados</span>
                     </div>
-                    <span className="text-2xl sm:text-3xl font-bold text-[#E8711A]">R$ {totalEstimate}</span>
+                    <span className="text-2xl sm:text-3xl font-bold text-[#E8711A]">R$ {totalEstimate.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
                   </div>
                 </div>
 

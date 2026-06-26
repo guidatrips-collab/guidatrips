@@ -21,6 +21,7 @@ interface ExperiencesViewProps {
   onNavigate?: (view: string) => void;
   currentUser: ClientUser | null;
   onTriggerAuthModal?: (action: { type: string; action: () => void }) => void;
+  stayDays?: number;
 }
 
 export default function ExperiencesView({
@@ -34,12 +35,17 @@ export default function ExperiencesView({
   onUpdateSettings,
   onNavigate,
   currentUser,
-  onTriggerAuthModal
+  onTriggerAuthModal,
+  stayDays = 4
 }: ExperiencesViewProps) {
   const [selectedCategory, setSelectedCategory] = useState<string>("todos");
   const [selectedLocation, setSelectedLocation] = useState<string>("todos");
   const [searchQuery, setSearchQuery] = useState("");
   const [activeExperience, setActiveExperience] = useState<Experience | null>(null);
+
+  // Day selection modal states
+  const [showDaySelectionModal, setShowDaySelectionModal] = useState(false);
+  const [pendingCartItem, setPendingCartItem] = useState<Partial<BookingCartItem> | null>(null);
 
   // Form states inside details modal
   const [bookingDate, setBookingDate] = useState("");
@@ -186,7 +192,7 @@ export default function ExperiencesView({
     e.preventDefault();
     if (!activeExperience) return;
 
-    onAddToCart({
+    setPendingCartItem({
       experienceId: activeExperience.id,
       date: bookingDate,
       schedule: bookingSchedule || (activeExperience.schedules && activeExperience.schedules.length > 0 ? activeExperience.schedules[0] : "08:00"),
@@ -196,10 +202,7 @@ export default function ExperiencesView({
       people: bookingAdults + bookingChildren + bookingInfants,
       observations: bookingObservations,
     });
-
-    // Close and open cart
-    setActiveExperience(null);
-    onOpenCart();
+    setShowDaySelectionModal(true);
   };
 
   // Perform Simulated Online Booking
@@ -710,41 +713,10 @@ export default function ExperiencesView({
                       </h2>
                     </div>
 
-                    {/* Booking Method Tab Selection */}
-                    <div className="grid grid-cols-2 bg-zinc-100 p-1.5 rounded-xl border border-zinc-200">
-                      <button
-                        onClick={() => { setBookingMethod("whatsapp"); setOnlineStep("details"); }}
-                        className={`py-2 px-3 text-[10px] font-accent uppercase tracking-wider font-bold rounded-lg transition-all cursor-pointer ${
-                          bookingMethod === "whatsapp" 
-                            ? "bg-[#0D1B2A] text-white shadow-sm" 
-                            : "text-zinc-500 hover:text-[#0D1B2A]"
-                        }`}
-                      >
-                        💬 via WhatsApp
-                      </button>
-                      <button
-                        onClick={() => {
-                          if (!currentUser && onTriggerAuthModal) {
-                            onTriggerAuthModal({
-                              type: "online_booking",
-                              action: () => {
-                                setBookingMethod("online");
-                                setOnlineStep("details");
-                              }
-                            });
-                          } else {
-                            setBookingMethod("online");
-                            setOnlineStep("details");
-                          }
-                        }}
-                        className={`py-2 px-3 text-[10px] font-accent uppercase tracking-wider font-bold rounded-lg transition-all cursor-pointer ${
-                          bookingMethod === "online" 
-                            ? "bg-[#0D1B2A] text-white shadow-sm" 
-                            : "text-zinc-500 hover:text-[#0D1B2A]"
-                        }`}
-                      >
-                        💳 Comprar Online
-                      </button>
+                    {/* Booking Method Header */}
+                    <div className="bg-[#E8711A]/8 border border-[#E8711A]/10 p-3.5 rounded-xl">
+                      <span className="font-accent text-[9px] text-[#E8711A] font-extrabold tracking-widest uppercase block mb-0.5">PLANEJAMENTO</span>
+                      <p className="text-xs text-zinc-650 leading-normal">Configure os participantes e observações abaixo para incluir este passeio no seu roteiro.</p>
                     </div>
 
                     {/* DYNAMIC CONTENT SWITCH BASED ON TAB & STEP */}
@@ -1320,6 +1292,103 @@ export default function ExperiencesView({
 
                 </div>
 
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Day Selection Modal */}
+      <AnimatePresence>
+        {showDaySelectionModal && pendingCartItem && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 15 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 15 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+              className="bg-white border border-zinc-200 rounded-3xl w-full max-w-sm p-6 sm:p-7 space-y-5 text-left shadow-2xl relative"
+            >
+              <div className="space-y-1">
+                <span className="font-accent text-[9px] text-[#E8711A] font-black tracking-widest uppercase bg-[#E8711A]/8 px-2.5 py-1 rounded-full">
+                  Etapa 2: Agendamento do Dia
+                </span>
+                <h3 className="font-serif text-base sm:text-lg font-bold text-[#0D1B2A] pt-1.5 leading-snug">
+                  Em qual dia da viagem você deseja adicionar este passeio?
+                </h3>
+                <p className="text-xs text-zinc-500">
+                  Status atual do seu planejamento:
+                </p>
+              </div>
+
+              <div className="space-y-2 max-h-[280px] overflow-y-auto pr-1">
+                {Array.from({ length: stayDays }).map((_, idx) => {
+                  const dayNum = idx + 1;
+                  const dayItems = cart.filter(item => item.dayIndex === dayNum);
+                  const isPlanned = dayItems.length > 0;
+
+                  return (
+                    <button
+                      key={dayNum}
+                      type="button"
+                      onClick={() => {
+                        const today = new Date();
+                        today.setDate(today.getDate() + 1); // Start from tomorrow
+                        const targetDate = new Date(today);
+                        targetDate.setDate(today.getDate() + (dayNum - 1));
+                        const computedDate = targetDate.toISOString().split("T")[0];
+
+                        onAddToCart({
+                          ...pendingCartItem as BookingCartItem,
+                          dayIndex: dayNum,
+                          date: computedDate,
+                        });
+
+                        setShowDaySelectionModal(false);
+                        setPendingCartItem(null);
+                        setActiveExperience(null);
+                        onOpenCart();
+                      }}
+                      className="w-full flex items-center justify-between p-3.5 bg-[#FAF8F5] border border-zinc-200 rounded-xl hover:border-[#E8711A] hover:bg-white transition-all duration-200 cursor-pointer text-left focus:outline-none focus:ring-2 focus:ring-[#E8711A]/30"
+                    >
+                      <div className="space-y-0.5">
+                        <span className="font-serif text-sm font-extrabold text-[#0D1B2A]">
+                          Dia {dayNum}
+                        </span>
+                        <span className="text-[10px] text-zinc-500 block">
+                          {isPlanned 
+                            ? `${dayItems.length} passeio${dayItems.length > 1 ? "s" : ""} planejado${dayItems.length > 1 ? "s" : ""}` 
+                            : "Sem passeios agendados"}
+                        </span>
+                      </div>
+
+                      <div>
+                        {isPlanned ? (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-full">
+                            ✅ Planejado
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-zinc-600 bg-zinc-100 border border-zinc-200 px-2 py-0.5 rounded-full">
+                            🟢 Livre
+                          </span>
+                        )}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowDaySelectionModal(false);
+                    setPendingCartItem(null);
+                  }}
+                  className="w-full py-3 bg-zinc-100 hover:bg-zinc-200 text-[#0D1B2A] font-accent font-black tracking-widest uppercase rounded-xl text-[10px] transition-colors cursor-pointer border border-zinc-200"
+                >
+                  Voltar aos Detalhes
+                </button>
               </div>
             </motion.div>
           </div>
