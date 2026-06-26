@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { 
   Compass, Calendar, Users, MapPin, Check, X, ArrowRight, Share2, 
   Search, Info, Plus, ChevronLeft, ChevronRight, CreditCard, Shield, 
@@ -46,6 +46,13 @@ export default function ExperiencesView({
   // Day selection modal states
   const [showDaySelectionModal, setShowDaySelectionModal] = useState(false);
   const [pendingCartItem, setPendingCartItem] = useState<Partial<BookingCartItem> | null>(null);
+  const [modalConflictError, setModalConflictError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!showDaySelectionModal) {
+      setModalConflictError(null);
+    }
+  }, [showDaySelectionModal]);
 
   // Form states inside details modal
   const [bookingDate, setBookingDate] = useState("");
@@ -1321,6 +1328,19 @@ export default function ExperiencesView({
                 </p>
               </div>
 
+              {/* Alert Error Message in Red only after trying to confirm */}
+              {modalConflictError && (
+                <div className="p-4 bg-red-50 border border-red-200 rounded-2xl text-xs text-red-900 flex flex-col gap-1.5 leading-relaxed text-left animate-pulse">
+                  <div className="font-bold flex items-center gap-1.5 text-red-800">
+                    <span className="text-sm">🔴</span>
+                    <span>Inclusão Impedida</span>
+                  </div>
+                  <div className="whitespace-pre-line pl-5 text-red-700 font-medium">
+                    {modalConflictError}
+                  </div>
+                </div>
+              )}
+
               <div className="space-y-3.5 max-h-[320px] overflow-y-auto pr-1">
                 {Array.from({ length: stayDays }).map((_, idx) => {
                   const dayNum = idx + 1;
@@ -1349,21 +1369,26 @@ export default function ExperiencesView({
                   const hasConflict = !!conflictReason;
 
                   return (
-                    <div key={dayNum} className="space-y-1">
+                    <div key={dayNum} className="space-y-1.5">
                       <button
                         type="button"
-                        disabled={hasConflict}
                         onClick={() => {
-                          onAddToCart(tempItem);
-                          setShowDaySelectionModal(false);
-                          setPendingCartItem(null);
-                          setActiveExperience(null);
-                          onOpenCart();
+                          if (hasConflict) {
+                            setModalConflictError(
+                              `Não foi possível adicionar este passeio ao Dia ${dayNum}.\nO horário deste passeio entra em conflito com outro passeio já programado para este mesmo dia.\nEscolha outro dia para continuar.`
+                            );
+                          } else {
+                            onAddToCart(tempItem);
+                            setShowDaySelectionModal(false);
+                            setPendingCartItem(null);
+                            setActiveExperience(null);
+                            onOpenCart();
+                          }
                         }}
-                        className={`w-full flex items-center justify-between p-3.5 border rounded-xl transition-all duration-250 text-left focus:outline-none ${
+                        className={`w-full flex items-center justify-between p-3.5 border rounded-xl transition-all duration-250 text-left focus:outline-none cursor-pointer ${
                           hasConflict
-                            ? "bg-zinc-50 border-zinc-200 opacity-60 cursor-not-allowed"
-                            : "bg-[#FAF8F5] border-zinc-200 hover:border-[#E8711A] hover:bg-white cursor-pointer hover:shadow-sm focus:ring-2 focus:ring-[#E8711A]/30"
+                            ? "bg-purple-50/10 border-purple-200/60 hover:bg-purple-50/20 hover:border-purple-300 focus:ring-2 focus:ring-purple-400/30"
+                            : "bg-[#FAF8F5] border-zinc-200 hover:border-emerald-500 hover:bg-emerald-50/10 hover:shadow-sm focus:ring-2 focus:ring-emerald-500/30"
                         }`}
                       >
                         <div className="space-y-0.5">
@@ -1379,24 +1404,21 @@ export default function ExperiencesView({
 
                         <div className="flex items-center gap-2">
                           {hasConflict ? (
-                            <span className="inline-flex items-center gap-1 text-[9px] font-bold text-red-800 bg-red-50 border border-red-150 px-2.5 py-1 rounded-full">
-                              ⚠️ Conflito
-                            </span>
-                          ) : isPlanned ? (
-                            <span className="inline-flex items-center gap-1 text-[9px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-100 px-2.5 py-1 rounded-full">
-                              ✅ Planejado
+                            <span className="inline-flex items-center gap-1 text-[9px] font-bold text-purple-700 bg-purple-50 border border-purple-150 px-2.5 py-1 rounded-full">
+                              🟣 Atenção
                             </span>
                           ) : (
-                            <span className="inline-flex items-center gap-1 text-[9px] font-bold text-zinc-600 bg-zinc-100 border border-zinc-200 px-2.5 py-1 rounded-full">
-                              🟢 Livre
+                            <span className="inline-flex items-center gap-1 text-[9px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-100 px-2.5 py-1 rounded-full">
+                              🟢 Disponível
                             </span>
                           )}
                         </div>
                       </button>
                       
                       {hasConflict && (
-                        <p className="text-[10px] text-red-600 font-medium pl-3 pr-1 leading-normal">
-                          {conflictReason}
+                        <p className="text-[10px] text-purple-600 font-medium pl-3 pr-1 leading-normal flex items-start gap-1">
+                          <span className="shrink-0 text-[10px]">🟣</span>
+                          <span>Este passeio não é recomendado para este dia, pois há outro passeio programado em horário conflitante.</span>
                         </p>
                       )}
                     </div>
