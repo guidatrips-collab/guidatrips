@@ -27,6 +27,24 @@ export interface Experience {
   coordinates: { lat: number; lng: number };
   photos: string[];
   videoEmbed?: string;
+  highlights?: string[];
+  bringItems?: string[];
+  partnerName?: string;
+  promotionalPrice?: number;
+  googleMapsUrl?: string;
+  availability?: {
+    type: "daily" | "specific_days";
+    daysOfWeek?: number[];
+    specificDates?: string[];
+    blockedDates?: string[];
+    slots: { time: string; capacity: number }[];
+  };
+  pricing?: {
+    adultPrice: number;
+    childPrice?: number;
+    babyPrice?: number;
+    promotionalAdultPrice?: number;
+  };
   whatsappMessage?: string;
   status: "active" | "paused" | "draft";
   featured: boolean;

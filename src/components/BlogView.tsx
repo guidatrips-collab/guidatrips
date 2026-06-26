@@ -52,7 +52,7 @@ export default function BlogView({ posts, onNavigateToContact, selectedSlug, onS
       .slice(0, 2);
 
     return (
-      <div id="blog-reading-view" className="py-24 bg-[#0D1B2A]">
+      <div id="blog-reading-view" className="pt-28 pb-24 bg-[#0D1B2A]">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
           
           {/* Breadcrumb de Navegação */}
@@ -201,7 +201,7 @@ export default function BlogView({ posts, onNavigateToContact, selectedSlug, onS
 
   // Render grid list
   return (
-    <div id="blog-magazine-view" className="py-24 bg-[#0D1B2A]">
+    <div id="blog-magazine-view" className="pt-28 pb-24 bg-[#0D1B2A]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
         
         {/* HEADER */}

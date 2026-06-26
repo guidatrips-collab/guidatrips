@@ -110,7 +110,7 @@ export default function ExperiencesView({
   };
 
   return (
-    <div id="experiences-view" className="py-24 bg-[#0D1B2A]">
+    <div id="experiences-view" className="pt-28 pb-24 bg-[#0D1B2A]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
         
         {/* HEADER EXTRAORDINÁRIO */}
@@ -233,7 +233,15 @@ export default function ExperiencesView({
                         <span className="text-[#E8711A]">⏱</span> {exp.duration}
                       </div>
                       <div className="flex items-center gap-1 shrink-0 font-bold text-[#F4EFE6]">
-                        <span className="text-[#E8711A]">💰</span> R$ {exp.priceFrom}
+                        <span className="text-[#E8711A]">💰</span> 
+                        {exp.promotionalPrice ? (
+                          <div className="flex items-center gap-1.5">
+                            <span className="line-through text-zinc-500">R${exp.priceFrom}</span>
+                            <span className="text-[#4ADE80]">R${exp.promotionalPrice}</span>
+                          </div>
+                        ) : (
+                          <span>R$ {exp.priceFrom}</span>
+                        )}
                       </div>
                       <div className="flex items-center gap-0.5 shrink-0 border-l border-white/5 pl-2 text-[9px] uppercase tracking-wider text-[#E8711A] font-bold">
                         <span>📍</span> {exp.location || "Arraial"}
@@ -312,49 +320,113 @@ export default function ExperiencesView({
                     </div>
                   )}
 
+                  {/* VÍDEO SE HOUVER */}
+                  {activeExperience.videoEmbed && (
+                    <div className="pt-2">
+                      <div className="aspect-video w-full rounded-2xl overflow-hidden shadow-sm border border-zinc-200">
+                        <iframe 
+                          src={activeExperience.videoEmbed.replace("watch?v=", "embed/")} 
+                          title="Vídeo do passeio" 
+                          className="w-full h-full" 
+                          allowFullScreen
+                        ></iframe>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* DESTAQUES PRINCIPAIS */}
+                  {activeExperience.highlights && activeExperience.highlights.length > 0 && (
+                    <div className="flex flex-wrap gap-2 pt-2">
+                      {activeExperience.highlights.map((hlt, idx) => (
+                        <span key={idx} className="bg-[#E8711A]/10 text-[#E8711A] px-3 py-1.5 rounded-full font-accent text-[9px] font-bold uppercase tracking-widest border border-[#E8711A]/20">
+                          🌟 {hlt}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
                   {/* Descrição em Markdown Formatada */}
                   <div className="space-y-4 border-t border-zinc-200/60 pt-6">
                     <h3 className="font-serif text-lg font-extrabold text-[#0D1B2A]">A Jornada:</h3>
                     <div className="font-sans text-xs sm:text-sm text-zinc-650 leading-relaxed whitespace-pre-line space-y-3">
                       {activeExperience.fullDescription}
                     </div>
+
+                    {/* Parceiro responsável (MVP) */}
+                    {activeExperience.partnerName && (
+                      <div className="text-xs text-zinc-500 font-sans italic border-l-2 border-zinc-300 pl-3 py-1">
+                        Operado por: <strong className="text-zinc-700">{activeExperience.partnerName}</strong>
+                      </div>
+                    )}
                     
                     {/* Itens incluídos / não incluídos */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-4">
-                      <div className="bg-zinc-50/50 p-5 border border-zinc-200/60 rounded-2xl space-y-3">
-                        <span className="font-accent text-[10px] text-[#E8711A] font-black tracking-widest uppercase flex items-center gap-1">
-                          ✨ O que Inclui
-                        </span>
-                        <ul className="space-y-1.5 font-sans text-xs text-zinc-600">
-                          {activeExperience.included.map((item, idx) => (
-                            <li key={idx} className="flex items-start gap-1.5">
-                              <span className="text-[#E8711A] select-none">✓</span>
-                              <span>{item}</span>
-                            </li>
-                          ))}
-                        </ul>
+                      <div className="space-y-4">
+                        <div className="bg-zinc-50/50 p-5 border border-zinc-200/60 rounded-2xl space-y-3 h-full">
+                          <span className="font-accent text-[10px] text-[#E8711A] font-black tracking-widest uppercase flex items-center gap-1">
+                            ✨ O que Inclui
+                          </span>
+                          <ul className="space-y-1.5 font-sans text-xs text-zinc-600">
+                            {activeExperience.included?.map((item, idx) => (
+                              <li key={idx} className="flex items-start gap-1.5">
+                                <span className="text-[#E8711A] select-none">✓</span>
+                                <span>{item}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
                       </div>
-                      <div className="bg-zinc-50/50 p-5 border border-zinc-200/60 rounded-2xl space-y-3">
-                        <span className="font-accent text-[10px] text-zinc-500 font-extrabold tracking-widest uppercase flex items-center gap-1">
-                          🚫 Não Inclui
-                        </span>
-                        <ul className="space-y-1.5 font-sans text-xs text-zinc-600">
-                          {activeExperience.notIncluded.map((item, idx) => (
-                            <li key={idx} className="flex items-start gap-1.5">
-                              <span className="text-zinc-400 select-none">✕</span>
-                              <span>{item}</span>
-                            </li>
-                          ))}
-                        </ul>
+                      <div className="space-y-4">
+                        <div className="bg-zinc-50/50 p-5 border border-zinc-200/60 rounded-2xl space-y-3 h-full">
+                          <span className="font-accent text-[10px] text-zinc-500 font-extrabold tracking-widest uppercase flex items-center gap-1">
+                            🚫 Não Inclui
+                          </span>
+                          <ul className="space-y-1.5 font-sans text-xs text-zinc-600">
+                            {activeExperience.notIncluded?.map((item, idx) => (
+                              <li key={idx} className="flex items-start gap-1.5">
+                                <span className="text-zinc-400 select-none">✕</span>
+                                <span>{item}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
                       </div>
                     </div>
 
-                    {/* Ponto de encontro */}
-                    <div className="flex items-start gap-2.5 pt-3 text-xs font-sans text-zinc-600 bg-[#FAF8F5] p-3.5 border border-zinc-200/50 rounded-xl">
-                      <MapPin className="w-4 h-4 text-[#E8711A] shrink-0 mt-0.5" />
-                      <div>
-                        <span className="font-extrabold text-[#0D1B2A]">Ponto de encontro:</span> {activeExperience.meetingPoint}
+                    {/* O que levar */}
+                    {activeExperience.bringItems && activeExperience.bringItems.length > 0 && (
+                      <div className="bg-[#E8711A]/5 p-4 border border-[#E8711A]/20 rounded-xl space-y-2 mt-4">
+                        <span className="font-accent text-[10px] text-[#E8711A] font-extrabold tracking-widest uppercase flex items-center gap-1.5">
+                          🎒 O Que Levar
+                        </span>
+                        <div className="flex flex-wrap gap-2 mt-2">
+                          {activeExperience.bringItems.map((item, idx) => (
+                            <span key={idx} className="bg-white border border-[#E8711A]/30 text-zinc-700 px-2 py-1 rounded-md text-[10px] font-sans">
+                              {item}
+                            </span>
+                          ))}
+                        </div>
                       </div>
+                    )}
+
+                    {/* Ponto de encontro */}
+                    <div className="flex items-center justify-between pt-3 text-xs font-sans text-zinc-600 bg-[#FAF8F5] p-3.5 border border-zinc-200/50 rounded-xl">
+                      <div className="flex items-start gap-2.5">
+                        <MapPin className="w-4 h-4 text-[#E8711A] shrink-0 mt-0.5" />
+                        <div>
+                          <span className="font-extrabold text-[#0D1B2A]">Ponto de encontro:</span> {activeExperience.meetingPoint}
+                        </div>
+                      </div>
+                      {activeExperience.googleMapsUrl && (
+                        <a 
+                          href={activeExperience.googleMapsUrl} 
+                          target="_blank" 
+                          rel="noreferrer"
+                          className="bg-[#0D1B2A] text-white font-accent text-[9px] uppercase tracking-widest font-bold px-3 py-1.5 rounded-md hover:bg-[#E8711A] transition-colors whitespace-nowrap"
+                        >
+                          Ver no Mapa
+                        </a>
+                      )}
                     </div>
 
                     {/* FAQ ACCORDION SECTION */}
@@ -437,7 +509,14 @@ export default function ExperiencesView({
                     <div className="space-y-3 font-sans text-xs text-zinc-650 bg-white p-4.5 rounded-2xl border border-zinc-200 shadow-xs">
                       <div className="flex justify-between items-center pb-2 border-b border-zinc-100">
                         <span>Preço básico de referência:</span>
-                        <span className="font-extrabold text-[#0D1B2A]">R$ {activeExperience.priceFrom} / pessoa</span>
+                        {activeExperience.promotionalPrice ? (
+                          <div className="flex items-center gap-2">
+                            <span className="line-through text-zinc-400 font-medium">R$ {activeExperience.priceFrom}</span>
+                            <span className="font-extrabold text-[#4ADE80]">R$ {activeExperience.promotionalPrice} / pessoa</span>
+                          </div>
+                        ) : (
+                          <span className="font-extrabold text-[#0D1B2A]">R$ {activeExperience.priceFrom} / pessoa</span>
+                        )}
                       </div>
                       <div className="flex justify-between items-center pb-2 border-b border-zinc-100">
                         <span>Duração estimada:</span>
@@ -609,7 +688,7 @@ export default function ExperiencesView({
                         <div className="flex justify-between items-baseline font-sans text-xs">
                           <span className="text-zinc-750 font-medium">Estimativa do Roteiro:</span>
                           <span className="font-extrabold text-xl text-[#E8711A] font-accent">
-                            R$ {(activeExperience.priceFrom * bookingAdults) + (activeExperience.priceFrom * 0.5 * bookingChildren)}
+                            R$ {((activeExperience.promotionalPrice || activeExperience.priceFrom) * bookingAdults) + ((activeExperience.promotionalPrice || activeExperience.priceFrom) * 0.5 * bookingChildren)}
                           </span>
                         </div>
                         <p className="text-[10px] text-zinc-500 font-sans leading-relaxed">
@@ -617,17 +696,28 @@ export default function ExperiencesView({
                         </p>
                       </div>
 
-                      <button
-                        type="submit"
-                        disabled={bookingAdults + bookingChildren + bookingInfants > activeExperience.capacity}
-                        className={`w-full py-4 text-xs font-accent font-extrabold tracking-[0.12em] uppercase rounded-xl shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-                          bookingAdults + bookingChildren + bookingInfants > activeExperience.capacity
-                            ? "bg-zinc-200 text-zinc-400 cursor-not-allowed"
-                            : "bg-[#E8711A] hover:bg-[#C45E12] text-[#0D1B2A]"
-                        }`}
-                      >
-                        <Plus className="w-4 h-4" /> INCLUIR NO MEU ROTEIRO
-                      </button>
+                      <div className="flex flex-col gap-3">
+                        <button
+                          type="submit"
+                          disabled={bookingAdults + bookingChildren + bookingInfants > activeExperience.capacity}
+                          className={`w-full py-4 text-xs font-accent font-extrabold tracking-[0.12em] uppercase rounded-xl shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                            bookingAdults + bookingChildren + bookingInfants > activeExperience.capacity
+                              ? "bg-zinc-200 text-zinc-400 cursor-not-allowed"
+                              : "bg-[#0D1B2A] hover:bg-[#1a2d42] text-white"
+                          }`}
+                        >
+                          <Plus className="w-4 h-4" /> INCLUIR NO MEU ROTEIRO
+                        </button>
+                        
+                        <a
+                          href={`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(`Olá! Gostaria de reservar o passeio *${activeExperience.name}* para o dia ${bookingDate} às ${bookingSchedule}. Seremos ${bookingAdults} adultos, ${bookingChildren} crianças e ${bookingInfants} bebês. Aguardo o contato!`)}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="w-full py-4 text-xs font-accent font-extrabold tracking-[0.12em] uppercase rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer bg-[#25D366] hover:bg-[#20b958] text-white"
+                        >
+                          RESERVAR PELO WHATSAPP
+                        </a>
+                      </div>
                     </form>
                   </div>
 

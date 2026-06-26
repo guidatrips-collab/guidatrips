@@ -175,9 +175,17 @@ export default function AdminView({
         duration: editingExperience.duration || "2 horas",
         capacity: editingExperience.capacity || 10,
         priceFrom: editingExperience.priceFrom || 100,
+        promotionalPrice: editingExperience.promotionalPrice,
         included: editingExperience.included || [],
         notIncluded: editingExperience.notIncluded || [],
+        highlights: editingExperience.highlights || [],
+        bringItems: editingExperience.bringItems || [],
+        itinerary: editingExperience.itinerary || [],
+        faqs: editingExperience.faqs || [],
         meetingPoint: editingExperience.meetingPoint || "A combinar",
+        googleMapsUrl: editingExperience.googleMapsUrl || "",
+        partnerName: editingExperience.partnerName || "",
+        videoEmbed: editingExperience.videoEmbed || "",
         coordinates: editingExperience.coordinates || { lat: -22.9715, lng: -42.0224 },
         photos: editingExperience.photos || ["https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=600&q=80"],
         status: editingExperience.status || "active",
@@ -607,13 +615,144 @@ export default function AdminView({
                         className="w-full bg-[#0D1B2A] border border-white/5 p-3 text-xs text-white"
                       />
                     </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                     <div className="space-y-1.5">
-                      <label className="font-accent text-[9px] text-[#ffefe6]/90 tracking-widest uppercase">Preço a partir de (R$)</label>
+                      <label className="font-accent text-[9px] text-[#ffefe6]/90 tracking-widest uppercase">Preço Base Referência (R$)</label>
                       <input
                         type="number"
                         placeholder="Ex: 120"
                         value={editingExperience.priceFrom || ""}
                         onChange={(e) => setEditingExperience({ ...editingExperience, priceFrom: parseInt(e.target.value) || 0 })}
+                        className="w-full bg-[#0D1B2A] border border-white/5 p-3 text-xs text-white"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="font-accent text-[9px] text-[#ffefe6]/90 tracking-widest uppercase">Preço Base Promocional (R$)</label>
+                      <input
+                        type="number"
+                        placeholder="Ex: 99"
+                        value={editingExperience.promotionalPrice || ""}
+                        onChange={(e) => setEditingExperience({ ...editingExperience, promotionalPrice: parseInt(e.target.value) || undefined })}
+                        className="w-full bg-[#0D1B2A] border border-white/5 p-3 text-xs text-white"
+                      />
+                    </div>
+                  </div>
+
+                  {/* PRECIFICAÇÃO DETALHADA */}
+                  <div className="p-4 bg-[#0D1B2A]/50 border border-white/10 rounded-lg space-y-4">
+                    <h4 className="font-serif text-sm font-bold text-[#E8711A]">Tabela de Preços (Adulto, Criança, Bebê)</h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+                      <div className="space-y-1.5">
+                        <label className="font-accent text-[9px] text-[#ffefe6]/90 tracking-widest uppercase">Adulto (R$)</label>
+                        <input
+                          type="number"
+                          value={editingExperience.pricing?.adultPrice || ""}
+                          onChange={(e) => setEditingExperience({ 
+                            ...editingExperience, 
+                            pricing: { ...(editingExperience.pricing || { adultPrice: 0 }), adultPrice: parseInt(e.target.value) || 0 } 
+                          })}
+                          className="w-full bg-[#0D1B2A] border border-white/5 p-3 text-xs text-white"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="font-accent text-[9px] text-[#ffefe6]/90 tracking-widest uppercase">Criança (R$)</label>
+                        <input
+                          type="number"
+                          value={editingExperience.pricing?.childPrice || ""}
+                          onChange={(e) => setEditingExperience({ 
+                            ...editingExperience, 
+                            pricing: { ...(editingExperience.pricing || { adultPrice: 0 }), childPrice: parseInt(e.target.value) || 0 } 
+                          })}
+                          className="w-full bg-[#0D1B2A] border border-white/5 p-3 text-xs text-white"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="font-accent text-[9px] text-[#ffefe6]/90 tracking-widest uppercase">Bebê (R$)</label>
+                        <input
+                          type="number"
+                          value={editingExperience.pricing?.babyPrice || ""}
+                          onChange={(e) => setEditingExperience({ 
+                            ...editingExperience, 
+                            pricing: { ...(editingExperience.pricing || { adultPrice: 0 }), babyPrice: parseInt(e.target.value) || 0 } 
+                          })}
+                          className="w-full bg-[#0D1B2A] border border-white/5 p-3 text-xs text-white"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* CALENDÁRIO & DISPONIBILIDADE */}
+                  <div className="p-4 bg-[#0D1B2A]/50 border border-white/10 rounded-lg space-y-4">
+                    <h4 className="font-serif text-sm font-bold text-[#E8711A]">Calendário e Disponibilidade</h4>
+                    <div className="grid grid-cols-1 gap-5">
+                      <div className="space-y-1.5">
+                        <label className="font-accent text-[9px] text-[#ffefe6]/90 tracking-widest uppercase">Tipo de Frequência</label>
+                        <select
+                          value={editingExperience.availability?.type || "daily"}
+                          onChange={(e) => setEditingExperience({ 
+                            ...editingExperience, 
+                            availability: { ...(editingExperience.availability || { type: "daily", slots: [] }), type: e.target.value as "daily" | "specific_days" } 
+                          })}
+                          className="w-full bg-[#0D1B2A] border border-white/5 p-3 text-xs text-white outline-none"
+                        >
+                          <option value="daily">Todos os dias</option>
+                          <option value="specific_days">Dias Específicos (Semana/Mês)</option>
+                        </select>
+                      </div>
+
+                      {editingExperience.availability?.type === "specific_days" && (
+                        <div className="space-y-1.5">
+                          <label className="font-accent text-[9px] text-[#ffefe6]/90 tracking-widest uppercase">Dias da Semana Permitidos (0 = Dom, 6 = Sáb)</label>
+                          <input
+                            type="text"
+                            placeholder="Ex: 1, 2, 3, 4, 5 (Segunda a Sexta)"
+                            value={editingExperience.availability?.daysOfWeek?.join(", ") || ""}
+                            onChange={(e) => {
+                              const days = e.target.value.split(",").map(s => parseInt(s.trim())).filter(n => !isNaN(n));
+                              setEditingExperience({
+                                ...editingExperience,
+                                availability: { ...(editingExperience.availability || { type: "specific_days", slots: [] }), daysOfWeek: days }
+                              });
+                            }}
+                            className="w-full bg-[#0D1B2A] border border-white/5 p-3 text-xs text-white"
+                          />
+                        </div>
+                      )}
+
+                      <div className="space-y-1.5">
+                        <label className="font-accent text-[9px] text-[#ffefe6]/90 tracking-widest uppercase">Horários (Separe por vírgula)</label>
+                        <input
+                          type="text"
+                          placeholder="Ex: 08:00, 10:00, 14:00"
+                          value={editingExperience.schedules?.join(", ") || ""}
+                          onChange={(e) => setEditingExperience({ ...editingExperience, schedules: e.target.value.split(",").map(s => s.trim()) })}
+                          className="w-full bg-[#0D1B2A] border border-white/5 p-3 text-xs text-white"
+                        />
+                        <p className="text-[10px] text-zinc-500 mt-1">Horários de saída e capacidade são gerenciados aqui (Ex: 08:00, 10:00)</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    <div className="space-y-1.5">
+                      <label className="font-accent text-[9px] text-[#ffefe6]/90 tracking-widest uppercase">Parceiro Responsável</label>
+                      <input
+                        type="text"
+                        placeholder="Ex: Agência Marítima X"
+                        value={editingExperience.partnerName || ""}
+                        onChange={(e) => setEditingExperience({ ...editingExperience, partnerName: e.target.value })}
+                        className="w-full bg-[#0D1B2A] border border-white/5 p-3 text-xs text-white"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="font-accent text-[9px] text-[#ffefe6]/90 tracking-widest uppercase">Localização (Link do Google Maps)</label>
+                      <input
+                        type="text"
+                        placeholder="Ex: https://maps.app.goo.gl/..."
+                        value={editingExperience.googleMapsUrl || ""}
+                        onChange={(e) => setEditingExperience({ ...editingExperience, googleMapsUrl: e.target.value })}
                         className="w-full bg-[#0D1B2A] border border-white/5 p-3 text-xs text-white"
                       />
                     </div>
@@ -679,12 +818,69 @@ export default function AdminView({
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <label className="font-accent text-[9px] text-[#ffefe6]/90 tracking-widest uppercase">Fotos da Galeria (Cole URLs de fotos separadas por vírgulas)</label>
+                      <label className="font-accent text-[9px] text-[#ffefe6]/90 tracking-widest uppercase">Vídeo de Destaque (URL do YouTube/Vimeo)</label>
                       <input
                         type="text"
-                        value={(editingExperience.photos || []).join(", ")}
-                        onChange={(e) => setEditingExperience({ ...editingExperience, photos: e.target.value.split(",").map(s => s.trim()) })}
-                        className="w-full bg-[#0D1B2A] border border-white/5 p-3 text-xs text-white text-sans"
+                        placeholder="Ex: https://youtube.com/watch?v=..."
+                        value={editingExperience.videoEmbed || ""}
+                        onChange={(e) => setEditingExperience({ ...editingExperience, videoEmbed: e.target.value })}
+                        className="w-full bg-[#0D1B2A] border border-white/5 p-3 text-xs text-white"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="font-accent text-[9px] text-[#ffefe6]/90 tracking-widest uppercase">Fotos da Galeria (Cole URLs de fotos separadas por vírgulas)</label>
+                    <input
+                      type="text"
+                      value={(editingExperience.photos || []).join(", ")}
+                      onChange={(e) => setEditingExperience({ ...editingExperience, photos: e.target.value.split(",").map(s => s.trim()) })}
+                      className="w-full bg-[#0D1B2A] border border-white/5 p-3 text-xs text-white text-sans"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    <div className="space-y-1.5">
+                      <label className="font-accent text-[9px] text-[#ffefe6]/90 tracking-widest uppercase">Destaques Principais (Uma por linha)</label>
+                      <textarea
+                        rows={4}
+                        placeholder="Ex: Guia Bilíngue\nEquipamento Incluso"
+                        value={(editingExperience.highlights || []).join("\n")}
+                        onChange={(e) => setEditingExperience({ ...editingExperience, highlights: e.target.value.split("\n").filter(Boolean) })}
+                        className="w-full bg-[#0D1B2A] border border-white/5 p-3 text-xs text-white"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="font-accent text-[9px] text-[#ffefe6]/90 tracking-widest uppercase">O Que Levar (Um por linha)</label>
+                      <textarea
+                        rows={4}
+                        placeholder="Ex: Protetor Solar\nToalha\nGarrafa d'água"
+                        value={(editingExperience.bringItems || []).join("\n")}
+                        onChange={(e) => setEditingExperience({ ...editingExperience, bringItems: e.target.value.split("\n").filter(Boolean) })}
+                        className="w-full bg-[#0D1B2A] border border-white/5 p-3 text-xs text-white"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    <div className="space-y-1.5">
+                      <label className="font-accent text-[9px] text-[#ffefe6]/90 tracking-widest uppercase">O Que Está Incluso (Um por linha)</label>
+                      <textarea
+                        rows={4}
+                        placeholder="Ex: Água\nSnacks"
+                        value={(editingExperience.included || []).join("\n")}
+                        onChange={(e) => setEditingExperience({ ...editingExperience, included: e.target.value.split("\n").filter(Boolean) })}
+                        className="w-full bg-[#0D1B2A] border border-white/5 p-3 text-xs text-white"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="font-accent text-[9px] text-[#ffefe6]/90 tracking-widest uppercase">O Que Não Está Incluso (Um por linha)</label>
+                      <textarea
+                        rows={4}
+                        placeholder="Ex: Almoço\nFotos Profissionais"
+                        value={(editingExperience.notIncluded || []).join("\n")}
+                        onChange={(e) => setEditingExperience({ ...editingExperience, notIncluded: e.target.value.split("\n").filter(Boolean) })}
+                        className="w-full bg-[#0D1B2A] border border-white/5 p-3 text-xs text-white"
                       />
                     </div>
                   </div>

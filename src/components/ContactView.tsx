@@ -49,7 +49,7 @@ export default function ContactView({ onAddLead, whatsappNumber }: ContactViewPr
   };
 
   return (
-    <div id="contact-view" className="py-24 bg-[#0D1B2A]">
+    <div id="contact-view" className="pt-28 pb-24 bg-[#0D1B2A]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
         
         {/* HEADER */}

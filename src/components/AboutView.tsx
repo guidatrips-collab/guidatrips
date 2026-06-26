@@ -56,7 +56,7 @@ export default function AboutView() {
   ];
 
   return (
-    <div id="about-view" className="py-24 bg-[#FBF9F6]">
+    <div id="about-view" className="pt-28 pb-24 bg-[#FBF9F6]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
         
         {/* HEADER */}

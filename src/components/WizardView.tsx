@@ -252,7 +252,7 @@ export default function WizardView({
   const filteredExps = getFilteredExperiences();
 
   return (
-    <div className="w-full bg-[#FCFBF9] text-[#0D1B2A] font-sans pb-16">
+    <div className="w-full bg-[#FCFBF9] text-[#0D1B2A] font-sans pt-28 pb-16">
       
       {/* Immersive Top Steps Tracker Menu Bar */}
       <div className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-zinc-150 py-3.5 px-4 shadow-sm text-left">

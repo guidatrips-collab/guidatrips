@@ -379,7 +379,7 @@ export default function HomeView({
     <div id="home-view" className="relative bg-[#FBF9F6]">
       
       {/* 1. SEÇÃO DE HERO EDITORIAL - COMPLEMENTANDO O FOCO SOCIAL E DE HISTÓRIAS DE PESSOAS FELIZES */}
-      <section id="hero-premium" className="relative min-h-[92vh] flex items-center justify-center bg-[#0D1B2A] text-[#FBF9F6] overflow-hidden px-4 pt-16">
+      <section id="hero-premium" className="relative min-h-[92vh] flex items-center justify-center bg-[#0D1B2A] text-[#FBF9F6] overflow-hidden px-4 pt-28 pb-12">
         {/* Subtle grid background */}
         <div className="absolute inset-0 bg-[radial-gradient(#ffffff_1px,transparent_1px)] opacity-[0.03] [background-size:24px_24px] pointer-events-none"></div>
         <div className="absolute -top-40 -left-40 w-96 h-96 rounded-full bg-[#E8711A]/10 blur-[120px] pointer-events-none"></div>
