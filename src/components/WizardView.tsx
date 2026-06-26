@@ -418,8 +418,237 @@ export default function WizardView({
     window.open(link, "_blank");
   };
 
+  const getMotivationalMessage = (currentStep: number) => {
+    switch (currentStep) {
+      case 1:
+        return "Excelente escolha para começar! Estamos preparando a curadoria perfeita para você.";
+      case 2:
+        return "Você já concluiu 25% do planejamento! Datas selecionadas ajudam a alinhar os melhores passeios.";
+      case 3:
+        return "Seu grupo está quase lá! Cuidado especial com segurança e diversão para todos.";
+      case 4:
+        return "Você já concluiu metade do planejamento! Vamos garantir seu repouso no paraíso.";
+      case 5:
+        return "Seu roteiro está quase pronto. Escolha os passeios que farão você vibrar em cada dia!";
+      case 6:
+        return "Sensacional! Seu plano de viagem premium está desenhado e pronto para se tornar realidade.";
+      default:
+        return "";
+    }
+  };
+
+  const renderLiveJourneySummary = (showActivitiesTimeline = false) => {
+    const chosenProfile = profiles.find(p => p.id === profile);
+    const linkedHotel = hotels.find(h => h.id === selectedHotelId);
+    const totalSelectedExperiences = cart.length;
+    
+    return (
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.98 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.3 }}
+        className="bg-zinc-900 text-white rounded-3xl p-5 sm:p-6 shadow-xl space-y-5 border border-zinc-800 relative overflow-hidden select-none"
+      >
+        {/* Subtle decorative background boarding pass ticket cuts */}
+        <div className="absolute top-1/2 -left-3 w-6 h-6 rounded-full bg-[#FCFBF9] border-r border-zinc-200" />
+        <div className="absolute top-1/2 -right-3 w-6 h-6 rounded-full bg-[#FCFBF9] border-l border-zinc-200" />
+        
+        <div className="border-b border-zinc-800 pb-3.5 flex items-center justify-between">
+          <div>
+            <h3 className="font-serif text-base font-bold text-white flex items-center gap-2">
+              <Map className="w-4.5 h-4.5 text-[#E8711A]" />
+              <span>Sua Viagem</span>
+            </h3>
+            <p className="text-[10px] text-zinc-400 mt-0.5">Construída em tempo real</p>
+          </div>
+          <span className="text-[8px] tracking-widest text-[#E8711A] font-mono border border-[#E8711A]/30 px-2 py-0.5 rounded">
+            VIP PASSPORT
+          </span>
+        </div>
+
+        {/* Dynamic Checklist Checklist Status */}
+        <div className="space-y-3 pt-1">
+          <p className="text-[9px] text-[#E8711A] font-black uppercase tracking-widest">Etapas de Planejamento</p>
+          
+          <div className="space-y-2">
+            {/* 1. Perfil */}
+            <div className="flex items-center justify-between text-xs py-1 border-b border-white/5">
+              <div className="flex items-center gap-2">
+                <span className={`w-4.5 h-4.5 rounded-full flex items-center justify-center text-[10px] font-black transition-colors ${
+                  profile ? "bg-emerald-500 text-white" : "bg-zinc-800 text-zinc-500"
+                }`}>
+                  {profile ? "✓" : "1"}
+                </span>
+                <span className="text-zinc-400">Perfil de Viagem</span>
+              </div>
+              <span className={`font-bold ${profile ? "text-white" : "text-zinc-500 italic"}`}>
+                {chosenProfile ? chosenProfile.label : "Não definido"}
+              </span>
+            </div>
+
+            {/* 2. Datas */}
+            <div className="flex items-center justify-between text-xs py-1 border-b border-white/5">
+              <div className="flex items-center gap-2">
+                <span className={`w-4.5 h-4.5 rounded-full flex items-center justify-center text-[10px] font-black transition-colors ${
+                  arrivalDate ? "bg-emerald-500 text-white" : "bg-zinc-800 text-zinc-500"
+                }`}>
+                  {arrivalDate ? "✓" : "2"}
+                </span>
+                <span className="text-zinc-400">Datas & Período</span>
+              </div>
+              <span className={`font-bold font-mono text-[11px] ${arrivalDate ? "text-white" : "text-zinc-500 italic"}`}>
+                {arrivalDate ? `${stayDays} ${stayDays === 1 ? 'dia' : 'dias'}` : "Não definido"}
+              </span>
+            </div>
+
+            {/* 3. Grupo */}
+            <div className="flex items-center justify-between text-xs py-1 border-b border-white/5">
+              <div className="flex items-center gap-2">
+                <span className={`w-4.5 h-4.5 rounded-full flex items-center justify-center text-[10px] font-black transition-colors ${
+                  adults > 0 ? "bg-emerald-500 text-white" : "bg-zinc-800 text-zinc-500"
+                }`}>
+                  {adults > 0 ? "✓" : "3"}
+                </span>
+                <span className="text-zinc-400">Passageiros</span>
+              </div>
+              <span className="text-white font-bold">
+                {adults + children + infants} {adults + children + infants === 1 ? "pessoa" : "pessoas"}
+              </span>
+            </div>
+
+            {/* 4. Hospedagem */}
+            <div className="flex items-center justify-between text-xs py-1 border-b border-white/5">
+              <div className="flex items-center gap-2">
+                <span className={`w-4.5 h-4.5 rounded-full flex items-center justify-center text-[10px] font-black transition-colors ${
+                  hasHotelAnswer ? "bg-emerald-500 text-white" : "bg-zinc-800 text-zinc-500"
+                }`}>
+                  {hasHotelAnswer ? "✓" : "4"}
+                </span>
+                <span className="text-zinc-400">Hospedagem</span>
+              </div>
+              <span className={`font-bold text-[11px] truncate max-w-[150px] ${hasHotelAnswer === "yes" && selectedHotelId ? "text-emerald-400" : hasHotelAnswer === "no" ? "text-zinc-450" : "text-zinc-500 italic"}`}>
+                {hasHotelAnswer === "yes" && linkedHotel ? linkedHotel.name : hasHotelAnswer === "no" ? "Possuo própria" : "Não definido"}
+              </span>
+            </div>
+
+            {/* 5. Passeios */}
+            <div className="flex items-center justify-between text-xs py-1">
+              <div className="flex items-center gap-2">
+                <span className={`w-4.5 h-4.5 rounded-full flex items-center justify-center text-[10px] font-black transition-colors ${
+                  totalSelectedExperiences > 0 ? "bg-emerald-500 text-white" : "bg-zinc-800 text-zinc-500"
+                }`}>
+                  {totalSelectedExperiences > 0 ? "✓" : "5"}
+                </span>
+                <span className="text-zinc-400">Passeios</span>
+              </div>
+              <span className="text-[#E8711A] font-extrabold">
+                {totalSelectedExperiences} {totalSelectedExperiences === 1 ? "selecionado" : "selecionados"}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Traveler details summary box */}
+        <div className="text-xs space-y-2 bg-white/5 p-3.5 rounded-2xl border border-white/5">
+          <p className="text-[10px] text-[#E8711A] font-black uppercase tracking-wider">Passageiro Titular</p>
+          <div className="space-y-0.5">
+            <p className="font-serif text-xs font-bold text-white truncate">{tempName || "Carolina Mendes"}</p>
+            {tempCity && <p className="text-zinc-400 font-mono text-[9px] italic">Origem: {tempCity}</p>}
+            <p className="text-zinc-350 text-[10px] pt-1">
+              {adults} Adultos {children > 0 && `, ${children} Crianças`} {infants > 0 && `, ${infants} Bebês`}
+            </p>
+          </div>
+        </div>
+
+        {/* Show timeline if requested (especially on step 5) */}
+        {showActivitiesTimeline && (
+          <div className="space-y-4 pt-1.5 border-t border-zinc-800">
+            <p className="text-[10px] text-zinc-400 font-black uppercase tracking-wider">Cronograma de Atividades</p>
+            <div className="space-y-3">
+              {Array.from({ length: stayDays }).map((_, idx) => {
+                const d = idx + 1;
+                const dayItems = cart.filter(item => item.dayIndex === d);
+                const isCurrent = d === currentPlanningDay;
+
+                return (
+                  <div 
+                    key={d} 
+                    onClick={() => setCurrentPlanningDay(d)}
+                    className={`text-xs border-l pl-4 py-0.5 space-y-1.5 text-left relative transition-all cursor-pointer ${
+                      isCurrent 
+                        ? "border-[#E8711A] bg-white/5 rounded-r-xl pr-2" 
+                        : "border-white/10 hover:border-white/35"
+                    }`}
+                  >
+                    <span className={`absolute left-[-5px] top-[7px] w-2.5 h-2.5 rounded-full transition-colors ${
+                      isCurrent ? "bg-[#E8711A]" : "bg-zinc-600"
+                    }`} />
+                    
+                    <div className="flex items-center justify-between">
+                      <p className={`font-bold ${isCurrent ? "text-[#E8711A]" : "text-zinc-300"}`}>Dia {d}</p>
+                      {isCurrent && <span className="text-[9px] bg-[#E8711A]/20 text-[#E8711A] font-extrabold px-1.5 py-0.2 rounded uppercase">Planejando</span>}
+                    </div>
+
+                    {dayItems.length === 0 ? (
+                      <div className="flex items-center gap-1.5 text-zinc-500 font-medium text-[11px] py-0.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-zinc-600 animate-pulse" />
+                        <span>Aguardando escolha</span>
+                      </div>
+                    ) : (
+                      <div className="space-y-1">
+                        {dayItems.map((item, i) => {
+                          const exp = experiences.find(e => e.id === item.experienceId);
+                          return (
+                            <div key={i} className="flex justify-between items-center gap-2">
+                              <span className="text-white text-[11px] font-bold flex items-center gap-1">
+                                <span className="text-emerald-400">✓</span>
+                                <span className="line-clamp-1">{exp?.name}</span>
+                              </span>
+                              <span className="text-zinc-500 font-mono text-[9px] shrink-0 bg-white/5 px-1.5 py-0.5 rounded">{item.schedule}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Pricing Recap */}
+        <div className="border-t border-zinc-800 pt-4 space-y-2.5">
+          <div className="flex justify-between items-center text-xs">
+            <span className="text-zinc-400 font-bold">Investimento Estimado</span>
+            <span className="font-serif text-lg font-black text-[#E8711A]">
+              {formatBRL(calculateEstimatedTotal())}
+            </span>
+          </div>
+          {step < 5 && (
+            <div className="text-[10px] text-zinc-400/80 leading-normal text-center italic bg-white/5 py-1 rounded-md border border-white/5">
+              Atualizado em tempo real
+            </div>
+          )}
+        </div>
+      </motion.div>
+    );
+  };
+
   return (
-    <div className="w-full bg-[#FCFBF9] text-[#0D1B2A] font-sans pt-24 pb-16 min-h-screen">
+    <div className="w-full bg-[#FCFBF9] text-[#0D1B2A] font-sans pt-24 pb-16 min-h-screen relative overflow-hidden">
+      
+      {/* Background Decorative Premium Waves */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-[0.035] select-none z-0">
+        <svg className="absolute top-[10%] left-[-10%] w-[50%] h-auto text-[#0D1B2A]" fill="currentColor" viewBox="0 0 100 100" preserveAspectRatio="none">
+          <path d="M0,50 C30,40 70,60 100,50 L100,100 L0,100 Z" />
+        </svg>
+        <svg className="absolute bottom-[5%] right-[-10%] w-[60%] h-auto text-[#E8711A]" fill="currentColor" viewBox="0 0 100 100" preserveAspectRatio="none">
+          <path d="M0,60 C40,40 60,80 100,60 L100,100 L0,100 Z" />
+        </svg>
+        <div className="absolute top-[40%] right-[5%] w-72 h-72 rounded-full bg-[#E8711A]/20 blur-3xl" />
+        <div className="absolute bottom-[20%] left-[5%] w-96 h-96 rounded-full bg-[#0D1B2A]/10 blur-3xl" />
+      </div>
       
       {/* Dynamic Sub-header Navigation Stepper */}
       <div className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-zinc-200 py-3 px-4 shadow-xs text-left">
@@ -496,7 +725,7 @@ export default function WizardView({
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-4 mt-8 sm:mt-12 text-center">
+      <div className="max-w-6xl mx-auto px-4 mt-8 sm:mt-12 text-center relative z-10">
 
         <AnimatePresence mode="wait">
           
@@ -507,67 +736,86 @@ export default function WizardView({
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -15 }}
-              className="space-y-8 max-w-4xl mx-auto"
+              className="space-y-8 text-left"
             >
               <div className="text-center space-y-2.5 max-w-2xl mx-auto">
                 <span className="font-accent text-[9px] text-[#E8711A] font-extrabold tracking-widest uppercase bg-[#E8711A]/8 px-3.5 py-1 rounded-full">
                   Etapa 1 de 6: Estilo de Viagem
                 </span>
-                <h2 className="font-serif text-3xl sm:text-4.5xl font-extrabold text-[#0D1B2A] leading-tight">
+                <h2 className="font-serif text-3xl sm:text-4.5xl font-extrabold text-[#0D1B2A] leading-tight text-center">
                   Como será sua viagem por Arraial do Cabo?
                 </h2>
-                <p className="text-xs sm:text-sm text-zinc-500 leading-relaxed">
+                <p className="text-xs sm:text-sm text-zinc-500 leading-relaxed text-center">
                   Para adaptarmos perfeitamente as experiências sugeridas, o ritmo do passeio, cortesias a bordo e a curadoria de hotéis, selecione o seu perfil.
                 </p>
               </div>
 
-              {/* Grid of Profile Cards */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-left">
-                {profiles.map((pOpt) => {
-                  const isSelected = profile === pOpt.id;
-                  return (
-                    <button
-                      key={pOpt.id}
-                      type="button"
-                      onClick={() => setProfile(pOpt.id as any)}
-                      className={`p-6 rounded-3xl border text-left cursor-pointer transition-all duration-300 relative overflow-hidden flex flex-col justify-between h-48 group ${
-                        isSelected
-                          ? "bg-[#0D1B2A] text-white border-[#0D1B2A] shadow-md scale-[1.01]"
-                          : "bg-white text-[#0D1B2A] border-zinc-200/80 hover:border-zinc-300 hover:bg-zinc-50/50"
-                      }`}
-                    >
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <h3 className="font-serif text-lg sm:text-xl font-extrabold">
-                            {pOpt.label}
-                          </h3>
-                          {isSelected && (
-                            <span className="bg-[#E8711A] text-white p-1 rounded-full">
-                              <Check className="w-3.5 h-3.5 stroke-[3]" />
-                            </span>
-                          )}
-                        </div>
-                        <p className={`text-xs ${isSelected ? "text-zinc-300" : "text-zinc-500"} leading-relaxed font-semibold`}>
-                          {pOpt.desc}
-                        </p>
-                        <p className={`text-[11px] leading-relaxed pt-1 border-t ${isSelected ? "border-white/10 text-zinc-400" : "border-zinc-100 text-zinc-400"} font-normal`}>
-                          {pOpt.info}
-                        </p>
-                      </div>
-                    </button>
-                  );
-                })}
+              {/* Motivational message banner */}
+              <div className="flex justify-center">
+                <span className="inline-flex items-center gap-1.5 px-4.5 py-2 bg-[#E8711A]/6 border border-[#E8711A]/12 text-[#E8711A] font-accent text-[10px] font-black uppercase tracking-wider rounded-full shadow-xs">
+                  ✨ {getMotivationalMessage(1)}
+                </span>
               </div>
 
-              {/* Next Step CTA */}
-              <div className="pt-6">
-                <button
-                  onClick={() => setStep(2)}
-                  className="px-8 py-3.5 bg-[#0D1B2A] hover:bg-[#E8711A] text-white hover:text-[#0D1B2A] text-xs font-extrabold uppercase tracking-wider rounded-full transition-all shadow-md hover:scale-102 cursor-pointer inline-flex items-center gap-2"
-                >
-                  <span>Continuar para as Datas</span>
-                  <ArrowRight className="w-4 h-4" />
-                </button>
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start max-w-6xl mx-auto">
+                {/* Left Area (8 Columns) */}
+                <div className="lg:col-span-8 space-y-6">
+                  {/* Grid of Profile Cards */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-left">
+                    {profiles.map((pOpt) => {
+                      const isSelected = profile === pOpt.id;
+                      return (
+                        <motion.button
+                          whileHover={{ scale: 1.015 }}
+                          whileTap={{ scale: 0.995 }}
+                          key={pOpt.id}
+                          type="button"
+                          onClick={() => setProfile(pOpt.id as any)}
+                          className={`p-6 rounded-3xl border text-left cursor-pointer transition-all duration-300 relative overflow-hidden flex flex-col justify-between h-48 group ${
+                            isSelected
+                              ? "bg-[#0D1B2A] text-white border-[#0D1B2A] shadow-md ring-2 ring-[#E8711A]/20"
+                              : "bg-white text-[#0D1B2A] border-zinc-200/80 hover:border-zinc-300 hover:bg-zinc-50/50 hover:shadow-xs"
+                          }`}
+                        >
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between">
+                              <h3 className="font-serif text-lg sm:text-xl font-extrabold">
+                                {pOpt.label}
+                              </h3>
+                              {isSelected && (
+                                <span className="bg-[#E8711A] text-white p-1 rounded-full">
+                                  <Check className="w-3.5 h-3.5 stroke-[3]" />
+                                </span>
+                              )}
+                            </div>
+                            <p className={`text-xs ${isSelected ? "text-zinc-300" : "text-zinc-500"} leading-relaxed font-semibold`}>
+                              {pOpt.desc}
+                            </p>
+                            <p className={`text-[11px] leading-relaxed pt-1 border-t ${isSelected ? "border-white/10 text-zinc-400" : "border-zinc-100 text-zinc-400"} font-normal`}>
+                              {pOpt.info}
+                            </p>
+                          </div>
+                        </motion.button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Next Step CTA */}
+                  <div className="pt-4 flex justify-end">
+                    <button
+                      onClick={() => setStep(2)}
+                      className="px-8 py-3.5 bg-[#0D1B2A] hover:bg-[#E8711A] text-white hover:text-[#0D1B2A] text-xs font-extrabold uppercase tracking-wider rounded-full transition-all shadow-md hover:scale-102 cursor-pointer inline-flex items-center gap-2"
+                    >
+                      <span>Continuar para as Datas</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Right Area Live Journey summary (4 Columns) */}
+                <div className="lg:col-span-4 lg:sticky lg:top-28">
+                  {renderLiveJourneySummary(false)}
+                </div>
               </div>
             </motion.div>
           )}
@@ -579,114 +827,131 @@ export default function WizardView({
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -15 }}
-              className="space-y-8 max-w-2xl mx-auto text-left"
+              className="space-y-8 text-left"
             >
               <div className="text-center space-y-2 max-w-2xl mx-auto">
                 <span className="font-accent text-[9px] text-[#E8711A] font-extrabold tracking-widest uppercase bg-[#E8711A]/8 px-3.5 py-1 rounded-full">
                   Etapa 2 de 6: Datas de Estadia
                 </span>
-                <h2 className="font-serif text-3xl font-extrabold text-[#0D1B2A] leading-tight">
+                <h2 className="font-serif text-3xl font-extrabold text-[#0D1B2A] leading-tight text-center">
                   Quando você pretende viajar?
                 </h2>
-                <p className="text-xs sm:text-sm text-zinc-500">
+                <p className="text-xs sm:text-sm text-zinc-500 text-center">
                   Defina a data de chegada e saída do paraíso. O sistema calculará o número de diárias e programará suas atividades em dias confortáveis.
                 </p>
               </div>
 
-              {/* Card Inputs */}
-              <div className="bg-white border border-zinc-200 rounded-3xl p-6 sm:p-8 space-y-6 shadow-sm">
-                
-                {/* Fast Name and City inputs as CRM details */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-1.5">
-                    <label className="text-xs text-[#0D1B2A] font-bold block">Seu Nome *</label>
-                    <input
-                      type="text"
-                      className="w-full bg-zinc-50 border border-zinc-200 rounded-xl p-3 text-sm text-[#0D1B2A] focus:outline-none focus:border-[#E8711A] focus:bg-white transition-colors"
-                      placeholder="Ex: Carolina Mendes"
-                      value={tempName}
-                      onChange={(e) => setTempName(e.target.value)}
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-xs text-[#0D1B2A] font-bold block">Sua Cidade de Origem</label>
-                    <input
-                      type="text"
-                      className="w-full bg-zinc-50 border border-zinc-200 rounded-xl p-3 text-sm text-[#0D1B2A] focus:outline-none focus:border-[#E8711A] focus:bg-white transition-colors"
-                      placeholder="Ex: Belo Horizonte - MG"
-                      value={tempCity}
-                      onChange={(e) => setTempCity(e.target.value)}
-                    />
-                  </div>
-                </div>
+              {/* Motivational message banner */}
+              <div className="flex justify-center">
+                <span className="inline-flex items-center gap-1.5 px-4.5 py-2 bg-[#E8711A]/6 border border-[#E8711A]/12 text-[#E8711A] font-accent text-[10px] font-black uppercase tracking-wider rounded-full shadow-xs">
+                  ✨ {getMotivationalMessage(2)}
+                </span>
+              </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-zinc-100">
-                  <div className="space-y-1.5">
-                    <label className="text-xs text-[#0D1B2A] font-bold block">Data de Chegada (Check-in)</label>
-                    <div className="relative">
-                      <input
-                        type="date"
-                        min={new Date().toISOString().split("T")[0]}
-                        className="w-full bg-zinc-50 border border-zinc-200 rounded-xl p-3 text-sm text-[#0D1B2A] focus:outline-none focus:border-[#E8711A] focus:bg-white cursor-pointer"
-                        value={arrivalDate}
-                        onChange={(e) => {
-                          setArrivalDate(e.target.value);
-                          // Ensure departure is after arrival
-                          if (new Date(e.target.value) >= new Date(departureDate)) {
-                            const newDep = new Date(e.target.value);
-                            newDep.setDate(newDep.getDate() + 3);
-                            setDepartureDate(newDep.toISOString().split("T")[0]);
-                          }
-                        }}
-                      />
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start max-w-6xl mx-auto">
+                {/* Left Area (8 Columns) */}
+                <div className="lg:col-span-8 space-y-6">
+                  {/* Card Inputs */}
+                  <div className="bg-white border border-zinc-200 rounded-3xl p-6 sm:p-8 space-y-6 shadow-sm">
+                    
+                    {/* Fast Name and City inputs as CRM details */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-1.5">
+                        <label className="text-xs text-[#0D1B2A] font-bold block">Seu Nome *</label>
+                        <input
+                          type="text"
+                          className="w-full bg-zinc-50 border border-zinc-200 rounded-xl p-3 text-sm text-[#0D1B2A] focus:outline-none focus:border-[#E8711A] focus:bg-white transition-colors"
+                          placeholder="Ex: Carolina Mendes"
+                          value={tempName}
+                          onChange={(e) => setTempName(e.target.value)}
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-xs text-[#0D1B2A] font-bold block">Sua Cidade de Origem</label>
+                        <input
+                          type="text"
+                          className="w-full bg-zinc-50 border border-zinc-200 rounded-xl p-3 text-sm text-[#0D1B2A] focus:outline-none focus:border-[#E8711A] focus:bg-white transition-colors"
+                          placeholder="Ex: Belo Horizonte - MG"
+                          value={tempCity}
+                          onChange={(e) => setTempCity(e.target.value)}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-zinc-100">
+                      <div className="space-y-1.5">
+                        <label className="text-xs text-[#0D1B2A] font-bold block">Data de Chegada (Check-in)</label>
+                        <div className="relative">
+                          <input
+                            type="date"
+                            min={new Date().toISOString().split("T")[0]}
+                            className="w-full bg-zinc-50 border border-zinc-200 rounded-xl p-3 text-sm text-[#0D1B2A] focus:outline-none focus:border-[#E8711A] focus:bg-white cursor-pointer"
+                            value={arrivalDate}
+                            onChange={(e) => {
+                              setArrivalDate(e.target.value);
+                              // Ensure departure is after arrival
+                              if (new Date(e.target.value) >= new Date(departureDate)) {
+                                const newDep = new Date(e.target.value);
+                                newDep.setDate(newDep.getDate() + 3);
+                                setDepartureDate(newDep.toISOString().split("T")[0]);
+                              }
+                            }}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-xs text-[#0D1B2A] font-bold block">Data de Saída (Check-out)</label>
+                        <input
+                          type="date"
+                          min={arrivalDate}
+                          className="w-full bg-zinc-50 border border-zinc-200 rounded-xl p-3 text-sm text-[#0D1B2A] focus:outline-none focus:border-[#E8711A] focus:bg-white cursor-pointer"
+                          value={departureDate}
+                          onChange={(e) => setDepartureDate(e.target.value)}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Stay Days Counter Badge */}
+                    <div className="p-4 bg-amber-50/60 rounded-2xl border border-amber-200/50 flex items-center justify-between">
+                      <div className="flex items-center gap-2 text-amber-900">
+                        <Calendar className="w-5 h-5 text-[#E8711A]" />
+                        <span className="text-xs font-semibold">Duração calculada da sua estadia:</span>
+                      </div>
+                      <span className="bg-[#E8711A] text-white px-3.5 py-1 rounded-full text-xs font-extrabold font-mono">
+                        {stayDays} {stayDays === 1 ? "DIA" : "DIAS"}
+                      </span>
                     </div>
                   </div>
 
-                  <div className="space-y-1.5">
-                    <label className="text-xs text-[#0D1B2A] font-bold block">Data de Saída (Check-out)</label>
-                    <input
-                      type="date"
-                      min={arrivalDate}
-                      className="w-full bg-zinc-50 border border-zinc-200 rounded-xl p-3 text-sm text-[#0D1B2A] focus:outline-none focus:border-[#E8711A] focus:bg-white cursor-pointer"
-                      value={departureDate}
-                      onChange={(e) => setDepartureDate(e.target.value)}
-                    />
+                  {/* Action Buttons */}
+                  <div className="flex gap-3 justify-end pt-2">
+                    <button
+                      onClick={() => setStep(1)}
+                      className="px-6 py-3 border border-zinc-300 hover:border-zinc-400 text-zinc-650 hover:text-zinc-800 rounded-full text-xs font-bold uppercase transition-all cursor-pointer"
+                    >
+                      Anterior
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (!tempName.trim()) {
+                          alert("Por favor, informe seu nome para prosseguirmos com seu roteiro personalizado!");
+                          return;
+                        }
+                        setStep(3);
+                      }}
+                      className="px-8 py-3 bg-[#0D1B2A] text-white hover:bg-[#E8711A] hover:text-[#0D1B2A] rounded-full text-xs font-bold uppercase tracking-wider transition-all shadow-md cursor-pointer hover:scale-102 flex items-center gap-1.5"
+                    >
+                      <span>Definir Pessoas</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </button>
                   </div>
                 </div>
 
-                {/* Stay Days Counter Badge */}
-                <div className="p-4 bg-amber-50/60 rounded-2xl border border-amber-200/50 flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-amber-900">
-                    <Calendar className="w-5 h-5 text-[#E8711A]" />
-                    <span className="text-xs font-semibold">Duração calculada da sua estadia:</span>
-                  </div>
-                  <span className="bg-[#E8711A] text-white px-3.5 py-1 rounded-full text-xs font-extrabold font-mono">
-                    {stayDays} {stayDays === 1 ? "DIA" : "DIAS"}
-                  </span>
+                {/* Right Area Live Journey summary (4 Columns) */}
+                <div className="lg:col-span-4 lg:sticky lg:top-28">
+                  {renderLiveJourneySummary(false)}
                 </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex gap-3 justify-center pt-2">
-                <button
-                  onClick={() => setStep(1)}
-                  className="px-6 py-3 border border-zinc-300 hover:border-zinc-400 text-zinc-650 hover:text-zinc-800 rounded-full text-xs font-bold uppercase transition-all cursor-pointer"
-                >
-                  Anterior
-                </button>
-                <button
-                  onClick={() => {
-                    if (!tempName.trim()) {
-                      alert("Por favor, informe seu nome para prosseguirmos com seu roteiro personalizado!");
-                      return;
-                    }
-                    setStep(3);
-                  }}
-                  className="px-8 py-3 bg-[#0D1B2A] text-white hover:bg-[#E8711A] hover:text-[#0D1B2A] rounded-full text-xs font-bold uppercase tracking-wider transition-all shadow-md cursor-pointer hover:scale-102 flex items-center gap-1.5"
-                >
-                  <span>Definir Pessoas</span>
-                  <ArrowRight className="w-4 h-4" />
-                </button>
               </div>
             </motion.div>
           )}
@@ -698,124 +963,141 @@ export default function WizardView({
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -15 }}
-              className="space-y-8 max-w-xl mx-auto text-left"
+              className="space-y-8 text-left"
             >
               <div className="text-center space-y-2">
                 <span className="font-accent text-[9px] text-[#E8711A] font-extrabold tracking-widest uppercase bg-[#E8711A]/8 px-3.5 py-1 rounded-full">
                   Etapa 3 de 6: Passageiros
                 </span>
-                <h2 className="font-serif text-3xl font-extrabold text-[#0D1B2A] leading-tight">
+                <h2 className="font-serif text-3xl font-extrabold text-[#0D1B2A] leading-tight text-center">
                   Quantas pessoas viajarão com você?
                 </h2>
-                <p className="text-xs text-zinc-500 max-w-md mx-auto">
+                <p className="text-xs text-zinc-500 max-w-md mx-auto text-center">
                   Ajustamos as capacidades das escunas, mimos e os tamanhos dos barcos para comportar com absoluto conforto todo o seu grupo.
                 </p>
               </div>
 
-              <div className="bg-white border border-zinc-200 rounded-3xl p-6 space-y-5 shadow-sm">
-                
-                {/* Adults Counter */}
-                <div className="flex items-center justify-between pb-4 border-b border-zinc-100">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2.5 bg-zinc-50 rounded-xl">
-                      <User className="w-5 h-5 text-[#0D1B2A]" />
-                    </div>
-                    <div>
-                      <h4 className="text-xs sm:text-sm font-bold text-[#0D1B2A]">Adultos</h4>
-                      <p className="text-[10px] text-zinc-400">Idade acima de 12 anos</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <button
-                      type="button"
-                      onClick={() => setAdults(Math.max(1, adults - 1))}
-                      className="w-8 h-8 bg-zinc-100 hover:bg-zinc-200 rounded-xl text-center font-bold text-sm cursor-pointer flex items-center justify-center text-[#0D1B2A]"
-                    >-</button>
-                    <span className="w-6 text-center text-sm font-extrabold font-mono text-[#0D1B2A]">{adults}</span>
-                    <button
-                      type="button"
-                      onClick={() => setAdults(adults + 1)}
-                      className="w-8 h-8 bg-zinc-100 hover:bg-zinc-200 rounded-xl text-center font-bold text-sm cursor-pointer flex items-center justify-center text-[#0D1B2A]"
-                    >+</button>
-                  </div>
-                </div>
-
-                {/* Children Counter */}
-                <div className="flex items-center justify-between pb-4 border-b border-zinc-100">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2.5 bg-zinc-50 rounded-xl">
-                      <Smile className="w-5 h-5 text-sky-500" />
-                    </div>
-                    <div>
-                      <h4 className="text-xs sm:text-sm font-bold text-[#0D1B2A]">Crianças</h4>
-                      <p className="text-[10px] text-zinc-400">Idade entre 2 e 12 anos</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <button
-                      type="button"
-                      onClick={() => setChildren(Math.max(0, children - 1))}
-                      className="w-8 h-8 bg-zinc-100 hover:bg-zinc-200 rounded-xl text-center font-bold text-sm cursor-pointer flex items-center justify-center text-[#0D1B2A]"
-                    >-</button>
-                    <span className="w-6 text-center text-sm font-extrabold font-mono text-[#0D1B2A]">{children}</span>
-                    <button
-                      type="button"
-                      onClick={() => setChildren(children + 1)}
-                      className="w-8 h-8 bg-zinc-100 hover:bg-zinc-200 rounded-xl text-center font-bold text-sm cursor-pointer flex items-center justify-center text-[#0D1B2A]"
-                    >+</button>
-                  </div>
-                </div>
-
-                {/* Infants Counter */}
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2.5 bg-zinc-50 rounded-xl">
-                      <Baby className="w-5 h-5 text-amber-500" />
-                    </div>
-                    <div>
-                      <h4 className="text-xs sm:text-sm font-bold text-[#0D1B2A]">Bebês de Colo</h4>
-                      <p className="text-[10px] text-zinc-400">Menores de 2 anos (Cortesia)</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <button
-                      type="button"
-                      onClick={() => setInfants(Math.max(0, infants - 1))}
-                      className="w-8 h-8 bg-zinc-100 hover:bg-zinc-200 rounded-xl text-center font-bold text-sm cursor-pointer flex items-center justify-center text-[#0D1B2A]"
-                    >-</button>
-                    <span className="w-6 text-center text-sm font-extrabold font-mono text-[#0D1B2A]">{infants}</span>
-                    <button
-                      type="button"
-                      onClick={() => setInfants(infants + 1)}
-                      className="w-8 h-8 bg-zinc-100 hover:bg-zinc-200 rounded-xl text-center font-bold text-sm cursor-pointer flex items-center justify-center text-[#0D1B2A]"
-                    >+</button>
-                  </div>
-                </div>
+              {/* Motivational message banner */}
+              <div className="flex justify-center">
+                <span className="inline-flex items-center gap-1.5 px-4.5 py-2 bg-[#E8711A]/6 border border-[#E8711A]/12 text-[#E8711A] font-accent text-[10px] font-black uppercase tracking-wider rounded-full shadow-xs">
+                  ✨ {getMotivationalMessage(3)}
+                </span>
               </div>
 
-              {/* Security / Safety Tip Box */}
-              <div className="p-4 bg-emerald-50 text-emerald-800 rounded-2xl border border-emerald-100 text-xs flex gap-3 items-start leading-relaxed">
-                <ShieldCheck className="w-5 h-5 text-emerald-600 shrink-0" />
-                <div>
-                  <strong>Segurança em Primeiro Lugar:</strong> Possuímos coletes salva-vidas homologados pela Marinha adaptados para bebês e crianças de todas as idades em nossas lanchas e barcos parceiros.
-                </div>
-              </div>
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start max-w-6xl mx-auto">
+                {/* Left Area (8 Columns) */}
+                <div className="lg:col-span-8 space-y-6">
+                  <div className="bg-white border border-zinc-200 rounded-3xl p-6 space-y-5 shadow-sm">
+                    
+                    {/* Adults Counter */}
+                    <div className="flex items-center justify-between pb-4 border-b border-zinc-100">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2.5 bg-zinc-50 rounded-xl">
+                          <User className="w-5 h-5 text-[#0D1B2A]" />
+                        </div>
+                        <div>
+                          <h4 className="text-xs sm:text-sm font-bold text-[#0D1B2A]">Adultos</h4>
+                          <p className="text-[10px] text-zinc-400">Idade acima de 12 anos</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <button
+                          type="button"
+                          onClick={() => setAdults(Math.max(1, adults - 1))}
+                          className="w-8 h-8 bg-zinc-100 hover:bg-zinc-200 rounded-xl text-center font-bold text-sm cursor-pointer flex items-center justify-center text-[#0D1B2A]"
+                        >-</button>
+                        <span className="w-6 text-center text-sm font-extrabold font-mono text-[#0D1B2A]">{adults}</span>
+                        <button
+                          type="button"
+                          onClick={() => setAdults(adults + 1)}
+                          className="w-8 h-8 bg-zinc-100 hover:bg-zinc-200 rounded-xl text-center font-bold text-sm cursor-pointer flex items-center justify-center text-[#0D1B2A]"
+                        >+</button>
+                      </div>
+                    </div>
 
-              {/* Actions */}
-              <div className="flex gap-3 justify-center pt-2">
-                <button
-                  onClick={() => setStep(2)}
-                  className="px-6 py-3 border border-zinc-300 text-zinc-650 rounded-full text-xs font-bold uppercase transition-all cursor-pointer"
-                >
-                  Anterior
-                </button>
-                <button
-                  onClick={() => setStep(4)}
-                  className="px-8 py-3 bg-[#0D1B2A] text-white hover:bg-[#E8711A] hover:text-[#0D1B2A] rounded-full text-xs font-bold uppercase tracking-wider transition-all shadow-md cursor-pointer hover:scale-102 flex items-center gap-1.5"
-                >
-                  <span>Escolher Hospedagem</span>
-                  <ArrowRight className="w-4 h-4" />
-                </button>
+                    {/* Children Counter */}
+                    <div className="flex items-center justify-between pb-4 border-b border-zinc-100">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2.5 bg-zinc-50 rounded-xl">
+                          <Smile className="w-5 h-5 text-sky-500" />
+                        </div>
+                        <div>
+                          <h4 className="text-xs sm:text-sm font-bold text-[#0D1B2A]">Crianças</h4>
+                          <p className="text-[10px] text-zinc-400">Idade entre 2 e 12 anos</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <button
+                          type="button"
+                          onClick={() => setChildren(Math.max(0, children - 1))}
+                          className="w-8 h-8 bg-zinc-100 hover:bg-zinc-200 rounded-xl text-center font-bold text-sm cursor-pointer flex items-center justify-center text-[#0D1B2A]"
+                        >-</button>
+                        <span className="w-6 text-center text-sm font-extrabold font-mono text-[#0D1B2A]">{children}</span>
+                        <button
+                          type="button"
+                          onClick={() => setChildren(children + 1)}
+                          className="w-8 h-8 bg-zinc-100 hover:bg-zinc-200 rounded-xl text-center font-bold text-sm cursor-pointer flex items-center justify-center text-[#0D1B2A]"
+                        >+</button>
+                      </div>
+                    </div>
+
+                    {/* Infants Counter */}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2.5 bg-zinc-50 rounded-xl">
+                          <Baby className="w-5 h-5 text-amber-500" />
+                        </div>
+                        <div>
+                          <h4 className="text-xs sm:text-sm font-bold text-[#0D1B2A]">Bebês de Colo</h4>
+                          <p className="text-[10px] text-zinc-400">Menores de 2 anos (Cortesia)</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <button
+                          type="button"
+                          onClick={() => setInfants(Math.max(0, infants - 1))}
+                          className="w-8 h-8 bg-zinc-100 hover:bg-zinc-200 rounded-xl text-center font-bold text-sm cursor-pointer flex items-center justify-center text-[#0D1B2A]"
+                        >-</button>
+                        <span className="w-6 text-center text-sm font-extrabold font-mono text-[#0D1B2A]">{infants}</span>
+                        <button
+                          type="button"
+                          onClick={() => setInfants(infants + 1)}
+                          className="w-8 h-8 bg-zinc-100 hover:bg-zinc-200 rounded-xl text-center font-bold text-sm cursor-pointer flex items-center justify-center text-[#0D1B2A]"
+                        >+</button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Security / Safety Tip Box */}
+                  <div className="p-4 bg-emerald-50 text-emerald-800 rounded-2xl border border-emerald-100 text-xs flex gap-3 items-start leading-relaxed">
+                    <ShieldCheck className="w-5 h-5 text-emerald-600 shrink-0" />
+                    <div>
+                      <strong>Segurança em Primeiro Lugar:</strong> Possuímos coletes salva-vidas homologados pela Marinha adaptados para bebês e crianças de todas as idades em nossas lanchas e barcos parceiros.
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex gap-3 justify-end pt-2">
+                    <button
+                      onClick={() => setStep(2)}
+                      className="px-6 py-3 border border-zinc-300 text-zinc-650 rounded-full text-xs font-bold uppercase transition-all cursor-pointer"
+                    >
+                      Anterior
+                    </button>
+                    <button
+                      onClick={() => setStep(4)}
+                      className="px-8 py-3 bg-[#0D1B2A] text-white hover:bg-[#E8711A] hover:text-[#0D1B2A] rounded-full text-xs font-bold uppercase tracking-wider transition-all shadow-md cursor-pointer hover:scale-102 flex items-center gap-1.5"
+                    >
+                      <span>Avançar</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Right Area Live Journey summary (4 Columns) */}
+                <div className="lg:col-span-4 lg:sticky lg:top-28">
+                  {renderLiveJourneySummary(false)}
+                </div>
               </div>
             </motion.div>
           )}
@@ -827,136 +1109,176 @@ export default function WizardView({
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -15 }}
-              className="space-y-8 max-w-4xl mx-auto text-left"
+              className="space-y-8 text-left"
             >
               <div className="text-center space-y-2 max-w-2xl mx-auto">
                 <span className="font-accent text-[9px] text-[#E8711A] font-extrabold tracking-widest uppercase bg-[#E8711A]/8 px-3.5 py-1 rounded-full">
                   Etapa 4 de 6: Hospedagens Recomendadas
                 </span>
-                <h2 className="font-serif text-3xl font-extrabold text-[#0D1B2A] leading-tight">
+                <h2 className="font-serif text-3xl font-extrabold text-[#0D1B2A] leading-tight text-center">
                   Deseja incluir hospedagem em seu plano?
                 </h2>
-                <p className="text-xs sm:text-sm text-zinc-500">
+                <p className="text-xs sm:text-sm text-zinc-500 text-center">
                   Parcerias exclusivas da Guida Trips garantem mimos de boas-vindas, late check-out e as melhores tarifas garantidas nas pousadas parceiras de Arraial e Cabo Frio.
                 </p>
               </div>
 
-              {/* Question triggers */}
-              <div className="flex gap-4 justify-center py-2 max-w-md mx-auto">
-                <button
-                  type="button"
-                  onClick={() => setHasHotelAnswer("yes")}
-                  className={`flex-1 py-3.5 rounded-2xl font-accent text-[11px] font-black tracking-wider uppercase transition-all cursor-pointer border shadow-xs ${
-                    hasHotelAnswer === "yes"
-                      ? "bg-[#E8711A] text-[#0D1B2A] border-[#E8711A] font-black scale-102"
-                      : "bg-white hover:bg-zinc-50 border-zinc-200 text-zinc-700"
-                  }`}
-                >
-                  Sim, ver opções 👍
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setHasHotelAnswer("no");
-                    if (onChangeHotelId) onChangeHotelId(null);
-                  }}
-                  className={`flex-1 py-3.5 rounded-2xl font-accent text-[11px] font-black tracking-wider uppercase transition-all cursor-pointer border shadow-xs ${
-                    hasHotelAnswer === "no"
-                      ? "bg-[#0D1B2A] text-white border-[#0D1B2A] scale-102"
-                      : "bg-white hover:bg-zinc-50 border-zinc-200 text-zinc-700"
-                  }`}
-                >
-                  Não, já tenho pousada ❌
-                </button>
+              {/* Motivational message banner */}
+              <div className="flex justify-center">
+                <span className="inline-flex items-center gap-1.5 px-4.5 py-2 bg-[#E8711A]/6 border border-[#E8711A]/12 text-[#E8711A] font-accent text-[10px] font-black uppercase tracking-wider rounded-full shadow-xs">
+                  ✨ {getMotivationalMessage(4)}
+                </span>
               </div>
 
-              {/* Show recommended hotel listings if selected YES */}
-              {hasHotelAnswer === "yes" && (
-                <div className="space-y-5 pt-4 border-t border-zinc-200/60 max-w-4xl mx-auto">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[#E8711A] text-base">🏨</span>
-                    <h5 className="font-accent text-[10px] font-black tracking-widest text-[#E8711A] uppercase">
-                      Indicações com Benefícios Exclusivos (Guida Trips Club)
-                    </h5>
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start max-w-6xl mx-auto">
+                {/* Left Area (8 Columns) */}
+                <div className="lg:col-span-8 space-y-6">
+                  {/* Question triggers */}
+                  <div className="flex gap-4 justify-center py-2 max-w-md mx-auto">
+                    <button
+                      type="button"
+                      onClick={() => setHasHotelAnswer("yes")}
+                      className={`flex-1 py-3.5 rounded-2xl font-accent text-[11px] font-black tracking-wider uppercase transition-all cursor-pointer border shadow-xs ${
+                        hasHotelAnswer === "yes"
+                          ? "bg-[#E8711A] text-[#0D1B2A] border-[#E8711A]"
+                          : "bg-white hover:bg-zinc-50 border-zinc-200 text-zinc-700"
+                      }`}
+                    >
+                      Sim, ver opções 👍
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setHasHotelAnswer("no");
+                        if (onChangeHotelId) onChangeHotelId(null);
+                      }}
+                      className={`flex-1 py-3.5 rounded-2xl font-accent text-[11px] font-black tracking-wider uppercase transition-all cursor-pointer border shadow-xs ${
+                        hasHotelAnswer === "no"
+                          ? "bg-[#0D1B2A] text-white border-[#0D1B2A]"
+                          : "bg-white hover:bg-zinc-50 border-zinc-200 text-zinc-700"
+                      }`}
+                    >
+                      Não, já tenho pousada ❌
+                    </button>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-                    {hotels.map((pousada) => {
-                      const isSelected = selectedHotelId === pousada.id;
+                  {/* Show recommended hotel listings if selected YES */}
+                  {hasHotelAnswer === "yes" && (
+                    <div className="space-y-5 pt-4 border-t border-zinc-200/60">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[#E8711A] text-base">🏨</span>
+                        <h5 className="font-accent text-[10px] font-black tracking-widest text-[#E8711A] uppercase">
+                          Indicações com Benefícios Exclusivos (Guida Trips Club)
+                        </h5>
+                      </div>
 
-                      return (
-                        <div
-                          key={pousada.id}
-                          className={`bg-white border rounded-2xl overflow-hidden shadow-xs hover:shadow-sm transition-all flex flex-col justify-between group ${
-                            isSelected ? "border-[#E8711A] ring-1 ring-[#E8711A]/20" : "border-zinc-200"
-                          }`}
-                        >
-                          <div className="h-32 overflow-hidden relative select-none">
-                            <img
-                              src={pousada.img}
-                              alt={pousada.name}
-                              className="w-full h-full object-cover group-hover:scale-103 transition-transform duration-500"
-                            />
-                            <span className="absolute bottom-2 left-2 bg-[#0D1B2A]/90 text-white text-[8px] font-accent tracking-widest px-2.5 py-1 rounded-sm">
-                              {pousada.tag}
-                            </span>
-                            <div className="absolute top-2 right-2 bg-white/95 text-[#0D1B2A] text-[9px] font-bold px-2 py-0.5 rounded shadow-xs flex items-center gap-0.5">
-                              <span className="text-yellow-500">★</span>
-                              <span>{pousada.rating}</span>
-                            </div>
-                          </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+                        {hotels.map((pousada) => {
+                          const isSelected = selectedHotelId === pousada.id;
 
-                          <div className="p-4 space-y-4 flex-grow flex flex-col justify-between">
-                            <div className="space-y-1 text-left">
-                              <span className="text-[9px] uppercase tracking-wider font-extrabold text-zinc-400">{pousada.location}</span>
-                              <h6 className="font-serif text-sm font-extrabold text-[#0D1B2A] leading-tight group-hover:text-[#E8711A] transition-colors line-clamp-1">
-                                {pousada.name}
-                              </h6>
-                              <p className="font-sans text-[11px] text-zinc-500 leading-relaxed line-clamp-2">
-                                {pousada.desc}
-                              </p>
-                            </div>
+                          return (
+                            <div
+                              key={pousada.id}
+                              className={`bg-white border rounded-2xl overflow-hidden shadow-xs hover:shadow-sm transition-all flex flex-col justify-between group ${
+                                isSelected ? "border-[#E8711A] ring-1 ring-[#E8711A]/20" : "border-zinc-200"
+                              }`}
+                            >
+                              <div className="h-32 overflow-hidden relative select-none">
+                                <img
+                                  src={pousada.img}
+                                  alt={pousada.name}
+                                  className="w-full h-full object-cover group-hover:scale-103 transition-transform duration-500"
+                                  referrerPolicy="no-referrer"
+                                />
+                                <span className="absolute bottom-2 left-2 bg-[#0D1B2A]/90 text-white text-[8px] font-accent tracking-widest px-2.5 py-1 rounded-sm">
+                                  {pousada.tag}
+                                </span>
+                                <div className="absolute top-2 right-2 bg-white/95 text-[#0D1B2A] text-[9px] font-bold px-2 py-0.5 rounded shadow-xs flex items-center gap-0.5">
+                                  <span className="text-yellow-500">★</span>
+                                  <span>{pousada.rating}</span>
+                                </div>
+                              </div>
 
-                            <div className="space-y-1.5 pt-2 border-t border-zinc-100">
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  if (onChangeHotelId) {
-                                    onChangeHotelId(isSelected ? null : pousada.id);
-                                  }
-                                }}
-                                className={`w-full py-2 rounded-xl font-accent text-[9px] font-extrabold tracking-wider uppercase transition-all flex items-center justify-center gap-1 cursor-pointer ${
-                                  isSelected
-                                    ? "bg-[#E8711A] text-[#0D1B2A] font-black"
-                                    : "bg-[#0D1B2A] hover:bg-[#E8711A] hover:text-[#0D1B2A] text-white"
-                                }`}
-                              >
-                                {isSelected ? "✨ SELECIONADO" : "VINCULAR POUSADA"}
-                              </button>
+                              <div className="p-4 space-y-4 flex-grow flex flex-col justify-between">
+                                <div className="space-y-1 text-left">
+                                  <span className="text-[9px] uppercase tracking-wider font-extrabold text-zinc-400">{pousada.location}</span>
+                                  <h6 className="font-serif text-sm font-extrabold text-[#0D1B2A] leading-tight group-hover:text-[#E8711A] transition-colors line-clamp-1">
+                                    {pousada.name}
+                                  </h6>
+                                  <p className="font-sans text-[11px] text-zinc-500 leading-relaxed line-clamp-2">
+                                    {pousada.desc}
+                                  </p>
+                                </div>
+
+                                <div className="space-y-1.5 pt-2 border-t border-zinc-100">
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      if (onChangeHotelId) {
+                                        onChangeHotelId(isSelected ? null : pousada.id);
+                                      }
+                                    }}
+                                    className={`w-full py-2 rounded-xl font-accent text-[9px] font-extrabold tracking-wider uppercase transition-all flex items-center justify-center gap-1 cursor-pointer ${
+                                      isSelected
+                                        ? "bg-[#E8711A] text-[#0D1B2A] font-black"
+                                        : "bg-[#0D1B2A] hover:bg-[#E8711A] hover:text-[#0D1B2A] text-white"
+                                    }`}
+                                  >
+                                    {isSelected ? "✨ SELECIONADO" : "VINCULAR POUSADA"}
+                                  </button>
+                                </div>
+                              </div>
                             </div>
-                          </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Supportive, comforting panel when selecting "No, already have hotel" */}
+                  {hasHotelAnswer === "no" && (
+                    <motion.div 
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="bg-emerald-50/50 border border-emerald-100 rounded-3xl p-6 text-left space-y-3"
+                    >
+                      <div className="flex items-center gap-2.5 text-emerald-800">
+                        <div className="bg-emerald-100 p-2 rounded-xl text-emerald-700">
+                          <Check className="w-5 h-5 stroke-[2.5]" />
                         </div>
-                      );
-                    })}
+                        <div>
+                          <h4 className="font-serif text-base font-extrabold">Entendido perfeitamente!</h4>
+                          <p className="text-xs text-emerald-600/90 font-medium">Você já possui hospedagem garantida em Arraial do Cabo.</p>
+                        </div>
+                      </div>
+                      <p className="text-xs sm:text-sm text-zinc-650 leading-relaxed pl-1">
+                        Não se preocupe! Nossas recomendações de passeios e cronograma diário serão perfeitamente customizados com base na localização das pousadas centrais para garantir embarques práticos, traslados pontuais e zero preocupações com logística de trânsito.
+                      </p>
+                    </motion.div>
+                  )}
+
+                  {/* Actions */}
+                  <div className="flex gap-3 justify-end pt-6">
+                    <button
+                      onClick={() => setStep(3)}
+                      className="px-6 py-3 border border-zinc-300 text-zinc-650 rounded-full text-xs font-bold uppercase transition-all cursor-pointer"
+                    >
+                      Anterior
+                    </button>
+                    <button
+                      onClick={() => setStep(5)}
+                      className="px-8 py-3 bg-[#0D1B2A] text-white hover:bg-[#E8711A] hover:text-[#0D1B2A] rounded-full text-xs font-bold uppercase tracking-wider transition-all shadow-md cursor-pointer hover:scale-102 flex items-center gap-1.5"
+                    >
+                      <span>Montar Cronograma</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </button>
                   </div>
                 </div>
-              )}
 
-              {/* Actions */}
-              <div className="flex gap-3 justify-center pt-6 max-w-md mx-auto">
-                <button
-                  onClick={() => setStep(3)}
-                  className="px-6 py-3 border border-zinc-300 text-zinc-650 rounded-full text-xs font-bold uppercase transition-all cursor-pointer"
-                >
-                  Anterior
-                </button>
-                <button
-                  onClick={() => setStep(5)}
-                  className="px-8 py-3 bg-[#0D1B2A] text-white hover:bg-[#E8711A] hover:text-[#0D1B2A] rounded-full text-xs font-bold uppercase tracking-wider transition-all shadow-md cursor-pointer hover:scale-102 flex items-center gap-1.5"
-                >
-                  <span>Montar Cronograma</span>
-                  <ArrowRight className="w-4 h-4" />
-                </button>
+                {/* Right Area Live Journey summary (4 Columns) */}
+                <div className="lg:col-span-4 lg:sticky lg:top-28">
+                  {renderLiveJourneySummary(false)}
+                </div>
               </div>
             </motion.div>
           )}
@@ -1294,112 +1616,18 @@ export default function WizardView({
                 </div>
 
                 {/* Premium Smart Summary Sidebar (4 Columns) */}
-                <div className="lg:col-span-4 bg-zinc-900 text-white rounded-3xl p-5 sm:p-6 shadow-md space-y-5 lg:sticky lg:top-28 border border-zinc-800">
-                  <div className="border-b border-zinc-800 pb-3">
-                    <h3 className="font-serif text-lg font-bold text-white flex items-center gap-2">
-                      <Map className="w-5 h-5 text-[#E8711A]" />
-                      <span>Sua Viagem</span>
-                    </h3>
-                    <p className="text-[10px] text-zinc-400 mt-1">Veja a evolução do seu cronograma em tempo real</p>
-                  </div>
-
-                  {/* General details recap */}
-                  <div className="text-xs space-y-2 bg-white/5 p-3.5 rounded-2xl border border-white/5">
-                    <p className="text-[10px] text-[#E8711A] font-black uppercase tracking-wider">Membros do Grupo</p>
-                    <p className="font-serif text-xs font-bold">{tempName || "Explorador"}</p>
-                    <p className="text-zinc-350">{stayDays} {stayDays === 1 ? "dia" : "dias"} em Cabo • {adults} Adultos {children > 0 && `, ${children} Crianças`} {infants > 0 && `, ${infants} Bebês`}</p>
-                    {tempCity && <p className="text-zinc-400 font-mono text-[9px] italic">Origem: {tempCity}</p>}
-                  </div>
-
-                  {/* Linked lodging summary */}
-                  {selectedHotelId ? (() => {
-                    const hotel = hotels.find(h => h.id === selectedHotelId);
-                    return (
-                      <div className="text-xs space-y-1 bg-white/5 p-3.5 rounded-2xl border border-white/5">
-                        <p className="text-[10px] text-emerald-400 font-black uppercase tracking-wider flex items-center gap-1">
-                          <Bed className="w-3.5 h-3.5" />
-                          Hospedagem Vinculada
-                        </p>
-                        <p className="font-serif text-xs font-bold">{hotel?.name}</p>
-                        <p className="text-zinc-400 text-[10px]">{hotel?.location}</p>
-                      </div>
-                    );
-                  })() : null}
-
-                  {/* Day-by-Day Timeline */}
-                  <div className="space-y-4 pt-1">
-                    <p className="text-[10px] text-zinc-450 font-black uppercase tracking-wider">Cronograma de Atividades</p>
-
-                    <div className="space-y-3">
-                      {Array.from({ length: stayDays }).map((_, idx) => {
-                        const d = idx + 1;
-                        const dayItems = cart.filter(item => item.dayIndex === d);
-                        const isCurrent = d === currentPlanningDay;
-
-                        return (
-                          <div 
-                            key={d} 
-                            onClick={() => setCurrentPlanningDay(d)}
-                            className={`text-xs border-l pl-4 py-0.5 space-y-1.5 text-left relative transition-all cursor-pointer ${
-                              isCurrent 
-                                ? "border-[#E8711A] bg-white/5 rounded-r-xl pr-2" 
-                                : "border-white/10 hover:border-white/35"
-                            }`}
-                          >
-                            <span className={`absolute left-[-5px] top-[7px] w-2.5 h-2.5 rounded-full transition-colors ${
-                              isCurrent ? "bg-[#E8711A]" : "bg-zinc-600"
-                            }`} />
-                            
-                            <div className="flex items-center justify-between">
-                              <p className={`font-bold ${isCurrent ? "text-[#E8711A]" : "text-zinc-300"}`}>Dia {d}</p>
-                              {isCurrent && <span className="text-[9px] bg-[#E8711A]/20 text-[#E8711A] font-extrabold px-1.5 py-0.2 rounded uppercase">Planejando</span>}
-                            </div>
-
-                            {dayItems.length === 0 ? (
-                              <div className="flex items-center gap-1.5 text-zinc-500 font-medium text-[11px] py-0.5">
-                                <span className="w-1.5 h-1.5 rounded-full bg-zinc-600 animate-pulse" />
-                                <span>Aguardando escolha</span>
-                              </div>
-                            ) : (
-                              <div className="space-y-1">
-                                {dayItems.map((item, i) => {
-                                  const exp = experiences.find(e => e.id === item.experienceId);
-                                  return (
-                                    <div key={i} className="flex justify-between items-center gap-2">
-                                      <span className="text-white text-[11px] font-bold flex items-center gap-1">
-                                        <span className="text-emerald-400">✔</span>
-                                        <span className="line-clamp-1">{exp?.name}</span>
-                                      </span>
-                                      <span className="text-zinc-500 font-mono text-[9px] shrink-0 bg-white/5 px-1.5 py-0.5 rounded">{item.schedule}</span>
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  {/* Pricing Recap */}
-                  <div className="border-t border-zinc-800 pt-4 space-y-2.5">
-                    <div className="flex justify-between items-center text-xs">
-                      <span className="text-zinc-400 font-bold">Investimento Estimado</span>
-                      <span className="font-serif text-lg font-black text-[#E8711A]">
-                        {formatBRL(calculateEstimatedTotal())}
-                      </span>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() => setStep(6)}
-                      className="w-full text-center py-3 bg-[#E8711A] text-[#0D1B2A] font-accent text-xs font-black uppercase tracking-wider rounded-xl hover:bg-white hover:text-[#0D1B2A] transition-all cursor-pointer shadow-md"
-                    >
-                      Concluir Roteiro 🍾
-                    </button>
-                  </div>
-
+                <div className="lg:col-span-4 lg:sticky lg:top-28 space-y-4">
+                  {renderLiveJourneySummary(true)}
+                  
+                  {/* Immediate finalization shortcut directly from Step 5 */}
+                  <button
+                    type="button"
+                    onClick={() => setStep(6)}
+                    className="w-full text-center py-3.5 bg-[#E8711A] text-[#0D1B2A] hover:bg-[#0D1B2A] hover:text-white font-accent text-xs font-black uppercase tracking-wider rounded-2xl transition-all cursor-pointer shadow-md flex items-center justify-center gap-2 hover:scale-102"
+                  >
+                    <span>Concluir Roteiro</span>
+                    <Check className="w-4 h-4 stroke-[3]" />
+                  </button>
                 </div>
 
               </div>
