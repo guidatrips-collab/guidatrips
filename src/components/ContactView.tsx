@@ -49,7 +49,7 @@ export default function ContactView({ onAddLead, whatsappNumber }: ContactViewPr
   };
 
   return (
-    <div id="contact-view" className="pt-28 pb-24 bg-[#0D1B2A]">
+    <div id="contact-view" className="pt-28 pb-24 bg-[#FBF9F6] min-h-screen text-[#0D1B2A] selection:bg-[#E8711A] selection:text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
         
         {/* HEADER */}
@@ -57,10 +57,10 @@ export default function ContactView({ onAddLead, whatsappNumber }: ContactViewPr
           <span className="font-accent text-[#E8711A] text-xs font-bold tracking-widest uppercase">
             Canal de Atendimento
           </span>
-          <h1 className="font-serif text-3xl sm:text-5xl font-extrabold text-[#F4EFE6] tracking-tight leading-tight">
+          <h1 className="font-serif text-3xl sm:text-5xl font-extrabold text-[#0D1B2A] tracking-tight leading-tight">
             Pronto para desenhar sua próxima história?
           </h1>
-          <p className="font-sans text-xs sm:text-sm text-[#8A96A3] leading-relaxed max-w-lg mx-auto">
+          <p className="font-sans text-xs sm:text-sm text-zinc-600 leading-relaxed max-w-lg mx-auto">
             Fale diretamente com nossa equipe de curadores locais ou envie um boletim estruturado de interesse abaixo para receber um orçamento detalhado no e-mail.
           </p>
         </div>
@@ -71,9 +71,9 @@ export default function ContactView({ onAddLead, whatsappNumber }: ContactViewPr
           <div className="lg:col-span-5 space-y-8 text-left">
             
             {/* Box Contato Direto */}
-            <div className="bg-[#132033] border border-white/5 rounded-sm p-8 space-y-6">
-              <h3 className="font-serif text-xl font-bold text-[#F4EFE6]">Conexão Instantânea</h3>
-              <p className="font-sans text-xs text-[#8A96A3]">Atendimento exclusivo com concierge humano em horários estendidos.</p>
+            <div className="bg-white border border-zinc-200 rounded-2xl p-8 space-y-6 shadow-sm">
+              <h3 className="font-serif text-xl font-bold text-[#0D1B2A]">Conexão Instantânea</h3>
+              <p className="font-sans text-xs text-zinc-500">Atendimento exclusivo com concierge humano em horários estendidos.</p>
 
               <div className="space-y-4 font-sans text-xs">
                 
@@ -82,30 +82,30 @@ export default function ContactView({ onAddLead, whatsappNumber }: ContactViewPr
                   href={`https://wa.me/${whatsappNumber}`}
                   target="_blank"
                   referrerPolicy="no-referrer"
-                  className="flex items-center gap-4 p-4 bg-[#E8711A]/5 hover:bg-[#E8711A] hover:text-[#0D1B2A] text-white rounded border border-[#E8711A]/20 transition-all cursor-pointer group"
+                  className="flex items-center gap-4 p-4 bg-[#E8711A]/5 hover:bg-[#E8711A] hover:text-white text-[#0D1B2A] rounded-xl border border-[#E8711A]/20 transition-all cursor-pointer group"
                 >
-                  <MessageSquare className="w-5 h-5 text-[#E8711A] group-hover:text-[#0D1B2A] shrink-0" />
+                  <MessageSquare className="w-5 h-5 text-[#E8711A] group-hover:text-white shrink-0" />
                   <div>
                     <h4 className="font-accent font-bold tracking-wider text-[10px] uppercase">Falar no WhatsApp</h4>
-                    <span className="text-xs font-sans text-[#8A96A3] group-hover:text-[#0D1B2A]/90">Mandar mensagem agora (Resposta imediata)</span>
+                    <span className="text-xs font-sans text-zinc-500 group-hover:text-white/90">Mandar mensagem agora (Resposta imediata)</span>
                   </div>
                 </a>
 
                 {/* Email Direct */}
-                <div className="flex items-center gap-4 p-4 bg-white/[0.02] rounded border border-white/5">
+                <div className="flex items-center gap-4 p-4 bg-zinc-50 rounded-xl border border-zinc-150">
                   <Mail className="w-5 h-5 text-[#E8711A] shrink-0" />
                   <div>
-                    <h4 className="font-accent font-bold tracking-wider text-[10px] uppercase">Enviar E-mail</h4>
-                    <span className="text-[#8A96A3]">concierge@guidatrips.com.br</span>
+                    <h4 className="font-accent font-bold tracking-wider text-[10px] uppercase text-[#0D1B2A]">Enviar E-mail</h4>
+                    <span className="text-zinc-500 font-medium">concierge@guidatrips.com.br</span>
                   </div>
                 </div>
 
                 {/* Sede */}
-                <div className="flex items-center gap-4 p-4 bg-white/[0.02] rounded border border-white/5">
+                <div className="flex items-center gap-4 p-4 bg-zinc-50 rounded-xl border border-zinc-150">
                   <MapPin className="w-5 h-5 text-[#E8711A] shrink-0" />
                   <div>
-                    <h4 className="font-accent font-bold tracking-wider text-[10px] uppercase">Sede de Embarque</h4>
-                    <span className="text-[#8A96A3]">Praia dos Anjos, Arraial do Cabo - RJ</span>
+                    <h4 className="font-accent font-bold tracking-wider text-[10px] uppercase text-[#0D1B2A]">Sede de Embarque</h4>
+                    <span className="text-zinc-500 font-medium">Praia dos Anjos, Arraial do Cabo - RJ</span>
                   </div>
                 </div>
 
@@ -113,16 +113,16 @@ export default function ContactView({ onAddLead, whatsappNumber }: ContactViewPr
             </div>
 
             {/* MAP EMBED STYLE (Handcrafted Map Mockup) */}
-            <div className="bg-[#132033] border border-white/5 rounded-sm p-6 space-y-4">
+            <div className="bg-white border border-zinc-200 rounded-2xl p-6 space-y-4 shadow-sm">
               <div className="flex items-center justify-between">
-                <h4 className="font-serif text-sm font-bold text-[#F4EFE6]">Nosso Porto de Saída</h4>
+                <h4 className="font-serif text-sm font-bold text-[#0D1B2A]">Nosso Porto de Saída</h4>
                 <div className="flex items-center gap-1 font-accent text-[9px] text-[#E8711A] uppercase tracking-wider">
                   <Navigation className="w-3 h-3" /> GPS ATIVO
                 </div>
               </div>
 
               {/* Representação visual do mapa */}
-              <div className="h-44 bg-[#0D1B2A] relative rounded border border-white/5 overflow-hidden flex items-center justify-center">
+              <div className="h-44 bg-[#0D1B2A] relative rounded-xl border border-white/5 overflow-hidden flex items-center justify-center">
                 
                 {/* Linhas cartográficas fictícias para estética premium editorial */}
                 <div className="absolute inset-0 border border-white/[0.02] bg-[radial-gradient(#e8711a_1px,transparent_1px)] [background-size:20px_20px] opacity-15"></div>
@@ -148,26 +148,26 @@ export default function ContactView({ onAddLead, whatsappNumber }: ContactViewPr
           </div>
 
           {/* LADO DIREITO: FORMULÁRIO DE CAPTAÇÃO DE LEADS (7 colunas) */}
-          <div className="lg:col-span-7 bg-[#132033]/60 border border-white/5 rounded-sm p-8 text-left">
-            <h3 className="font-serif text-xl font-bold text-[#F4EFE6] mb-2">Descreva Sua Preferência</h3>
-            <p className="font-sans text-xs text-[#8A96A3] mb-8">Monte um roteiro personalizado, nosso concierge retornará em menos de 1 hora.</p>
+          <div className="lg:col-span-7 bg-white border border-zinc-200 rounded-2xl p-8 text-left shadow-sm">
+            <h3 className="font-serif text-xl font-bold text-[#0D1B2A] mb-2">Descreva Sua Preferência</h3>
+            <p className="font-sans text-xs text-zinc-500 mb-8">Monte um roteiro personalizado, nosso concierge retornará em menos de 1 hora.</p>
 
             {submitted ? (
               <motion.div 
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="bg-[#E8711A]/5 border border-[#E8711A]/20 p-8 rounded-sm text-center py-12 space-y-4"
+                className="bg-[#E8711A]/5 border border-[#E8711A]/20 p-8 rounded-xl text-center py-12 space-y-4"
               >
                 <div className="flex justify-center">
                   <CheckCircle2 className="w-12 h-12 text-[#E8711A]" />
                 </div>
-                <h4 className="font-serif text-lg font-bold text-[#F4EFE6]">Boletim de Interesse Recebido!</h4>
-                <p className="font-sans text-xs text-[#8A96A3] max-w-sm mx-auto leading-relaxed">
+                <h4 className="font-serif text-lg font-bold text-[#0D1B2A]">Boletim de Interesse Recebido!</h4>
+                <p className="font-sans text-xs text-zinc-600 max-w-sm mx-auto leading-relaxed">
                   Perfeito. Registramos o seu interesse em nossa base e enviamos o alerta ao comissariado da Guida Trips. Um de nossos curadores entrará em contato via telefone/WhatsApp muito brevemente.
                 </p>
                 <button
                   onClick={() => setSubmitted(false)}
-                  className="px-6 py-2 bg-transparent border border-[#E8711A] text-[#E8711A] hover:bg-[#E8711A] hover:text-[#0D1B2A] font-accent text-xs font-bold uppercase tracking-wider rounded-sm transition-colors mt-4 cursor-pointer"
+                  className="px-6 py-2 bg-transparent border border-[#E8711A] text-[#E8711A] hover:bg-[#E8711A] hover:text-white font-accent text-xs font-bold uppercase tracking-wider rounded-lg transition-colors mt-4 cursor-pointer"
                 >
                   Enviar Novo Formulário
                 </button>
@@ -177,59 +177,59 @@ export default function ContactView({ onAddLead, whatsappNumber }: ContactViewPr
                 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                   <div className="space-y-1.5">
-                    <label className="font-accent text-[9px] text-[#F4EFE6] tracking-widest uppercase">Seu Nome *</label>
+                    <label className="font-accent text-[9px] text-[#0D1B2A] tracking-widest uppercase font-bold">Seu Nome *</label>
                     <input
                       type="text"
                       required
                       placeholder="Ex: João Silva"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      className="w-full bg-[#132033] border border-white/5 p-3 text-xs text-[#F4EFE6] focus:outline-none focus:border-[#E8711A]"
+                      className="w-full bg-zinc-50 border border-zinc-200 rounded-xl p-3 text-xs text-[#0D1B2A] focus:outline-none focus:border-[#E8711A] focus:bg-white transition-colors"
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <label className="font-accent text-[9px] text-[#F4EFE6] tracking-widest uppercase">E-mail para Orçamento *</label>
+                    <label className="font-accent text-[9px] text-[#0D1B2A] tracking-widest uppercase font-bold">E-mail para Orçamento *</label>
                     <input
                       type="email"
                       required
                       placeholder="Ex: joao@email.com"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="w-full bg-[#132033] border border-white/5 p-3 text-xs text-[#F4EFE6] focus:outline-none focus:border-[#E8711A]"
+                      className="w-full bg-zinc-50 border border-zinc-200 rounded-xl p-3 text-xs text-[#0D1B2A] focus:outline-none focus:border-[#E8711A] focus:bg-white transition-colors"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                   <div className="space-y-1.5">
-                    <label className="font-accent text-[9px] text-[#F4EFE6] tracking-widest uppercase">WhatsApp com DDD *</label>
+                    <label className="font-accent text-[9px] text-[#0D1B2A] tracking-widest uppercase font-bold">WhatsApp com DDD *</label>
                     <input
                       type="tel"
                       required
                       placeholder="Ex: (21) 99999-9999"
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
-                      className="w-full bg-[#132033] border border-white/5 p-3 text-xs text-[#F4EFE6] focus:outline-none focus:border-[#E8711A]"
+                      className="w-full bg-zinc-50 border border-zinc-200 rounded-xl p-3 text-xs text-[#0D1B2A] focus:outline-none focus:border-[#E8711A] focus:bg-white transition-colors"
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <label className="font-accent text-[9px] text-[#F4EFE6] tracking-widest uppercase">Previsão da Viagem</label>
+                    <label className="font-accent text-[9px] text-[#0D1B2A] tracking-widest uppercase font-bold">Previsão da Viagem</label>
                     <input
                       type="date"
                       value={preferredDate}
                       onChange={(e) => setPreferredDate(e.target.value)}
-                      className="w-full bg-[#132033] border border-white/5 p-3 text-xs text-[#F4EFE6] focus:outline-none focus:border-[#E8711A]"
+                      className="w-full bg-zinc-50 border border-zinc-200 rounded-xl p-3 text-xs text-[#0D1B2A] focus:outline-none focus:border-[#E8711A] focus:bg-white transition-colors"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                   <div className="space-y-1.5">
-                    <label className="font-accent text-[9px] text-[#F4EFE6] tracking-widest uppercase font-semibold">Experiência Desejada</label>
+                    <label className="font-accent text-[9px] text-[#0D1B2A] tracking-widest uppercase font-bold">Experiência Desejada</label>
                     <select
                       value={interest}
                       onChange={(e) => setInterest(e.target.value)}
-                      className="w-full bg-[#132033] border border-white/5 p-3 text-xs text-[#F4EFE6] focus:outline-none focus:border-[#E8711A] cursor-pointer"
+                      className="w-full bg-zinc-50 border border-zinc-200 rounded-xl p-3 text-xs text-[#0D1B2A] focus:outline-none focus:border-[#E8711A] focus:bg-white transition-colors cursor-pointer"
                     >
                       <option value="passeio-barco-premium">🚤 Passeio de Barco Premium</option>
                       <option value="buggy-massambaba">🚙 Expedição Buggy Off-Road</option>
@@ -240,32 +240,32 @@ export default function ContactView({ onAddLead, whatsappNumber }: ContactViewPr
                     </select>
                   </div>
                   <div className="space-y-1.5">
-                    <label className="font-accent text-[9px] text-[#F4EFE6] tracking-widest uppercase">Acompanhantes</label>
+                    <label className="font-accent text-[9px] text-[#0D1B2A] tracking-widest uppercase font-bold">Acompanhantes</label>
                     <input
                       type="number"
                       min={1}
                       max={90}
                       value={groupSize}
                       onChange={(e) => setGroupSize(parseInt(e.target.value) || 1)}
-                      className="w-full bg-[#132033] border border-white/5 p-3 text-xs text-[#F4EFE6] focus:outline-none focus:border-[#E8711A]"
+                      className="w-full bg-zinc-50 border border-zinc-200 rounded-xl p-3 text-xs text-[#0D1B2A] focus:outline-none focus:border-[#E8711A] focus:bg-white transition-colors"
                     />
                   </div>
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="font-accent text-[9px] text-[#F4EFE6] tracking-widest uppercase">Restrições Alimentares ou Observações</label>
+                  <label className="font-accent text-[9px] text-[#0D1B2A] tracking-widest uppercase font-bold">Restrições Alimentares ou Observações</label>
                   <textarea
                     rows={4}
-                    placeholder="Nos diga o perfil do grupo, alergias alimentares ou pedidos especiais."
+                    placeholder="Nos diga o perfil do group, alergias alimentares ou pedidos especiais."
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
-                    className="w-full bg-[#132033] border border-white/5 p-3 text-xs text-[#F4EFE6] focus:outline-none focus:border-[#E8711A]"
+                    className="w-full bg-zinc-50 border border-zinc-200 rounded-xl p-3 text-xs text-[#0D1B2A] focus:outline-none focus:border-[#E8711A] focus:bg-white transition-colors"
                   />
                 </div>
 
                 <button
                   type="submit"
-                  className="w-full sm:w-auto px-8 py-4 bg-[#E8711A] hover:bg-[#C45E12] text-[#0D1B2A] font-accent text-xs font-bold tracking-widest uppercase rounded-sm duration-200 cursor-pointer shadow-lg transition-all flex items-center justify-center gap-2"
+                  className="w-full sm:w-auto px-8 py-4 bg-[#E8711A] hover:bg-[#C45E12] text-white font-accent text-xs font-bold tracking-widest uppercase rounded-xl duration-200 cursor-pointer shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2"
                 >
                   <Send className="w-4 h-4" /> Enviar Boletim de Interesse
                 </button>
