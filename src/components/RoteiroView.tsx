@@ -314,43 +314,9 @@ export default function RoteiroView({
             {/* LEFT COLUMN: Visual timeline itinerary (7 columns) - HIGHLY VISUAL AND ROUNDED */}
             <div className="lg:col-span-7 space-y-8">
               
-              {/* Refined and rounded Day Manager Panel */}
-              <div className="bg-white border border-zinc-150 rounded-2xl p-5 sm:p-6 shadow-sm space-y-5">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-5">
-                  <div className="flex items-center gap-3">
-                    <span className="p-2.5 bg-amber-500/10 text-[#E8711A] rounded-xl shrink-0">
-                      <Calendar className="w-5 h-5" />
-                    </span>
-                    <div className="text-left">
-                      <h3 className="font-serif text-base font-extrabold text-[#0D1B2A]">
-                        Duração da Viagem
-                      </h3>
-                      <p className="text-[11px] text-zinc-500 leading-tight">
-                        Defina a quantidade de dias da sua estadia:
-                      </p>
-                    </div>
-                  </div>
-                  
-                  {/* Highly tactile premium select dropdown */}
-                  <div className="flex-1 max-w-[180px]">
-                    <select
-                      value={stayDays}
-                      onChange={(e) => onUpdateStayDays(parseInt(e.target.value, 10))}
-                      className="w-full bg-[#FBF9F6] border border-zinc-200 text-[#0D1B2A] font-bold text-xs rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#E8711A] cursor-pointer"
-                    >
-                      {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
-                        <option key={num} value={num}>
-                          {num} {num === 1 ? "Dia" : "Dias"} de viagem
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-
-
-                {/* Conflict Warnings with pleasant, clean layout */}
-                {conflicts.length > 0 && (
+              {/* Conflict Warnings with pleasant, clean layout */}
+              {conflicts.length > 0 && (
+                <div className="bg-white border border-zinc-150 rounded-2xl p-5 sm:p-6 shadow-sm">
                   <div className="p-4 bg-amber-50 rounded-xl border border-amber-200/60 text-xs sm:text-sm text-amber-900 space-y-2 leading-relaxed text-left">
                     <div className="font-bold flex items-center gap-2 text-amber-800">
                       <Info className="w-4 h-4 shrink-0 text-amber-600 font-bold animate-bounce" />
@@ -360,8 +326,8 @@ export default function RoteiroView({
                       <div key={idx} className="pl-6 text-zinc-650 text-xs sm:text-sm">{str}</div>
                     ))}
                   </div>
-                )}
-              </div>
+                </div>
+              )}
 
               {/* Day-by-Day Timeline Itinerary */}
               <div className="space-y-6">
