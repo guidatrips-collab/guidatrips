@@ -1,23 +1,24 @@
 import React, { useState } from "react";
-import { Experience, BlogPost, ClientUser, ClientReservation, ClientPartner } from "../types";
+import { Experience, BlogPost, ClientUser, ClientReservation, ClientPartner, GlobalSettings } from "../types";
 import { 
   Compass, Map, Ticket, Star, User, Heart, ChevronRight, 
   MapPin, Clock, Calendar, CheckCircle, Info, Video, Gift, Search,
-  AlertTriangle
+  AlertTriangle, ExternalLink, PlayCircle
 } from "lucide-react";
 
 interface ClientPanelViewProps {
   experiences: Experience[];
   posts: BlogPost[];
+  settings?: GlobalSettings;
   onNavigate: (view: string) => void;
 }
 
-export default function ClientPanelView({ experiences, posts, onNavigate }: ClientPanelViewProps) {
+export default function ClientPanelView({ experiences, posts, settings, onNavigate }: ClientPanelViewProps) {
   const [activeTab, setActiveTab] = useState<"dashboard" | "viagem" | "dicas" | "beneficios" | "perfil">("dashboard");
   const [selectedReservationId, setSelectedReservationId] = useState<string | null>(null);
 
-  // MOCK DATA FOR DEMO PURPOSES
-  const mockUser: ClientUser = {
+  // Use configured data or fallback to mock
+  const clientUser: ClientUser = settings?.clientUser || {
     id: "user-1",
     name: "Carolina Mendes",
     email: "carolina.mendes@example.com",
@@ -27,7 +28,7 @@ export default function ClientPanelView({ experiences, posts, onNavigate }: Clie
     favorites: []
   };
 
-  const mockReservations: ClientReservation[] = [
+  const clientReservations: ClientReservation[] = settings?.clientReservations?.length ? settings.clientReservations : [
     {
       id: "res-1",
       userId: "user-1",
@@ -48,7 +49,7 @@ export default function ClientPanelView({ experiences, posts, onNavigate }: Clie
     }
   ];
 
-  const mockPartners: ClientPartner[] = [
+  const clientPartners: ClientPartner[] = settings?.clientPartners?.length ? settings.clientPartners : [
     {
       id: "part-1",
       category: "restaurantes",
@@ -84,22 +85,22 @@ export default function ClientPanelView({ experiences, posts, onNavigate }: Clie
   };
 
   const currentReservation = selectedReservationId 
-    ? mockReservations.find(r => r.id === selectedReservationId)
-    : mockReservations[0];
+    ? clientReservations.find(r => r.id === selectedReservationId)
+    : clientReservations[0];
 
   const currentExp = currentReservation 
     ? experiences.find(e => e.id === currentReservation.experienceId)
     : null;
 
   return (
-    <div className="flex flex-col md:flex-row min-h-screen bg-[#FBF9F6] pt-14 md:pt-0">
+    <div className="flex flex-col md:flex-row min-h-screen bg-[#FBF9F6] pt-24 md:pt-[80px]">
       {/* SIDEBAR NAVIGATION (Desktop) / BOTTOM BAR (Mobile) */}
-      <aside className="fixed bottom-0 left-0 right-0 h-16 md:h-screen md:sticky md:top-0 md:w-64 bg-[#0D1B2A] text-white flex flex-row md:flex-col z-50 border-t md:border-t-0 md:border-r border-white/10 shadow-[0_-5px_20px_rgba(0,0,0,0.1)] md:shadow-none">
-        <div className="hidden md:flex flex-col items-center p-8 border-b border-white/10 mt-14">
+      <aside className="fixed bottom-0 left-0 right-0 h-[72px] md:h-[calc(100vh-80px)] md:sticky md:top-[80px] md:w-64 bg-[#0D1B2A] text-white flex flex-row md:flex-col z-40 border-t md:border-t-0 md:border-r border-white/10 shadow-[0_-5px_20px_rgba(0,0,0,0.1)] md:shadow-none overflow-hidden">
+        <div className="hidden md:flex flex-col items-center p-6 border-b border-white/10 mt-4">
           <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-[#E8711A] mb-3">
-            <img src={mockUser.photoUrl} alt={mockUser.name} className="w-full h-full object-cover" />
+            <img src={clientUser.photoUrl} alt={clientUser.name} className="w-full h-full object-cover" />
           </div>
-          <h3 className="font-serif text-sm font-bold">{mockUser.name}</h3>
+          <h3 className="font-serif text-sm font-bold">{clientUser.name}</h3>
           <p className="font-sans text-[10px] text-zinc-400">Viajante Guida Trips</p>
         </div>
 
@@ -115,7 +116,7 @@ export default function ClientPanelView({ experiences, posts, onNavigate }: Clie
           </button>
           
           <button
-            onClick={() => { setActiveTab("viagem"); setSelectedReservationId(mockReservations[0]?.id || null); }}
+            onClick={() => { setActiveTab("viagem"); setSelectedReservationId(clientReservations[0]?.id || null); }}
             className={`flex flex-col md:flex-row items-center gap-1 md:gap-3 px-2 md:px-4 py-2 md:py-3 rounded text-center md:text-left transition-colors flex-1 md:flex-none ${
               activeTab === "viagem" ? "md:bg-[#E8711A] md:text-[#0D1B2A] text-[#E8711A] md:shadow-md md:font-bold" : "text-zinc-400 hover:bg-white/5 hover:text-white"
             }`}
@@ -163,7 +164,7 @@ export default function ClientPanelView({ experiences, posts, onNavigate }: Clie
         {activeTab === "dashboard" && (
           <div className="space-y-10 animate-fade-in max-w-5xl mx-auto">
             <header className="space-y-2">
-              <h1 className="font-serif text-3xl md:text-4xl font-bold text-[#0D1B2A]">Olá, Carolina! 🌊</h1>
+              <h1 className="font-serif text-3xl md:text-4xl font-bold text-[#0D1B2A]">Olá, {clientUser.name.split(" ")[0]}! 🌊</h1>
               <p className="font-sans text-sm text-[#5C6874]">Faltam <strong className="text-[#E8711A]">12 dias</strong> para a sua experiência incrível em Arraial do Cabo começar.</p>
             </header>
 
@@ -310,43 +311,61 @@ export default function ClientPanelView({ experiences, posts, onNavigate }: Clie
 
                 {/* Direita: QR Code e Regras */}
                 <div className="space-y-6">
-                  {/* Voucher Card */}
-                  <div className="bg-[#0D1B2A] text-white rounded-xl shadow-lg overflow-hidden relative text-center p-8">
-                    <div className="absolute top-0 left-0 w-full h-1 bg-[#E8711A]"></div>
-                    <Ticket className="w-8 h-8 mx-auto text-[#E8711A] mb-4" />
-                    <h4 className="font-accent text-[10px] uppercase tracking-widest text-zinc-400 mb-1">Voucher de Acesso</h4>
-                    <p className="font-mono text-2xl font-bold tracking-wider mb-6">{currentReservation.voucherCode}</p>
+                  {/* Voucher Card Modern */}
+                  <div className="bg-[#0D1B2A] text-white rounded-2xl shadow-xl overflow-hidden relative text-center flex flex-col items-center">
+                    <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-[#E8711A] to-yellow-500"></div>
                     
-                    <div className="bg-white p-4 rounded-lg inline-block mx-auto mb-4">
-                      {/* Fake QR CODE layout */}
-                      <div className="grid grid-cols-5 grid-rows-5 gap-1 w-32 h-32 opacity-80">
-                         {Array.from({length: 25}).map((_, i) => (
-                           <div key={i} className={`bg-[#0D1B2A] rounded-sm ${Math.random() > 0.4 ? 'opacity-100' : 'opacity-0'}`}></div>
-                         ))}
-                      </div>
+                    {/* Ticketer perforations */}
+                    <div className="absolute top-[60%] -left-3 w-6 h-6 bg-[#FBF9F6] rounded-full"></div>
+                    <div className="absolute top-[60%] -right-3 w-6 h-6 bg-[#FBF9F6] rounded-full"></div>
+                    <div className="absolute top-[60%] left-0 w-full border-t-2 border-dashed border-white/20"></div>
+
+                    <div className="p-8 pb-4 w-full">
+                      <Ticket className="w-10 h-10 mx-auto text-[#E8711A] mb-3 drop-shadow-md" />
+                      <h4 className="font-accent text-[10px] uppercase tracking-widest text-zinc-400 mb-1">Voucher Premium</h4>
+                      <p className="font-mono text-3xl font-extrabold tracking-widest text-white drop-shadow-sm">{currentReservation.voucherCode}</p>
                     </div>
-                    <p className="font-sans text-[10px] text-zinc-400">Apresente este código no embarque.</p>
+
+                    <div className="bg-white/5 w-full p-8 pt-6 flex flex-col items-center justify-center">
+                      <div className="bg-white p-3 rounded-xl inline-block mb-4 shadow-inner">
+                        {/* Fake QR CODE layout */}
+                        <div className="grid grid-cols-5 grid-rows-5 gap-1.5 w-32 h-32 opacity-90">
+                           {Array.from({length: 25}).map((_, i) => (
+                             <div key={i} className={`bg-[#0D1B2A] rounded-sm ${Math.random() > 0.4 ? 'opacity-100' : 'opacity-0'}`}></div>
+                           ))}
+                        </div>
+                      </div>
+                      <p className="font-sans text-[11px] text-zinc-400 font-medium">Apresente este código no embarque.</p>
+                    </div>
                   </div>
 
                   {/* Checklist Card */}
-                  <div className="bg-white border border-zinc-200 rounded-xl p-6">
-                    <h3 className="font-serif text-base font-bold text-[#0D1B2A] mb-4">Checklist do Viajante</h3>
+                  <div className="bg-white border border-zinc-100 shadow-sm rounded-2xl p-6">
+                    <h3 className="font-serif text-lg font-bold text-[#0D1B2A] mb-5 border-b border-zinc-100 pb-3">Checklist do Viajante</h3>
                     
-                    <div className="space-y-4">
+                    <div className="space-y-6">
                       <div>
-                        <h4 className="font-accent text-[10px] text-green-600 font-bold uppercase tracking-widest mb-2 flex items-center gap-1.5"><CheckCircle className="w-3 h-3" /> O que levar</h4>
-                        <ul className="space-y-1.5">
+                        <h4 className="font-accent text-[10px] text-emerald-600 font-bold uppercase tracking-widest mb-3 flex items-center gap-1.5 bg-emerald-50 w-max px-2 py-1 rounded">
+                          <CheckCircle className="w-3.5 h-3.5" /> O que levar
+                        </h4>
+                        <ul className="grid grid-cols-1 gap-2">
                           {currentReservation.bringItems.map((item, idx) => (
-                            <li key={idx} className="font-sans text-xs text-[#5C6874] pl-2 border-l-2 border-green-200">{item}</li>
+                            <li key={idx} className="font-sans text-xs text-[#5C6874] flex items-center gap-2 bg-zinc-50 p-2 rounded-lg border border-zinc-100">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0"></span> {item}
+                            </li>
                           ))}
                         </ul>
                       </div>
                       
-                      <div className="pt-2">
-                        <h4 className="font-accent text-[10px] text-red-500 font-bold uppercase tracking-widest mb-2 flex items-center gap-1.5"><AlertTriangle className="w-3 h-3" /> O que evitar</h4>
-                        <ul className="space-y-1.5">
+                      <div>
+                        <h4 className="font-accent text-[10px] text-rose-500 font-bold uppercase tracking-widest mb-3 flex items-center gap-1.5 bg-rose-50 w-max px-2 py-1 rounded">
+                          <AlertTriangle className="w-3.5 h-3.5" /> O que evitar
+                        </h4>
+                        <ul className="grid grid-cols-1 gap-2">
                           {currentReservation.avoidItems.map((item, idx) => (
-                            <li key={idx} className="font-sans text-xs text-[#5C6874] pl-2 border-l-2 border-red-200">{item}</li>
+                            <li key={idx} className="font-sans text-xs text-[#5C6874] flex items-center gap-2 bg-zinc-50 p-2 rounded-lg border border-zinc-100">
+                              <span className="w-1.5 h-1.5 rounded-full bg-rose-400 shrink-0"></span> {item}
+                            </li>
                           ))}
                         </ul>
                       </div>
@@ -354,12 +373,14 @@ export default function ClientPanelView({ experiences, posts, onNavigate }: Clie
                   </div>
 
                   {/* Regras Card */}
-                  <div className="bg-[#FBF9F7] border border-zinc-200 rounded-xl p-6">
-                    <h3 className="font-serif text-base font-bold text-[#0D1B2A] mb-4 flex items-center gap-2"><Info className="w-4 h-4 text-[#E8711A]" /> Regras de Ouro</h3>
-                    <ul className="space-y-2">
+                  <div className="bg-gradient-to-br from-[#0D1B2A] to-[#1a2d42] text-white rounded-2xl p-6 shadow-lg">
+                    <h3 className="font-serif text-lg font-bold text-white mb-4 flex items-center gap-2 border-b border-white/10 pb-3">
+                      <Info className="w-5 h-5 text-[#E8711A]" /> Regras de Ouro
+                    </h3>
+                    <ul className="space-y-3 mt-4">
                       {currentReservation.rules.map((rule, idx) => (
-                        <li key={idx} className="font-sans text-[11px] text-[#5C6874] flex items-start gap-2">
-                          <span className="text-[#E8711A]">•</span>
+                        <li key={idx} className="font-sans text-xs text-zinc-300 flex items-start gap-2.5 leading-relaxed">
+                          <span className="text-[#E8711A] text-lg leading-none mt-0.5">•</span>
                           {rule}
                         </li>
                       ))}
@@ -389,21 +410,41 @@ export default function ClientPanelView({ experiences, posts, onNavigate }: Clie
               <p className="font-sans text-sm text-[#5C6874] mt-2">Conteúdos produzidos por nativos para enriquecer sua jornada.</p>
             </header>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
               {posts.map(post => (
-                <div key={post.id} className="bg-white rounded-xl shadow-sm border border-zinc-200 overflow-hidden group cursor-pointer hover:shadow-md transition-all">
-                  <div className="h-44 relative overflow-hidden">
-                    <img src={post.coverImage} alt={post.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 filter brightness-95" />
-                    <div className="absolute top-3 left-3 bg-white/90 backdrop-blur text-[#0D1B2A] font-accent text-[8px] px-2 py-1 uppercase tracking-widest rounded-sm font-bold">
+                <div key={post.id} className="bg-white rounded-2xl shadow-sm border border-zinc-100 overflow-hidden group cursor-pointer hover:shadow-xl transition-all duration-300 flex flex-col">
+                  <div className="h-56 relative overflow-hidden">
+                    <img src={post.coverImage} alt={post.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 filter brightness-95" />
+                    <div className="absolute top-4 left-4 bg-white/90 backdrop-blur text-[#0D1B2A] font-accent text-[9px] px-3 py-1.5 uppercase tracking-widest rounded-full font-bold">
                       {post.category || "Editorial"}
                     </div>
+                    {post.videoUrl && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/40 transition-colors">
+                        <PlayCircle className="w-12 h-12 text-white/90 drop-shadow-lg group-hover:scale-110 transition-transform" />
+                      </div>
+                    )}
                   </div>
-                  <div className="p-5">
-                    <h3 className="font-serif text-lg font-bold text-[#0D1B2A] group-hover:text-[#E8711A] transition-colors leading-tight mb-2">{post.title}</h3>
-                    <p className="font-sans text-xs text-[#5C6874] line-clamp-2">{post.excerpt}</p>
-                    <div className="mt-4 pt-4 border-t border-zinc-100 flex items-center justify-between text-[#8A96A3] font-sans text-[10px] uppercase font-bold">
-                      <span>{formatDate(post.publishedAt)}</span>
-                      <span>Ler Artigo &rarr;</span>
+                  <div className="p-6 flex flex-col flex-1">
+                    <h3 className="font-serif text-xl font-bold text-[#0D1B2A] group-hover:text-[#E8711A] transition-colors leading-snug mb-3">{post.title}</h3>
+                    <p className="font-sans text-sm text-[#5C6874] line-clamp-3 mb-6 flex-1">{post.excerpt}</p>
+                    
+                    <div className="mt-auto flex items-center justify-between text-[#0D1B2A] border-t border-zinc-100 pt-4">
+                      <span className="font-sans text-xs text-zinc-500">{formatDate(post.publishedAt)}</span>
+                      {post.videoUrl ? (
+                        <a 
+                          href={post.videoUrl} 
+                          target="_blank" 
+                          rel="noreferrer" 
+                          className="font-accent text-[10px] uppercase font-bold tracking-widest text-[#E8711A] flex items-center gap-1 hover:text-[#0D1B2A] transition-colors"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          Ver Vídeo <ExternalLink className="w-3 h-3" />
+                        </a>
+                      ) : (
+                        <span className="font-accent text-[10px] uppercase font-bold tracking-widest flex items-center gap-1 group-hover:text-[#E8711A] transition-colors">
+                          Ler Artigo &rarr;
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -421,7 +462,7 @@ export default function ClientPanelView({ experiences, posts, onNavigate }: Clie
             </header>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {mockPartners.map(partner => (
+              {clientPartners.map(partner => (
                 <div key={partner.id} className="bg-white rounded-xl shadow-sm border border-zinc-200 flex flex-col sm:flex-row overflow-hidden group">
                   <div className="sm:w-2/5 h-48 sm:h-auto relative">
                     <img src={partner.img} alt={partner.name} className="w-full h-full object-cover filter brightness-95" />
@@ -460,15 +501,15 @@ export default function ClientPanelView({ experiences, posts, onNavigate }: Clie
                 <div className="space-y-4">
                   <div>
                     <label className="font-accent text-[9px] text-zinc-500 uppercase tracking-widest font-bold">Nome Completo</label>
-                    <p className="font-sans text-sm text-[#0D1B2A] font-medium">{mockUser.name}</p>
+                    <p className="font-sans text-sm text-[#0D1B2A] font-medium">{clientUser.name}</p>
                   </div>
                   <div>
                     <label className="font-accent text-[9px] text-zinc-500 uppercase tracking-widest font-bold">E-mail</label>
-                    <p className="font-sans text-sm text-[#0D1B2A] font-medium">{mockUser.email}</p>
+                    <p className="font-sans text-sm text-[#0D1B2A] font-medium">{clientUser.email}</p>
                   </div>
                   <div>
                     <label className="font-accent text-[9px] text-zinc-500 uppercase tracking-widest font-bold">Telefone</label>
-                    <p className="font-sans text-sm text-[#0D1B2A] font-medium">{mockUser.phone}</p>
+                    <p className="font-sans text-sm text-[#0D1B2A] font-medium">{clientUser.phone}</p>
                   </div>
                 </div>
                 <button className="mt-4 px-6 py-2 bg-zinc-100 text-[#0D1B2A] font-accent text-[10px] uppercase font-bold tracking-widest rounded-sm hover:bg-zinc-200 transition-colors">
@@ -479,7 +520,7 @@ export default function ClientPanelView({ experiences, posts, onNavigate }: Clie
               <div className="bg-white border border-zinc-200 rounded-xl p-6 md:p-8 space-y-6">
                 <h3 className="font-serif text-xl font-bold text-[#0D1B2A] border-b border-zinc-100 pb-3">Preferências de Viagem</h3>
                 <div className="flex flex-wrap gap-2">
-                  {mockUser.preferences?.map((pref, idx) => (
+                  {clientUser.preferences?.map((pref, idx) => (
                     <span key={idx} className="bg-[#FBF9F7] border border-zinc-200 text-[#5C6874] px-3 py-1.5 rounded-full font-sans text-xs">
                       {pref}
                     </span>

@@ -585,6 +585,7 @@ export default function App() {
           <ClientPanelView 
             experiences={experiences}
             posts={posts}
+            settings={settings}
             onNavigate={setCurrentView}
           />
         )}

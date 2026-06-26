@@ -68,6 +68,7 @@ export interface BlogPost {
   coverImage: string;
   excerpt: string;
   body: string; // supports rich text/Markdown
+  videoUrl?: string; // Add video url for tips
   seo?: {
     metaTitle: string;
     metaDescription: string;
@@ -195,6 +196,11 @@ export interface GlobalSettings {
   homeGuideTitle?: string;
   homeGuideDesc?: string;
   homeGuideBtnText?: string;
+  
+  // Client Area Settings
+  clientReservations?: ClientReservation[];
+  clientPartners?: ClientPartner[];
+  clientUser?: ClientUser;
 }
 
 export interface BookingCartItem {

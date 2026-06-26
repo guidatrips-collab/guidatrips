@@ -7,7 +7,7 @@ import React, { useState } from "react";
 import { 
   TrendingUp, Users, Compass, BarChart3, Settings, ShieldAlert,
   Globe, Plus, Trash2, Edit3, Eye, FileText, CheckCircle, 
-  X, AlertTriangle, Play, HelpCircle, Save, Phone, MessageSquare, Image
+  X, AlertTriangle, Play, HelpCircle, Save, Phone, MessageSquare, Image, User
 } from "lucide-react";
 import { Experience, Lead, BlogPost, GlobalSettings, ExperienceCategory } from "../types";
 
@@ -84,7 +84,7 @@ export default function AdminView({
   ];
 
   // Active submodule
-  const [activeTab, setActiveTab] = useState<"overview" | "experiences" | "leads" | "blog" | "settings">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "experiences" | "leads" | "blog" | "settings" | "client">("overview");
 
   // CRM status labels
   const leadStatuses = [
@@ -368,6 +368,7 @@ export default function AdminView({
               { id: "experiences", label: "Passeios", icon: Compass },
               { id: "leads", label: "Leads CRM", icon: Users, alertCount: activeLeadsCount },
               { id: "blog", label: "Revista/Blog", icon: FileText },
+              { id: "client", label: "Área Cliente", icon: User },
               { id: "settings", label: "Ajustes", icon: Settings }
             ].map((tab) => {
               const Icon = tab.icon;
@@ -1011,6 +1012,17 @@ export default function AdminView({
                   </div>
 
                   <div className="space-y-1.5">
+                    <label className="font-accent text-[9px] text-white tracking-widest uppercase">Vídeo Dica (URL do YouTube/Vimeo) - Opcional</label>
+                    <input
+                      type="text"
+                      placeholder="Ex: https://www.youtube.com/watch?v=..."
+                      value={editingPost.videoUrl || ""}
+                      onChange={(e) => setEditingPost({ ...editingPost, videoUrl: e.target.value })}
+                      className="w-full bg-[#0D1B2A] border border-white/5 p-3 text-xs text-sans text-white"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
                     <label className="font-accent text-[9px] text-white tracking-widest uppercase">Resumo / Linha de chamada (Exibido nas listas)</label>
                     <input
                       type="text"
@@ -1051,6 +1063,146 @@ export default function AdminView({
                 </form>
               </div>
             )}
+          </div>
+        )}
+
+        {/* -------------------- TAB: CLIENT AREA -------------------- */}
+        {activeTab === "client" && (
+          <div className="space-y-6 text-left">
+            <div className="bg-[#132033] border border-white/5 p-6 rounded-sm space-y-6">
+              <div className="flex justify-between items-center border-b border-white/5 pb-4">
+                <div>
+                  <h3 className="font-serif text-xl font-bold">Gestão da Área do Cliente</h3>
+                  <p className="font-sans text-xs text-zinc-400 mt-1">Configure os dados de demonstração (roteiros, parceiros, etc).</p>
+                </div>
+                <button 
+                  onClick={handleUpdateSettings} 
+                  className="bg-[#E8711A] text-[#0D1B2A] font-accent text-[10px] font-bold uppercase tracking-widest px-4 py-2 rounded flex items-center gap-2 hover:bg-white transition-colors"
+                >
+                  <Save className="w-3.5 h-3.5" />
+                  Salvar
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 gap-6">
+                
+                {/* Roteiros Personalizados (Reservas) */}
+                <div className="bg-[#0D1B2A]/40 border border-white/5 p-5 rounded space-y-4">
+                  <h4 className="font-serif text-sm font-bold text-[#E8711A] flex items-center gap-1.5 border-b border-white/5 pb-2">
+                    <Map className="w-4 h-4" /> 1. Roteiros Personalizados (Exemplo Cliente)
+                  </h4>
+                  <p className="text-xs text-zinc-400">Edite as informações da viagem (o que evitar, checklist) do usuário de exemplo.</p>
+                  
+                  {tempSettings.clientReservations?.map((res, rIdx) => (
+                    <div key={res.id} className="bg-[#0D1B2A] border border-white/10 p-4 rounded space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-1.5">
+                          <label className="font-accent text-[9px] text-white tracking-widest uppercase">ID da Experiência</label>
+                          <input
+                            type="text"
+                            value={res.experienceId}
+                            onChange={(e) => {
+                              const arr = [...(tempSettings.clientReservations || [])];
+                              arr[rIdx] = { ...arr[rIdx], experienceId: e.target.value };
+                              setTempSettings({ ...tempSettings, clientReservations: arr });
+                            }}
+                            className="w-full bg-transparent border border-white/5 p-2 text-xs text-white"
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="font-accent text-[9px] text-white tracking-widest uppercase">Ponto de Encontro</label>
+                          <input
+                            type="text"
+                            value={res.meetingPoint}
+                            onChange={(e) => {
+                              const arr = [...(tempSettings.clientReservations || [])];
+                              arr[rIdx] = { ...arr[rIdx], meetingPoint: e.target.value };
+                              setTempSettings({ ...tempSettings, clientReservations: arr });
+                            }}
+                            className="w-full bg-transparent border border-white/5 p-2 text-xs text-white"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="font-accent text-[9px] text-white tracking-widest uppercase">Checklist (O que levar - Separe por vírgula)</label>
+                        <input
+                          type="text"
+                          value={res.bringItems.join(", ")}
+                          onChange={(e) => {
+                            const arr = [...(tempSettings.clientReservations || [])];
+                            arr[rIdx] = { ...arr[rIdx], bringItems: e.target.value.split(",").map(i => i.trim()) };
+                            setTempSettings({ ...tempSettings, clientReservations: arr });
+                          }}
+                          className="w-full bg-transparent border border-white/5 p-2 text-xs text-white"
+                        />
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="font-accent text-[9px] text-white tracking-widest uppercase">O que evitar (Separe por vírgula)</label>
+                        <input
+                          type="text"
+                          value={res.avoidItems.join(", ")}
+                          onChange={(e) => {
+                            const arr = [...(tempSettings.clientReservations || [])];
+                            arr[rIdx] = { ...arr[rIdx], avoidItems: e.target.value.split(",").map(i => i.trim()) };
+                            setTempSettings({ ...tempSettings, clientReservations: arr });
+                          }}
+                          className="w-full bg-transparent border border-white/5 p-2 text-xs text-white"
+                        />
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="font-accent text-[9px] text-white tracking-widest uppercase">Regras de Ouro (Separe por |)</label>
+                        <input
+                          type="text"
+                          value={res.rules.join(" | ")}
+                          onChange={(e) => {
+                            const arr = [...(tempSettings.clientReservations || [])];
+                            arr[rIdx] = { ...arr[rIdx], rules: e.target.value.split("|").map(i => i.trim()) };
+                            setTempSettings({ ...tempSettings, clientReservations: arr });
+                          }}
+                          className="w-full bg-transparent border border-white/5 p-2 text-xs text-white"
+                        />
+                      </div>
+                    </div>
+                  ))}
+
+                  <button 
+                    type="button"
+                    onClick={() => {
+                      const newRes = {
+                        id: `res-${Date.now()}`,
+                        userId: "user-1",
+                        experienceId: experiences[0]?.id || "",
+                        date: "2026-10-15",
+                        time: "08:00",
+                        status: "confirmed" as any,
+                        pax: 2,
+                        voucherCode: "GDT-NEW",
+                        meetingPoint: "Cais da Praia dos Anjos, Píer 3",
+                        rules: ["Chegue com 20 min de antecedência"],
+                        bringItems: ["Protetor solar"],
+                        avoidItems: ["Sacos plásticos"]
+                      };
+                      setTempSettings({ ...tempSettings, clientReservations: [...(tempSettings.clientReservations || []), newRes] });
+                    }}
+                    className="mt-2 text-xs text-[#E8711A] flex items-center gap-1 hover:text-white"
+                  >
+                    <Plus className="w-3.5 h-3.5" /> Adicionar Reserva
+                  </button>
+                </div>
+
+                {/* Dicas (Blog Posts - Vídeos) */}
+                <div className="bg-[#0D1B2A]/40 border border-white/5 p-5 rounded space-y-4">
+                  <h4 className="font-serif text-sm font-bold text-[#E8711A] flex items-center gap-1.5 border-b border-white/5 pb-2">
+                    <Play className="w-4 h-4" /> 2. Dicas & Vídeos (Via Aba Blog)
+                  </h4>
+                  <p className="text-xs text-zinc-400">Para adicionar vídeos, vá na aba "Revista/Blog" e edite os artigos, adicionando um link de vídeo.</p>
+                </div>
+              </div>
+
+            </div>
           </div>
         )}
 
