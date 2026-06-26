@@ -824,7 +824,11 @@ export default function RoteiroView({
                       >
                         <div className="space-y-2.5">
                           <div className="aspect-[4/3] rounded-xl overflow-hidden shadow-inner border border-zinc-100">
-                            <img src={recExp.photos[0]} alt={recExp.name} className="h-full w-full object-cover" />
+                            <img 
+                              src={recExp.photos && recExp.photos.length > 0 ? recExp.photos[0] : "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=600&q=80"} 
+                              alt={recExp.name} 
+                              className="h-full w-full object-cover" 
+                            />
                           </div>
                           <div>
                             <h4 className="font-sans text-xs font-bold text-[#0D1B2A] line-clamp-1 h-4">{recExp.name}</h4>

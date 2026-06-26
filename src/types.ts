@@ -56,6 +56,9 @@ export interface Experience {
   featured: boolean;
   badge?: "mais-vendido" | "novidade" | "temporada" | "";
   location?: string; // e.g. "Arraial do Cabo", "Cabo Frio", "Búzios"
+  departureCity?: string; // e.g. "Arraial do Cabo RJ", "Cabo Frio RJ"
+  minAge?: string; // e.g. "2 anos"
+  maxAge?: string; // e.g. "65 anos"
   schedules?: string[]; // Dynamic schedules list managed by admin
   recommendations?: string[]; // Suggested related experience ids
   itinerary?: string[]; // Optional itinerary property

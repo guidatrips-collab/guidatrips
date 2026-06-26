@@ -7,336 +7,455 @@ import { Experience, ExperienceCategory, BlogPost, GlobalSettings } from "./type
 
 export const INITIAL_EXPERIENCES: Experience[] = [
   {
-    id: "passeio-barco-premium",
-    name: "Passeio de Barco Premium — Ilha do Farol & Pontal",
-    slug: "passeio-barco-premium-ilha-farol",
+    id: "bate-volta-arraial",
+    name: "Bate e Volta Arraial do Cabo: O Paraíso Saindo do Rio!",
+    slug: "bate-volta-arraial-cabo-rio",
     category: ExperienceCategory.NAUTICO,
-    shortDescription: "Navegue pelas águas mais cristalinas do Brasil com embarcação exclusiva e curadoria de paradas.",
-    fullDescription: `### O Caribe Brasileiro como você nunca viu
+    shortDescription: "Saia do Rio de Janeiro e venha viver um dia inesquecível no \"Caribe Brasileiro\" com o máximo de conforto e conveniência.",
+    fullDescription: `### Sobre o Passeio
+Saia do Rio de Janeiro e venha viver um dia inesquecível no "Caribe Brasileiro" com o máximo de conforto e conveniência. Esqueça as preocupações com trânsito ou onde comer: nós cuidamos de tudo, do embarque ao churrasco em alto mar!
 
-Navegar por Arraial do Cabo é mergulhar em um cenário cinematográfico. O nosso passeio náutico exclusivo foi desenhado para quem busca escapar da bagunça dos barcos de turismo de massa e vivenciar o mar como ele deve ser vivido: com calma, conforto e atenção aos detalhes.
+🌟 **O que está incluso na sua experiência:**
+- **🚍 Transporte Premium**: Ônibus cadastrado com ar-condicionado (saídas da Zona Sul e Centro do Rio).
+- **🙋🏻‍♂️ Acompanhamento VIP**: Guia credenciado durante todo o percurso.
+- **🚤 O Melhor Barco de Arraial**: Embarcação de dois andares, com toboágua, Wi-Fi, 2 banheiros e flutuadores inclusos.
+- **🍹 Almoço**: Churrasco Completo: Carne bovina, porco, frango, linguiça, pão de alho, arroz, farofa e vinagrete.
+  - **Acompanhamento**: Fritas ou macarronese.
+  - **Bebidas**: 1 caipirinha grande + 2 refrigerantes ou sucos grandes.
+  - **Mimos**: 1 taça exclusiva e frutas da estação.
 
-Nossa embarcação conta com infraestrutura premium, marinheiro experiente e serviço de bordo atencioso, incluindo água fresca, gelo e frutas da estação.
+🏝️ **Um Roteiro de Tirar o Fôlego**
+👶 **Crianças**: Até 5 anos não pagam (indo no colo).
 
-#### O Roteiro Editorial:
-- **Ilha do Farol**: Acesso restrito controlado pela Marinha do Brasil. Uma das praias mais puras e perfeita do planeta, caracterizada por sua areia branca ultrafina e águas azul-turquesa inertes.
-- **Prainhas do Pontal do Atalaia**: Desembarque direto na areia para caminhar sob a famosa escadaria de madeira e admirar a vista privilegiada do alto da colina.
-- **Gruta Azul**: Aproximação segura do paredão pedregoso de fendas milenares que, ao receber o reflexo dourado do sol, reluz em tons de safira hipnotizantes.
-- **Fenda de Nossa Senhora**: Uma incrível formação geológica de 40 metros de altura no meio do mar aberto.
-- **Praia do Forno**: Parada estratégica para mergulho livre (snorkeling) e observação da fauna marinha local (tartarugas são visitantes frequentes).`,
+🎒 **Dicas para o seu dia:**
+- Leve protetor solar, toalha, roupa de banho e um casaco para o ar-condicionado do ônibus.
+- É permitido levar lanches leves para a viagem de ônibus.
+- Não esqueça: O pagamento das taxas da Marinha (R$ 15,00) e da Jardineira (R$ 20,00) deve ser feito em dinheiro no dia do passeio.
+
+🚐 **Compromisso com sua Diversão**
+Em caso de condições adversas de mar que impeçam a navegação, garantimos o Tour Terrestre Alternativo via jardineira, visitando a Praia dos Anjos, Praia do Forno e a espetacular Praia Grande. Você aproveita o paraíso de qualquer jeito!`,
+    duration: "14 horas",
+    capacity: 46,
+    priceFrom: 250,
+    included: [
+      "Transporte Premium Rio-Arraial-Rio com ar-condicionado",
+      "Guia de Turismo credenciado Cadastur",
+      "Passeio de Barco de dois andares com toboágua e Wi-Fi",
+      "Churrasco Completo a bordo (bovino, porco, frango, linguiça, acompanhamentos)",
+      "1 Caipirinha grande, 2 Refrigerantes ou Sucos grandes",
+      "1 Taça exclusiva e frutas da estação"
+    ],
+    notIncluded: [
+      "Sobremesas",
+      "Máscaras de mergulho (aluguel no barco se disponível – sem cilindro)",
+      "Taxa da Marinha (píer): R$ 15,00 (pago em dinheiro)",
+      "Taxa da jardineira (acesso): R$ 20,00 (pago em dinheiro)"
+    ],
+    meetingPoint: "Embarque em hotéis da Zona Sul ou pontos de encontro no Centro do Rio",
+    coordinates: { lat: -22.9715, lng: -42.0224 },
+    photos: [],
+    status: "active",
+    featured: true,
+    badge: "mais-vendido",
+    location: "Arraial do Cabo",
+    departureCity: "Arraial do Cabo RJ",
+    minAge: "2 anos",
+    maxAge: "65 anos",
+    schedules: ["06:00"],
+    itinerary: [
+      "Ilha do Farol: Uma das praias mais famosas e preservadas da região, acessível apenas de barco.",
+      "As Prainhas do Pontal do Atalaia: Duas praias paradisíacas conectadas por uma faixa de areia branca.",
+      "Grota Azul: Uma caverna fascinante com um espetáculo de luzes naturais.",
+      "Pedra do Gorila: Um ponto icônico, onde as formações rochosas se assemelham ao perfil de um gorila.",
+      "Pedra da Tartaruga: Uma formação rochosa que lembra o formato de uma tartaruga.",
+      "Fenda da nossa Senhora: Uma estreita abertura nas rochas com grande valor cênico e espiritual.",
+      "Praia do Forno: Uma charmosa praia com águas calmas e cristalinas, ideal para banho.",
+      "Impacto do Meteorito: Um ponto de interesse geológico único.",
+      "Gruta do Amor: Uma pequena caverna cheia de charme, cercada por lendas locais."
+    ],
+    faqs: [
+      { question: "De onde sai o transporte no Rio de Janeiro?", answer: "Temos saídas diárias da Zona Sul e do Centro. Oferecemos o serviço \"porta a porta\" para a maioria dos hotéis e pontos de encontro estratégicos. Ao fazer a sua reserva, solicitamos a sua localização para indicar o ponto e horário mais próximos." },
+      { question: "A que horas começa o embarque e quando voltamos?", answer: "O embarque começa a partir das 06:00h. O retorno de Arraial do Cabo acontece no final da tarde, com chegada prevista ao Rio de Janeiro por volta das 20:30h, dependendo das condições do trânsito." },
+      { question: "O que está incluído no Pacote?", answer: "O nosso Pacote inclui um churrasco misto (carne, frango, porco e linguiça) com arroz, farofa, vinagrete e pão de alho. Pode escolher entre batata frita ou macarronese como acompanhamento. Além disso, inclui 1 caipirinha grande, 2 refrigerantes/sucos, fruta e uma taça personalizada." },
+      { question: "Crianças pagam?", answer: "Crianças até 5 anos são isentas, desde que viajem no colo dos responsáveis no autocarro/ônibus. A partir dos 6 anos, pagam o valor integral do pacote." },
+      { question: "Quais são as taxas pagas à parte?", answer: "Existem duas taxas municipais que não estão incluídas no pacote e devem ser pagas obrigatoriamente em dinheiro: Taxa da Marinha (Píer): R$ 15,00. Taxa da Jardineira (Acesso): R$ 20,00." },
+      { question: "E se o mar estiver agitado e o barco não sair?", answer: "A saída do barco depende da autorização da Marinha. Caso a navegação seja proibida por questões de segurança, realizaremos um Tour Terrestre Alternativo em jardineiras, visitando a Praia dos Anjos, Praia do Forno e Praia Grande. O valor do passeio permanece o mesmo." },
+      { question: "Posso levar bebidas ou cooler?", answer: "Por normas de segurança e organização da embarcação, não é permitida a entrada de bebidas alcoólicas, coolers ou caixas de som. O nosso pacote já inclui bebidas e temos serviço de bar a bordo." },
+      { question: "Quanto tempo dura a viagem do Rio até Arraial?", answer: "A viagem dura em média 2h50 a 4h, podendo variar conforme o trânsito na saída do Rio ou na Ponte Rio-Niterói. Recomendamos levar um lanche leve para o trajeto de ida." },
+      { question: "Como faço para garantir a minha reserva?", answer: "A reserva é confirmada mediante o pagamento de um sinal de R$ 100,00 por pessoa. O restante do valor é pago no dia do embarque. Aceitamos PIX (sem taxas) ou cartão de crédito/débito (crédito com 5% de acréscimo)." },
+      { question: "Qual é a política de cancelamento ou reagendamento?", answer: "Reagendamento: Pode ser feito com até 2 dias de antecedência. Arrependimento: O cliente tem direito ao cancelamento gratuito até 7 dias após a compra (conforme o Código de Defesa do Consumidor). No-show: O não comparecimento no local e hora marcados implica a perda do sinal da reserva." },
+      { question: "Dica de Ouro", answer: "Como este tour sai muito cedo, recomendamos que deixe a sua roupa de banho já por baixo da roupa leve e não esqueça o protetor solar! ☀️🏝️" }
+    ],
+    createdAt: "2026-06-25T12:00:00-03:00",
+    updatedAt: "2026-06-25T12:00:00-03:00"
+  },
+  {
+    id: "experiencia-gastronomica-mar",
+    name: "Experiência Gastronômica & Mar: Passeio de Barco Completo em Arraial do Cabo",
+    slug: "experiencia-gastronomica-mar-barco-arraial",
+    category: ExperienceCategory.GASTRONOMIA,
+    shortDescription: "Se você não quer apenas um passeio, mas um dia de rei e rainha no Caribe Brasileiro, este é o seu pacote! Unimos o melhor do roteiro com uma experiência gastronômica.",
+    fullDescription: `### Sobre o Passeio
+Se você não quer apenas um passeio, mas um dia de rei e rainha no Caribe Brasileiro, este é o seu pacote! Unimos o melhor do roteiro paradisíaco de Arraial com uma experiência gastronômica completa a bordo.
+
+✨ **O Diferencial: Churrasco e Drinks Inclusos**
+Nesta modalidade, você já tem tudo garantido para curtir o mar com o pé na areia e o copo na mão:
+- **🍹 Drinks & Refrescos**: 1 Caipirinha grande + 2 Refrigerantes ou sucos grandes + 1 Taça personalizada.
+- **🍽️ Almoço Premium (Churrasco Misto)**: Carnes nobres (bovina, frango, porco e linguiça) preparadas na hora.
+- **🥗 Acompanhamentos**: Arroz, farofa, vinagrete, pão de alho quentinho e a escolha entre batata frita ou macarronese.
+- **🍎 Extra**: 1 Fruta da estação para refrescar.
+
+🚤 **Estrutura de Lazer (Barco Toboágua)**
+Diversão e conforto em cada detalhe da nossa embarcação de dois andares:
+- **Toboágua**: Para mergulhar com estilo nas paradas.
+- **Conectividade**: Wi-Fi liberado em alto mar.
+- **Conforto**: 2 banheiros higienizados e água inclusa.
+- **Cenários Instagramáveis**: Coração para fotos e fotógrafo profissional a bordo (serviço à parte).
+
+🏝️ **Roteiro de Tirar o Fôlego**
+Visitamos os pontos mais icônicos da região, com tempo para relaxar e fotografar:
+- **Praia da Ilha do Farol**: Águas cristalinas e areia branquíssima (desembarque).
+- **Prainhas do Pontal do Atalaia**: A famosa escadaria de Arraial (desembarque).
+- **Enseada do Guriri & Praia do Forno**: Paradas estratégicas para banho com uso do toboágua.
+- **Tour Panorâmico**: Gruta Azul, Pedra do Gorila, Pedra da Tartaruga, Fenda de Nossa Senhora e o Impacto do Meteorito.
+
+📅 **Planeje sua Saída**
+- **Duração**: 4 horas.
+- **Check-in**: Das 10h30 às 11h30 na Praia dos Anjos.
+- **Saída**: Diariamente às 12h.
+- **Local de Encontro**: Rua Gonçalves Dias, nº 10 (Próximo à Praça do Cova).
+- **Vantagem Extra**: Clientes do Pacote Completo têm desconto especial no Estacionamento ArraialShow (consulte disponibilidade e agende sua vaga).
+
+⚠️ **Informações Importantes**
+- **Taxa de Embarque**: R$ 15,00 (paga em dinheiro no píer).
+- **Restrições**: Não é permitido o embarque com coolers ou caixas de som (temos tudo o que você precisa a bordo!).
+- **Condições do Mar**: O roteiro pode sofrer alterações pela Marinha visando a segurança dos passageiros.`,
     duration: "4 horas",
     capacity: 45,
-    priceFrom: 120,
-    included: [
-      "Marinheiro credenciado",
-      "Colete salva-vidas e óculos de snorkeling",
-      "Serviço de bordo (água mineral e frutas)",
-      "Taxa de embarque inclusa"
-    ],
-    notIncluded: [
-      "Almoço e bebidas alcoólicas",
-      "Despesas de transporte até o píer",
-      "Fotografia profissional (serviço opcional)"
-    ],
-    meetingPoint: "Píer da Praia dos Anjos (Porto de Arraial do Cabo)",
-    coordinates: { lat: -22.9715, lng: -42.0224 },
-    photos: [
-      "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80",
-      "https://images.unsplash.com/photo-1544735716-392fe2489ffa?auto=format&fit=crop&w=1200&q=80",
-      "https://images.unsplash.com/photo-1519046904884-53103b34b206?auto=format&fit=crop&w=1200&q=80"
-    ],
-    videoEmbed: "https://www.youtube.com/embed/dQw4w9WgXcQ",
-    whatsappMessage: "Olá! Gostaria de reservar o Passeio de Barco Premium.",
-    status: "active",
-    featured: true,
-    badge: "mais-vendido",
-    location: "Arraial do Cabo",
-    schedules: ["08:00", "11:30", "15:00"],
-    recommendations: ["buggy-massambaba", "batismo-mergulho-autonomo"],
-    faqs: [
-      { question: "A escadaria do Pontal está incluída?", answer: "Sim! Faremos parada especial nas Prainhas do Pontal do Atalaia com tempo livre para caminhar e fotografar na escadaria." },
-      { question: "Qual é a tolerância de atraso?", answer: "Sugerimos chegar com 20 minutos de antecedência no píer de embarque da Praia dos Anjos para o check-in." }
-    ],
-    seo: {
-      metaTitle: "Passeio de Barco Premium em Arraial do Cabo | Guida Trips",
-      metaDescription: "Fugir do turismo de massa. Explore a Ilha do Farol e as prainhas do Atalaia em embarcação exclusiva com curadoria de roteiro de 4 horas.",
-      keywords: ["passeio de barco arraial", "ilha do farol", "prainhas do pontal", "caribe brasileiro"]
-    },
-    createdAt: "2026-06-20T12:00:00-03:00",
-    updatedAt: "2026-06-20T12:00:00-03:00"
-  },
-  {
-    id: "buggy-massambaba",
-    name: "Expedição Buggy Off-Road — Dunas de Massambaba",
-    slug: "expedicao-buggy-off-road-massambaba",
-    category: ExperienceCategory.OFF_ROAD,
-    shortDescription: "Aventura imersiva cruzando praias desertas, dunas gigantes e mirantes secretos em alta definição estética.",
-    fullDescription: `### Sinta o vento. Descubra caminhos selvagens.
-
-Se você acha que Arraial do Cabo se limita à praia dos Anjos e barcos, esta expedição vai revolucionar a sua percepção. A nossa rota Off-Road de Buggy foi desenhada por aventureiros locais para explorar o lado intocado e selvagem da península.
-
-Guiados por profissionais credenciados que respiram o destino, cruzaremos as incríveis dunas móveis e margearemos praias de mar aberto onde o homem raramente pisa.
-
-#### O Roteiro de Liberdade:
-- **Praia Grande**: Parada inicial para contemplar a grandiosidade de uma das maiores praias do estado, com sua areia que range sob os pés e ondas selvagens.
-- **Dunas de Massambaba**: Verdadeiros desertos de areia cristalina esculpidos pelo vento contínuo. Aqui, o buggy dança entre caminhos sinuosos com total segurança.
-- **Lagoa Vermelha**: Parada ecológica para compreender o ecossistema local e o fenômeno de águas com ricas propriedades minerais.
-- **Mirante Secreto do Pontal**: Acesso exclusivo por trilha off-road para ver o entardecer do ponto geográfico mais alto e privilegiado, longe da muvuca de observadores clássicos.`,
-    duration: "3h30",
-    capacity: 4,
     priceFrom: 180,
     included: [
-      "Buggy privativo higienizado",
-      "Piloto/Guia credenciado e experiente",
-      "Combustível e taxas locais",
-      "Seguro de aventura individual"
+      "🍹 1 Caipirinha grande, 2 Refrigerantes ou sucos grandes e 1 Taça personalizada",
+      "🍽️ Almoço Premium (Churrasco Misto) preparado na hora",
+      "🥗 Arroz, farofa, vinagrete, pão de alho e batata frita ou macarronese",
+      "🍎 1 Fruta da estação",
+      "🚤 Embarcação de dois andares com Toboágua e Wi-Fi liberado",
+      "Flutuadores e coletes salva-vidas"
     ],
     notIncluded: [
-      "Alimentos e bebidas nos quiosques",
-      "Acessórios adicionais de mergulho"
+      "Fotografia",
+      "Taxa de Embarque (Marinha): R$ 15,00 (pago em dinheiro)"
     ],
-    meetingPoint: "Acomodação do cliente (Hotel/Pousada em Arraial do Cabo)",
-    coordinates: { lat: -22.9642, lng: -42.0298 },
-    photos: [
-      "https://images.unsplash.com/photo-1509114397022-ed747cca3f65?auto=format&fit=crop&w=1200&q=80",
-      "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=1200&q=80"
-    ],
-    videoEmbed: "",
-    whatsappMessage: "Olá! Gostaria de agendar a Expedição Buggy Off-Road.",
+    meetingPoint: "Rua Gonçalves Dias, nº 10 - Praia dos Anjos (Próximo à Praça do Cova), Arraial do Cabo",
+    coordinates: { lat: -22.9715, lng: -42.0224 },
+    photos: [],
     status: "active",
     featured: true,
     badge: "mais-vendido",
     location: "Arraial do Cabo",
-    schedules: ["09:00", "14:00", "16:30"],
-    recommendations: ["sunset-pontal-cultural", "passeio-barco-premium"],
-    faqs: [
-      { question: "Quantas pessoas cabem por buggy?", answer: "Cada veículo comporta com total segurança até 4 passageiros mais o piloto credenciado." },
-      { question: "O passeio inclui parada para banho?", answer: "Sim! Paramos na fantástica Praia Grande e contornamos dunas com paradas para banho na lagoa." }
+    departureCity: "Arraial do Cabo RJ",
+    minAge: "2 anos",
+    maxAge: "90 anos",
+    schedules: ["12:00"],
+    itinerary: [
+      "Praia da Ilha do Farol (desembarque) 🏝️",
+      "Enseada do Guriri (mergulho e toboáguas) 🤿",
+      "Praia do Forno (mergulho e toboáguas) 🌊",
+      "Prainhas do Pontal do Atalaia 🌅",
+      "Gruta Azul 🏔️",
+      "Pedra do Gorila 🦍",
+      "Pedra da Tartaruga 🐢",
+      "Fenda de Nossa Senhora 🙏",
+      "Impacto do Meteorito ☄️"
     ],
-    seo: {
-      metaTitle: "Passeio de Buggy em Arraial do Cabo | Guida Trips",
-      metaDescription: "Sinta a liberdade máxima com nossa Expedição de Buggy pelas Dunas de Massambaba e praias selvagens de Arraial do Cabo. Faça sua reserva hoje.",
-      keywords: ["passeio de buggy", "dunas de massambaba", "pôr do sol arraial do cabo", "off road rj"]
-    },
-    createdAt: "2026-06-20T12:00:00-03:00",
-    updatedAt: "2026-06-20T12:00:00-03:00"
+    faqs: [
+      { question: "Qual o horário e local de saída?", answer: "Nossas embarcações saem diariamente às 12h. No entanto, o check-in deve ser feito obrigatoriamente entre 10h30 e 11h30 no nosso ponto de encontro: Rua Gonçalves Dias, nº 10 – Praia dos Anjos (próximo à Praça do Cova)." },
+      { question: "O que está incluso na refeição do Pacote Completo?", answer: "É um banquete completo! Você terá direito a um churrasco misto (carne bovina, frango, porco e linguiça) com arroz, farofa, vinagrete e pão de alho. Para acompanhar, você escolhe entre fritas ou macarronese. Além disso, inclui 1 caipirinha grande, 2 refrigerantes ou sucos e uma fruta." },
+      { question: "O passeio para em quais praias?", answer: "Nós visitamos os principais cartões-postais de Arraial! O roteiro inclui desembarque na Ilha do Farol e nas Prainhas do Pontal do Atalaia. Também fazemos paradas para mergulho (com uso do toboágua) na Enseada do Guriri e na Praia do Forno, além de passar por pontos panorâmicos como a Gruta Azul e a Fenda de Nossa Senhora." },
+      { question: "O barco oferece estrutura para crianças e idosos?", answer: "Sim! Nosso barco possui dois andares, é seguro e conta com 2 banheiros. Crianças até 5 anos e idosos acima de 60 anos são isentos da taxa do píer. Além disso, disponibilizamos \"espaguetes\" flutuantes para auxiliar no mergulho." },
+      { question: "Posso levar minha própria bebida ou comida?", answer: "De acordo com as normas de segurança e organização, não é permitida a entrada de coolers, bolsas térmicas ou caixas de som. Temos um bar e serviço de cozinha completo a bordo para sua comodidade." },
+      { question: "Existe algum custo extra além do pacote?", answer: "Sim, há uma taxa de embarque da Prefeitura (Píer) no valor de R$ 15,00 por pessoa, que deve ser paga obrigatoriamente em dinheiro no momento do embarque. Isentos: Crianças até 5 anos, idosos acima de 60, militares e moradores." },
+      { question: "Onde posso estacionar o carro?", answer: "Temos parceria com o Estacionamento ArraialShow (procurar por Gabriel). Dica: Clientes do Pacote Completo pagam um valor reduzido no estacionamento! É necessário agendar com antecedência, pois as vagas são limitadas." },
+      { question: "E se o tempo estiver ruim ou a Marinha cancelar?", answer: "A segurança vem em primeiro lugar. Caso a Marinha do Brasil proíba a navegação devido às condições do mar, o passeio poderá ser reagendado. O roteiro também pode sofrer alterações de percurso sem aviso prévim por determinação das autoridades marítimas." },
+      { question: "Como funciona o cancelamento e reagendamento?", answer: "Reagendamento: Pode ser solicitado com até 2 dias de antecedência. No-show: O não comparecimento no horário do check-in resulta na perda do sinal da reserva." }
+    ],
+    createdAt: "2026-06-25T12:00:00-03:00",
+    updatedAt: "2026-06-25T12:00:00-03:00"
   },
   {
-    id: "temporada-baleias-avistamento",
-    name: "Safári Ambiental — Avistamento de Baleias Jubarte",
-    slug: "safari-ambiental-avistamento-baleias-jubarte",
-    category: ExperienceCategory.TEMPORADA,
-    shortDescription: "Um espetáculo indescritível em mar aberto. Monitores biólogos guiam o avistamento da rota migratória anual.",
-    fullDescription: `### Gigantes do Oceano bem na sua frente
-
-De julho a outubro, as águas profundas do entorno de Arraial do Cabo se transformam em uma verdadeira rodovia de gigantes. As baleias-jubarte viajam milhares de quilômetros das águas antárticas para se reproduzir nas águas quentes da Bahia, e Arraial é um ponto estratégico e geográfico maravilhoso para avistamento.
-
-Nossa operação é estritamente ecológica, seguindo portarias internacionais de proteção de mamíferos marinhos. Navegamos sob a orientação de biólogos marinhos dedicados que enriquecem a jornada com palestras científicas ao vivo.
-
-#### A Experiência Científica e Emocional:
-- **Briefing de Conservação**: Palestra de 15 minutos antes do embarque sobre a ecologia das baleias e regras éticas de aproximação passiva.
-- **Busca em Mar Aberto**: Navegação coordenada por profissionais munidos de telescópios na terra e rádio de apoio.
-- **Música do Oceano**: Lançamento de hidrofone subaquático (se as condições permitirem) para tentar escutar o belo canto melódico dos machos de jubarte.
-- **Registro Fotográfico**: Envio gratuito das melhores fotos científicas captadas por nossa equipe profissional durante o passeio.`,
-    duration: "4h30",
-    capacity: 25,
-    priceFrom: 220,
-    included: [
-      "Embarcação homologada de alta estabilidade",
-      "Acompanhamento de Biólogo Marinho especialista",
-      "Uso de hidrofone de alta sensitividade",
-      "Café e lanche de bordo ecológico"
-    ],
-    notIncluded: [
-      "Medicação para enjoo (recomenda-se tomar antes)",
-      "Bebidas alcoólicas"
-    ],
-    meetingPoint: "Deck dos Pescadores, Praia dos Anjos",
-    coordinates: { lat: -22.9731, lng: -42.0210 },
-    photos: [
-      "https://images.unsplash.com/photo-1549488344-1f9b8d2bd1f3?auto=format&fit=crop&w=1200&q=80",
-      "https://images.unsplash.com/photo-1502082553048-f009c37129b9?auto=format&fit=crop&w=1200&q=80"
-    ],
-    videoEmbed: "",
-    whatsappMessage: "Olá! Tenho interesse no Safári Ambiental das Baleias Jubarte.",
-    status: "active",
-    featured: true,
-    badge: "temporada",
-    location: "Arraial do Cabo",
-    schedules: ["07:30", "12:30"],
-    recommendations: ["batismo-mergulho-autonomo", "sunset-pontal-cultural"],
-    faqs: [
-      { question: "E se não virmos nenhuma baleia?", answer: "Por tratar-se de vida selvagem e livre no mar aberto, não há garantia absoluta. No entanto, nossa taxa histórica de sucesso na temporada é superior a 94%." }
-    ],
-    seo: {
-      metaTitle: "Passeio Avistamento de Baleias em Arraial do Cabo | Guida Trips",
-      metaDescription: "Participe da temporada de baleias-jubarte in Arraial do Cabo com equipe de biólogos marinhos. Conforto, segurança e rígidos protocolos ecológicos.",
-      keywords: ["baleia jubarte arraial", "quando ver baleias", "safari ambiental", "biologia marinha rj"]
-    },
-    createdAt: "2026-06-20T12:00:00-03:00",
-    updatedAt: "2026-06-20T12:00:00-03:00"
-  },
-  {
-    id: "batismo-mergulho-autonomo",
-    name: "Batismo de Mergulho Autônomo — Capitânia Ecológica",
-    slug: "batismo-mergulho-autonomo-arraial",
+    id: "passeio-barco-toboagua",
+    name: "Passeio de Barco em Arraial do Cabo (com Tobogã)",
+    slug: "passeio-barco-toboagua-arraial",
     category: ExperienceCategory.NAUTICO,
-    shortDescription: "Descubra por que Arraial do Cabo é a Capital Nacional do Mergulho com águas transparentes e rica biodiversidade.",
-    fullDescription: `### O Universo Subaquático Conectado
+    shortDescription: "O Pacote Básico oferece uma experiência completa para explorar as belezas de Arraial do Cabo com conforto e excelente custo-benefício.",
+    fullDescription: `### Sobre o Passeio
+O Pacote Básico oferece uma experiência completa para explorar as belezas de Arraial do Cabo com conforto e economia.
 
-Arraial do Cabo goza de uma característica mágica no continente sul-americano: o fenômeno da **Ressurgência**. Águas profundas e gélidas ricas em nutrientes sobem à superfície, transformando a região em um berço ecológico imbatível de vida marinha.
+Ideal para quem busca um passeio inesquecível pelas águas cristalinas da região, o pacote inclui acesso a um barco moderno de dois andares, equipado com Wi-Fi, água mineral à vontade, e banheiros a bordo.
 
-No nosso Batismo de Mergulho, você não precisa de curso ou experiência prévia. Um instrutor altamente qualificado e certificado internacionalmente (PADI/NAUI) acompanhará você de forma individual, operando o seu equipamento durante todo o tempo sob a água.
+Durante o passeio, são servidas frutas frescas para tornar a experiência ainda mais agradável.
 
-#### O Passeio de Mapeamento:
-- **Adaptação Superficial**: Treinamento de 15 minutos em água rasa e abrigada para se habituar ao regulador de respiração.
-- **Mergulho Alinhado**: Desfazer o estresse flutuando entre 5 e 10 metros de profundidade ao lado do seu instrutor exclusivo.
-- **Biodiversidade Fantástica**: Interagir com tartarugas gigantes de carapaça brilhante, arraias-chita voando na correnteza, cardumes de lagostas amarelas e corais multicoloridos raros.`,
-    duration: "3 horas",
-    capacity: 12,
-    priceFrom: 290,
+O roteiro contempla paradas nos principais pontos turísticos, como a Ilha do Farol, as Prainhas do Pontal do Atalaia, a Gruta Azul, a Pedra do Gorila, e outras atrações naturais deslumbrantes.
+
+Além disso, o barco conta com um coração decorativo exclusivo para registros fotográficos perfeitos.
+
+A taxa do píer (R$15 por pessoa) não está inclusa e deve ser paga separadamente.
+
+Um fotógrafo estará disponível como atração opcional para eternizar os melhores momentos do passeio.
+
+O Pacote Básico é uma excelente opção para quem deseja vivenciar o melhor de Arraial do Cabo com um ótimo custo-benefício.
+
+Seja para relaxar, capturar momentos inesquecíveis ou aproveitar um dia repleto de conforto e exclusividade, o Pacote Premium é a opção perfeita para quem valoriza qualidade e conveniência em cada detalhe.`,
+    duration: "4 horas",
+    capacity: 60,
+    priceFrom: 110,
     included: [
-      "Equipamento de mergulho completo (roupa de neoprene, cilindro, regulador)",
-      "Instrutor individual (credenciado PADI/NAUI)",
-      "Lanches leves pós-mergulho no barco",
-      "Sessão de fotos subaquáticas em alta resolução inclusa"
+      "Passeio de barco moderno de dois andares com tobogã/toboágua",
+      "Água mineral liberada a bordo",
+      "Frutas da estação servidas durante o percurso",
+      "Wi-Fi de alta velocidade em alto mar"
     ],
     notIncluded: [
-      "Aluguel de computador de mergulho profissional",
-      "Bebidas gaseificadas"
+      "Fotografia",
+      "Taxa do Píer (Prefeitura): R$ 15,00 (pago em dinheiro)"
     ],
-    meetingPoint: "Operadora de Mergulho parceira, Praia Grande",
-    coordinates: { lat: -22.9720, lng: -42.0250 },
-    photos: [
-      "https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=1200&q=80",
-      "https://images.unsplash.com/photo-1682687220063-4742bd7fd538?auto=format&fit=crop&w=1200&q=80"
-    ],
-    videoEmbed: "",
-    whatsappMessage: "Olá! Gostaria de reservar o Batismo de Mergulho em Arraial.",
+    meetingPoint: "Píer da Praia dos Anjos, Arraial do Cabo",
+    coordinates: { lat: -22.9715, lng: -42.0224 },
+    photos: [],
     status: "active",
     featured: false,
     badge: "novidade",
     location: "Arraial do Cabo",
-    schedules: ["08:00", "11:30", "14:30"],
-    recommendations: ["passeio-barco-premium", "gourmet-praia-dos-anjos"],
-    faqs: [
-      { question: "Precisa saber nadar?", answer: "Não é obrigatório saber nadar. Faremos uma adaptação na superfície e a descida é totalmente guiada de forma individual pelo instrutor, que controla seus equipamentos." }
+    departureCity: "Arraial do Cabo RJ",
+    minAge: "1 anos",
+    maxAge: "90 anos",
+    schedules: ["09:00", "11:30", "13:30"],
+    itinerary: [
+      "Ilha do Farol: Uma das praias mais famosas e preservadas da região, acessível apenas de barco.",
+      "As Prainhas do Pontal do Atalaia: Duas praias paradisíacas conectadas por uma faixa de areia branca.",
+      "Grota Azul: Uma caverna fascinante com um espetáculo de luzes naturais.",
+      "Pedra do Gorila: Um ponto icônico, onde as formações rochosas se assemelham ao perfil de um gorila.",
+      "Pedra da Tartaruga: Uma formação rochosa que lembra o formato de uma tartaruga.",
+      "Fenda da nossa Senhora: Uma estreita abertura nas rochas com grande valor cênico.",
+      "Praia do Forno: Uma charmosa praia com águas calmas e cristalinas.",
+      "Impacto do Meteorito: Um ponto de interesse geológico único.",
+      "Gruta do Amor: Uma pequena caverna cheia de charme, cercada por lendas locais."
     ],
-    seo: {
-      metaTitle: "Mergulho de Batismo em Arraial do Cabo | Guida Trips",
-      metaDescription: "Respire debaixo d'água de forma totalmente segura. Batismo guiado por instrutores dedicados com equipamento premium e sessão fotográfica inclusa.",
-      keywords: ["mergulho arraial do cabo", "batismo de mergulho", "ressurgencia rj", "ver tartarugas rj"]
-    },
-    createdAt: "2026-06-20T12:00:00-03:00",
-    updatedAt: "2026-06-20T12:00:00-03:00"
+    faqs: [],
+    createdAt: "2026-06-25T12:00:00-03:00",
+    updatedAt: "2026-06-25T12:00:00-03:00"
   },
   {
-    id: "sunset-pontal-cultural",
-    name: "Roteiro Histórico & Sunset Curado no Pontal do Atalaia",
-    slug: "roteiro-historico-sunset-pontal-atalaia",
-    category: ExperienceCategory.CULTURA,
-    shortDescription: "Uma caminhada elegante resgatando histórias dos povos sambaquianos finalizando com espumante de curadoria no pôr do sol.",
-    fullDescription: `### O Sol se deita no fim da América
+    id: "passeio-lancha-cabo-frio",
+    name: "Passeio de Lancha em Cabo Frio RJ RIO X CABO FRIO (DAY USE)",
+    slug: "passeio-lancha-cabo-frio-day-use",
+    category: ExperienceCategory.NAUTICO,
+    shortDescription: "Viva uma experiência inesquecível pela maior lagoa navegável do mundo, com paradas nas ilhas e pontos mais encantadores de Cabo Frio + Day Use.",
+    fullDescription: `### Sobre o Passeio
+Passeio de Lancha pelas Ilhas de Cabo Frio + Day Use na Pousada 🛥️🌅
 
-Dizem que o entardecer nas encostas do Pontal do Atalaia cura a alma. Criamos essa experiência intimista para os apreciadores de belas histórias, vinhos refinados e geografia peculiar de Arraial.
+Viva uma experiência inesquecível pela maior lagoa navegável do mundo, com paradas nas ilhas e pontos mais encantadores de Cabo Frio. Um passeio exclusivo, com conforto, segurança e paisagens de tirar o fôlego — perfeito para quem quer conhecer a região de um jeito único.
 
-Mapeado de forma exclusiva, o nosso guia cultural conduzirá você a pé por caminhos secretos contornando despenhadeiros oceânicos, enquanto desvenda curiosidades sobre a colonização portuguesa, piratas ingleses que naufragaram nessas águas e a lendária rota dos navegadores indígenas.
+#### Roteiro Lagoon Experience
+Durante as 4 horas de passeio, você visitará os pontos mais incríveis de Cabo Frio com máximo conforto e registros inesquecíveis.
 
-#### A Linha de Rota:
-- **Caminho das Falésias**: Uma trilha suave interpretando a fauna e flora endêmica da restinga fluminense.
-- **Ruínas da Antiga Fortaleza**: Visita explicativa aos cumes de observação militar desativados da Marinha colonial.
-- **Brinde Editorial**: Ao som das ondas colidindo nas rochas e o sol submergindo no horizonte atlântico, ofereceremos uma degustação especial de queijos artesanais fluminenses e espumante brut gelado.`,
-    duration: "3 horas",
+#### Horários:
+- ⏱️ **09h às 13h** — período mais calmo, com pouco movimento na água
+- 🌅 **13h30 às 17h30** — passeio com pôr do sol na lagoa
+Ambos com 4 horas de navegação a bordo de lancha, com máximo conforto.
+
+#### Incluso no Passeio:
+- 🥤 Água, 🍹 Suco e 🥤 Refrigerante.
+
+#### Day Use na Pousada 😍
+Após o passeio, aproveite nossa estrutura completa na pousada parceira:
+- 🍽️ **Almoço Self-Service** (sem balança)
+- 🚿 **Ducha exclusiva**
+- 🏊 **Piscina**
+Relaxe, curta o dia e finalize sua experiência com conforto absoluto!`,
+    duration: "4 horas",
+    capacity: 12,
+    priceFrom: 290,
+    included: [
+      "Bebidas à vontade (Água, Suco, Refrigerante)",
+      "Navegação exclusiva em lancha confortável",
+      "Day Use em pousada parceira pós-passeio",
+      "Almoço Self-Service liberado (sem balança) na pousada",
+      "Uso de piscina e ducha exclusiva na pousada"
+    ],
+    notIncluded: [
+      "Aluguel de Jet Ski"
+    ],
+    meetingPoint: "Canal de Cabo Frio / Pousada Parceira, Cabo Frio",
+    coordinates: { lat: -22.8784, lng: -42.0191 },
+    photos: [],
+    status: "active",
+    featured: true,
+    badge: "mais-vendido",
+    location: "Cabo Frio",
+    departureCity: "Cabo Frio RJ",
+    minAge: "2 anos",
+    maxAge: "65 anos",
+    schedules: ["09:00", "13:30"],
+    itinerary: [
+      "Praia do Forte 🌊: Linda vista panorâmica de uma das praias urbanas mais famosas.",
+      "Ilha dos Papagaios 🦜: Parada perfeita para banho de mar e flutuação em águas límpidas.",
+      "Ilha do Japonês 🏝️: O coração ecológico e raso da lagoa de Cabo Frio.",
+      "Enseada da Carolina ✨: Parada charmosa com águas calmas e límpidas.",
+      "Pedra da Baleia 🐋: Formação rochosa curiosa de Cabo Frio.",
+      "Praia Brava 🌊: Cenário rústico e ondas exuberantes.",
+      "Bairro Histórico da Passagem 🏘️: Vista do canal margeando a rica arquitetura colonial.",
+      "Anjo Caído 😇: Monumento de passagem turística clássica no meio do canal.",
+      "Forte São Matheus 🏰: O forte histórico que guarda a entrada do porto antigo."
+    ],
+    faqs: [],
+    createdAt: "2026-06-25T12:00:00-03:00",
+    updatedAt: "2026-06-25T12:00:00-03:00"
+  },
+  {
+    id: "quadriciclo-arraial",
+    name: "Descubra Arraial do Cabo de Quadriciclo: Uma Aventura Off-Road Inesquecível!",
+    slug: "passeio-quadriciclo-arraial",
+    category: ExperienceCategory.OFF_ROAD,
+    shortDescription: "Uma emocionante aventura de quadriciclo off-road pelos cenários mais deslumbrantes, trilhas ecológicas e pontos históricos de Arraial do Cabo.",
+    fullDescription: `### Sobre o Passeio
+Viva uma emocionante aventura de quadriciclo off-road pelos cenários mais deslumbrantes, trilhas ecológicas e pontos históricos de Arraial do Cabo. Uma experiência perfeita para os amantes de adrenalina e natureza!
+
+Sinta a liberdade de pilotar seu próprio quadriciclo por rotas exclusivas que mostram as dunas, lagoas e praias deslumbrantes da península.`,
+    duration: "2h30",
     capacity: 10,
+    priceFrom: 180,
+    included: [
+      "Uso de quadriciclo moderno de alta cilindrada",
+      "Guia local experiente que acompanha durante todo o trajeto",
+      "Capacete e equipamentos de segurança individuais",
+      "Treinamento básico antes da partida"
+    ],
+    notIncluded: [
+      "Fotos profissionais adicionais"
+    ],
+    meetingPoint: "Base de quadriciclos de Arraial do Cabo",
+    coordinates: { lat: -22.9642, lng: -42.0298 },
+    photos: [],
+    status: "active",
+    featured: false,
+    badge: "",
+    location: "Arraial do Cabo",
+    departureCity: "Arraial do Cabo RJ",
+    minAge: "12 anos",
+    maxAge: "65 anos",
+    schedules: ["09:00", "12:00", "15:00"],
+    itinerary: [
+      "Pedreira: Início do passeio em um cenário deslumbrante, com formações rochosas impressionantes e vista panorâmica.",
+      "Lagoa Rosada: Uma parada em um verdadeiro paraíso natural com águas de tons rosados encantadores.",
+      "Trilhas das Salinas: Aventura por uma das trilhas mais icônicas, com paisagens marcantes das antigas salinas.",
+      "Pórtico: Registro fotográfico clássico no ponto de boas-vindas da cidade.",
+      "Trilhas do Pórtico: Caminhos cercados por vegetação exuberante de restinga e contato direto com a natureza.",
+      "Caminho das Árvores: Uma trilha encantadora com árvores formando um lindo túnel natural.",
+      "Trilha da Praia Grande: Trajeto panorâmico com paisagens de tirar o fôlego da icônica Praia Grande.",
+      "Deserto da Praia Grande: Encerramento espetacular onde o deserto de areias brancas se funde ao oceano azul."
+    ],
+    faqs: [],
+    createdAt: "2026-06-25T12:00:00-03:00",
+    updatedAt: "2026-06-25T12:00:00-03:00"
+  },
+  {
+    id: "buggy-arraial-novo",
+    name: "Descubra Arraial do Cabo de Buggy: Uma Aventura Off-Road Inesquecível!",
+    slug: "passeio-buggy-arraial-novo",
+    category: ExperienceCategory.OFF_ROAD,
+    shortDescription: "Descubra a beleza de Arraial do Cabo com nosso exclusivo passeio de buggy! Uma aventura emocionante que combina paisagens deslumbrantes.",
+    fullDescription: `### Sobre o Passeio
+Descubra a beleza de Arraial do Cabo com nosso exclusivo passeio de buggy! Prepare-se para uma aventura emocionante que combina paisagens deslumbrantes, praias paradisíacas e momentos inesquecíveis.
+
+Nosso passeio de buggy oferece paradas estratégicas em pontos icônicos de Arraial, como a Prainha, Praia do Pontal, Lagoa Vermelha e muito mais. Com duração de 2 horas e 30 minutos, você terá tempo de sobra para mergulhar nas águas cristalinas e capturar fotos incríveis, tudo com a comodidade de um guia experiente e fotos inclusas no pacote.
+
+Escolha entre nossos horários de saída ao longo do dia e finalize a experiência com o pôr do sol espetacular, caso opte pelo último horário. Valores acessíveis para grupos de até 4 pessoas. Faça sua reserva e viva a emoção de explorar Arraial do Cabo de uma maneira única e cheia de estilo!
+
+🌟 **Destaques da Viagem:**
+- 📸 **Fotos Inclusas**
+- 🗺️ **O Melhor Roteiro**
+- 🎢 **Diversão Garantida!**`,
+    duration: "2h30",
+    capacity: 4,
     priceFrom: 160,
     included: [
-      "Mochileiro Guia Cultural especializado",
-      "Cesta de piquenique gourmet (queijos locais, pães de fermentação natural)",
-      "Garrafa de Espumante Brut (para cada 2 pessoas)",
-      "Taças de acrílico premium reutilizáveis de brinde"
+      "Buggy privativo limpo e higienizado",
+      "Piloto/Guia credenciado local",
+      "Combustível do veículo incluso",
+      "Serviço de fotografia digital com as fotos inclusas"
     ],
     notIncluded: [
-      "Buggy ou veículo particular de trânsito",
-      "Calçados próprios de caminhada (recomenda-se tênis)"
+      "Alimentação e bebidas"
     ],
-    meetingPoint: "Guarita de Segurança do Pontal do Atalaia",
-    coordinates: { lat: -22.9818, lng: -42.0195 },
-    photos: [
-      "https://images.unsplash.com/photo-1472289065668-ce650ac443d2?auto=format&fit=crop&w=1200&q=80",
-      "https://images.unsplash.com/photo-1510798831971-661eb04b3739?auto=format&fit=crop&w=1200&q=80"
-    ],
-    videoEmbed: "",
-    whatsappMessage: "Olá! Desejo reservar o Sunset Curado no Pontal do Atalaia.",
+    meetingPoint: "Embarque na pousada do cliente em Arraial do Cabo",
+    coordinates: { lat: -22.9642, lng: -42.0298 },
+    photos: [],
     status: "active",
-    featured: false,
-    badge: "",
+    featured: true,
+    badge: "mais-vendido",
     location: "Arraial do Cabo",
-    schedules: ["16:00"],
-    recommendations: ["gourmet-praia-dos-anjos", "buggy-massambaba"],
-    faqs: [
-      { question: "O piquenique é privativo?", answer: "Sim! Montamos uma mesa/lounge privativa para casais ou pequenos grupos em pontos reservados e afastados do trânsito na colina." }
+    departureCity: "Arraial do Cabo RJ",
+    minAge: "7 anos",
+    maxAge: "65 anos",
+    schedules: ["09:00", "12:00", "15:00", "16:30"],
+    itinerary: [
+      "Prainha: Um paraíso com águas cristalinas e areia branca, ideal para um mergulho refrescante.",
+      "Praia do Pontal: Uma praia tranquila e pouco explorada com um visual encantador.",
+      "Curvinha: Um ponto especial com uma vista privilegiada para belos registros.",
+      "Lagoa Vermelha: Famosa por sua coloração única, ótima para contemplação.",
+      "Pórtico da Cidade: Parada clássica no cartão de boas-vindas da cidade.",
+      "Praia Grande: Longa faixa de areia branca e mar azul intenso, ideal para curtir o pôr do sol."
     ],
-    seo: {
-      metaTitle: "Pôr do Sol no Pontal do Atalaia com Espumante | Guida Trips",
-      metaDescription: "Um piquenique gourmet exclusivo no pôr do sol mais espetacular de Arraial do Cabo. Trilha histórica, brinde luxuoso e vista dinâmica incrível.",
-      keywords: ["pontal do atalaia por do sol", "piquenique arraial", "turismo historico", "sunset rj"]
-    },
-    createdAt: "2026-06-20T12:00:00-03:00",
-    updatedAt: "2026-06-20T12:00:00-03:00"
+    faqs: [],
+    createdAt: "2026-06-25T12:00:00-03:00",
+    updatedAt: "2026-06-25T12:00:00-03:00"
   },
   {
-    id: "gourmet-praia-dos-anjos",
-    name: "Jantar Curado à Luz de Velas — Praia dos Anjos",
-    slug: "jantar-curado-luz-de-velas-praia-anjos",
-    category: ExperienceCategory.GASTRONOMIA,
-    shortDescription: "Menu degustação focado em frutos do mar grelhados com pescaria sustentável do dia, sob o céu estrelado.",
-    fullDescription: `### O Mar servido no seu prato
+    id: "mergulho-batismo-novo",
+    name: "Mergulho de Batismo em Arraial do Cabo",
+    slug: "mergulho-batismo-arraial-novo",
+    category: ExperienceCategory.NAUTICO,
+    shortDescription: "Prepare-se para uma experiência inesquecível! Descubra o paraíso submerso de Arraial do Cabo em um mergulho guiado com total segurança.",
+    fullDescription: `### Sobre o Passeio
+Prepare-se para uma experiência inesquecível! Nosso Mergulho de Batismo é a oportunidade perfeita para explorar as incríveis belezas subaquáticas de Arraial do Cabo, mesmo sem experiência prévia. Guiado por um instrutor profissional, você mergulhará em águas cristalinas, conhecendo a rica vida marinha da região com total segurança e conforto.
 
-A gastronomia da Região dos Lagos transcende o clássico peixe frito com batata. Unindo a pescaria artesanal local com técnicas refinadas da cozinha ibero-americana, criamos uma experiência acolhedora, intimista e profundamente aromática.
+Com duração de 30 minutos submerso e profundidade de até 10 metros, o passeio inclui todos os equipamentos necessários, como máscara, cilindro, colete equilibrador, roupa de neoprene e nadadeiras. Para tornar o momento ainda mais especial, oferecemos serviços opcionais de fotografia e vídeo subaquáticos, capturando cada detalhe da sua aventura.
 
-Montamos uma mesa privativa diretamente na areia ou no deck de madeira de um bistrô parceiro secreto na areia da Praia dos Anjos, perfeitamente isolada e decorada com velas aromáticas e iluminação quente minimalista.
+A embarcação é espaçosa e confortável, com dois andares — um convés principal e um deck panorâmico — garantindo uma experiência relaxante antes e depois do mergulho. Além disso, o embarque é direto no píer principal da cidade, evitando filas e garantindo sua comodidade.
 
-#### O Menu da Noite:
-- **Entrada**: Ceviche de Peixe Branco da Ressurgência marinado no limão galego com raspas de tangerina e pimenta de cheiro local.
-- **Prato Principal**: Lula gigante de Arraial grelhada na brasa acompanhada de risoto cremoso de limão siciliano e castanha de caju crocante.
-- **Sobremesa**: Mousse aerada de maracujá da restinga com calda de chocolate meio amargo e sal marinho.`,
-    duration: "2h30",
-    capacity: 6,
-    priceFrom: 195,
+Descubra o paraíso submerso com o suporte da renomada operadora AquaWorld e leve para casa memórias incríveis desse passeio único. Reserve agora e viva a magia de Arraial do Cabo de um jeito que você nunca imaginou!`,
+    duration: "3 horas",
+    capacity: 12,
+    priceFrom: 290,
     included: [
-      "Menu degustação de 3 etapas completo",
-      "Mesa decorada privativa",
-      "Sommelier local sugerindo harmonização",
-      "Água e welcome drink artesanal"
+      "Equipamento de mergulho completo (máscara, cilindro, colete, neoprene, nadadeiras)",
+      "Instrução profissional individual por instrutor credenciado",
+      "Duração de 30 minutos submerso (até 10 metros de profundidade)",
+      "Embarcação ampla com deck de dois andares"
     ],
     notIncluded: [
-      "Vinhos e espumantes adicionais consumidos",
-      "Taxa de serviço padrão da cozinha"
+      "Serviços de foto e vídeo subaquáticos opcionais"
     ],
-    meetingPoint: "Orla da Praia dos Anjos, Cabo Frio/Arraial",
-    coordinates: { lat: -22.9698, lng: -42.0232 },
-    photos: [
-      "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=1200&q=80",
-      "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?auto=format&fit=crop&w=1200&q=80"
-    ],
-    videoEmbed: "",
-    whatsappMessage: "Olá! Desejo reservar o Jantar à Luz de Velas na Praia dos Anjos.",
+    meetingPoint: "Píer principal de Arraial do Cabo, Praia dos Anjos",
+    coordinates: { lat: -22.9720, lng: -42.0250 },
+    photos: [],
     status: "active",
     featured: false,
     badge: "",
     location: "Arraial do Cabo",
-    schedules: ["19:30", "21:00"],
-    recommendations: ["sunset-pontal-cultural", "passeio-barco-premium"],
-    faqs: [
-      { question: "Há alternativas vegetarianas?", answer: "Sim, oferecemos opções como carpaccio de abobrinha defumada e massa fresca artesanal com molho de cogumelos locais. Nos informe na reserva." }
+    departureCity: "Arraial do Cabo RJ",
+    minAge: "10 anos",
+    maxAge: "65 anos",
+    schedules: ["08:00", "11:00", "14:00"],
+    itinerary: [
+      "Instrução Inicial: Aula rápida sobre os sinais básicos, respiração e funcionamento do equipamento.",
+      "Navegação até o Ponto: Passeio confortável de barco até o local ideal de mergulho selecionado no dia.",
+      "Adaptação na Água: Respiração e flutuação inicial assistida pelo instrutor na superfície.",
+      "Mergulho de Batismo (30 min): Descida lenta e assistida até no máximo 10 metros para fitar cardumes, tartarugas e corais."
     ],
-    seo: {
-      metaTitle: "Jantar à Luz de Velas em Arraial do Cabo | Guida Trips",
-      metaDescription: "Vivencie um jantar gourmet exclusivo com frutos do mar grelhados e pescaria do dia na Praia dos Anjos. Mesa decorada privativa com menus de 3 etapas.",
-      keywords: ["jantar romantico arraial", "restaurante praia dos anjos", "onde comer arraial do cabo", "frutos do mar rj"]
-    },
-    createdAt: "2026-06-20T12:00:00-03:00",
-    updatedAt: "2026-06-20T12:00:00-03:00"
+    faqs: [],
+    createdAt: "2026-06-25T12:00:00-03:00",
+    updatedAt: "2026-06-25T12:00:00-03:00"
   }
 ];
 

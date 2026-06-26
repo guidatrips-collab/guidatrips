@@ -623,6 +623,39 @@ export default function AdminView({
                         className="w-full bg-[#0D1B2A] border border-white/5 p-3 text-xs text-white"
                       />
                     </div>
+                    <div className="space-y-1.5">
+                      <label className="font-accent text-[9px] text-[#ffefe6]/90 tracking-widest uppercase">Cidade de Partida (Ex: Cabo Frio RJ)</label>
+                      <input
+                        type="text"
+                        placeholder="Ex: Cabo Frio RJ"
+                        value={editingExperience.departureCity || ""}
+                        onChange={(e) => setEditingExperience({ ...editingExperience, departureCity: e.target.value })}
+                        className="w-full bg-[#0D1B2A] border border-white/5 p-3 text-xs text-white"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    <div className="space-y-1.5">
+                      <label className="font-accent text-[9px] text-[#ffefe6]/90 tracking-widest uppercase">Idade Mínima (Ex: 2 anos)</label>
+                      <input
+                        type="text"
+                        placeholder="Ex: 2 anos"
+                        value={editingExperience.minAge || ""}
+                        onChange={(e) => setEditingExperience({ ...editingExperience, minAge: e.target.value })}
+                        className="w-full bg-[#0D1B2A] border border-white/5 p-3 text-xs text-white"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="font-accent text-[9px] text-[#ffefe6]/90 tracking-widest uppercase">Idade Máxima (Ex: 65 anos)</label>
+                      <input
+                        type="text"
+                        placeholder="Ex: 65 anos"
+                        value={editingExperience.maxAge || ""}
+                        onChange={(e) => setEditingExperience({ ...editingExperience, maxAge: e.target.value })}
+                        className="w-full bg-[#0D1B2A] border border-white/5 p-3 text-xs text-white"
+                      />
+                    </div>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
@@ -891,6 +924,17 @@ export default function AdminView({
                         className="w-full bg-[#0D1B2A] border border-white/5 p-3 text-xs text-white"
                       />
                     </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="font-accent text-[9px] text-[#ffefe6]/90 tracking-widest uppercase">Roteiro Completo (Título do Ponto: Descrição - Um por linha)</label>
+                    <textarea
+                      rows={6}
+                      placeholder="Ex: Praia do Forte 🌊: Linda vista panorâmica da praia.&#10;Ilha dos Papagaios 🦜: Parada perfeita para banho de mar."
+                      value={(editingExperience.itinerary || []).join("\n")}
+                      onChange={(e) => setEditingExperience({ ...editingExperience, itinerary: e.target.value.split("\n").filter(Boolean) })}
+                      className="w-full bg-[#0D1B2A] border border-white/5 p-3 text-xs text-white font-sans"
+                    />
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">

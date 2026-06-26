@@ -445,7 +445,7 @@ export default function ExperiencesView({
                   {/* Hero image of the Tour */}
                   <div className="relative h-64 sm:h-[400px] overflow-hidden rounded-2xl border border-white/5 select-none">
                     <img 
-                      src={activeExperience.photos[0]} 
+                      src={activeExperience.photos && activeExperience.photos.length > 0 ? activeExperience.photos[0] : "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80"} 
                       alt={activeExperience.name} 
                       className="w-full h-full object-cover"
                     />
@@ -455,7 +455,7 @@ export default function ExperiencesView({
                   </div>
 
                   {/* Gallery Thumbs */}
-                  {activeExperience.photos.length > 1 && (
+                  {activeExperience.photos && activeExperience.photos.length > 1 && (
                     <div className="grid grid-cols-4 gap-2">
                       {activeExperience.photos.slice(1).map((pic, i) => (
                         <div key={i} className="h-16 sm:h-20 overflow-hidden rounded-xl border border-white/5 bg-[#101F33]">
@@ -476,7 +476,6 @@ export default function ExperiencesView({
                     </div>
                   )}
 
-                  {/* Interactive Embedded Video */}
                   {activeExperience.videoEmbed && (
                     <div className="space-y-2">
                       <span className="font-accent text-[9px] text-[#8A96A3] tracking-widest uppercase block font-bold">Registro em Vídeo</span>
@@ -491,6 +490,29 @@ export default function ExperiencesView({
                     </div>
                   )}
 
+                  {/* Tour Metadata Specs (Departure City, Age limits, Duration) */}
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 bg-[#101F33]/30 border border-white/5 p-4 rounded-2xl pt-4">
+                    {activeExperience.departureCity && (
+                      <div className="text-left">
+                        <span className="font-accent text-[8px] sm:text-[9px] text-[#8A96A3] tracking-widest uppercase block font-bold">Partida</span>
+                        <span className="font-sans text-xs sm:text-sm text-[#F4EFE6] font-semibold">{activeExperience.departureCity}</span>
+                      </div>
+                    )}
+                    {(activeExperience.minAge || activeExperience.maxAge) && (
+                      <div className="text-left">
+                        <span className="font-accent text-[8px] sm:text-[9px] text-[#8A96A3] tracking-widest uppercase block font-bold">Faixa Etária</span>
+                        <span className="font-sans text-xs sm:text-sm text-[#F4EFE6] font-semibold">
+                          {activeExperience.minAge ? `${activeExperience.minAge}` : "Livre"}
+                          {activeExperience.maxAge ? ` até ${activeExperience.maxAge}` : ""}
+                        </span>
+                      </div>
+                    )}
+                    <div className="text-left">
+                      <span className="font-accent text-[8px] sm:text-[9px] text-[#8A96A3] tracking-widest uppercase block font-bold">Duração</span>
+                      <span className="font-sans text-xs sm:text-sm text-[#F4EFE6] font-semibold">{activeExperience.duration}</span>
+                    </div>
+                  </div>
+
                   {/* Full Description text */}
                   <div className="space-y-4 pt-2">
                     <h3 className="font-serif text-xl font-bold text-[#F4EFE6] border-b border-white/5 pb-2">Sobre este passeio</h3>
@@ -498,6 +520,28 @@ export default function ExperiencesView({
                       {activeExperience.fullDescription}
                     </p>
                   </div>
+
+                  {/* Itinerary (Roteiro) section */}
+                  {activeExperience.itinerary && activeExperience.itinerary.length > 0 && (
+                    <div className="space-y-4 pt-4 border-t border-white/5">
+                      <h3 className="font-serif text-lg font-bold text-[#F4EFE6] pb-1">📍 Roteiro Completo</h3>
+                      <div className="relative pl-6 space-y-6 before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-[2px] before:bg-[#E8711A]/20">
+                        {activeExperience.itinerary.map((step, idx) => {
+                          const [title, ...descParts] = step.split(":");
+                          const desc = descParts.join(":");
+                          return (
+                            <div key={idx} className="relative">
+                              <div className="absolute -left-[20px] top-1 w-3 h-3 rounded-full bg-[#E8711A] border-4 border-[#0D1B2A] z-10" />
+                              <div className="text-left">
+                                <h4 className="font-sans text-xs sm:text-sm font-bold text-[#F4EFE6]">{title || step}</h4>
+                                {desc && <p className="font-sans text-xs text-zinc-400 mt-1">{desc.trim()}</p>}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
 
                   {/* Inclusions / Exclusions Tiles */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-4">
@@ -616,7 +660,11 @@ export default function ExperiencesView({
                             >
                               <div className="flex items-center gap-3 min-w-0">
                                 <div className="h-12 w-12 shrink-0 bg-[#0A131F] rounded-xl overflow-hidden border border-white/10">
-                                  <img src={recExp.photos[0]} alt={recExp.name} className="h-full w-full object-cover" />
+                                  <img 
+                                    src={recExp.photos && recExp.photos.length > 0 ? recExp.photos[0] : "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=100&q=80"} 
+                                    alt={recExp.name} 
+                                    className="h-full w-full object-cover" 
+                                  />
                                 </div>
                                 <div className="text-left min-w-0">
                                   <h4 className="font-serif text-xs font-bold text-[#F4EFE6] line-clamp-1">{recExp.name}</h4>

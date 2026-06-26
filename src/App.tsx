@@ -113,13 +113,32 @@ export default function App() {
     // 2. Async Cloud Firestore Sync (Seed & Load)
     const syncFirestore = async () => {
       try {
-        // A. Seed collections if empty
+        // A. Check for old default experiences to perform a automatic migration/reset
+        let dbExps = await firestoreService.getAll<Experience>("experiences");
+        const containsOld = dbExps.some(e => e.id === "passeio-barco-premium");
+        if (containsOld) {
+          console.log("Old experiences detected. Migrating database to the new 7 tours...");
+          // Delete all old ones
+          for (const exp of dbExps) {
+            await firestoreService.delete("experiences", exp.id);
+          }
+          // Seed the new ones
+          for (const newExp of INITIAL_EXPERIENCES) {
+            await firestoreService.set("experiences", newExp.id, newExp);
+          }
+          // Re-fetch
+          dbExps = await firestoreService.getAll<Experience>("experiences");
+        }
+
+        // B. Seed collections if empty
         await firestoreService.seedCollection("experiences", INITIAL_EXPERIENCES);
         await firestoreService.seedCollection("posts", INITIAL_BLOG_POSTS);
         await firestoreService.seedCollection("leads", INITIAL_LEADS);
 
-        // B. Fetch real database items
-        const dbExps = await firestoreService.getAll<Experience>("experiences");
+        // C. Fetch real database items
+        if (dbExps.length === 0) {
+          dbExps = await firestoreService.getAll<Experience>("experiences");
+        }
         if (dbExps && dbExps.length > 0) {
           setExperiences(dbExps);
           localStorage.setItem("guidatrips_experiences", JSON.stringify(dbExps));
@@ -980,7 +999,11 @@ export default function App() {
                           >
                             <div className="flex items-center gap-2.5">
                               <div className="h-10 w-10 shrink-0 bg-zinc-200 rounded overflow-hidden">
-                                <img src={recExp.photos[0]} alt={recExp.name} className="h-full w-full object-cover" />
+                                <img 
+                                  src={recExp.photos && recExp.photos.length > 0 ? recExp.photos[0] : "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=100&q=80"} 
+                                  alt={recExp.name} 
+                                  className="h-full w-full object-cover" 
+                                />
                               </div>
                               <div>
                                 <h4 className="font-serif text-[11px] font-bold text-[#0D1B2A] line-clamp-1">{recExp.name}</h4>
