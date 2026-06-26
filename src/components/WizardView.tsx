@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { Experience, BookingCartItem } from "../types";
 import { firestoreService } from "../firebase";
+import ExperienceMediaGallery from "./ExperienceMediaGallery";
 
 interface WizardViewProps {
   experiences: Experience[];
@@ -1458,41 +1459,12 @@ export default function WizardView({
                         >
                           {/* Left Column: Elegant Large Experience Image */}
                           <div className="md:col-span-5 relative aspect-[16/10] sm:aspect-[4/3] rounded-2xl overflow-hidden border border-zinc-200/50 bg-zinc-100 group select-none">
-                            {exp.photos && exp.photos.length > 0 ? (
-                              <img 
-                                src={exp.photos[activePhotoIndex]} 
-                                alt={exp.name} 
-                                referrerPolicy="no-referrer"
-                                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-103"
-                              />
-                            ) : (
-                              <div className="w-full h-full bg-zinc-200 flex items-center justify-center text-xs">Sem Fotos</div>
-                            )}
+                            <ExperienceMediaGallery experience={exp} className="w-full h-full" />
 
                             {exp.badge && (
-                              <span className="absolute top-3 left-3 bg-[#E8711A] text-white text-[8px] font-black uppercase tracking-wider px-2.5 py-1 rounded-md shadow-sm">
+                              <span className="absolute top-3 left-3 bg-[#E8711A] text-white text-[8px] font-black uppercase tracking-wider px-2.5 py-1 rounded-md shadow-sm z-10">
                                 {exp.badge === "mais-vendido" ? "🏆 Campeão de Vendas" : exp.badge}
                               </span>
-                            )}
-
-                            {/* Discrete image carousels */}
-                            {exp.photos && exp.photos.length > 1 && (
-                              <>
-                                <button
-                                  type="button"
-                                  onClick={() => prevExpPhoto(exp.id, exp.photos.length)}
-                                  className="absolute left-2.5 top-1/2 -translate-y-1/2 p-1 bg-white/95 text-zinc-700 hover:text-[#E8711A] rounded-full shadow cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity"
-                                >
-                                  <ChevronLeft className="w-4 h-4" />
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => nextExpPhoto(exp.id, exp.photos.length)}
-                                  className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 bg-white/95 text-zinc-700 hover:text-[#E8711A] rounded-full shadow cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity"
-                                >
-                                  <ChevronRight className="w-4 h-4" />
-                                </button>
-                              </>
                             )}
                           </div>
 

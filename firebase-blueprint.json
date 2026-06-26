@@ -74,6 +74,34 @@
         "diferencialTitle": "string",
         "diferencialDescription": "string"
       }
+    },
+    "users": {
+      "schema": {
+        "id": "string",
+        "name": "string",
+        "email": "string",
+        "password": "string",
+        "phone": "string",
+        "photoUrl": "string",
+        "preferences": "array",
+        "favorites": "array",
+        "createdAt": "string"
+      }
+    },
+    "reservations": {
+      "schema": {
+        "id": "string",
+        "userId": "string",
+        "experienceId": "string",
+        "date": "string",
+        "schedule": "string",
+        "adults": "number",
+        "children": "number",
+        "infants": "number",
+        "totalPrice": "number",
+        "status": "string",
+        "createdAt": "string"
+      }
     }
   }
 }

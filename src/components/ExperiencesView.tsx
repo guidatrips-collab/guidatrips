@@ -7,6 +7,7 @@ import {
 import { Experience, ExperienceCategory, BookingCartItem, GlobalSettings, ClientReservation, ClientUser } from "../types";
 import { motion, AnimatePresence } from "motion/react";
 import { firestoreService } from "../firebase";
+import ExperienceMediaGallery from "./ExperienceMediaGallery";
 
 interface ExperiencesViewProps {
   experiences: Experience[];
@@ -354,16 +355,11 @@ export default function ExperiencesView({
                 >
                   {/* Card Cover */}
                   <div className="relative h-60 overflow-hidden select-none">
-                    <img 
-                      src={exp.photos[0] || "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=600&q=80"} 
-                      alt={exp.name} 
-                      className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-500"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent"></div>
+                    <ExperienceMediaGallery experience={exp} className="w-full h-full" />
                     
                     {/* Badge */}
                     {exp.badge && (
-                      <span className="absolute top-4 left-4 font-accent text-[8px] font-black tracking-widest text-white bg-[#E8711A] px-3 py-1 uppercase rounded-md shadow-md">
+                      <span className="absolute top-4 left-4 font-accent text-[8px] font-black tracking-widest text-white bg-[#E8711A] px-3 py-1 uppercase rounded-md shadow-md z-10">
                         {exp.badge === "mais-vendido" && "🔥 MAIS VENDIDO"}
                         {exp.badge === "novidade" && "✨ NOVIDADE"}
                         {exp.badge === "temporada" && "🐋 TEMPORADA"}
@@ -371,7 +367,7 @@ export default function ExperiencesView({
                     )}
 
                     {/* Location Tag */}
-                    <span className="absolute bottom-4 right-4 font-accent text-[9px] font-bold tracking-widest text-zinc-800 bg-white/95 border border-zinc-200 px-2.5 py-1 uppercase rounded-md shadow-sm">
+                    <span className="absolute bottom-4 right-4 font-accent text-[9px] font-bold tracking-widest text-zinc-800 bg-white/95 border border-zinc-200 px-2.5 py-1 uppercase rounded-md shadow-sm z-10">
                       📍 {exp.location || "Arraial"}
                     </span>
                   </div>

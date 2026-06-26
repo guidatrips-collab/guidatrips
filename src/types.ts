@@ -11,6 +11,13 @@ export enum ExperienceCategory {
   TEMPORADA = "temporada",
 }
 
+export interface MediaItem {
+  id: string;
+  type: "image" | "video" | "video_vertical" | "video_institutional" | "image_360";
+  url: string;
+  title?: string;
+}
+
 export interface Experience {
   id: string;
   name: string;
@@ -26,6 +33,7 @@ export interface Experience {
   meetingPoint: string;
   coordinates: { lat: number; lng: number };
   photos: string[];
+  mediaGallery?: MediaItem[];
   videoEmbed?: string;
   highlights?: string[];
   bringItems?: string[];
