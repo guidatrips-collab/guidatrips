@@ -11,15 +11,15 @@ import {
   writeBatch
 } from "firebase/firestore";
 
-// Config parsed directly from the applet environment setup
+// Config parsed directly from the applet environment setup with optional dynamic overrides for Vercel production
 const firebaseConfig = {
-  projectId: "gen-lang-client-0699053288",
-  appId: "1:776287510967:web:e2643d5aa8d536ba5d0832",
-  apiKey: "AIzaSyDiIai1sIDytAmk_gkFrtCFw4Cq-UxjiPU",
-  authDomain: "gen-lang-client-0699053288.firebaseapp.com",
-  firestoreDatabaseId: "ai-studio-3ffc4164-e99b-4272-8cb6-23ffc6b63f1d",
-  storageBucket: "gen-lang-client-0699053288.firebasestorage.app",
-  messagingSenderId: "776287510967"
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "gen-lang-client-0699053288",
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:776287510967:web:e2643d5aa8d536ba5d0832",
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyDiIai1sIDytAmk_gkFrtCFw4Cq-UxjiPU",
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "gen-lang-client-0699053288.firebaseapp.com",
+  firestoreDatabaseId: import.meta.env.VITE_FIREBASE_DATABASE_ID || "ai-studio-3ffc4164-e99b-4272-8cb6-23ffc6b63f1d",
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "gen-lang-client-0699053288.firebasestorage.app",
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "776287510967"
 };
 
 // Initialize App
