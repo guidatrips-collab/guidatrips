@@ -11,7 +11,7 @@ import {
   Compass, X, ArrowRight, Home, MessageSquare, Hotel, Trash2, 
   CheckCircle2, Bed, Baby, User, ShieldCheck, Map
 } from "lucide-react";
-import { Experience, BookingCartItem } from "../types";
+import { Experience, BookingCartItem, checkSchedulingConflict, getTourScheduleDetails } from "../types";
 import { firestoreService } from "../firebase";
 import ExperienceMediaGallery from "./ExperienceMediaGallery";
 
@@ -106,6 +106,8 @@ export default function WizardView({
     infants: number;
     observations: string;
   }>>({});
+
+  const [cardSchedules, setCardSchedules] = useState<Record<string, string>>({});
 
   // Save Name / City to parent components for CRM leads sync
   const [tempName, setTempName] = useState(clientName || "");
@@ -267,7 +269,7 @@ export default function WizardView({
   const filteredExps = getFilteredExperiences();
 
   // Smart Collision / Combination recommendations for the current day
-  const getSmartRecommendations = (dayNum: number, currentExpId: string) => {
+  const getSmartRecommendations = (dayNum: number, currentExpId: string, currentSchedule?: string) => {
     const dayBookedItems = cart.filter(item => item.dayIndex === dayNum);
     if (dayBookedItems.length === 0) {
       return {
@@ -281,6 +283,39 @@ export default function WizardView({
         allowed: false,
         message: `Você já agendou esta atividade para o Dia ${dayNum}.`
       };
+    }
+
+    // Check conflict using our universal scheduling checker!
+    const targetExp = experiences.find(e => e.id === currentExpId);
+    if (targetExp) {
+      const schedule = currentSchedule || (targetExp.schedules && targetExp.schedules[0]) || "08:00";
+      const today = new Date();
+      today.setDate(today.getDate() + 1);
+      const targetDate = new Date(today);
+      targetDate.setDate(today.getDate() + (dayNum - 1));
+      const computedDate = targetDate.toISOString().split("T")[0];
+
+      const tempItem: BookingCartItem = {
+        experienceId: currentExpId,
+        dayIndex: dayNum,
+        date: computedDate,
+        schedule,
+        adults: 2,
+        children: 0,
+        infants: 0,
+        people: 2,
+        observations: ""
+      };
+
+      for (const existingItem of dayBookedItems) {
+        const conflict = checkSchedulingConflict(tempItem, existingItem, experiences);
+        if (conflict.hasConflict && conflict.reason) {
+          return {
+            allowed: false,
+            message: `⚠️ Conflito: ${conflict.reason}`
+          };
+        }
+      }
     }
 
     if (dayBookedItems.length >= 2) {
@@ -1414,8 +1449,10 @@ export default function WizardView({
                       // Check if already in cart on this specific day
                       const isAlreadyInCart = cart.some(item => item.experienceId === exp.id && item.dayIndex === currentPlanningDay);
                       
+                      const chosenSchedule = cardSchedules[exp.id] || (exp.schedules && exp.schedules.length > 0 ? exp.schedules[0] : "08:00");
+
                       // Collision check feedback message
-                      const feedback = getSmartRecommendations(currentPlanningDay, exp.id);
+                      const feedback = getSmartRecommendations(currentPlanningDay, exp.id, chosenSchedule);
 
                       // Date matching calculation
                       const targetDate = new Date(arrivalDate + "T00:00:00");
@@ -1521,8 +1558,9 @@ export default function WizardView({
                                   Horário de Saída
                                 </span>
                                 <select
+                                  value={chosenSchedule}
+                                  onChange={(e) => setCardSchedules(prev => ({ ...prev, [exp.id]: e.target.value }))}
                                   className="bg-white border border-zinc-200 rounded-lg p-1.5 text-[11px] text-zinc-800 font-bold cursor-pointer focus:outline-none focus:border-[#E8711A]"
-                                  defaultValue={exp.schedules && exp.schedules.length > 0 ? exp.schedules[0] : "08:00"}
                                 >
                                   {(exp.schedules && exp.schedules.length > 0 ? exp.schedules : ["08:00", "13:30"]).map(time => (
                                     <option key={time} value={time}>{time}</option>
@@ -1543,6 +1581,7 @@ export default function WizardView({
                               {/* Primary Add/Remove Button with animations */}
                               <button
                                 type="button"
+                                disabled={!feedback.allowed && !isAlreadyInCart}
                                 onClick={() => {
                                   if (isAlreadyInCart) {
                                     const indexInCart = cart.findIndex(item => item.experienceId === exp.id && item.dayIndex === currentPlanningDay);
@@ -1553,7 +1592,7 @@ export default function WizardView({
                                     onAddToCart({
                                       experienceId: exp.id,
                                       date: targetDateStr,
-                                      schedule: exp.schedules && exp.schedules.length > 0 ? exp.schedules[0] : "08:00",
+                                      schedule: chosenSchedule,
                                       adults: config.adults,
                                       children: config.children,
                                       infants: config.infants,
@@ -1563,10 +1602,12 @@ export default function WizardView({
                                     });
                                   }
                                 }}
-                                className={`w-full text-center py-2.5 rounded-xl text-[10px] font-accent font-black uppercase tracking-wider transition-all duration-200 cursor-pointer ${
+                                className={`w-full text-center py-2.5 rounded-xl text-[10px] font-accent font-black uppercase tracking-wider transition-all duration-200 ${
                                   isAlreadyInCart
-                                    ? "bg-emerald-600 text-white hover:bg-rose-600 hover:text-white flex items-center justify-center gap-1.5"
-                                    : "bg-[#0D1B2A] text-white hover:bg-[#E8711A] hover:text-[#0D1B2A] shadow-xs active:scale-99"
+                                    ? "bg-emerald-600 text-white hover:bg-rose-600 hover:text-white flex items-center justify-center gap-1.5 cursor-pointer"
+                                    : !feedback.allowed
+                                      ? "bg-zinc-200 text-zinc-400 cursor-not-allowed opacity-60"
+                                      : "bg-[#0D1B2A] text-white hover:bg-[#E8711A] hover:text-[#0D1B2A] shadow-xs active:scale-99 cursor-pointer"
                                 }`}
                               >
                                 {isAlreadyInCart ? (

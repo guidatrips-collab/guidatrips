@@ -4,7 +4,7 @@ import {
   Search, Info, Plus, ChevronLeft, ChevronRight, CreditCard, Shield, 
   Send, Sparkles, CheckCircle, Smartphone, Trash2 
 } from "lucide-react";
-import { Experience, ExperienceCategory, BookingCartItem, GlobalSettings, ClientReservation, ClientUser } from "../types";
+import { Experience, ExperienceCategory, BookingCartItem, GlobalSettings, ClientReservation, ClientUser, checkSchedulingConflict } from "../types";
 import { motion, AnimatePresence } from "motion/react";
 import { firestoreService } from "../firebase";
 import ExperienceMediaGallery from "./ExperienceMediaGallery";
@@ -1307,73 +1307,103 @@ export default function ExperiencesView({
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 15 }}
               transition={{ duration: 0.2, ease: "easeOut" }}
-              className="bg-white border border-zinc-200 rounded-3xl w-full max-w-sm p-6 sm:p-7 space-y-5 text-left shadow-2xl relative"
+              className="bg-white border border-zinc-200 rounded-3xl w-full max-w-md p-6 sm:p-7 space-y-5 text-left shadow-2xl relative"
             >
               <div className="space-y-1">
                 <span className="font-accent text-[9px] text-[#E8711A] font-black tracking-widest uppercase bg-[#E8711A]/8 px-2.5 py-1 rounded-full">
                   Etapa 2: Agendamento do Dia
                 </span>
                 <h3 className="font-serif text-base sm:text-lg font-bold text-[#0D1B2A] pt-1.5 leading-snug">
-                  Em qual dia da viagem você deseja adicionar este passeio?
+                  Em qual dia da viagem deseja incluir este passeio?
                 </h3>
                 <p className="text-xs text-zinc-500">
-                  Status atual do seu planejamento:
+                  Qualquer passeio selecionado respeitará o limite de 1 hora de margem de segurança entre programações:
                 </p>
               </div>
 
-              <div className="space-y-2 max-h-[280px] overflow-y-auto pr-1">
+              <div className="space-y-3.5 max-h-[320px] overflow-y-auto pr-1">
                 {Array.from({ length: stayDays }).map((_, idx) => {
                   const dayNum = idx + 1;
                   const dayItems = cart.filter(item => item.dayIndex === dayNum);
                   const isPlanned = dayItems.length > 0;
 
+                  // Create the temporary item to check for conflicts
+                  const today = new Date();
+                  today.setDate(today.getDate() + 1); // Start from tomorrow
+                  const targetDate = new Date(today);
+                  targetDate.setDate(today.getDate() + (dayNum - 1));
+                  const computedDate = targetDate.toISOString().split("T")[0];
+
+                  const tempItem: BookingCartItem = {
+                    ...pendingCartItem as BookingCartItem,
+                    dayIndex: dayNum,
+                    date: computedDate,
+                  };
+
+                  // Check conflict against existing items of that day
+                  let conflictReason = "";
+                  for (const existingItem of dayItems) {
+                    const conflict = checkSchedulingConflict(tempItem, existingItem, experiences);
+                    if (conflict.hasConflict && conflict.reason) {
+                      conflictReason = conflict.reason;
+                      break;
+                    }
+                  }
+
+                  const hasConflict = !!conflictReason;
+
                   return (
-                    <button
-                      key={dayNum}
-                      type="button"
-                      onClick={() => {
-                        const today = new Date();
-                        today.setDate(today.getDate() + 1); // Start from tomorrow
-                        const targetDate = new Date(today);
-                        targetDate.setDate(today.getDate() + (dayNum - 1));
-                        const computedDate = targetDate.toISOString().split("T")[0];
-
-                        onAddToCart({
-                          ...pendingCartItem as BookingCartItem,
-                          dayIndex: dayNum,
-                          date: computedDate,
-                        });
-
-                        setShowDaySelectionModal(false);
-                        setPendingCartItem(null);
-                        setActiveExperience(null);
-                        onOpenCart();
-                      }}
-                      className="w-full flex items-center justify-between p-3.5 bg-[#FAF8F5] border border-zinc-200 rounded-xl hover:border-[#E8711A] hover:bg-white transition-all duration-200 cursor-pointer text-left focus:outline-none focus:ring-2 focus:ring-[#E8711A]/30"
-                    >
-                      <div className="space-y-0.5">
-                        <span className="font-serif text-sm font-extrabold text-[#0D1B2A]">
-                          Dia {dayNum}
-                        </span>
-                        <span className="text-[10px] text-zinc-500 block">
-                          {isPlanned 
-                            ? `${dayItems.length} passeio${dayItems.length > 1 ? "s" : ""} planejado${dayItems.length > 1 ? "s" : ""}` 
-                            : "Sem passeios agendados"}
-                        </span>
-                      </div>
-
-                      <div>
-                        {isPlanned ? (
-                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-full">
-                            ✅ Planejado
+                    <div key={dayNum} className="space-y-1">
+                      <button
+                        type="button"
+                        disabled={hasConflict}
+                        onClick={() => {
+                          onAddToCart(tempItem);
+                          setShowDaySelectionModal(false);
+                          setPendingCartItem(null);
+                          setActiveExperience(null);
+                          onOpenCart();
+                        }}
+                        className={`w-full flex items-center justify-between p-3.5 border rounded-xl transition-all duration-250 text-left focus:outline-none ${
+                          hasConflict
+                            ? "bg-zinc-50 border-zinc-200 opacity-60 cursor-not-allowed"
+                            : "bg-[#FAF8F5] border-zinc-200 hover:border-[#E8711A] hover:bg-white cursor-pointer hover:shadow-sm focus:ring-2 focus:ring-[#E8711A]/30"
+                        }`}
+                      >
+                        <div className="space-y-0.5">
+                          <span className="font-serif text-sm font-extrabold text-[#0D1B2A]">
+                            Dia {dayNum}
                           </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-zinc-600 bg-zinc-100 border border-zinc-200 px-2 py-0.5 rounded-full">
-                            🟢 Livre
+                          <span className="text-[10px] text-zinc-500 block">
+                            {isPlanned 
+                              ? `${dayItems.length} passeio${dayItems.length > 1 ? "s" : ""} planejado${dayItems.length > 1 ? "s" : ""}` 
+                              : "Sem passeios agendados"}
                           </span>
-                        )}
-                      </div>
-                    </button>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          {hasConflict ? (
+                            <span className="inline-flex items-center gap-1 text-[9px] font-bold text-red-800 bg-red-50 border border-red-150 px-2.5 py-1 rounded-full">
+                              ⚠️ Conflito
+                            </span>
+                          ) : isPlanned ? (
+                            <span className="inline-flex items-center gap-1 text-[9px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-100 px-2.5 py-1 rounded-full">
+                              ✅ Planejado
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 text-[9px] font-bold text-zinc-600 bg-zinc-100 border border-zinc-200 px-2.5 py-1 rounded-full">
+                              🟢 Livre
+                            </span>
+                          )}
+                        </div>
+                      </button>
+                      
+                      {hasConflict && (
+                        <p className="text-[10px] text-red-600 font-medium pl-3 pr-1 leading-normal">
+                          {conflictReason}
+                        </p>
+                      )}
+                    </div>
                   );
                 })}
               </div>
@@ -1385,7 +1415,7 @@ export default function ExperiencesView({
                     setShowDaySelectionModal(false);
                     setPendingCartItem(null);
                   }}
-                  className="w-full py-3 bg-zinc-100 hover:bg-zinc-200 text-[#0D1B2A] font-accent font-black tracking-widest uppercase rounded-xl text-[10px] transition-colors cursor-pointer border border-zinc-200"
+                  className="w-full py-3 bg-zinc-150 hover:bg-zinc-250 text-[#0D1B2A] font-accent font-black tracking-widest uppercase rounded-xl text-[10px] transition-colors cursor-pointer border border-zinc-200"
                 >
                   Voltar aos Detalhes
                 </button>

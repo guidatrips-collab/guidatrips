@@ -298,3 +298,108 @@ export interface ClientReview {
   photos: string[];
   date: string;
 }
+
+export interface TourScheduleDetails {
+  id: string;
+  name: string;
+  checkInMinutesBefore: number;
+  checkInTimeStr: string;
+  departureTimeStr: string;
+  durationMinutes: number;
+  returnTimeStr: string;
+  checkInStartMin: number;
+  departureMin: number;
+  returnMin: number;
+}
+
+export function parseTimeToMinutes(timeStr: string): number {
+  if (!timeStr) return 480; // default 08:00
+  const parts = timeStr.split(":");
+  const h = parseInt(parts[0], 10) || 0;
+  const m = parseInt(parts[1], 10) || 0;
+  return h * 60 + m;
+}
+
+export function minutesToTimeStr(totalMinutes: number): string {
+  const h = Math.floor(totalMinutes / 60) % 24;
+  const m = totalMinutes % 60;
+  return `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}`;
+}
+
+export function getTourScheduleDetails(exp: Experience, scheduleStr: string): TourScheduleDetails {
+  const schedule = scheduleStr || (exp.schedules && exp.schedules[0]) || "08:00";
+  const departureMin = parseTimeToMinutes(schedule);
+  
+  let durationMinutes = 180; // default 3 hours
+  if (exp.duration) {
+    const cleanDur = exp.duration.toLowerCase();
+    if (cleanDur.includes("14")) durationMinutes = 14 * 60;
+    else if (cleanDur.includes("4")) durationMinutes = 4 * 60;
+    else if (cleanDur.includes("3")) durationMinutes = 3 * 60;
+    else if (cleanDur.includes("2h30")) durationMinutes = 150;
+    else if (cleanDur.includes("2.5")) durationMinutes = 150;
+    else if (cleanDur.includes("2")) durationMinutes = 120;
+    else if (cleanDur.includes("5")) durationMinutes = 5 * 60;
+    else if (cleanDur.includes("6")) durationMinutes = 6 * 60;
+  }
+  
+  let checkInMinutesBefore = 30; // default 30 mins
+  if (exp.id.includes("barco") || exp.id.includes("mar") || exp.id.includes("lancha")) {
+    checkInMinutesBefore = 60; // boat tours need 1 hour check-in
+  } else if (exp.id.includes("bate-volta")) {
+    checkInMinutesBefore = 15;
+  }
+  
+  const checkInStartMin = departureMin - checkInMinutesBefore;
+  const returnMin = departureMin + durationMinutes;
+  
+  return {
+    id: exp.id,
+    name: exp.name,
+    checkInMinutesBefore,
+    checkInTimeStr: minutesToTimeStr(checkInStartMin),
+    departureTimeStr: schedule,
+    durationMinutes,
+    returnTimeStr: minutesToTimeStr(returnMin),
+    checkInStartMin,
+    departureMin,
+    returnMin
+  };
+}
+
+export function checkSchedulingConflict(
+  itemA: BookingCartItem,
+  itemB: BookingCartItem,
+  experiences: Experience[]
+): { hasConflict: boolean; reason?: string } {
+  // Only same day/date can conflict
+  if (itemA.dayIndex !== itemB.dayIndex && itemA.date !== itemB.date) {
+    return { hasConflict: false };
+  }
+  
+  const expA = experiences.find(e => e.id === itemA.experienceId);
+  const expB = experiences.find(e => e.id === itemB.experienceId);
+  if (!expA || !expB) return { hasConflict: false };
+  
+  const schedA = getTourScheduleDetails(expA, itemA.schedule);
+  const schedB = getTourScheduleDetails(expB, itemB.schedule);
+  
+  // Determine which is earlier
+  const first = schedA.departureMin <= schedB.departureMin ? schedA : schedB;
+  const second = schedA.departureMin <= schedB.departureMin ? schedB : schedA;
+  
+  const gap = second.checkInStartMin - first.returnMin;
+  
+  if (gap < 60) {
+    const gapMin = gap;
+    let reason = "";
+    if (gapMin < 0) {
+      reason = `O passeio "${first.name}" (termina às ${first.returnTimeStr}) sobrepõe o horário de check-in de "${second.name}" (começa às ${second.checkInTimeStr}).`;
+    } else {
+      reason = `O intervalo entre "${first.name}" (termina às ${first.returnTimeStr}) e o check-in de "${second.name}" (inicia às ${second.checkInTimeStr}) é de apenas ${gapMin} minutos. É necessário pelo menos 1 hora de margem de segurança.`;
+    }
+    return { hasConflict: true, reason };
+  }
+  
+  return { hasConflict: false };
+}

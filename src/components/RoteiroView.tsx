@@ -11,7 +11,7 @@ import {
   ChevronDown, ChevronUp, Star, Gift, Coffee, Sparkles, Users, Info, ArrowUpRight,
   ChevronLeft, ChevronRight
 } from "lucide-react";
-import { BookingCartItem, Experience } from "../types";
+import { BookingCartItem, Experience, checkSchedulingConflict, getTourScheduleDetails } from "../types";
 
 interface RoteiroViewProps {
   cart: BookingCartItem[];
@@ -100,6 +100,11 @@ export default function RoteiroView({
   const [editAdults, setEditAdults] = useState(2);
   const [editChildren, setEditChildren] = useState(0);
   const [editInfants, setEditInfants] = useState(0);
+  const [editConflictError, setEditConflictError] = useState<string | null>(null);
+
+  // Day Selection Modal for suggestions
+  const [showDaySelectionModal, setShowDaySelectionModal] = useState(false);
+  const [pendingCartItem, setPendingCartItem] = useState<Partial<BookingCartItem> | null>(null);
 
   const toggleIntercurso = (id: string) => {
     setExpandedIntercuso(prev => ({ ...prev, [id]: !prev[id] }));
@@ -112,31 +117,14 @@ export default function RoteiroView({
   // Find conflicts
   const findConflicts = () => {
     const conflictsList: string[] = [];
-    const seenDaySchedule = new Map<string, BookingCartItem>(); // key: dayIndex_schedule
-    const seenDateSchedule = new Map<string, BookingCartItem>(); // key: date_schedule
-    
-    cart.forEach((item) => {
-      const exp = experiences.find(e => e.id === item.experienceId);
-      const name = exp ? exp.name : "Passeio";
-      const keyDay = `${item.dayIndex || 1}_${item.schedule}`;
-      const keyDate = `${item.date}_${item.schedule}`;
-      
-      let conflictedItem: BookingCartItem | null = null;
-      if (seenDaySchedule.has(keyDay)) {
-        conflictedItem = seenDaySchedule.get(keyDay)!;
-      } else if (seenDateSchedule.has(keyDate)) {
-        conflictedItem = seenDateSchedule.get(keyDate)!;
+    for (let i = 0; i < cart.length; i++) {
+      for (let j = i + 1; j < cart.length; j++) {
+        const conflict = checkSchedulingConflict(cart[i], cart[j], experiences);
+        if (conflict.hasConflict && conflict.reason) {
+          conflictsList.push(conflict.reason);
+        }
       }
-      
-      if (conflictedItem) {
-        const otherExp = experiences.find(e => e.id === conflictedItem.experienceId);
-        const otherName = otherExp ? otherExp.name : "Outro passeio";
-        conflictsList.push(`⚠️ Atenção: Os passeios "${name}" e "${otherName}" foram agendados para o mesmo dia (Dia ${item.dayIndex || 1}) e horário (${item.schedule}). Sugerimos alterar um deles para evitar sobreposições!`);
-      } else {
-        seenDaySchedule.set(keyDay, item);
-        seenDateSchedule.set(keyDate, item);
-      }
-    });
+    }
     return conflictsList;
   };
 
@@ -736,6 +724,7 @@ export default function RoteiroView({
                                         onClick={() => {
                                           if (editingIndex === actualCartIdx) {
                                             setEditingIndex(null);
+                                            setEditConflictError(null);
                                           } else {
                                             setEditingIndex(actualCartIdx);
                                             setEditDate(item.date);
@@ -743,6 +732,7 @@ export default function RoteiroView({
                                             setEditAdults(item.adults);
                                             setEditChildren(item.children || 0);
                                             setEditInfants(item.infants || 0);
+                                            setEditConflictError(null);
                                           }
                                         }}
                                         className="text-[#E8711A] hover:bg-[#E8711A]/5 border border-[#E8711A]/20 hover:border-[#E8711A] text-[11px] font-bold uppercase tracking-wider px-4 py-2 rounded-full transition-all cursor-pointer font-accent self-start sm:self-center"
@@ -851,16 +841,25 @@ export default function RoteiroView({
                                           </div>
                                         </div>
 
+                                        {editConflictError && (
+                                          <div className="p-3.5 bg-red-50 border border-red-200 text-xs text-red-800 rounded-xl font-medium leading-relaxed">
+                                            {editConflictError}
+                                          </div>
+                                        )}
+
                                         <div className="flex gap-2 justify-end pt-2 text-xs">
                                           <button
                                             type="button"
-                                            onClick={() => setEditingIndex(null)}
+                                            onClick={() => {
+                                              setEditingIndex(null);
+                                              setEditConflictError(null);
+                                            }}
                                             className="px-4 py-2 font-semibold text-zinc-500 bg-white border rounded-xl hover:bg-zinc-50 cursor-pointer"
                                           >Cancelar</button>
                                           <button
                                             type="button"
                                             onClick={() => {
-                                              onSaveEdit(actualCartIdx, {
+                                              const updatedItem = {
                                                 ...item,
                                                 date: editDate,
                                                 schedule: editSchedule,
@@ -868,8 +867,27 @@ export default function RoteiroView({
                                                 children: editChildren,
                                                 infants: editInfants,
                                                 people: editAdults + editChildren + editInfants,
-                                              });
+                                              };
+
+                                              // Check if this updated item conflicts with any other items
+                                              let conflictReason = "";
+                                              for (let i = 0; i < cart.length; i++) {
+                                                if (i === actualCartIdx) continue;
+                                                const conflict = checkSchedulingConflict(updatedItem, cart[i], experiences);
+                                                if (conflict.hasConflict && conflict.reason) {
+                                                  conflictReason = conflict.reason;
+                                                  break;
+                                                }
+                                              }
+
+                                              if (conflictReason) {
+                                                setEditConflictError(conflictReason);
+                                                return;
+                                              }
+
+                                              onSaveEdit(actualCartIdx, updatedItem);
                                               setEditingIndex(null);
+                                              setEditConflictError(null);
                                             }}
                                             className="px-5 py-2 font-bold text-white bg-[#0D1B2A] hover:bg-[#E8711A] hover:text-[#0D1B2A] rounded-xl transition-all cursor-pointer"
                                           >Confirmar Mudanças</button>
@@ -951,23 +969,17 @@ export default function RoteiroView({
                         <button
                           type="button"
                           onClick={() => {
-                            const tmr = new Date();
-                            tmr.setDate(tmr.getDate() + 2);
-                            const yyyy = tmr.getFullYear();
-                            const mm = String(tmr.getMonth() + 1).padStart(2, "0");
-                            const dd = String(tmr.getDate()).padStart(2, "0");
-
-                            onAddToCart({
+                            const defaultSchedule = recExp.schedules && recExp.schedules.length > 0 ? recExp.schedules[0] : "08:00";
+                            setPendingCartItem({
                               experienceId: recExp.id,
-                              date: `${yyyy}-${mm}-${dd}`,
-                              schedule: recExp.schedules && recExp.schedules.length > 0 ? recExp.schedules[0] : "08:00",
+                              schedule: defaultSchedule,
                               adults: 2,
                               children: 0,
                               infants: 0,
                               people: 2,
-                              observations: "Adicionado por indicação de dia livre!",
-                              dayIndex: 1
+                              observations: "Adicionado por indicação do roteiro!"
                             });
+                            setShowDaySelectionModal(true);
                           }}
                           className="w-full text-center py-2 bg-[#0D1B2A] text-white hover:bg-[#E8711A] hover:text-[#0D1B2A] text-[11px] font-semibold rounded-xl transition-colors cursor-pointer"
                         >
@@ -1144,6 +1156,132 @@ export default function RoteiroView({
         )}
 
       </div>
+
+      {/* Day Selection Modal */}
+      <AnimatePresence>
+        {showDaySelectionModal && pendingCartItem && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 15 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 15 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+              className="bg-white border border-zinc-200 rounded-3xl w-full max-w-md p-6 sm:p-7 space-y-5 text-left shadow-2xl relative"
+            >
+              <div className="space-y-1">
+                <span className="font-accent text-[9px] text-[#E8711A] font-black tracking-widest uppercase bg-[#E8711A]/8 px-2.5 py-1 rounded-full">
+                  Agendamento do Dia
+                </span>
+                <h3 className="font-serif text-base sm:text-lg font-bold text-[#0D1B2A] pt-1.5 leading-snug">
+                  Em qual dia da viagem deseja incluir este passeio?
+                </h3>
+                <p className="text-xs text-zinc-500">
+                  Qualquer passeio selecionado respeitará o limite de 1 hora de margem de segurança entre programações:
+                </p>
+              </div>
+
+              <div className="space-y-3.5 max-h-[320px] overflow-y-auto pr-1">
+                {Array.from({ length: stayDays }).map((_, idx) => {
+                  const dayNum = idx + 1;
+                  const dayItems = cart.filter(item => item.dayIndex === dayNum);
+                  const isPlanned = dayItems.length > 0;
+
+                  // Create the temporary item to check for conflicts
+                  const today = new Date();
+                  today.setDate(today.getDate() + 1); // Start from tomorrow
+                  const targetDate = new Date(today);
+                  targetDate.setDate(today.getDate() + (dayNum - 1));
+                  const computedDate = targetDate.toISOString().split("T")[0];
+
+                  const tempItem: BookingCartItem = {
+                    ...pendingCartItem as BookingCartItem,
+                    dayIndex: dayNum,
+                    date: computedDate,
+                  };
+
+                  // Check conflict against existing items of that day
+                  let conflictReason = "";
+                  for (const existingItem of dayItems) {
+                    const conflict = checkSchedulingConflict(tempItem, existingItem, experiences);
+                    if (conflict.hasConflict && conflict.reason) {
+                      conflictReason = conflict.reason;
+                      break;
+                    }
+                  }
+
+                  const hasConflict = !!conflictReason;
+
+                  return (
+                    <div key={dayNum} className="space-y-1">
+                      <button
+                        type="button"
+                        disabled={hasConflict}
+                        onClick={() => {
+                          onAddToCart(tempItem);
+                          setShowDaySelectionModal(false);
+                          setPendingCartItem(null);
+                        }}
+                        className={`w-full flex items-center justify-between p-3.5 border rounded-xl transition-all duration-250 text-left focus:outline-none ${
+                          hasConflict
+                            ? "bg-zinc-50 border-zinc-200 opacity-60 cursor-not-allowed"
+                            : "bg-[#FAF8F5] border-zinc-200 hover:border-[#E8711A] hover:bg-white cursor-pointer hover:shadow-sm focus:ring-2 focus:ring-[#E8711A]/30"
+                        }`}
+                      >
+                        <div className="space-y-0.5">
+                          <span className="font-serif text-sm font-extrabold text-[#0D1B2A]">
+                            Dia {dayNum}
+                          </span>
+                          <span className="text-[10px] text-zinc-500 block">
+                            {isPlanned 
+                              ? `${dayItems.length} passeio${dayItems.length > 1 ? "s" : ""} planejado${dayItems.length > 1 ? "s" : ""}` 
+                              : "Sem passeios agendados"}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          {hasConflict ? (
+                            <span className="inline-flex items-center gap-1 text-[9px] font-bold text-red-800 bg-red-50 border border-red-150 px-2.5 py-1 rounded-full">
+                              ⚠️ Conflito
+                            </span>
+                          ) : isPlanned ? (
+                            <span className="inline-flex items-center gap-1 text-[9px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-100 px-2.5 py-1 rounded-full">
+                              ✅ Planejado
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 text-[9px] font-bold text-zinc-600 bg-zinc-100 border border-zinc-200 px-2.5 py-1 rounded-full">
+                              🟢 Livre
+                            </span>
+                          )}
+                        </div>
+                      </button>
+                      
+                      {hasConflict && (
+                        <p className="text-[10px] text-red-600 font-medium pl-3 pr-1 leading-normal">
+                          {conflictReason}
+                        </p>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowDaySelectionModal(false);
+                    setPendingCartItem(null);
+                  }}
+                  className="w-full py-3 bg-zinc-150 hover:bg-zinc-250 text-[#0D1B2A] font-accent font-black tracking-widest uppercase rounded-xl text-[10px] transition-colors cursor-pointer border border-zinc-200"
+                >
+                  Cancelar
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
     </div>
   );
 }
