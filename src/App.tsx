@@ -112,7 +112,7 @@ export default function App() {
   };
 
   const handleNavigate = (view: string) => {
-    if (view === "cliente" || view === "wizard") {
+    if (view === "cliente") {
       if (!currentUser) {
         setPendingAuthAction({ type: "navigate", view });
         setIsAuthModalOpen(true);
@@ -717,6 +717,8 @@ export default function App() {
             selectedHotelId={selectedHotelId}
             onChangeHotelId={handleUpdateHotelId}
             whatsappNumber={settings.whatsappNumber}
+            currentUser={currentUser}
+            onTriggerAuthModal={handleTriggerAuthModalForCheckout}
           />
         )}
         {currentView === "hospedagens" && (
