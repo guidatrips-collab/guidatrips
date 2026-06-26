@@ -17,9 +17,10 @@ import HospedagensView from "./components/HospedagensView";
 import RoteiroView from "./components/RoteiroView";
 import WizardView from "./components/WizardView";
 import ClientPanelView from "./components/ClientPanelView";
+import ClientAuthModal from "./components/ClientAuthModal";
 
 import { 
-  Experience, BlogPost, Lead, GlobalSettings, BookingCartItem 
+  Experience, BlogPost, Lead, GlobalSettings, BookingCartItem, ClientUser, ClientReservation 
 } from "./types";
 import { 
   INITIAL_EXPERIENCES, INITIAL_BLOG_POSTS, INITIAL_LEADS, INITIAL_SETTINGS 
@@ -30,6 +31,103 @@ import {
 import { firestoreService } from "./firebase";
 
 export default function App() {
+  // Client Authentication & Active Session State
+  const [currentUser, setCurrentUser] = useState<ClientUser | null>(() => {
+    try {
+      const stored = localStorage.getItem("guidatrips_logged_in_user");
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      return null;
+    }
+  });
+
+  const [userReservations, setUserReservations] = useState<ClientReservation[]>([]);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [pendingAuthAction, setPendingAuthAction] = useState<
+    | { type: "navigate"; view: string }
+    | { type: "add_to_cart"; item: BookingCartItem }
+    | { type: "online_booking"; callback: () => void }
+    | null
+  >(null);
+
+  // Sync load of reservations from Firestore
+  useEffect(() => {
+    const fetchReservations = async () => {
+      if (!currentUser) {
+        setUserReservations([]);
+        return;
+      }
+      try {
+        const allRes = await firestoreService.getAll<ClientReservation>("reservations");
+        const filtered = allRes.filter(r => r.userId === currentUser.id);
+        setUserReservations(filtered);
+      } catch (err) {
+        console.error("Error loading user reservations from Firestore:", err);
+      }
+    };
+    fetchReservations();
+  }, [currentUser]);
+
+  const handleLogout = () => {
+    setCurrentUser(null);
+    localStorage.removeItem("guidatrips_logged_in_user");
+    setUserReservations([]);
+    setCurrentView("home");
+  };
+
+  const handleAuthSuccess = (user: ClientUser) => {
+    setCurrentUser(user);
+    localStorage.setItem("guidatrips_logged_in_user", JSON.stringify(user));
+
+    // Resolve any pending protected actions
+    if (pendingAuthAction) {
+      if (pendingAuthAction.type === "navigate") {
+        setCurrentView(pendingAuthAction.view);
+      } else if (pendingAuthAction.type === "add_to_cart") {
+        const item = pendingAuthAction.item;
+        const normalizedItem: BookingCartItem = {
+          ...item,
+          adults: item.adults ?? 2,
+          children: item.children ?? 0,
+          infants: item.infants ?? 0,
+          people: (item.adults ?? 2) + (item.children ?? 0) + (item.infants ?? 0),
+          schedule: item.schedule ?? "08:00",
+          observations: item.observations || "Adicionado automaticamente pós cadastro/login",
+          dayIndex: item.dayIndex ?? 1,
+        };
+        const updated = [...cart, normalizedItem];
+        setCart(updated);
+        localStorage.setItem("guidatrips_cart", JSON.stringify(updated));
+        
+        // Redirect to Client Dashboard (Dashboard do Cliente)
+        setCurrentView("cliente");
+      } else if (pendingAuthAction.type === "online_booking") {
+        pendingAuthAction.callback();
+      }
+      setPendingAuthAction(null);
+    } else {
+      // If no specific action was pending, just direct to client panel dashboard
+      setCurrentView("cliente");
+    }
+  };
+
+  const handleNavigate = (view: string) => {
+    if (view === "cliente" || view === "wizard") {
+      if (!currentUser) {
+        setPendingAuthAction({ type: "navigate", view });
+        setIsAuthModalOpen(true);
+        return;
+      }
+    }
+    setCurrentView(view);
+    setSelectedPostSlug(null);
+  };
+
+  const handleTriggerAuthModalForCheckout = (action: { type: string; action: () => void }) => {
+    setPendingAuthAction({ type: "online_booking", callback: action.action });
+    setIsAuthModalOpen(true);
+  };
+
   // Navigation & State Routing
   const [currentView, setCurrentView] = useState<string>("home");
   const [selectedPostSlug, setSelectedPostSlug] = useState<string | null>(null);
@@ -316,6 +414,13 @@ export default function App() {
   };
 
   const handleAddToCart = (item: BookingCartItem) => {
+    // Intercept if not logged in
+    if (!currentUser) {
+      setPendingAuthAction({ type: "add_to_cart", item });
+      setIsAuthModalOpen(true);
+      return;
+    }
+
     // Ensure dayIndex and properties are set safely
     const adults = item.adults ?? (item.people ?? 2);
     const children = item.children ?? 0;
@@ -558,9 +663,10 @@ export default function App() {
       <header>
         <Navbar 
           currentView={currentView}
-          onNavigate={(v) => { setCurrentView(v); setSelectedPostSlug(null); }}
+          onNavigate={handleNavigate}
           cartCount={cart.length}
           onOpenCart={() => { setCurrentView("roteiro"); }}
+          currentUser={currentUser}
         />
       </header>
 
@@ -569,7 +675,7 @@ export default function App() {
         {currentView === "home" && (
           <HomeView 
             settings={settings} 
-            onNavigate={setCurrentView} 
+            onNavigate={handleNavigate} 
             onAddToCart={handleAddToCart} 
             experiences={experiences}
             selectedHotelId={selectedHotelId}
@@ -587,11 +693,13 @@ export default function App() {
             whatsappNumber={settings.whatsappNumber}
             settings={settings}
             onUpdateSettings={updateSettings}
-            onNavigate={setCurrentView}
+            onNavigate={handleNavigate}
+            currentUser={currentUser}
+            onTriggerAuthModal={handleTriggerAuthModalForCheckout}
           />
         )}
         {currentView === "destino" && (
-          <DestinoView onNavigate={setCurrentView} />
+          <DestinoView onNavigate={handleNavigate} />
         )}
         {currentView === "wizard" && (
           <WizardView 
@@ -603,7 +711,7 @@ export default function App() {
             onUpdateStayDays={updateStayDays}
             onAddToCart={handleAddToCart}
             onRemoveFromCart={handleRemoveFromCart}
-            onNavigate={setCurrentView}
+            onNavigate={handleNavigate}
             onSetClientName={setClientName}
             onSetClientCity={setClientCity}
             selectedHotelId={selectedHotelId}
@@ -620,7 +728,7 @@ export default function App() {
         {currentView === "blog" && (
           <BlogView 
             posts={posts} 
-            onNavigateToContact={() => setCurrentView("contato")}
+            onNavigateToContact={() => handleNavigate("contato")}
             selectedSlug={selectedPostSlug}
             onSelectPost={setSelectedPostSlug}
           />
@@ -648,7 +756,10 @@ export default function App() {
             experiences={experiences}
             posts={posts}
             settings={settings}
-            onNavigate={setCurrentView}
+            onNavigate={handleNavigate}
+            currentUser={currentUser}
+            onLogout={handleLogout}
+            userReservations={userReservations}
           />
         )}
         {currentView === "roteiro" && (
@@ -667,14 +778,21 @@ export default function App() {
             onSetClientName={setClientName}
             onSetClientCity={setClientCity}
             onTriggerWhatsapp={handleTriggerWhatsapp}
-            onNavigate={setCurrentView}
+            onNavigate={handleNavigate}
             selectedHotelId={selectedHotelId}
             onChangeHotelId={handleUpdateHotelId}
           />
         )}
       </main>
 
-      <Footer onNavigate={setCurrentView} whatsappNumber={settings.whatsappNumber} />
+      <Footer onNavigate={handleNavigate} whatsappNumber={settings.whatsappNumber} />
+
+      {/* Client Authentication Modal */}
+      <ClientAuthModal 
+        isOpen={isAuthModalOpen} 
+        onClose={() => { setIsAuthModalOpen(false); setPendingAuthAction(null); }} 
+        onSuccess={handleAuthSuccess} 
+      />
 
       {/* COMPONENTE FLOATING ROTERIO (TRIGGER DRAWERS) */}
       {(cart.length > 0 || selectedHotelId) && currentView !== "roteiro" && (

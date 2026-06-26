@@ -4,8 +4,9 @@ import {
   Search, Info, Plus, ChevronLeft, ChevronRight, CreditCard, Shield, 
   Send, Sparkles, CheckCircle, Smartphone, Trash2 
 } from "lucide-react";
-import { Experience, ExperienceCategory, BookingCartItem, GlobalSettings, ClientReservation } from "../types";
+import { Experience, ExperienceCategory, BookingCartItem, GlobalSettings, ClientReservation, ClientUser } from "../types";
 import { motion, AnimatePresence } from "motion/react";
+import { firestoreService } from "../firebase";
 
 interface ExperiencesViewProps {
   experiences: Experience[];
@@ -17,6 +18,8 @@ interface ExperiencesViewProps {
   settings?: GlobalSettings;
   onUpdateSettings?: (settings: GlobalSettings) => void;
   onNavigate?: (view: string) => void;
+  currentUser: ClientUser | null;
+  onTriggerAuthModal?: (action: { type: string; action: () => void }) => void;
 }
 
 export default function ExperiencesView({
@@ -28,7 +31,9 @@ export default function ExperiencesView({
   whatsappNumber,
   settings,
   onUpdateSettings,
-  onNavigate
+  onNavigate,
+  currentUser,
+  onTriggerAuthModal
 }: ExperiencesViewProps) {
   const [selectedCategory, setSelectedCategory] = useState<string>("todos");
   const [selectedLocation, setSelectedLocation] = useState<string>("todos");
@@ -59,6 +64,15 @@ export default function ExperiencesView({
   const [clientFormName, setClientFormName] = useState("");
   const [clientFormPhone, setClientFormPhone] = useState("");
   const [clientFormEmail, setClientFormEmail] = useState("");
+
+  // Sync with logged-in user details
+  React.useEffect(() => {
+    if (currentUser) {
+      setClientFormName(currentUser.name || "");
+      setClientFormEmail(currentUser.email || "");
+      setClientFormPhone(currentUser.phone || "");
+    }
+  }, [currentUser]);
 
   // Interactive calendar active month
   const [calendarMonth, setCalendarMonth] = useState(new Date());
@@ -200,7 +214,7 @@ export default function ExperiencesView({
     // Append newly created reservation to Global Settings
     const newReservation: ClientReservation = {
       id: `res-${Date.now()}`,
-      userId: "user-1", // Carolina Mendes (Default profile)
+      userId: currentUser ? currentUser.id : "user-1", // Carolina Mendes (Default profile fallback)
       experienceId: activeExperience.id,
       date: bookingDate,
       time: bookingSchedule,
@@ -215,6 +229,13 @@ export default function ExperiencesView({
       bringItems: activeExperience.bringItems || ["Filtro solar", "Toalha de banho"],
       avoidItems: activeExperience.notIncluded || ["Sacos plásticos", "Salto alto"]
     };
+
+    // Safely write to Firestore reservations collection for authenticated users
+    try {
+      await firestoreService.set("reservations", newReservation.id, newReservation);
+    } catch (err) {
+      console.error("Error persisting reservation to Firestore:", err);
+    }
 
     const updatedReservations = [newReservation, ...(settings.clientReservations || [])];
     
@@ -706,7 +727,20 @@ export default function ExperiencesView({
                         💬 via WhatsApp
                       </button>
                       <button
-                        onClick={() => setBookingMethod("online")}
+                        onClick={() => {
+                          if (!currentUser && onTriggerAuthModal) {
+                            onTriggerAuthModal({
+                              type: "online_booking",
+                              action: () => {
+                                setBookingMethod("online");
+                                setOnlineStep("details");
+                              }
+                            });
+                          } else {
+                            setBookingMethod("online");
+                            setOnlineStep("details");
+                          }
+                        }}
                         className={`py-2 px-3 text-[10px] font-accent uppercase tracking-wider font-bold rounded-lg transition-all cursor-pointer ${
                           bookingMethod === "online" 
                             ? "bg-[#0D1B2A] text-white shadow-sm" 

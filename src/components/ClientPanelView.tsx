@@ -11,14 +11,25 @@ interface ClientPanelViewProps {
   posts: BlogPost[];
   settings?: GlobalSettings;
   onNavigate: (view: string) => void;
+  currentUser: ClientUser | null;
+  onLogout?: () => void;
+  userReservations?: ClientReservation[];
 }
 
-export default function ClientPanelView({ experiences, posts, settings, onNavigate }: ClientPanelViewProps) {
+export default function ClientPanelView({ 
+  experiences, 
+  posts, 
+  settings, 
+  onNavigate,
+  currentUser,
+  onLogout,
+  userReservations
+}: ClientPanelViewProps) {
   const [activeTab, setActiveTab] = useState<"dashboard" | "viagem" | "dicas" | "beneficios" | "perfil">("dashboard");
   const [selectedReservationId, setSelectedReservationId] = useState<string | null>(null);
 
   // Use configured data or fallback to mock
-  const clientUser: ClientUser = settings?.clientUser || {
+  const clientUser: ClientUser = currentUser || settings?.clientUser || {
     id: "user-1",
     name: "Carolina Mendes",
     email: "carolina.mendes@example.com",
@@ -28,7 +39,9 @@ export default function ClientPanelView({ experiences, posts, settings, onNaviga
     favorites: []
   };
 
-  const clientReservations: ClientReservation[] = settings?.clientReservations?.length ? settings.clientReservations : [
+  const clientReservations: ClientReservation[] = userReservations && userReservations.length > 0
+    ? userReservations
+    : (settings?.clientReservations?.length ? settings.clientReservations : [
     {
       id: "res-1",
       userId: "user-1",
@@ -47,7 +60,7 @@ export default function ClientPanelView({ experiences, posts, settings, onNaviga
       bringItems: ["Protetor solar ecológico", "Toalha", "Óculos de sol", "Câmera fotográfica"],
       avoidItems: ["Sacos plásticos descartáveis", "Sapatos de salto", "Jóias de valor"]
     }
-  ];
+  ]);
 
   const clientPartners: ClientPartner[] = settings?.clientPartners?.length ? settings.clientPartners : [
     {
@@ -512,9 +525,19 @@ export default function ClientPanelView({ experiences, posts, settings, onNaviga
                     <p className="font-sans text-sm text-[#0D1B2A] font-medium">{clientUser.phone}</p>
                   </div>
                 </div>
-                <button className="mt-4 px-6 py-2 bg-zinc-100 text-[#0D1B2A] font-accent text-[10px] uppercase font-bold tracking-widest rounded-sm hover:bg-zinc-200 transition-colors">
-                  Editar Dados
-                </button>
+                <div className="flex gap-2 mt-4">
+                  <button className="px-6 py-2 bg-zinc-100 text-[#0D1B2A] font-accent text-[10px] uppercase font-bold tracking-widest rounded-sm hover:bg-zinc-200 transition-colors">
+                    Editar Dados
+                  </button>
+                  {onLogout && (
+                    <button 
+                      onClick={onLogout}
+                      className="px-6 py-2 bg-red-50 text-red-600 border border-red-200 font-accent text-[10px] uppercase font-bold tracking-widest rounded-sm hover:bg-red-600 hover:text-white transition-colors cursor-pointer"
+                    >
+                      Sair da Conta
+                    </button>
+                  )}
+                </div>
               </div>
 
               <div className="bg-white border border-zinc-200 rounded-xl p-6 md:p-8 space-y-6">

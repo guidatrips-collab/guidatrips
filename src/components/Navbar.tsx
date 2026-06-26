@@ -11,9 +11,10 @@ interface NavbarProps {
   onNavigate: (view: string) => void;
   cartCount: number;
   onOpenCart: () => void;
+  currentUser?: any;
 }
 
-export default function Navbar({ currentView, onNavigate, cartCount, onOpenCart }: NavbarProps) {
+export default function Navbar({ currentView, onNavigate, cartCount, onOpenCart, currentUser }: NavbarProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
 
@@ -131,11 +132,11 @@ export default function Navbar({ currentView, onNavigate, cartCount, onOpenCart 
               onClick={() => handleLinkClick("cliente")}
               className={`flex items-center gap-1.5 border px-4 py-2.5 rounded-full text-xs font-bold uppercase transition-all duration-300 hover:scale-105 ${
                 isThemeDarkHero
-                  ? "border-white/20 text-white hover:bg-white/10"
-                  : "border-[#0D1B2A]/20 text-[#0D1B2A] hover:bg-[#0D1B2A]/5"
+                  ? "border-[#E8711A] text-white hover:bg-white/10"
+                  : "border-[#E8711A] text-[#0D1B2A] hover:bg-[#E8711A]/5"
               }`}
             >
-              Área do Cliente
+              {currentUser ? `Olá, ${currentUser.name.split(" ")[0]} 🌊` : "Área do Cliente"}
             </button>
 
             {/* CTA do Whatsapp */}
@@ -204,7 +205,7 @@ export default function Navbar({ currentView, onNavigate, cartCount, onOpenCart 
                 currentView.startsWith("cliente") ? "text-[#E8711A] font-bold" : "text-[#0D1B2A] font-bold"
               }`}
             >
-              <span>Área do Cliente</span>
+              <span>{currentUser ? `Olá, ${currentUser.name.split(" ")[0]} 🌊` : "Área do Cliente"}</span>
             </button>
           </div>
 
