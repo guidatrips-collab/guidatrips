@@ -7,9 +7,10 @@ import React, { useState } from "react";
 import { 
   TrendingUp, Users, Compass, BarChart3, Settings, ShieldAlert,
   Globe, Plus, Trash2, Edit3, Eye, FileText, CheckCircle, 
-  X, AlertTriangle, Play, HelpCircle, Save, Phone, MessageSquare, Image, User
+  X, AlertTriangle, Play, HelpCircle, Save, Phone, MessageSquare, Image, User, Calendar
 } from "lucide-react";
 import { Experience, Lead, BlogPost, GlobalSettings, ExperienceCategory } from "../types";
+import { CalendarPricingView } from "./CalendarPricingView";
 
 interface AdminViewProps {
   experiences: Experience[];
@@ -84,7 +85,7 @@ export default function AdminView({
   ];
 
   // Active submodule
-  const [activeTab, setActiveTab] = useState<"overview" | "experiences" | "leads" | "blog" | "settings" | "client">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "experiences" | "calendar" | "leads" | "blog" | "settings" | "client">("overview");
 
   // CRM status labels
   const leadStatuses = [
@@ -214,6 +215,12 @@ export default function AdminView({
     }
 
     setEditingExperience(null);
+  };
+
+  const handleUpdateSingleExperience = (updatedExp: Experience) => {
+    const updated = experiences.map((exp) => exp.id === updatedExp.id ? { ...updatedExp, updatedAt: new Date().toISOString() } : exp);
+    onUpdateExperiences(updated);
+    addLog(`Tarifário atualizado: ${updatedExp.name}`);
   };
 
   const handleDeleteExperience = (expId: string) => {
@@ -374,6 +381,7 @@ export default function AdminView({
             {[
               { id: "overview", label: "Visão Geral", icon: TrendingUp },
               { id: "experiences", label: "Passeios", icon: Compass },
+              { id: "calendar", label: "Tarifário", icon: Calendar },
               { id: "leads", label: "Leads CRM", icon: Users, alertCount: activeLeadsCount },
               { id: "blog", label: "Revista/Blog", icon: FileText },
               { id: "client", label: "Área Cliente", icon: User },
@@ -946,6 +954,14 @@ export default function AdminView({
             )}
 
           </div>
+        )}
+
+        {/* -------------------- TAB: CALENDAR TARIFÁRIO -------------------- */}
+        {activeTab === "calendar" && (
+          <CalendarPricingView 
+            experiences={experiences} 
+            onUpdateExperience={handleUpdateSingleExperience} 
+          />
         )}
 
         {/* -------------------- TAB: LEADS CRM GESTOR -------------------- */}

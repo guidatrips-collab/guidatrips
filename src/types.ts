@@ -39,6 +39,12 @@ export interface Experience {
     blockedDates?: string[];
     slots: { time: string; capacity: number }[];
   };
+  calendar?: Record<string, {
+    status: "open" | "closed";
+    adultPrice: number;
+    childPrice: number;
+    babyPrice: number;
+  }>;
   pricing?: {
     adultPrice: number;
     childPrice?: number;
@@ -52,6 +58,7 @@ export interface Experience {
   location?: string; // e.g. "Arraial do Cabo", "Cabo Frio", "Búzios"
   schedules?: string[]; // Dynamic schedules list managed by admin
   recommendations?: string[]; // Suggested related experience ids
+  itinerary?: string[]; // Optional itinerary property
   faqs?: { question: string; answer: string }[]; // List of custom FAQs
   seo?: {
     metaTitle: string;
@@ -140,9 +147,10 @@ export interface GlobalSettings {
   homeCompassDesc?: string;
   homeCategories?: {
     id: string;
-    name: string;
+    name?: string;
+    label?: string;
     count: string;
-    font: string;
+    font?: string;
   }[];
   homeMapPoints?: {
     id: number;
@@ -164,6 +172,7 @@ export interface GlobalSettings {
   homeMimosDesc?: string;
   homeMimosTabs?: {
     key: string;
+    label?: string;
     badge: string;
     title: string;
     text: string;

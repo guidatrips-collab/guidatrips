@@ -527,6 +527,9 @@ export default function App() {
             onRemoveFromCart={handleRemoveFromCart}
             onOpenCart={() => { setCurrentView("roteiro"); }}
             whatsappNumber={settings.whatsappNumber}
+            settings={settings}
+            onUpdateSettings={updateSettings}
+            onNavigate={setCurrentView}
           />
         )}
         {currentView === "destino" && (
