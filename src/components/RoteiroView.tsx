@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { 
   Check, Trash2, Calendar, Clock, ArrowLeft, 
@@ -76,6 +76,12 @@ export default function RoteiroView({
     }
     return 1;
   });
+
+  useEffect(() => {
+    if (activeStepDay > stayDays) {
+      setActiveStepDay(stayDays > 0 ? stayDays : 1);
+    }
+  }, [stayDays, activeStepDay]);
 
   const changeStepDay = (dayNum: number) => {
     setActiveStepDay(dayNum);
@@ -308,79 +314,66 @@ export default function RoteiroView({
             <div className="lg:col-span-7 space-y-8">
               
               {/* Refined and rounded Day Manager Panel */}
-              <div className="bg-white border border-zinc-150 rounded-2xl p-5 sm:p-7 shadow-sm space-y-5">
-                <div className="space-y-4">
-                  <div className="flex items-center gap-2.5">
-                    <span className="p-2 bg-amber-500/10 text-[#E8711A] rounded-xl">
+              <div className="bg-white border border-zinc-150 rounded-2xl p-5 sm:p-6 shadow-sm space-y-5">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-5">
+                  <div className="flex items-center gap-3">
+                    <span className="p-2.5 bg-amber-500/10 text-[#E8711A] rounded-xl shrink-0">
                       <Calendar className="w-5 h-5" />
                     </span>
                     <div className="text-left">
-                      <h3 className="font-serif text-base sm:text-lg font-extrabold text-[#0D1B2A]">
-                        Defina o tempo da sua viagem
+                      <h3 className="font-serif text-base font-extrabold text-[#0D1B2A]">
+                        Duração da Viagem
                       </h3>
-                      <p className="text-xs text-zinc-500">
-                        Nós vamos distribuir suas atividades por estes dias para ficar bem confortável:
+                      <p className="text-[11px] text-zinc-500 leading-tight">
+                        Defina a quantidade de dias da sua estadia:
                       </p>
                     </div>
                   </div>
                   
-                  {/* High legibility stayDays selection circles - Very rounded and tactile */}
-                  <div className="flex flex-wrap items-center gap-2.5 bg-[#FBF9F6] p-2.5 rounded-2xl border border-zinc-200/50">
-                    {Array.from({ length: 8 }).map((_, i) => {
-                      const num = i + 1;
-                      const isSelected = stayDays === num;
-                      return (
-                        <button
-                          key={num}
-                          type="button"
-                          onClick={() => {
-                            onUpdateStayDays(num);
-                          }}
-                          className={`flex-1 min-w-[50px] aspect-square flex flex-col items-center justify-center rounded-xl transition-all duration-200 cursor-pointer ${
-                            isSelected
-                              ? "bg-[#0D1B2A] text-white shadow-md font-bold scale-[1.03]"
-                              : "text-zinc-700 bg-white border border-zinc-200 hover:bg-zinc-100 hover:text-[#0D1B2A]"
-                          }`}
-                        >
-                          <span className="text-sm font-bold leading-none">{num}</span>
-                          <span className="text-[8px] uppercase tracking-wider text-zinc-400 font-bold font-accent mt-0.5">
-                            {num === 1 ? "Dia" : "Dias"}
-                          </span>
-                        </button>
-                      );
-                    })}
+                  {/* Highly tactile premium select dropdown */}
+                  <div className="flex-1 max-w-[180px]">
+                    <select
+                      value={stayDays}
+                      onChange={(e) => onUpdateStayDays(parseInt(e.target.value, 10))}
+                      className="w-full bg-[#FBF9F6] border border-zinc-200 text-[#0D1B2A] font-bold text-xs rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#E8711A] cursor-pointer"
+                    >
+                      {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
+                        <option key={num} value={num}>
+                          {num} {num === 1 ? "Dia" : "Dias"} de viagem
+                        </option>
+                      ))}
+                    </select>
                   </div>
+                </div>
 
-                  {/* View Mode Switcher tabs */}
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-t border-zinc-100 pt-4 mt-2">
-                    <span className="text-xs font-bold text-zinc-500">Formato de Planejamento:</span>
-                    <div className="flex p-1 bg-zinc-100 rounded-xl border border-zinc-200">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setIsStepMode(true);
-                          setActiveStepDay(1);
-                        }}
-                        className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                          isStepMode
-                            ? "bg-white text-[#0D1B2A] shadow-sm"
-                            : "text-zinc-500 hover:text-[#0D1B2A]"
-                        }`}
-                      >
-                        Passo a Passo 🗺️
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setIsStepMode(false)}
-                        className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                          !isStepMode
-                            ? "bg-white text-[#0D1B2A] shadow-sm"
-                            : "text-zinc-500 hover:text-[#0D1B2A]"
-                        }`}
-                      >
-                        Cronograma Completo 📅
-                      </button>
-                    </div>
+                {/* View Mode Switcher tabs */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-t border-zinc-100 pt-4">
+                  <span className="text-xs font-bold text-zinc-500 text-left">Formato de Visualização:</span>
+                  <div className="flex p-1 bg-zinc-100 rounded-xl border border-zinc-200 self-start sm:self-auto">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsStepMode(true);
+                      }}
+                      className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                        isStepMode
+                          ? "bg-white text-[#0D1B2A] shadow-sm"
+                          : "text-zinc-500 hover:text-[#0D1B2A]"
+                      }`}
+                    >
+                      Passo a Passo 🗺️
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setIsStepMode(false)}
+                      className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                        !isStepMode
+                          ? "bg-white text-[#0D1B2A] shadow-sm"
+                          : "text-zinc-500 hover:text-[#0D1B2A]"
+                      }`}
+                    >
+                      Cronograma Completo 📅
+                    </button>
                   </div>
                 </div>
 
@@ -472,52 +465,73 @@ export default function RoteiroView({
                   );
                 })()}
 
-                {/* Guided Stepper Navigation for Step Mode */}
-                {isStepMode && (
-                  <div className="bg-[#FCFBF9] border border-zinc-150 rounded-3xl p-5 shadow-sm space-y-4 text-left">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-200/60 pb-3">
+                {/* Dynamic Day Tabs Selector */}
+                {isStepMode ? (
+                  <div className="space-y-4 text-left">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[#FCFBF9] border border-zinc-150 p-4 sm:p-5 rounded-3xl">
                       <div>
-                        <span className="font-accent text-[9px] text-[#E8711A] font-black tracking-widest uppercase block mb-0.5">PLANEJAMENTO PASSO A PASSO</span>
-                        <h3 className="font-serif text-base font-bold text-[#0D1B2A]">Dia {activeStepDay} de {stayDays}</h3>
+                        <span className="font-accent text-[9px] text-[#E8711A] font-black tracking-widest uppercase block mb-0.5">ROTEIRO PASSO A PASSO</span>
+                        <h3 className="font-serif text-base font-bold text-[#0D1B2A]">Dia Ativo: Dia {activeStepDay} de {stayDays}</h3>
                       </div>
                       
                       <button
                         type="button"
                         onClick={() => setIsStepMode(false)}
-                        className="px-4 py-1.5 bg-zinc-100 hover:bg-zinc-200 text-[#0D1B2A] rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 self-start sm:self-center"
+                        className="px-4 py-2 bg-emerald-50 hover:bg-emerald-100/80 text-emerald-800 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 self-start sm:self-center border border-emerald-200/50"
                       >
-                        <span>Ver roteiro completo</span>
+                        <span>Ver Roteiro Completo</span>
                         <Check className="w-3.5 h-3.5 text-emerald-600" />
                       </button>
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-2">
+                    {/* Premium horizontal scrollable/flexible dynamic tabs */}
+                    <div className="flex items-center overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 gap-2 scrollbar-none">
                       {Array.from({ length: stayDays }).map((_, i) => {
                         const dayNum = i + 1;
                         const isCurrent = activeStepDay === dayNum;
                         const dayItems = cart.filter(item => item.dayIndex === dayNum);
                         const isPlanned = dayItems.length > 0;
+                        
                         return (
                           <button
                             key={dayNum}
                             type="button"
                             onClick={() => changeStepDay(dayNum)}
-                            className={`flex-1 min-w-[55px] aspect-square flex flex-col items-center justify-center rounded-2xl transition-all duration-200 cursor-pointer relative ${
+                            className={`flex-1 min-w-[100px] sm:min-w-[120px] py-3.5 px-4 rounded-2xl font-sans text-xs font-bold transition-all duration-200 cursor-pointer flex flex-col items-center justify-center border ${
                               isCurrent
-                                ? "bg-[#0D1B2A] text-[#FCFBF9] shadow-md font-bold scale-[1.03] border-2 border-[#E8711A]"
+                                ? "bg-[#0D1B2A] text-[#FCFBF9] border-[#0D1B2A] shadow-md scale-[1.02]"
                                 : isPlanned
-                                  ? "bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100/80"
-                                  : "text-zinc-500 bg-white border border-zinc-200 hover:bg-zinc-50"
+                                  ? "bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100/80"
+                                  : "bg-white text-zinc-600 border-zinc-200 hover:bg-zinc-50"
                             }`}
                           >
-                            <span className="text-sm font-extrabold leading-none">{dayNum}</span>
-                            <span className="text-[7.5px] uppercase tracking-wider text-zinc-400 font-bold font-accent mt-1 leading-none">
-                              {isPlanned ? "Planejado ✓" : "Vazio ⏰"}
+                            <span className="text-[9px] uppercase tracking-wider text-zinc-400 font-accent font-black leading-none">DIA</span>
+                            <span className="text-xl font-black mt-1 leading-none">{dayNum}</span>
+                            <span className={`text-[9px] mt-1.5 font-medium leading-none ${isCurrent ? "text-[#E8711A]" : isPlanned ? "text-emerald-600" : "text-zinc-400"}`}>
+                              {isPlanned ? "Planejado ✓" : "Livre 🌴"}
                             </span>
                           </button>
                         );
                       })}
                     </div>
+                  </div>
+                ) : (
+                  /* Info bar for complete view */
+                  <div className="bg-[#FCFBF9] border border-zinc-150 p-4 sm:p-5 rounded-3xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-left">
+                    <div className="space-y-1">
+                      <h4 className="font-serif text-sm sm:text-base font-bold text-[#0D1B2A]">🎉 Roteiro Completo Ativado!</h4>
+                      <p className="text-xs text-zinc-500">Você está visualizando o cronograma unificado de todos os dias da sua viagem.</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsStepMode(true);
+                        setActiveStepDay(1);
+                      }}
+                      className="px-4 py-2 bg-[#E8711A] text-[#0D1B2A] hover:bg-[#0D1B2A] hover:text-[#FCFBF9] rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 self-start sm:self-center shadow-xs"
+                    >
+                      <span>Voltar para Passo a Passo</span>
+                    </button>
                   </div>
                 )}
 
