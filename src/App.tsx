@@ -550,6 +550,7 @@ export default function App() {
             onSetClientCity={setClientCity}
             selectedHotelId={selectedHotelId}
             onChangeHotelId={handleUpdateHotelId}
+            whatsappNumber={settings.whatsappNumber}
           />
         )}
         {currentView === "hospedagens" && (

@@ -26,6 +26,7 @@ interface WizardViewProps {
   onSetClientCity?: (city: string) => void;
   selectedHotelId?: string | null;
   onChangeHotelId?: (id: string | null) => void;
+  whatsappNumber?: string;
 }
 
 interface DestinationHub {
@@ -51,7 +52,8 @@ export default function WizardView({
   onSetClientName,
   onSetClientCity,
   selectedHotelId = null,
-  onChangeHotelId
+  onChangeHotelId,
+  whatsappNumber = "552299887766"
 }: WizardViewProps) {
   // Wizard master steps: 1 = Profile, 2 = Destination & Days, 3 = Experiences Selection
   const [step, setStep] = useState(1);
@@ -1031,49 +1033,74 @@ export default function WizardView({
                           </div>
 
                           {/* Booking/Add CTA button with smart checkmark inside */}
-                          <button
-                            type="button"
-                            onClick={() => {
-                              // If already in cart, remove it first to act as a toggle or prevent duplication
-                              if (isAlreadyInCart) {
-                                const idxToRemove = cart.findIndex(item => item.experienceId === exp.id && item.dayIndex === config.dayIndex);
-                                if (idxToRemove !== -1) {
-                                  onRemoveFromCart(idxToRemove);
-                                }
-                              } else {
-                                // Add to cart with progressive dynamic sequence date matching dayIndex
-                                const today = new Date();
-                                const targetDate = new Date(today);
-                                targetDate.setDate(today.getDate() + (config.dayIndex - 1));
-                                const dateStr = targetDate.toISOString().split("T")[0];
-                                onAddToCart({
-                                  experienceId: exp.id,
-                                  date: dateStr,
-                                  schedule: exp.schedules && exp.schedules.length > 0 ? exp.schedules[0] : "08:00",
-                                  adults: config.adults,
-                                  children: config.children,
-                                  infants: config.infants,
-                                  people: config.adults + config.children + config.infants,
-                                  observations: config.observations || "Configurado pelo Wizard Intuitivo!",
-                                  dayIndex: config.dayIndex
-                                });
-                              }
-                            }}
-                            className={`w-full text-center py-3 rounded-xl text-xs font-accent font-extrabold uppercase tracking-wider transition-all duration-300 shadow cursor-pointer ${
-                              isAlreadyInCart
-                                ? "bg-emerald-600 text-white hover:bg-red-50 hover:text-red-700 hover:border-red-200 hover:bg-red-50/10 flex items-center justify-center gap-1.5"
-                                : "bg-[#0D1B2A] text-[#FCFBF9] hover:bg-[#E8711A] hover:text-[#0D1B2A] hover:scale-[1.01]"
-                            }`}
-                          >
-                            {isAlreadyInCart ? (
-                              <>
-                                <Check className="w-4 h-4 stroke-[2.5]" />
-                                <span>Adicionado ao Dia {config.dayIndex} (Remover?)</span>
-                              </>
-                            ) : (
-                              <span>Adicionar este Passeio ao Dia {config.dayIndex} ⛵</span>
-                            )}
-                          </button>
+                          {(() => {
+                            const todayForDate = new Date();
+                            const targetDate = new Date(todayForDate);
+                            targetDate.setDate(todayForDate.getDate() + (config.dayIndex - 1));
+                            const targetDateStr = targetDate.toISOString().split("T")[0];
+                            const customTariff = exp.calendar?.[targetDateStr];
+                            const isBlockedOrNoTariff = !customTariff || customTariff.status === "closed";
+
+                            return (
+                              <div className="space-y-3">
+                                {isBlockedOrNoTariff && (
+                                  <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-900 font-sans text-[11px] leading-relaxed text-left flex gap-2">
+                                    <span className="text-sm shrink-0">⚠️</span>
+                                    <div>
+                                      <strong>Disponibilidade Online Indisponível:</strong> Não há dunas automáticas ou tarifas configuradas para {new Date(targetDateStr + "T00:00:00").toLocaleDateString("pt-BR")}.
+                                      <p className="mt-1 text-zinc-500 font-normal">
+                                        Adicione este passeio para salvá-lo como <strong>Sob Consulta</strong>. Enviaremos tudo organizado aos nossos atendentes no WhatsApp para agendamento manual.
+                                      </p>
+                                    </div>
+                                  </div>
+                                )}
+
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    // If already in cart, remove it first to act as a toggle or prevent duplication
+                                    if (isAlreadyInCart) {
+                                      const idxToRemove = cart.findIndex(item => item.experienceId === exp.id && item.dayIndex === config.dayIndex);
+                                      if (idxToRemove !== -1) {
+                                        onRemoveFromCart(idxToRemove);
+                                      }
+                                    } else {
+                                      // Add to cart with progressive dynamic sequence date matching dayIndex
+                                      onAddToCart({
+                                        experienceId: exp.id,
+                                        date: targetDateStr,
+                                        schedule: exp.schedules && exp.schedules.length > 0 ? exp.schedules[0] : "08:00",
+                                        adults: config.adults,
+                                        children: config.children,
+                                        infants: config.infants,
+                                        people: config.adults + config.children + config.infants,
+                                        observations: config.observations || "Configurado pelo Wizard Intuitivo!",
+                                        dayIndex: config.dayIndex
+                                      });
+                                    }
+                                  }}
+                                  className={`w-full text-center py-3 rounded-xl text-xs font-accent font-extrabold uppercase tracking-wider transition-all duration-300 shadow cursor-pointer ${
+                                    isAlreadyInCart
+                                      ? "bg-emerald-600 text-white hover:bg-red-50 hover:text-red-700 hover:border-red-200 hover:bg-red-50/10 flex items-center justify-center gap-1.5"
+                                      : isBlockedOrNoTariff
+                                        ? "bg-amber-500/10 text-amber-700 border border-amber-300/40 hover:bg-amber-500 hover:text-white"
+                                        : "bg-[#0D1B2A] text-[#FCFBF9] hover:bg-[#E8711A] hover:text-[#0D1B2A] hover:scale-[1.01]"
+                                  }`}
+                                >
+                                  {isAlreadyInCart ? (
+                                    <>
+                                      <Check className="w-4 h-4 stroke-[2.5]" />
+                                      <span>Adicionado ao Dia {config.dayIndex} (Remover?)</span>
+                                    </>
+                                  ) : isBlockedOrNoTariff ? (
+                                    <span>Incluir como "Sob Consulta" 💬</span>
+                                  ) : (
+                                    <span>Adicionar este Passeio ao Dia {config.dayIndex} ⛵</span>
+                                  )}
+                                </button>
+                              </div>
+                            );
+                          })()}
 
                         </div>
 

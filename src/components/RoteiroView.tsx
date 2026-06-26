@@ -135,18 +135,49 @@ export default function RoteiroView({
 
   const recommendations = getRecommendations();
 
+  // Helper to determine the pricing and availability of a cart item based on its selected date
+  const getCartItemTariff = (exp: Experience, dateStr: string) => {
+    const baseAdult = exp.pricing?.adultPrice ?? exp.priceFrom;
+    const baseChild = exp.pricing?.childPrice ?? (exp.promotionalPrice || exp.priceFrom) * 0.5;
+    const baseBaby = exp.pricing?.babyPrice ?? 0;
+
+    if (!dateStr) {
+      return { adultPrice: baseAdult, childPrice: baseChild, babyPrice: baseBaby, isClosed: true, hasNoTariff: true };
+    }
+
+    const customData = exp.calendar?.[dateStr];
+    if (customData) {
+      return {
+        adultPrice: customData.adultPrice,
+        childPrice: customData.childPrice,
+        babyPrice: customData.babyPrice,
+        isClosed: customData.status === "closed",
+        hasNoTariff: false
+      };
+    }
+
+    return { adultPrice: baseAdult, childPrice: baseChild, babyPrice: baseBaby, isClosed: true, hasNoTariff: true };
+  };
+
   // Pricing details summary
   const computeTotalCost = () => {
     return cart.reduce((total, item) => {
       const exp = experiences.find(e => e.id === item.experienceId);
       if (!exp) return total;
-      const adultsCost = exp.priceFrom * (item.adults || 2);
-      const kidsCost = exp.priceFrom * 0.5 * (item.children || 0);
+      const tariff = getCartItemTariff(exp, item.date);
+      const adultsCost = tariff.adultPrice * (item.adults || 2);
+      const kidsCost = tariff.childPrice * (item.children || 0);
       return total + adultsCost + kidsCost;
     }, 0);
   };
 
   const totalEstimate = computeTotalCost();
+  const hasUnavailableItems = cart.some(item => {
+    const exp = experiences.find(e => e.id === item.experienceId);
+    if (!exp) return false;
+    const tariff = getCartItemTariff(exp, item.date);
+    return tariff.isClosed || tariff.hasNoTariff;
+  });
   const hasItems = cart.length > 0 || selectedHotelId !== null;
 
   // Helpler to format date elegantly in Portuguese
@@ -419,8 +450,11 @@ export default function RoteiroView({
                             const exp = experiences.find(e => e.id === item.experienceId);
                             const isEditing = editingIndex === actualCartIdx;
 
-                            const extimateCosts = exp 
-                              ? ((exp.priceFrom * item.adults) + (exp.priceFrom * 0.5 * item.children))
+                            const tariff = exp ? getCartItemTariff(exp, item.date) : null;
+                            const isUnavailable = tariff ? (tariff.isClosed || tariff.hasNoTariff) : false;
+
+                            const extimateCosts = (exp && tariff)
+                              ? ((tariff.adultPrice * item.adults) + (tariff.childPrice * (item.children || 0)))
                               : 0;
 
                             const isIntercursoOpen = expandedIntercuso[`${dayNum}-${localIdx}`] !== false; // Pre-expanded for great reading
@@ -497,6 +531,28 @@ export default function RoteiroView({
                                       <p className="text-xs sm:text-sm text-zinc-500 italic leading-relaxed border-l-2 border-[#E8711A]/40 pl-3">
                                         "{exp?.shortDescription}"
                                       </p>
+
+                                      {isUnavailable && (
+                                        <div className="bg-red-50 border border-red-200/60 p-4 rounded-xl flex items-start gap-2.5 text-left mt-3">
+                                          <span className="text-sm shrink-0">⚠️</span>
+                                          <div className="space-y-1 text-xs">
+                                            <h5 className="font-bold text-red-950 uppercase tracking-wide">Sem Disponibilidade Online nesta Data</h5>
+                                            <p className="text-red-900 leading-relaxed">
+                                              Não possuímos tarifas cadastradas ou vagas liberadas no site para o dia <strong>{formatFriendlyDate(item.date)}</strong>. Para não perder o passeio, solicite-o diretamente aos nossos atendentes no WhatsApp.
+                                            </p>
+                                            <a
+                                              href={`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(
+                                                `Olá! Vi que o passeio *${exp?.name}* não tem tarifas configuradas no site para o dia ${item.date} às ${item.schedule}. Gostaria de verificar disponibilidade manual com vocês.`
+                                              )}`}
+                                              target="_blank"
+                                              rel="noreferrer"
+                                              className="inline-flex items-center gap-1 font-bold text-xs text-[#E8711A] hover:underline pt-1"
+                                            >
+                                              Consultar Atendentes no WhatsApp &rarr;
+                                            </a>
+                                          </div>
+                                        </div>
+                                      )}
                                     </div>
 
                                     {/* Humanized collapsible lists - Round, soft and clean */}
@@ -580,9 +636,15 @@ export default function RoteiroView({
                                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-3 border-t border-zinc-100 text-xs text-left">
                                       <div>
                                         <span className="text-zinc-500 font-medium">Estimado para as pessoas selecionadas: </span>
-                                        <span className="font-bold text-[#0D1B2A] ml-1 bg-zinc-100 py-1.5 px-3 rounded-full font-mono text-sm">
-                                          R$ {extimateCosts}
-                                        </span>
+                                        {isUnavailable ? (
+                                          <span className="font-bold text-amber-600 ml-1 bg-amber-50 py-1.5 px-3 rounded-full font-sans text-xs border border-amber-200">
+                                            Sob Consulta 💬
+                                          </span>
+                                        ) : (
+                                          <span className="font-bold text-[#0D1B2A] ml-1 bg-zinc-100 py-1.5 px-3 rounded-full font-mono text-sm">
+                                            R$ {extimateCosts}
+                                          </span>
+                                        )}
                                       </div>
                                       
                                       <button
@@ -895,12 +957,25 @@ export default function RoteiroView({
                 </div>
 
                 {/* Highlight text notice */}
-                <div className="bg-amber-50 rounded-2xl border border-amber-200/50 p-4 text-xs sm:text-sm text-zinc-650 leading-relaxed font-medium text-left flex gap-2">
-                  <span className="text-base shrink-0">💡</span>
-                  <p>
-                    <strong>Como funciona agora:</strong> Nós criaremos um link no seu WhatsApp com as dunas, barcos e horários organizados. O piloto enviará fotos reais do barco preservado para o seu grupo para confirmar sua reserva!
-                  </p>
-                </div>
+                {hasUnavailableItems ? (
+                  <div className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-4 text-xs text-amber-900 leading-relaxed font-medium text-left flex gap-2">
+                    <span className="text-base shrink-0">⚠️</span>
+                    <div>
+                      <strong className="text-amber-950 font-bold block mb-1">Solicitação Manual via WhatsApp Necessária</strong>
+                      Seu roteiro possui passeios sem tarifas automáticas configuradas para as datas selecionadas.
+                      <p className="mt-1 text-zinc-650">
+                        Não se preocupe! Ao clicar abaixo para enviar no WhatsApp, nossos atendentes verificarão as vagas e tarifas sob demanda manualmente e retornarão com o orçamento personalizado para você em poucos minutos.
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="bg-amber-50 rounded-2xl border border-amber-200/50 p-4 text-xs sm:text-sm text-zinc-650 leading-relaxed font-medium text-left flex gap-2">
+                    <span className="text-base shrink-0">💡</span>
+                    <p>
+                      <strong>Como funciona agora:</strong> Nós criaremos um link no seu WhatsApp com as dunas, barcos e horários organizados. O piloto enviará fotos reais do barco preservado para o seu grupo para confirmar sua reserva!
+                    </p>
+                  </div>
+                )}
 
                 {/* Primary CTA Action Button with prominent layout - very rounded */}
                 <div className="space-y-3.5">

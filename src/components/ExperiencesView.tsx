@@ -104,7 +104,7 @@ export default function ExperiencesView({
     const baseBaby = exp.pricing?.babyPrice ?? 0;
 
     if (!dateStr) {
-      return { adultPrice: baseAdult, childPrice: baseChild, babyPrice: baseBaby, isClosed: false };
+      return { adultPrice: baseAdult, childPrice: baseChild, babyPrice: baseBaby, isClosed: true, hasNoTariff: true };
     }
 
     // Direct match from Admin Pricing Calendar
@@ -114,20 +114,13 @@ export default function ExperiencesView({
         adultPrice: customData.adultPrice,
         childPrice: customData.childPrice,
         babyPrice: customData.babyPrice,
-        isClosed: customData.status === "closed"
+        isClosed: customData.status === "closed",
+        hasNoTariff: false
       };
     }
 
-    // Check specific days restriction
-    if (exp.availability?.type === "specific_days" && exp.availability.daysOfWeek) {
-      const dayOfWeek = new Date(dateStr + "T00:00:00").getDay();
-      const isAllowed = exp.availability.daysOfWeek.includes(dayOfWeek);
-      if (!isAllowed) {
-        return { adultPrice: baseAdult, childPrice: baseChild, babyPrice: baseBaby, isClosed: true };
-      }
-    }
-
-    return { adultPrice: baseAdult, childPrice: baseChild, babyPrice: baseBaby, isClosed: false };
+    // If there is no custom calendar tariff defined for this date, default to closed/blocked.
+    return { adultPrice: baseAdult, childPrice: baseChild, babyPrice: baseBaby, isClosed: true, hasNoTariff: true };
   };
 
   const handleOpenDetails = (exp: Experience) => {
@@ -1123,7 +1116,39 @@ export default function ExperiencesView({
                         </div>
 
                         {/* CTA Flow Switches */}
-                        {bookingMethod === "whatsapp" ? (
+                        {selectedDateRates.isClosed || selectedDateRates.hasNoTariff ? (
+                          /* BLOCKED DATE - WHATSAPP CONSULTATION ONLY */
+                          <div className="space-y-4 pt-2">
+                            <div className="bg-amber-500/10 border border-amber-500/20 p-4 rounded-xl space-y-2 text-left font-sans text-xs text-amber-200">
+                              <div className="flex items-center gap-1.5 font-bold text-[#E8711A]">
+                                <span className="text-sm">⚠️</span>
+                                <span>Sem Disponibilidade Online</span>
+                              </div>
+                              <p className="text-zinc-350 leading-relaxed">
+                                Não possuímos tarifas online publicadas ou vagas automáticas liberadas para o dia <strong>{bookingDate ? new Date(bookingDate + "T00:00:00").toLocaleDateString("pt-BR") : ""}</strong>.
+                              </p>
+                              <p className="text-zinc-400 font-medium">
+                                Por favor, consulte nossos atendentes para verificar vagas alternativas ou agendamentos sob demanda.
+                              </p>
+                            </div>
+
+                            <a
+                              href={`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(
+                                `Olá! Gostaria de consultar se há disponibilidade sob demanda para o passeio *${activeExperience.name}* no dia ${bookingDate} às ${bookingSchedule}.\n\n` +
+                                `👤 Detalhes do Grupo:\n` +
+                                `- Adultos: ${bookingAdults}\n` +
+                                `${bookingChildren > 0 ? `- Crianças: ${bookingChildren}\n` : ""}` +
+                                `${bookingInfants > 0 ? `- Bebês: ${bookingInfants}\n` : ""}` +
+                                `\nComo não encontrei tarifas online para esta data, gostaria de ver se é possível reservar diretamente com vocês. Obrigado!`
+                              )}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="w-full py-4 bg-[#25D366] hover:bg-[#20bd5a] text-[#0A131F] font-accent font-black tracking-widest uppercase rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer font-bold text-center block text-xs"
+                            >
+                              <Send className="w-4 h-4 inline" /> Consultar Disponibilidade no WhatsApp
+                            </a>
+                          </div>
+                        ) : bookingMethod === "whatsapp" ? (
                           /* WHATSAPP CTA BLOCK */
                           <div className="space-y-3 pt-2">
                             <button
@@ -1147,7 +1172,7 @@ export default function ExperiencesView({
                               )}`}
                               target="_blank"
                               rel="noreferrer"
-                              className="w-full py-4 bg-[#25D366] hover:bg-[#20bd5a] text-[#0A131F] font-accent font-black tracking-widest uppercase rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer font-bold"
+                              className="w-full py-4 bg-[#25D366] hover:bg-[#20bd5a] text-[#0A131F] font-accent font-black tracking-widest uppercase rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer font-bold font-bold"
                             >
                               <Send className="w-4 h-4" /> Enviar para WhatsApp
                             </a>
