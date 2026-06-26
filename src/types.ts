@@ -379,13 +379,20 @@ export function checkSchedulingConflict(
   itemB: BookingCartItem,
   experiences: Experience[]
 ): { hasConflict: boolean; reason?: string } {
-  // 1. Separate Days Check: If both have different day indexes, they CANNOT conflict
-  if (itemA.dayIndex !== undefined && itemB.dayIndex !== undefined) {
-    if (itemA.dayIndex !== itemB.dayIndex) {
-      return { hasConflict: false };
-    }
-  } else if (itemA.date && itemB.date && itemA.date !== itemB.date) {
-    // Fallback date check if dayIndex is not defined
+  // 1. Separate Days Check: If both are on different days, they CANNOT conflict.
+  // We normalize dayIndex to 1 if not defined, and compare them.
+  const dayIdxA = itemA.dayIndex !== undefined && itemA.dayIndex !== null ? itemA.dayIndex : 1;
+  const dayIdxB = itemB.dayIndex !== undefined && itemB.dayIndex !== null ? itemB.dayIndex : 1;
+  
+  if (dayIdxA !== dayIdxB) {
+    return { hasConflict: false };
+  }
+  
+  // We normalize dates (using the same dayIndex mapping if missing) and compare them.
+  const dateStrA = itemA.date || addDaysToBrazilDate(getBrazilLocalDate(), dayIdxA);
+  const dateStrB = itemB.date || addDaysToBrazilDate(getBrazilLocalDate(), dayIdxB);
+  
+  if (dateStrA !== dateStrB) {
     return { hasConflict: false };
   }
   

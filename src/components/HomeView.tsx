@@ -810,7 +810,7 @@ export default function HomeView({
                                 <button
                                   type="button"
                                   onClick={() => {
-                                    const dateStr = addDaysToBrazilDate(getBrazilLocalDate(), configDay - 1);
+                                    const dateStr = addDaysToBrazilDate(getBrazilLocalDate(), configDay);
 
                                     onAddToCart?.({
                                       experienceId: item.id,

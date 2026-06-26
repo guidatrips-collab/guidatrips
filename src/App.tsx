@@ -437,10 +437,10 @@ export default function App() {
     const savedDay = localStorage.getItem("guidatrips_current_planning_day");
     const dayIndex = item.dayIndex ?? (savedDay ? parseInt(savedDay, 10) : 1);
 
-    // If day index was loaded from localStorage, let's also update the date accordingly
+    // If date is not provided, calculate it consistently based on dayIndex
     let finalDate = item.date;
-    if (!item.dayIndex && savedDay) {
-      finalDate = addDaysToBrazilDate(getBrazilLocalDate(), dayIndex - 1);
+    if (!finalDate) {
+      finalDate = addDaysToBrazilDate(getBrazilLocalDate(), dayIndex);
     }
 
     const normalizedItem: BookingCartItem = {
@@ -469,7 +469,7 @@ export default function App() {
   const handleChangeItemDay = (index: number, day: number) => {
     const updated = cart.map((item, idx) => {
       if (idx === index) {
-        const dateStr = addDaysToBrazilDate(getBrazilLocalDate(), day - 1);
+        const dateStr = addDaysToBrazilDate(getBrazilLocalDate(), day);
         return { ...item, dayIndex: day, date: dateStr };
       }
       return item;
@@ -503,28 +503,20 @@ export default function App() {
   const findCartConflicts = () => {
     const conflicts: string[] = [];
     const seenDaySchedule = new Map<string, BookingCartItem>(); // key: dayIndex_schedule
-    const seenDateSchedule = new Map<string, BookingCartItem>(); // key: date_schedule
     
     cart.forEach((item) => {
       const exp = experiences.find(e => e.id === item.experienceId);
       const name = exp ? exp.name : "Passeio";
-      const keyDay = `${item.dayIndex || 1}_${item.schedule}`;
-      const keyDate = `${item.date}_${item.schedule}`;
+      const dayIndex = item.dayIndex !== undefined && item.dayIndex !== null ? item.dayIndex : 1;
+      const keyDay = `${dayIndex}_${item.schedule}`;
       
-      let conflictedItem: BookingCartItem | null = null;
       if (seenDaySchedule.has(keyDay)) {
-        conflictedItem = seenDaySchedule.get(keyDay)!;
-      } else if (seenDateSchedule.has(keyDate)) {
-        conflictedItem = seenDateSchedule.get(keyDate)!;
-      }
-      
-      if (conflictedItem) {
+        const conflictedItem = seenDaySchedule.get(keyDay)!;
         const otherExp = experiences.find(e => e.id === conflictedItem.experienceId);
         const otherName = otherExp ? otherExp.name : "Outro passeio";
-        conflicts.push(`⚠️ ATENÇÃO: Os passeios "${name}" e "${otherName}" foram marcados para o mesmo dia (Dia ${item.dayIndex || 1}) e horário (${item.schedule}). Sugerimos alterar um deles para evitar sobreposição de agendas!`);
+        conflicts.push(`⚠️ ATENÇÃO: Os passeios "${name}" e "${otherName}" foram marcados para o mesmo dia (Dia ${dayIndex}) e horário (${item.schedule}). Sugerimos alterar um deles para evitar sobreposição de agendas!`);
       } else {
         seenDaySchedule.set(keyDay, item);
-        seenDateSchedule.set(keyDate, item);
       }
     });
     return conflicts;
