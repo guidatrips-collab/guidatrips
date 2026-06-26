@@ -109,6 +109,8 @@ export default function ClientPanelView({
     ? experiences.find(e => e.id === currentReservation.experienceId)
     : null;
 
+  const destName = destinations?.find(d => d.id === selectedDestinationId)?.name || "Arraial do Cabo";
+
   return (
     <div className="flex flex-col md:flex-row min-h-screen bg-[#FBF9F6] pt-24 md:pt-[80px]">
       {/* SIDEBAR NAVIGATION (Desktop) / BOTTOM BAR (Mobile) */}

@@ -777,6 +777,9 @@ export default function App() {
             currentUser={currentUser}
             onTriggerAuthModal={handleTriggerAuthModalForCheckout}
             stayDays={stayDays}
+            destinations={destinations}
+            selectedDestinationId={selectedDestinationId}
+            onUpdateSelectedDestinationId={updateSelectedDestinationId}
           />
         )}
         {currentView === "destino" && (

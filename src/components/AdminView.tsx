@@ -7,7 +7,7 @@ import React, { useState } from "react";
 import { 
   TrendingUp, Users, Compass, BarChart3, Settings, ShieldAlert,
   Globe, Plus, Trash2, Edit3, Eye, FileText, CheckCircle, 
-  X, AlertTriangle, Play, HelpCircle, Save, Phone, MessageSquare, Image, User, Calendar
+  X, AlertTriangle, Play, HelpCircle, Save, Phone, MessageSquare, Image, User, Calendar, MapPin
 } from "lucide-react";
 import { Experience, Lead, BlogPost, GlobalSettings, ExperienceCategory, Destination } from "../types";
 import { CalendarPricingView } from "./CalendarPricingView";

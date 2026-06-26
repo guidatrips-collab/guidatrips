@@ -113,7 +113,7 @@ export default function ExperiencesView({
   // Dynamically group unique locations with active status
   const availableLocations = [
     { id: "todos", label: "🗺️ Todos os Destinos" },
-    ...destinations.filter(d => d.status === "active" || d.id === selectedDestinationId).map(d => ({
+    ...(destinations || []).filter(d => d.status === "active" || d.id === selectedDestinationId).map(d => ({
       id: d.id, label: `📍 ${d.name}`
     }))
   ];
