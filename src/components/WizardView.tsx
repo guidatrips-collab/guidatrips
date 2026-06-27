@@ -11,8 +11,9 @@ import {
   Compass, X, ArrowRight, Home, MessageSquare, Hotel, Trash2, 
   CheckCircle2, Bed, Baby, User, ShieldCheck, Map
 } from "lucide-react";
-import { Experience, BookingCartItem, checkSchedulingConflict, getTourScheduleDetails, getBrazilLocalDate, addDaysToBrazilDate, Destination } from "../types";
+import { Experience, BookingCartItem, checkSchedulingConflict, getTourScheduleDetails, getBrazilLocalDate, addDaysToBrazilDate, Destination, Accommodation, Lead, ClientReservation } from "../types";
 import { firestoreService } from "../firebase";
+import { analytics } from "../lib/analytics";
 import ExperienceMediaGallery from "./ExperienceMediaGallery";
 
 interface WizardViewProps {
@@ -368,9 +369,7 @@ export default function WizardView({
           children: item.children ?? 0,
           infants: item.infants ?? 0,
           pax: item.people ?? 2,
-          notes: item.observations || "Agendado via Roteiro Inteligente!",
           status: "new",
-          createdAt: new Date().toISOString(),
           bringItems: exp?.bringItems || ["Filtro Solar", "Toalha de Banho"],
           avoidItems: exp?.notIncluded || ["Sapatos de Salto"],
           meetingPoint: exp?.meetingPoint || "A combinar"
@@ -386,8 +385,9 @@ export default function WizardView({
         phone: userToSave.phone || "Não informado",
         experienceInterest: cart.map(item => item.experienceId),
         status: "novo",
-        origin: "site",
-        metadata: analytics.getAttributionData(),
+        origin: "formulario",
+        metadata: analytics.getAttributionData().metadata,
+        history: [],
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         notes: [`Checkout via plataforma realizado. Itinerário de ${cart.length} itens. Total estimado: ${formatBRL(calculateEstimatedTotal())}`]
@@ -418,7 +418,8 @@ export default function WizardView({
       experienceInterest: cart.map(item => item.experienceId),
       status: "novo",
       origin: "whatsapp",
-      metadata: analytics.getAttributionData(),
+      metadata: analytics.getAttributionData().metadata,
+      history: [],
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       notes: [

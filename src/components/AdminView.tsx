@@ -7,10 +7,14 @@ import React, { useState } from "react";
 import { 
   TrendingUp, Users, Compass, BarChart3, Settings, ShieldAlert,
   Globe, Plus, Trash2, Edit3, Eye, FileText, CheckCircle, Ticket,
-  X, AlertTriangle, Play, HelpCircle, Save, Phone, MessageSquare, Image, User, Calendar, MapPin, Waves
+  X, AlertTriangle, Play, HelpCircle, Save, Phone, MessageSquare, Image, User, Calendar, MapPin, Waves, Map, Mail
 } from "lucide-react";
-import { Experience, Lead, BlogPost, GlobalSettings, ExperienceCategory, Destination, Accommodation } from "../types";
+import { Experience, Lead, BlogPost, GlobalSettings, ExperienceCategory, Destination, Accommodation, LeadHistoryItem } from "../types";
 import { CalendarPricingView } from "./CalendarPricingView";
+import ImageUpload from "./ImageUpload";
+import { firestoreService, storageService } from "../firebase";
+import { motion, AnimatePresence } from "motion/react";
+import { formatBRL } from "../lib/utils";
 
 interface AdminViewProps {
   experiences: Experience[];
@@ -745,15 +749,13 @@ export default function AdminView({
                         <option value="inactive">Inativo (Oculto)</option>
                       </select>
                     </div>
-                    <div>
-                      <label className="block text-[10px] font-accent text-[#8A96A3] uppercase tracking-widest mb-1">Imagem Principal (Hero)</label>
-                      <input
-                        required
-                        type="url"
-                        value={editingDestination.heroImage || ""}
-                        onChange={(e) => setEditingDestination({ ...editingDestination, heroImage: e.target.value })}
-                        className="w-full bg-black/30 border border-white/10 rounded px-3 py-2 text-sm text-white focus:border-[#E8711A] outline-none"
-                        placeholder="https://..."
+                    <div className="space-y-3">
+                      <ImageUpload
+                        label="Imagem Principal (Hero)"
+                        currentImageUrl={editingDestination.heroImage}
+                        onUploadComplete={(url) => setEditingDestination({ ...editingDestination, heroImage: url })}
+                        onRemove={() => setEditingDestination({ ...editingDestination, heroImage: "" })}
+                        folder="destinations"
                       />
                     </div>
                   </div>
@@ -1233,14 +1235,35 @@ export default function AdminView({
                     </div>
                   </div>
 
-                  <div className="space-y-1.5">
-                    <label className="font-accent text-[9px] text-[#ffefe6]/90 tracking-widest uppercase">Fotos da Galeria (Cole URLs de fotos separadas por vírgulas)</label>
-                    <input
-                      type="text"
-                      value={(editingExperience.photos || []).join(", ")}
-                      onChange={(e) => setEditingExperience({ ...editingExperience, photos: e.target.value.split(",").map(s => s.trim()) })}
-                      className="w-full bg-[#0D1B2A] border border-white/5 p-3 text-xs text-white text-sans"
-                    />
+                  <div className="space-y-3">
+                    <label className="font-accent text-[9px] text-[#ffefe6]/90 tracking-widest uppercase">Fotos da Galeria</label>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                      {(editingExperience.photos || []).map((photo, idx) => (
+                        <ImageUpload
+                          currentImageUrl={photo}
+                          onUploadComplete={(url) => {
+                            const newPhotos = [...(editingExperience.photos || [])];
+                            newPhotos[idx] = url;
+                            setEditingExperience({ ...editingExperience, photos: newPhotos });
+                          }}
+                          onRemove={() => {
+                            const newPhotos = (editingExperience.photos || []).filter((_, i) => i !== idx);
+                            setEditingExperience({ ...editingExperience, photos: newPhotos });
+                          }}
+                          folder="experiences"
+                        />
+                      ))}
+                      <ImageUpload
+                        onUploadComplete={(url) => {
+                          setEditingExperience({ 
+                            ...editingExperience, 
+                            photos: [...(editingExperience.photos || []), url] 
+                          });
+                        }}
+                        folder="experiences"
+                        label="Adicionar Foto"
+                      />
+                    </div>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
@@ -1535,14 +1558,35 @@ export default function AdminView({
                         className="w-full bg-black/30 border border-white/10 rounded px-3 py-2 text-sm text-white focus:border-[#E8711A] outline-none"
                       />
                     </div>
-                    <div>
-                      <label className="block text-[10px] font-accent text-[#8A96A3] uppercase tracking-widest mb-1">Foto Principal (URL)</label>
-                      <input
-                        type="text"
-                        value={editingAccommodation.photos?.[0] || ""}
-                        onChange={(e) => setEditingAccommodation({ ...editingAccommodation, photos: [e.target.value] })}
-                        className="w-full bg-black/30 border border-white/10 rounded px-3 py-2 text-sm text-white focus:border-[#E8711A] outline-none"
-                      />
+                    <div className="space-y-3">
+                      <label className="block text-[10px] font-accent text-[#8A96A3] uppercase tracking-widest mb-1">Fotos da Hospedagem</label>
+                      <div className="grid grid-cols-2 gap-3">
+                        {(editingAccommodation.photos || []).map((photo, idx) => (
+                          <ImageUpload
+                            currentImageUrl={photo}
+                            onUploadComplete={(url) => {
+                              const newPhotos = [...(editingAccommodation.photos || [])];
+                              newPhotos[idx] = url;
+                              setEditingAccommodation({ ...editingAccommodation, photos: newPhotos });
+                            }}
+                            onRemove={() => {
+                              const newPhotos = (editingAccommodation.photos || []).filter((_, i) => i !== idx);
+                              setEditingAccommodation({ ...editingAccommodation, photos: newPhotos });
+                            }}
+                            folder="accommodations"
+                          />
+                        ))}
+                        <ImageUpload
+                          onUploadComplete={(url) => {
+                            setEditingAccommodation({ 
+                              ...editingAccommodation, 
+                              photos: [...(editingAccommodation.photos || []), url] 
+                            });
+                          }}
+                          folder="accommodations"
+                          label="Adicionar Foto"
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -2219,14 +2263,13 @@ export default function AdminView({
                     </div>
                   </div>
 
-                  <div className="space-y-1.5">
-                    <label className="font-accent text-[9px] text-white tracking-widest uppercase">Imagem de Capa (URL)</label>
-                    <input
-                      type="text"
-                      placeholder="URL da Foto do Unsplash"
-                      value={editingPost.coverImage || ""}
-                      onChange={(e) => setEditingPost({ ...editingPost, coverImage: e.target.value })}
-                      className="w-full bg-[#0D1B2A] border border-white/5 p-3 text-xs text-sans text-white"
+                  <div className="space-y-3">
+                    <ImageUpload
+                      label="Imagem de Capa"
+                      currentImageUrl={editingPost.coverImage}
+                      onUploadComplete={(url) => setEditingPost({ ...editingPost, coverImage: url })}
+                      onRemove={() => setEditingPost({ ...editingPost, coverImage: "" })}
+                      folder="blog"
                     />
                   </div>
 
@@ -2517,13 +2560,13 @@ export default function AdminView({
                     />
                   </div>
 
-                  <div className="space-y-1.5">
-                    <label className="font-accent text-[9px] text-white tracking-widest uppercase">URL da Imagem da Home (Ao lado do texto)</label>
-                    <input
-                      type="text"
-                      value={tempSettings.homeHeroImgUrl || ""}
-                      onChange={(e) => setTempSettings({ ...tempSettings, homeHeroImgUrl: e.target.value })}
-                      className="w-full bg-[#0D1B2A] border border-white/5 p-3 text-xs text-white text-sans"
+                  <div className="space-y-3">
+                    <ImageUpload
+                      label="Imagem da Home (Ao lado do texto)"
+                      currentImageUrl={tempSettings.homeHeroImgUrl}
+                      onUploadComplete={(url) => setTempSettings({ ...tempSettings, homeHeroImgUrl: url })}
+                      onRemove={() => setTempSettings({ ...tempSettings, homeHeroImgUrl: "" })}
+                      folder="settings"
                     />
                   </div>
 

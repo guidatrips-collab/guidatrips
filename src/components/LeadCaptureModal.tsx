@@ -40,11 +40,13 @@ export function LeadCaptureModal({
         phone,
         status: "novo",
         origin: attribution.origin || "whatsapp",
-        attribution: attribution.attribution,
+        attribution: {
+          ...attribution.attribution,
+          conversionPage: window.location.pathname
+        },
         metadata: {
           ...attribution.metadata,
-          channel: "WhatsApp",
-          conversionPage: window.location.pathname
+          channel: "WhatsApp"
         },
         tags: ["WhatsApp", attribution.origin === "google" ? "Google" : "Direto"],
         history: [{

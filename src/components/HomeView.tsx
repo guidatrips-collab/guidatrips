@@ -16,6 +16,7 @@ interface HomeViewProps {
   destinations: Destination[];
   selectedDestinationId: string | null;
   onUpdateSelectedDestinationId: (id: string) => void;
+  onWhatsAppContact?: (message?: string) => void;
 }
 
 export default function HomeView({ 

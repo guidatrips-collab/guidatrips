@@ -36,7 +36,8 @@ export default function ContactView({ onAddLead, whatsappNumber, onWhatsAppConta
       preferredDate,
       groupSize,
       experienceInterest: [interest],
-      notes: message ? [message] : []
+      notes: message ? [message] : [],
+      history: []
     });
 
     setSubmitted(true);

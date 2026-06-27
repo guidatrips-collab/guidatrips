@@ -12,6 +12,13 @@ import {
   onSnapshot,
   query
 } from "firebase/firestore";
+import { 
+  getStorage, 
+  ref, 
+  uploadBytes, 
+  getDownloadURL, 
+  deleteObject 
+} from "firebase/storage";
 
 // Config parsed directly from the applet environment setup with optional dynamic overrides for Vercel production
 const firebaseConfig = {
@@ -29,6 +36,9 @@ const app = initializeApp(firebaseConfig);
 
 // Initialize Firestore targeting the specific provisioned database
 export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId || "(default)");
+
+// Initialize Storage
+export const storage = getStorage(app);
 
 // Helper to remove undefined values before sending to Firestore
 const sanitizeData = (data: any): any => {
@@ -132,6 +142,38 @@ export const firestoreService = {
       }
     } catch (error) {
       console.error(`Error seeding ${collectionName}:`, error);
+    }
+  }
+};
+
+// Storage helpers for image uploads
+export const storageService = {
+  uploadFile: async (file: File, folder: string = "uploads"): Promise<string> => {
+    try {
+      const fileName = `${Date.now()}-${file.name}`;
+      const storageRef = ref(storage, `${folder}/${fileName}`);
+      await uploadBytes(storageRef, file);
+      const downloadURL = await getDownloadURL(storageRef);
+      return downloadURL;
+    } catch (error) {
+      console.error("Error uploading file:", error);
+      throw error;
+    }
+  },
+
+  deleteFile: async (fileURL: string): Promise<void> => {
+    try {
+      // Decode URL to get the storage path
+      // This is a simplified way to extract the path from a Firebase Storage URL
+      const decodedURL = decodeURIComponent(fileURL);
+      const pathPart = decodedURL.split("/o/")[1]?.split("?")[0];
+      if (!pathPart) return;
+
+      const storageRef = ref(storage, pathPart);
+      await deleteObject(storageRef);
+    } catch (error) {
+      console.error("Error deleting file:", error);
+      // We don't throw here to avoid blocking deletions if file is already gone
     }
   }
 };

@@ -24,7 +24,7 @@ import { analytics } from "./lib/analytics";
 
 import { 
   Experience, BlogPost, Lead, GlobalSettings, BookingCartItem, ClientUser, ClientReservation,
-  getBrazilLocalDate, addDaysToBrazilDate, Destination
+  getBrazilLocalDate, addDaysToBrazilDate, Destination, Accommodation, LeadHistoryItem
 } from "./types";
 import { 
   INITIAL_EXPERIENCES, INITIAL_BLOG_POSTS, INITIAL_LEADS, INITIAL_SETTINGS, INITIAL_DESTINATIONS, INITIAL_ACCOMMODATIONS
@@ -738,6 +738,7 @@ export default function App() {
       origin: "whatsapp",
       status: "novo",
       notes: [`Cliente originou contato WhatsApp com roteiro de ${cart.length} itens. Origem: ${finalCity}. Estadia: ${stayDays} dias. Escrito dia a dia.`],
+      history: [],
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
