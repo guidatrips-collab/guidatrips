@@ -12,9 +12,10 @@ interface NavbarProps {
   cartCount: number;
   onOpenCart: () => void;
   currentUser?: any;
+  onWhatsAppContact: (message?: string) => void;
 }
 
-export default function Navbar({ currentView, onNavigate, cartCount, onOpenCart, currentUser }: NavbarProps) {
+export default function Navbar({ currentView, onNavigate, cartCount, onOpenCart, currentUser, onWhatsAppContact }: NavbarProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
 
@@ -140,18 +141,16 @@ export default function Navbar({ currentView, onNavigate, cartCount, onOpenCart,
             </button>
 
             {/* CTA do Whatsapp */}
-            <a
-              href={`https://wa.me/552299887766`}
-              target="_blank"
-              referrerPolicy="no-referrer"
-              className={`flex items-center gap-1.5 border px-5 py-2.5 rounded-full text-xs font-bold uppercase transition-all duration-300 hover:scale-105 ${
+            <button
+              onClick={() => onWhatsAppContact()}
+              className={`flex items-center gap-1.5 border px-5 py-2.5 rounded-full text-xs font-bold uppercase transition-all duration-300 hover:scale-105 cursor-pointer ${
                 isThemeDarkHero
                   ? "border-[#E8711A] text-[#F4EFE6] hover:bg-[#E8711A] hover:text-[#0D1B2A]"
                   : "border-[#0D1B2A] text-[#0D1B2A] hover:bg-[#0D1B2A] hover:text-white"
               }`}
             >
               CONEXÃO ↗
-            </a>
+            </button>
           </div>
 
           {/* Hamburger Menu & Cart (Mobile) */}
@@ -213,14 +212,12 @@ export default function Navbar({ currentView, onNavigate, cartCount, onOpenCart,
             <p className="font-accent text-[10px] text-zinc-400 tracking-widest text-center uppercase">
               EXPERIÊNCIAS QUE CONECTAM
             </p>
-            <a
-              href={`https://wa.me/552299887766`}
-              target="_blank"
-              referrerPolicy="no-referrer"
+            <button
+              onClick={() => onWhatsAppContact()}
               className="w-full text-center bg-[#0D1B2A] hover:bg-[#E8711A] hover:text-[#0D1B2A] text-white py-3 rounded-sm font-accent text-xs font-semibold tracking-widest uppercase transition-colors"
             >
               FALAR NO WHATSAPP ↗
-            </a>
+            </button>
           </div>
         </div>
       )}

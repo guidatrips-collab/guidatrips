@@ -26,7 +26,8 @@ export default function HomeView({
   stayDays = 3,
   destinations,
   selectedDestinationId,
-  onUpdateSelectedDestinationId
+  onUpdateSelectedDestinationId,
+  onWhatsAppContact
 }: HomeViewProps) {
 
   // States of the micro-itinerary configurator drawer inside the homepage cards
@@ -65,11 +66,10 @@ export default function HomeView({
               <button onClick={() => onNavigate("wizard")} className="px-6 py-4 bg-[#E8711A] hover:bg-white text-[#0D1B2A] font-accent text-xs font-bold tracking-widest uppercase transition-all rounded shadow-lg flex items-center justify-center gap-2.5 hover:scale-[1.02] cursor-pointer">
                 Monte seu Roteiro
               </button>
-              <button onClick={() => {
-                  const number = settings?.whatsappNumber?.replace(/\D/g, "") || "552299887766";
-                  const text = encodeURIComponent("Olá, Guida Trips! Gostaria de ajuda para planejar minha viagem.");
-                  window.open(`https://wa.me/${number}?text=${text}`, "_blank");
-                }} className="px-6 py-4 border border-white/20 hover:border-[#E8711A] text-white hover:text-[#E8711A] font-accent text-xs font-bold tracking-widest uppercase bg-transparent transition-colors rounded hover:bg-white/5 cursor-pointer">
+              <button 
+                onClick={() => onWhatsAppContact?.("Olá, Guida Trips! Gostaria de ajuda para planejar minha viagem.")} 
+                className="px-6 py-4 border border-white/20 hover:border-[#E8711A] text-white hover:text-[#E8711A] font-accent text-xs font-bold tracking-widest uppercase bg-transparent transition-colors rounded hover:bg-white/5 cursor-pointer"
+              >
                 Falar no WhatsApp
               </button>
               <button onClick={() => onNavigate("os")} className="px-6 py-4 bg-blue-600 hover:bg-blue-500 text-white font-accent text-xs font-bold tracking-widest uppercase transition-all rounded shadow-lg flex items-center justify-center gap-2.5 hover:scale-[1.02] cursor-pointer">

@@ -25,6 +25,7 @@ interface ExperiencesViewProps {
   destinations: Destination[];
   selectedDestinationId: string | null;
   onUpdateSelectedDestinationId: (id: string) => void;
+  onWhatsAppContact?: (message?: string) => void;
 }
 
 export default function ExperiencesView({
@@ -42,7 +43,8 @@ export default function ExperiencesView({
   stayDays = 4,
   destinations,
   selectedDestinationId,
-  onUpdateSelectedDestinationId
+  onUpdateSelectedDestinationId,
+  onWhatsAppContact
 }: ExperiencesViewProps) {
   const [selectedCategory, setSelectedCategory] = useState<string>("todos");
   const [selectedLocation, setSelectedLocation] = useState<string>("todos");
@@ -1196,21 +1198,19 @@ export default function ExperiencesView({
                               </p>
                             </div>
 
-                            <a
-                              href={`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(
+                            <button
+                              onClick={() => onWhatsAppContact?.(
                                 `Olá! Gostaria de consultar se há disponibilidade sob demanda para o passeio *${activeExperience.name}* no dia ${bookingDate} às ${bookingSchedule}.\n\n` +
                                 `👤 Detalhes do Grupo:\n` +
                                 `- Adultos: ${bookingAdults}\n` +
                                 `${bookingChildren > 0 ? `- Crianças: ${bookingChildren}\n` : ""}` +
                                 `${bookingInfants > 0 ? `- Bebês: ${bookingInfants}\n` : ""}` +
                                 `\nComo não encontrei tarifas online para esta data, gostaria de ver se é possível reservar diretamente com vocês. Obrigado!`
-                              )}`}
-                              target="_blank"
-                              rel="noreferrer"
+                              )}
                               className="w-full py-4 bg-[#25D366] hover:bg-[#20bd5a] text-white font-accent font-black tracking-widest uppercase rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer font-bold text-center block text-xs"
                             >
                               <Send className="w-4 h-4 inline" /> Consultar Disponibilidade no WhatsApp
-                            </a>
+                            </button>
                           </div>
                         ) : bookingMethod === "whatsapp" ? (
                           /* WHATSAPP CTA BLOCK */
@@ -1223,8 +1223,8 @@ export default function ExperiencesView({
                               <Plus className="w-4 h-4" /> Incluir No Meu Roteiro
                             </button>
                             
-                            <a
-                              href={`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(
+                            <button
+                              onClick={() => onWhatsAppContact?.(
                                 `Olá! Gostaria de reservar o passeio *${activeExperience.name}* para o dia ${bookingDate} às ${bookingSchedule}.\n\n` +
                                 `👤 Detalhes do Grupo:\n` +
                                 `- Adultos: ${bookingAdults} (Tarifa: R$${selectedDateRates.adultPrice})\n` +
@@ -1233,13 +1233,11 @@ export default function ExperiencesView({
                                 `\n💵 Valor estimado: *R$ ${totalCost}*\n` +
                                 `📝 Observações: ${bookingObservations || "Nenhuma."}\n\n` +
                                 `Aguardando confirmação!`
-                              )}`}
-                              target="_blank"
-                              rel="noreferrer"
+                              )}
                               className="w-full py-4 bg-[#25D366] hover:bg-[#20bd5a] text-white font-accent font-black tracking-widest uppercase rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer font-bold"
                             >
                               <Send className="w-4 h-4" /> Enviar para WhatsApp
-                            </a>
+                            </button>
                           </div>
                         ) : (
                           /* DIRECT SECURE BILLING PROMPT STEP 1 */

@@ -6,10 +6,10 @@
 import React, { useState } from "react";
 import { 
   TrendingUp, Users, Compass, BarChart3, Settings, ShieldAlert,
-  Globe, Plus, Trash2, Edit3, Eye, FileText, CheckCircle, 
-  X, AlertTriangle, Play, HelpCircle, Save, Phone, MessageSquare, Image, User, Calendar, MapPin
+  Globe, Plus, Trash2, Edit3, Eye, FileText, CheckCircle, Ticket,
+  X, AlertTriangle, Play, HelpCircle, Save, Phone, MessageSquare, Image, User, Calendar, MapPin, Waves
 } from "lucide-react";
-import { Experience, Lead, BlogPost, GlobalSettings, ExperienceCategory, Destination } from "../types";
+import { Experience, Lead, BlogPost, GlobalSettings, ExperienceCategory, Destination, Accommodation } from "../types";
 import { CalendarPricingView } from "./CalendarPricingView";
 
 interface AdminViewProps {
@@ -18,11 +18,15 @@ interface AdminViewProps {
   posts: BlogPost[];
   settings: GlobalSettings;
   destinations: Destination[];
+  accommodations: Accommodation[];
+  reservations: any[];
   onUpdateExperiences: (exps: Experience[]) => void;
   onUpdatePosts: (posts: BlogPost[]) => void;
   onUpdateLeads: (leads: Lead[]) => void;
   onUpdateSettings: (settings: GlobalSettings) => void;
   onUpdateDestinations: (destinations: Destination[]) => void;
+  onUpdateAccommodations: (accommodations: Accommodation[]) => void;
+  onUpdateReservations: (reservations: any[]) => void;
 }
 
 export default function AdminView({
@@ -31,11 +35,15 @@ export default function AdminView({
   posts,
   settings,
   destinations,
+  accommodations,
+  reservations,
   onUpdateExperiences,
   onUpdatePosts,
   onUpdateLeads,
   onUpdateSettings,
-  onUpdateDestinations
+  onUpdateDestinations,
+  onUpdateAccommodations,
+  onUpdateReservations
 }: AdminViewProps) {
   // Login State
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -89,7 +97,8 @@ export default function AdminView({
   ];
 
   // Active submodule
-  const [activeTab, setActiveTab] = useState<"overview" | "destinations" | "experiences" | "calendar" | "leads" | "blog" | "settings" | "client">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "destinations" | "experiences" | "hospedagens" | "calendar" | "leads" | "blog" | "settings" | "client">("overview");
+  const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
 
   // CRM status labels
   const leadStatuses = [
@@ -104,6 +113,8 @@ export default function AdminView({
   const [editingExperience, setEditingExperience] = useState<Partial<Experience> | null>(null);
   const [editingPost, setEditingPost] = useState<Partial<BlogPost> | null>(null);
   const [editingDestination, setEditingDestination] = useState<Partial<Destination> | null>(null);
+  const [editingAccommodation, setEditingAccommodation] = useState<Partial<Accommodation> | null>(null);
+  const [leadsViewMode, setLeadsViewMode] = useState<"table" | "pipeline">("pipeline");
   const [tempSettings, setTempSettings] = useState<GlobalSettings>({
     ...settings,
     homeFilosofiaPillars: settings.homeFilosofiaPillars || defaultFilosofiaPillars,
@@ -147,12 +158,28 @@ export default function AdminView({
   const handleUpdateLeadStatus = (leadId: string, newStatus: Lead["status"]) => {
     const updated = leads.map((l) => {
       if (l.id === leadId) {
-        return { ...l, status: newStatus, updatedAt: new Date().toISOString() };
+        const historyItem: LeadHistoryItem = {
+          id: `hist-${Date.now()}`,
+          timestamp: new Date().toISOString(),
+          type: "status_change",
+          description: `Status alterado de '${l.status}' para '${newStatus}'`,
+          user: "Administrador"
+        };
+        return { 
+          ...l, 
+          status: newStatus, 
+          updatedAt: new Date().toISOString(),
+          history: [...(l.history || []), historyItem]
+        };
       }
       return l;
     });
     onUpdateLeads(updated);
     addLog(`Status do Lead #${leadId.slice(0,8)} alterado para '${newStatus}'`);
+    
+    if (selectedLead?.id === leadId) {
+      setSelectedLead(updated.find(l => l.id === leadId) || null);
+    }
   };
 
   const handleDeleteLead = (leadId: string) => {
@@ -326,6 +353,62 @@ export default function AdminView({
     }
   };
 
+  const handleSaveAccommodation = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingAccommodation) return;
+
+    if (!editingAccommodation.id) {
+      // Create new
+      const newAcc: Accommodation = {
+        id: `acc-${Date.now()}`,
+        name: editingAccommodation.name || "Nova Pousada",
+        slug: editingAccommodation.slug || `${editingAccommodation.name?.toLowerCase().replace(/\s+/g, "-")}`,
+        category: editingAccommodation.category || "pousada",
+        typeTag: editingAccommodation.typeTag || "boutique",
+        destinationId: editingAccommodation.destinationId || destinations[0]?.id || "",
+        partnerId: editingAccommodation.partnerId || "",
+        description: editingAccommodation.description || "",
+        amenities: editingAccommodation.amenities || [],
+        photos: editingAccommodation.photos || ["https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800"],
+        location: editingAccommodation.location || "",
+        address: editingAccommodation.address || "",
+        netRate: editingAccommodation.netRate || 0,
+        sellRate: editingAccommodation.sellRate || 0,
+        markup: editingAccommodation.markup || 20,
+        commission: editingAccommodation.commission || 0,
+        status: editingAccommodation.status || "active",
+        tag: editingAccommodation.tag || "CURADORIA EXCLUSIVA",
+        rating: editingAccommodation.rating || 5.0,
+        reviews: editingAccommodation.reviews || 0,
+        highlight: editingAccommodation.highlight || "",
+        whatsappMessage: editingAccommodation.whatsappMessage || "",
+        priceDisplay: editingAccommodation.priceDisplay || `A partir de R$ ${editingAccommodation.sellRate} / noite`,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+      onUpdateAccommodations([...accommodations, newAcc]);
+      addLog(`Hospedagem "${newAcc.name}" adicionada.`);
+    } else {
+      // Update
+      const updated = accommodations.map((a) => 
+        a.id === editingAccommodation.id 
+          ? { ...a, ...editingAccommodation, updatedAt: new Date().toISOString() } as Accommodation 
+          : a
+      );
+      onUpdateAccommodations(updated);
+      addLog(`Hospedagem "${editingAccommodation.name}" atualizada.`);
+    }
+    setEditingAccommodation(null);
+  };
+
+  const handleDeleteAccommodation = (id: string) => {
+    if (confirm("Confirmar exclusão desta hospedagem?")) {
+      const filtered = accommodations.filter((a) => a.id !== id);
+      onUpdateAccommodations(filtered);
+      addLog(`Hospedagem #${id} excluída.`);
+    }
+  };
+
   const handleUpdateSettings = (e: React.FormEvent) => {
     e.preventDefault();
     onUpdateSettings(tempSettings);
@@ -344,9 +427,17 @@ export default function AdminView({
 
     const updated = leads.map((l) => {
       if (l.id === leadId) {
+        const historyItem: LeadHistoryItem = {
+          id: `hist-${Date.now()}`,
+          timestamp: new Date().toISOString(),
+          type: "note_added",
+          description: `Nota adicionada: ${txt}`,
+          user: "Administrador"
+        };
         return {
           ...l,
           notes: [...(l.notes || []), txt],
+          history: [...(l.history || []), historyItem],
           updatedAt: new Date().toISOString()
         };
       }
@@ -354,6 +445,10 @@ export default function AdminView({
     });
     onUpdateLeads(updated);
     addLog(`Nota interna inserida no lead #${leadId.slice(0,8)}`);
+    
+    if (selectedLead?.id === leadId) {
+      setSelectedLead(updated.find(l => l.id === leadId) || null);
+    }
   };
 
   // Login page layout
@@ -430,8 +525,10 @@ export default function AdminView({
               { id: "overview", label: "Visão Geral", icon: TrendingUp },
               { id: "destinations", label: "Destinos", icon: MapPin },
               { id: "experiences", label: "Passeios", icon: Compass },
+              { id: "hospedagens", label: "Hospedagens", icon: Waves },
               { id: "calendar", label: "Tarifário", icon: Calendar },
               { id: "leads", label: "Leads CRM", icon: Users, alertCount: activeLeadsCount },
+              { id: "reservations", label: "Reservas", icon: Ticket },
               { id: "blog", label: "Revista/Blog", icon: FileText },
               { id: "client", label: "Área Cliente", icon: User },
               { id: "settings", label: "Ajustes", icon: Settings }
@@ -1266,6 +1363,210 @@ export default function AdminView({
           </div>
         )}
 
+        {/* -------------------- TAB: HOSPEDAGENS CRUD -------------------- */}
+        {activeTab === "hospedagens" && (
+          <div className="space-y-6 text-left">
+            {!editingAccommodation ? (
+              <div className="space-y-4">
+                <div className="flex justify-between items-center bg-[#132033] border border-white/5 p-4 rounded-sm">
+                  <span className="font-accent text-xs font-bold text-[#8A96A3] uppercase">Gestão de Hospedagens ({accommodations.length})</span>
+                  <button
+                    onClick={() => setEditingAccommodation({})}
+                    className="flex items-center gap-1 bg-[#E8711A] text-[#0D1B2A] font-accent text-xs font-bold uppercase tracking-wider px-4 py-2.5 rounded-sm hover:bg-[#C45E12] cursor-pointer"
+                  >
+                    <Plus className="w-4 h-4" /> Nova Hospedagem
+                  </button>
+                </div>
+
+                <div className="bg-[#132033]/60 border border-white/5 rounded-sm overflow-hidden">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="border-b border-white/5 bg-[#132033] font-accent text-[10px] text-[#8A96A3] uppercase tracking-widest">
+                        <th className="p-4">Thumb</th>
+                        <th className="p-4">Nome da Pousada</th>
+                        <th className="p-4">Localização</th>
+                        <th className="p-4">Tarifa Venda</th>
+                        <th className="p-4">Status</th>
+                        <th className="p-4 text-right">Ações</th>
+                      </tr>
+                    </thead>
+                    <tbody className="font-sans text-xs">
+                      {accommodations.map((acc) => (
+                        <tr key={acc.id} className="border-b border-white/5 hover:bg-white/[0.01]">
+                          <td className="p-4">
+                            <img src={acc.photos?.[0]} className="w-12 h-8 object-cover rounded" alt="Thumb" />
+                          </td>
+                          <td className="p-4">
+                            <div className="font-bold text-white">{acc.name}</div>
+                            <div className="text-[10px] opacity-60 uppercase">{acc.typeTag}</div>
+                          </td>
+                          <td className="p-4 opacity-75">{acc.location}</td>
+                          <td className="p-4 font-bold text-[#E8711A]">R$ {acc.sellRate}</td>
+                          <td className="p-4">
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-accent uppercase ${
+                              acc.status === "active" ? "bg-emerald-500/20 text-emerald-400" : "bg-red-500/20 text-red-400"
+                            }`}>
+                              {acc.status === "active" ? "Ativo" : "Inativo"}
+                            </span>
+                          </td>
+                          <td className="p-4 text-right space-x-2">
+                            <button
+                              onClick={() => setEditingAccommodation(acc)}
+                              className="p-1.5 bg-white/5 hover:bg-[#E8711A] text-[#8A96A3] hover:text-[#0D1B2A] rounded transition-colors"
+                              title="Editar"
+                            >
+                              <Edit3 className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteAccommodation(acc.id)}
+                              className="p-1.5 bg-white/5 hover:bg-red-500 text-[#8A96A3] hover:text-white rounded transition-colors"
+                              title="Excluir"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  {accommodations.length === 0 && (
+                    <div className="p-8 text-center text-[#8A96A3] text-sm">
+                      Nenhuma hospedagem cadastrada ainda.
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <form onSubmit={handleSaveAccommodation} className="bg-[#132033] border border-white/5 rounded-sm p-6 space-y-6">
+                <div className="flex justify-between items-center border-b border-white/5 pb-4">
+                  <h3 className="font-serif text-xl font-bold text-[#F4EFE6]">
+                    {editingAccommodation.id ? "Editar Hospedagem" : "Nova Hospedagem Curada"}
+                  </h3>
+                  <button type="button" onClick={() => setEditingAccommodation(null)} className="text-[#8A96A3] hover:text-white">
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-[10px] font-accent text-[#8A96A3] uppercase tracking-widest mb-1">Nome da Pousada *</label>
+                      <input
+                        required
+                        type="text"
+                        value={editingAccommodation.name || ""}
+                        onChange={(e) => setEditingAccommodation({ ...editingAccommodation, name: e.target.value })}
+                        className="w-full bg-black/30 border border-white/10 rounded px-3 py-2 text-sm text-white focus:border-[#E8711A] outline-none"
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-[10px] font-accent text-[#8A96A3] uppercase tracking-widest mb-1">Tipo / Categoria</label>
+                        <select
+                          value={editingAccommodation.typeTag || "boutique"}
+                          onChange={(e) => setEditingAccommodation({ ...editingAccommodation, typeTag: e.target.value as any })}
+                          className="w-full bg-black/30 border border-white/10 rounded px-3 py-2 text-sm text-white focus:border-[#E8711A] outline-none"
+                        >
+                          <option value="boutique">Boutique / Charme</option>
+                          <option value="pe-na-areia">Pé na areia</option>
+                          <option value="vista">Vista Panorâmica</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-accent text-[#8A96A3] uppercase tracking-widest mb-1">Status</label>
+                        <select
+                          value={editingAccommodation.status || "active"}
+                          onChange={(e) => setEditingAccommodation({ ...editingAccommodation, status: e.target.value as any })}
+                          className="w-full bg-black/30 border border-white/10 rounded px-3 py-2 text-sm text-white focus:border-[#E8711A] outline-none"
+                        >
+                          <option value="active">Ativo</option>
+                          <option value="inactive">Inativo</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-accent text-[#8A96A3] uppercase tracking-widest mb-1">Localização (Bairro/Cidade)</label>
+                      <input
+                        type="text"
+                        value={editingAccommodation.location || ""}
+                        onChange={(e) => setEditingAccommodation({ ...editingAccommodation, location: e.target.value })}
+                        className="w-full bg-black/30 border border-white/10 rounded px-3 py-2 text-sm text-white focus:border-[#E8711A] outline-none"
+                        placeholder="Ex: Praia Grande, Arraial do Cabo"
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-[10px] font-accent text-[#8A96A3] uppercase tracking-widest mb-1">Tarifa NET (Custo)</label>
+                        <input
+                          type="number"
+                          value={editingAccommodation.netRate || 0}
+                          onChange={(e) => setEditingAccommodation({ ...editingAccommodation, netRate: Number(e.target.value) })}
+                          className="w-full bg-black/30 border border-white/10 rounded px-3 py-2 text-sm text-white focus:border-[#E8711A] outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-accent text-[#8A96A3] uppercase tracking-widest mb-1">Tarifa Venda</label>
+                        <input
+                          type="number"
+                          value={editingAccommodation.sellRate || 0}
+                          onChange={(e) => setEditingAccommodation({ ...editingAccommodation, sellRate: Number(e.target.value) })}
+                          className="w-full bg-black/30 border border-white/10 rounded px-3 py-2 text-sm text-white focus:border-[#E8711A] outline-none"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-[10px] font-accent text-[#8A96A3] uppercase tracking-widest mb-1">Descrição</label>
+                      <textarea
+                        rows={3}
+                        value={editingAccommodation.description || ""}
+                        onChange={(e) => setEditingAccommodation({ ...editingAccommodation, description: e.target.value })}
+                        className="w-full bg-black/30 border border-white/10 rounded px-3 py-2 text-sm text-white focus:border-[#E8711A] outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-accent text-[#8A96A3] uppercase tracking-widest mb-1">Destaque (Exibido no site)</label>
+                      <input
+                        type="text"
+                        value={editingAccommodation.highlight || ""}
+                        onChange={(e) => setEditingAccommodation({ ...editingAccommodation, highlight: e.target.value })}
+                        className="w-full bg-black/30 border border-white/10 rounded px-3 py-2 text-sm text-white focus:border-[#E8711A] outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-accent text-[#8A96A3] uppercase tracking-widest mb-1">Foto Principal (URL)</label>
+                      <input
+                        type="text"
+                        value={editingAccommodation.photos?.[0] || ""}
+                        onChange={(e) => setEditingAccommodation({ ...editingAccommodation, photos: [e.target.value] })}
+                        className="w-full bg-black/30 border border-white/10 rounded px-3 py-2 text-sm text-white focus:border-[#E8711A] outline-none"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pt-4 border-t border-white/5 flex justify-end gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setEditingAccommodation(null)}
+                    className="px-4 py-2 border border-white/10 rounded text-xs font-bold uppercase tracking-wider text-[#8A96A3] hover:text-white"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-6 py-2 bg-[#E8711A] text-[#0D1B2A] rounded text-xs font-bold uppercase tracking-wider hover:bg-[#C45E12]"
+                  >
+                    Salvar Hospedagem
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        )}
+
         {/* -------------------- TAB: CALENDAR TARIFÁRIO -------------------- */}
         {activeTab === "calendar" && (
           <CalendarPricingView 
@@ -1277,14 +1578,34 @@ export default function AdminView({
         {/* -------------------- TAB: LEADS CRM GESTOR -------------------- */}
         {activeTab === "leads" && (
           <div className="space-y-6 text-left">
-            <div className="bg-[#132033] border border-white/5 p-4 rounded-sm">
-              <span className="font-accent text-xs font-bold text-[#8A96A3] uppercase">Leads Qualificados do CRM ({leads.length})</span>
+            <div className="bg-[#132033] border border-white/5 p-4 rounded-sm flex justify-between items-center">
+              <span className="font-accent text-xs font-bold text-[#8A96A3] uppercase">Gestão de Leads CRM ({leads.length})</span>
+              <div className="flex bg-black/40 rounded p-1 border border-white/5">
+                <button
+                  onClick={() => setLeadsViewMode("table")}
+                  className={`px-3 py-1 text-[10px] font-accent uppercase tracking-wider rounded transition-all ${
+                    leadsViewMode === "table" ? "bg-[#E8711A] text-[#0D1B2A] font-bold" : "text-[#8A96A3] hover:text-white"
+                  }`}
+                >
+                  Tabela
+                </button>
+                <button
+                  onClick={() => setLeadsViewMode("pipeline")}
+                  className={`px-3 py-1 text-[10px] font-accent uppercase tracking-wider rounded transition-all ${
+                    leadsViewMode === "pipeline" ? "bg-[#E8711A] text-[#0D1B2A] font-bold" : "text-[#8A96A3] hover:text-white"
+                  }`}
+                >
+                  Pipeline
+                </button>
+              </div>
             </div>
 
             {leads.length > 0 ? (
-              <div className="bg-[#132033]/60 border border-white/5 rounded-sm overflow-hidden">
-                <table className="w-full text-left border-collapse">
-                  <thead>
+              <>
+                {leadsViewMode === "table" ? (
+                  <div className="bg-[#132033]/60 border border-white/5 rounded-sm overflow-hidden">
+                    <table className="w-full text-left border-collapse">
+                      <thead>
                     <tr className="border-b border-white/5 bg-[#132033] font-accent text-[10px] text-[#8A96A3] uppercase tracking-widest">
                       <th className="p-4"># Lead</th>
                       <th className="p-4">Info do Viajante</th>
@@ -1343,6 +1664,13 @@ export default function AdminView({
                         </td>
                         <td className="p-4 text-right space-x-2">
                           <button
+                            onClick={() => setSelectedLead(lead)}
+                            className="p-2 bg-white/5 hover:bg-white/10 rounded inline-block text-white"
+                            title="Ver Detalhes Rastreamento"
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                          </button>
+                          <button
                             onClick={() => handleAddNote(lead.id)}
                             className="p-2 bg-white/5 hover:bg-white/10 rounded inline-block text-white"
                             title="Inserir Nota Interna"
@@ -1375,10 +1703,379 @@ export default function AdminView({
                 </table>
               </div>
             ) : (
-              <div className="text-center py-20 bg-[#132033]/40 border border-white/5 rounded-sm">
-                <p className="font-sans text-xs text-[#8A96A3]">Nenhum lead qualificado no CRM ainda.</p>
+              <div className="grid grid-cols-1 md:grid-cols-5 gap-4 min-h-[600px] overflow-x-auto pb-4 custom-scrollbar">
+                {leadStatuses.map((status) => {
+                  const filteredLeads = leads.filter(l => l.status === status.id);
+                  return (
+                    <div key={status.id} className="flex flex-col bg-[#132033]/40 border border-white/5 rounded-sm min-w-[200px]">
+                      <div className={`p-3 border-b border-white/5 ${status.color} flex justify-between items-center`}>
+                        <span className="font-accent text-[10px] font-bold uppercase tracking-widest">{status.label}</span>
+                        <span className="text-[10px] opacity-75 font-bold">{filteredLeads.length}</span>
+                      </div>
+                      
+                      <div className="flex-1 p-2 space-y-3">
+                        {filteredLeads.map((lead) => (
+                          <motion.div
+                            layoutId={lead.id}
+                            key={lead.id}
+                            className="bg-[#132033] border border-white/10 p-3 rounded shadow-sm hover:border-[#E8711A]/50 transition-colors cursor-pointer group"
+                            onClick={() => setSelectedLead(lead)}
+                          >
+                            <div className="flex justify-between items-start mb-2">
+                              <span className="text-[9px] font-mono text-[#8A96A3]">#{lead.id.slice(-4).toUpperCase()}</span>
+                              <div className="flex gap-1">
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); handleAddNote(lead.id); }}
+                                  className="p-1 text-[#8A96A3] hover:text-white"
+                                >
+                                  <FileText className="w-3 h-3" />
+                                </button>
+                              </div>
+                            </div>
+                            <div className="font-bold text-white text-[11px] mb-1">{lead.name}</div>
+                            <div className="text-[10px] text-[#8A96A3] mb-2 truncate">
+                              {lead.experienceInterest.map(id => experiences.find(e => e.id === id)?.name || id).join(", ")}
+                            </div>
+                            
+                            <div className="flex items-center justify-between text-[9px] text-[#8A96A3]">
+                              <div className="flex items-center gap-1">
+                                <Calendar className="w-2.5 h-2.5" />
+                                {lead.preferredDate ? lead.preferredDate.split("-").reverse().join("/") : "A decidir"}
+                              </div>
+                              <div className="flex items-center gap-1 text-[#E8711A]">
+                                <Phone className="w-2.5 h-2.5" /> {lead.phone.slice(-4)}
+                              </div>
+                            </div>
+
+                            <div className="mt-3 pt-2 border-t border-white/5 flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <a
+                                href={`https://wa.me/${lead.phone.replace(/\D/g, "")}`}
+                                target="_blank"
+                                onClick={(e) => e.stopPropagation()}
+                                className="p-1.5 bg-green-500/10 text-green-400 rounded hover:bg-green-500/20"
+                              >
+                                <MessageSquare className="w-3 h-3" />
+                              </a>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); handleDeleteLead(lead.id); }}
+                                className="p-1.5 bg-red-500/10 text-red-400 rounded hover:bg-red-500/20"
+                              >
+                                <Trash2 className="w-3 h-3" />
+                              </button>
+                            </div>
+                          </motion.div>
+                        ))}
+                        {filteredLeads.length === 0 && (
+                          <div className="h-20 flex items-center justify-center border border-dashed border-white/5 rounded opacity-30 text-[10px] uppercase font-accent">
+                            Vazio
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             )}
+          </>
+        ) : (
+          <div className="text-center py-20 bg-[#132033]/40 border border-white/5 rounded-sm">
+            <p className="font-sans text-xs text-[#8A96A3]">Nenhum lead qualificado no CRM ainda.</p>
+          </div>
+        )}
+
+        {/* Lead Details Modal */}
+            {selectedLead && (
+              <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                <motion.div 
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="bg-[#132033] border border-white/10 rounded-lg w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl"
+                >
+                  {/* Modal Header */}
+                  <div className="p-6 border-b border-white/5 flex justify-between items-center bg-[#0D1B2A]">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-[#E8711A]/20 rounded-full flex items-center justify-center text-[#E8711A]">
+                        <User className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h3 className="font-serif text-lg font-bold text-white">{selectedLead.name}</h3>
+                        <p className="text-[10px] font-accent text-[#8A96A3] uppercase tracking-widest">ID: #{selectedLead.id.toUpperCase()}</p>
+                      </div>
+                    </div>
+                    <button 
+                      onClick={() => setSelectedLead(null)}
+                      className="p-2 hover:bg-white/5 rounded-full transition-colors text-zinc-400 hover:text-white"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+
+                  {/* Modal Body */}
+                  <div className="flex-1 overflow-y-auto p-8 space-y-8">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                      
+                      {/* Section: Status & Basic Info */}
+                      <div className="space-y-6">
+                        <div>
+                          <h4 className="font-accent text-[9px] text-[#E8711A] font-bold uppercase tracking-widest mb-3">Status Atual</h4>
+                          <select
+                            value={selectedLead.status}
+                            onChange={(e) => handleUpdateLeadStatus(selectedLead.id, e.target.value as any)}
+                            className="w-full bg-[#0D1B2A] border border-white/10 p-2.5 rounded text-xs font-accent text-white focus:border-[#E8711A] outline-none"
+                          >
+                            <option value="novo">🔵 Novo</option>
+                            <option value="atendendo">🟡 Em Atendimento</option>
+                            <option value="proposta">🟣 Proposta Enviada</option>
+                            <option value="fechado">🟢 Fechado</option>
+                            <option value="perdido">🔴 Perdido</option>
+                          </select>
+                        </div>
+
+                        <div>
+                          <h4 className="font-accent text-[9px] text-[#8A96A3] font-bold uppercase tracking-widest mb-3">Contatos</h4>
+                          <div className="space-y-3">
+                            <div className="flex items-center gap-2 text-xs">
+                              <Phone className="w-3.5 h-3.5 text-[#8A96A3]" />
+                              <span className="text-white">{selectedLead.phone}</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-xs">
+                              <Mail className="w-3.5 h-3.5 text-[#8A96A3]" />
+                              <span className="text-white">{selectedLead.email || "Não informado"}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div>
+                          <h4 className="font-accent text-[9px] text-[#8A96A3] font-bold uppercase tracking-widest mb-3">Interesses</h4>
+                          <div className="space-y-2">
+                            {selectedLead.experienceInterest?.map(expId => {
+                              const exp = experiences.find(e => e.id === expId);
+                              return (
+                                <div key={expId} className="px-3 py-2 bg-white/5 border border-white/5 rounded text-[11px] text-white font-bold">
+                                  {exp?.name || expId}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Section: Intelligence Tracking */}
+                      <div className="space-y-6 col-span-2 border-l border-white/5 pl-8 text-left">
+                        <div className="grid grid-cols-2 gap-8 text-left">
+                          <div className="text-left">
+                            <h4 className="font-accent text-[9px] text-[#E8711A] font-bold uppercase tracking-widest mb-3">Atribuição (Marketing)</h4>
+                            <div className="space-y-2 text-[11px]">
+                              <div className="flex justify-between border-b border-white/5 pb-1">
+                                <span className="text-[#8A96A3]">Origem:</span>
+                                <span className="text-white font-bold uppercase">{selectedLead.attribution?.source || selectedLead.origin}</span>
+                              </div>
+                              <div className="flex justify-between border-b border-white/5 pb-1">
+                                <span className="text-[#8A96A3]">Mídia:</span>
+                                <span className="text-white">{selectedLead.attribution?.medium || "-"}</span>
+                              </div>
+                              <div className="flex justify-between border-b border-white/5 pb-1">
+                                <span className="text-[#8A96A3]">Campanha:</span>
+                                <span className="text-white">{selectedLead.attribution?.campaign || "-"}</span>
+                              </div>
+                              <div className="flex justify-between border-b border-white/5 pb-1">
+                                <span className="text-[#8A96A3]">Termo:</span>
+                                <span className="text-white">{selectedLead.attribution?.term || "-"}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-[#8A96A3]">Canal:</span>
+                                <span className="text-white">{selectedLead.metadata?.channel || "-"}</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="text-left">
+                            <h4 className="font-accent text-[9px] text-[#E8711A] font-bold uppercase tracking-widest mb-3">Tecnologia & Local</h4>
+                            <div className="space-y-2 text-[11px]">
+                              <div className="flex justify-between border-b border-white/5 pb-1">
+                                <span className="text-[#8A96A3]">Dispositivo:</span>
+                                <span className="text-white">{selectedLead.metadata?.device || "-"}</span>
+                              </div>
+                              <div className="flex justify-between border-b border-white/5 pb-1">
+                                <span className="text-[#8A96A3]">Sistema:</span>
+                                <span className="text-white">{selectedLead.metadata?.os || "-"}</span>
+                              </div>
+                              <div className="flex justify-between border-b border-white/5 pb-1">
+                                <span className="text-[#8A96A3]">Navegador:</span>
+                                <span className="text-white">{selectedLead.metadata?.browser || "-"}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-[#8A96A3]">Cidade/UF:</span>
+                                <span className="text-white">{selectedLead.metadata?.city ? `${selectedLead.metadata.city}/${selectedLead.metadata.state}` : "-"}</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="text-left">
+                          <h4 className="font-accent text-[9px] text-[#8A96A3] font-bold uppercase tracking-widest mb-3">Histórico de Movimentação</h4>
+                          <div className="space-y-3 max-h-60 overflow-y-auto pr-2">
+                            {selectedLead.history && selectedLead.history.length > 0 ? (
+                              selectedLead.history.map((item, idx) => (
+                                <div key={item.id} className="relative pl-4 border-l border-[#E8711A]/30 pb-2">
+                                  <div className="absolute -left-[5px] top-1.5 w-2 h-2 rounded-full bg-[#E8711A]" />
+                                  <div className="text-[10px] text-[#8A96A3] flex justify-between">
+                                    <span>{new Date(item.timestamp).toLocaleString("pt-BR")}</span>
+                                    <span className="font-bold text-white/50">{item.user}</span>
+                                  </div>
+                                  <p className="text-[11px] text-white mt-0.5">{item.description}</p>
+                                </div>
+                              ))
+                            ) : (
+                              <p className="text-[10px] text-[#8A96A3] italic">Nenhuma movimentação registrada.</p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                    </div>
+                  </div>
+
+                  {/* Modal Footer */}
+                  <div className="p-6 border-t border-white/5 flex justify-between items-center bg-[#0D1B2A]">
+                    <div className="flex gap-2">
+                      <button 
+                        onClick={() => handleAddNote(selectedLead.id)}
+                        className="px-4 py-2 bg-white/5 hover:bg-white/10 text-white rounded text-[10px] font-accent font-bold uppercase tracking-widest transition-colors flex items-center gap-2"
+                      >
+                        <FileText className="w-3.5 h-3.5" /> Adicionar Nota
+                      </button>
+                      <a 
+                        href={`https://wa.me/${selectedLead.phone.replace(/\D/g, "")}`}
+                        target="_blank"
+                        className="px-4 py-2 bg-green-500/10 hover:bg-green-500/20 text-green-400 rounded text-[10px] font-accent font-bold uppercase tracking-widest transition-colors flex items-center gap-2"
+                      >
+                        <MessageSquare className="w-3.5 h-3.5" /> Abrir WhatsApp
+                      </a>
+                    </div>
+                    <button 
+                      onClick={() => setSelectedLead(null)}
+                      className="px-6 py-2 bg-[#E8711A] text-[#0D1B2A] rounded text-[10px] font-accent font-bold uppercase tracking-widest hover:bg-[#C45E12] transition-colors"
+                    >
+                      Fechar Detalhes
+                    </button>
+                  </div>
+                </motion.div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* -------------------- TAB: RESERVAS (Gestão de Itinerários) -------------------- */}
+        {activeTab === "reservations" && (
+          <div className="space-y-6 text-left">
+            <div className="flex justify-between items-center bg-[#132033] border border-white/5 p-4 rounded-sm">
+              <span className="font-accent text-xs font-bold text-[#8A96A3] uppercase tracking-widest">
+                Gerenciamento de Reservas / Itinerários ({reservations.length})
+              </span>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    const csv = reservations.map(r => `${r.id},${r.userId},${r.experienceId},${r.date},${r.status}`).join('\n');
+                    const blob = new Blob([csv], { type: 'text/csv' });
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.setAttribute('hidden', '');
+                    a.setAttribute('href', url);
+                    a.setAttribute('download', 'reservas_guida.csv');
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                  }}
+                  className="flex items-center gap-2 bg-white/5 text-[#8A96A3] font-accent text-[10px] font-bold uppercase tracking-widest px-4 py-2.5 rounded-sm hover:text-white transition-colors"
+                >
+                  <FileText className="w-4 h-4" /> Exportar CSV
+                </button>
+              </div>
+            </div>
+
+            <div className="bg-[#132033]/60 border border-white/5 rounded-sm overflow-hidden">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-white/5 bg-[#132033] font-accent text-[10px] text-[#8A96A3] uppercase tracking-widest">
+                    <th className="p-4">Data/Hora</th>
+                    <th className="p-4">Cliente/ID</th>
+                    <th className="p-4">Experiência</th>
+                    <th className="p-4 text-center">Pax</th>
+                    <th className="p-4">Status</th>
+                    <th className="p-4 text-right">Ações</th>
+                  </tr>
+                </thead>
+                <tbody className="font-sans text-xs">
+                  {[...reservations].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map((res) => {
+                    const exp = experiences.find(e => e.id === res.experienceId);
+                    return (
+                      <tr key={res.id} className="border-b border-white/5 hover:bg-white/[0.01]">
+                        <td className="p-4">
+                          <div className="font-bold text-white">{new Date(res.date).toLocaleDateString('pt-BR')}</div>
+                          <div className="text-[10px] text-[#8A96A3]">{res.time}</div>
+                        </td>
+                        <td className="p-4">
+                          <div className="text-white font-medium">{res.userName || res.userId}</div>
+                          <div className="text-[10px] text-[#8A96A3] uppercase tracking-tighter">ID: #{res.id.slice(0, 8)}</div>
+                        </td>
+                        <td className="p-4">
+                          <div className="text-white font-bold">{exp?.name || "Passeio Removido"}</div>
+                          <div className="text-[10px] text-[#8A96A3]">{exp?.category}</div>
+                        </td>
+                        <td className="p-4 text-center">
+                          <span className="bg-[#1a2d42] text-white px-2 py-0.5 rounded text-[10px] font-bold">{res.pax || ((res.adults || 0) + (res.children || 0))}</span>
+                        </td>
+                        <td className="p-4">
+                          <span className={`px-2 py-0.5 rounded-sm text-[9px] font-accent font-bold uppercase tracking-widest ${
+                            res.status === 'confirmed' ? 'bg-green-500/10 text-green-400' :
+                            res.status === 'pending' ? 'bg-yellow-500/10 text-yellow-400' :
+                            res.status === 'new' ? 'bg-blue-500/10 text-blue-400' :
+                            'bg-red-500/10 text-red-400'
+                          }`}>
+                            {res.status === 'new' ? 'Novo Itinerário' : 
+                             res.status === 'confirmed' ? 'Confirmado' :
+                             res.status === 'pending' ? 'Em Análise' : 'Cancelado'}
+                          </span>
+                        </td>
+                        <td className="p-4 text-right">
+                          <div className="flex justify-end gap-2">
+                            <button 
+                              onClick={() => {
+                                const newStatus = res.status === 'confirmed' ? 'pending' : 'confirmed';
+                                const updated = reservations.map(r => r.id === res.id ? { ...r, status: newStatus } : r);
+                                onUpdateReservations(updated);
+                              }}
+                              title="Alterar Status"
+                              className="p-1.5 bg-white/5 text-[#8A96A3] rounded hover:text-white"
+                            >
+                              <CheckCircle className="w-3.5 h-3.5" />
+                            </button>
+                            <button 
+                              onClick={() => {
+                                if(confirm("Deseja realmente remover esta reserva?")) {
+                                  onUpdateReservations(reservations.filter(r => r.id !== res.id));
+                                }
+                              }}
+                              className="p-1.5 bg-red-500/10 text-red-400 rounded hover:bg-red-500/20"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                  {reservations.length === 0 && (
+                    <tr>
+                      <td colSpan={6} className="p-10 text-center text-[#8A96A3] font-accent text-xs uppercase tracking-widest opacity-50">
+                        Nenhuma reserva encontrada
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
 

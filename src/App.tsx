@@ -19,6 +19,8 @@ import WizardView from "./components/WizardView";
 import ClientPanelView from "./components/ClientPanelView";
 import ClientAuthModal from "./components/ClientAuthModal";
 import { GuidaOS } from "./os/GuidaOS";
+import { LeadCaptureModal } from "./components/LeadCaptureModal";
+import { analytics } from "./lib/analytics";
 
 import { 
   Experience, BlogPost, Lead, GlobalSettings, BookingCartItem, ClientUser, ClientReservation,
@@ -152,6 +154,20 @@ export default function App() {
   const [financial, setFinancial] = useState<any[]>([]);
   const [affiliates, setAffiliates] = useState<any[]>([]);
   const [budgets, setBudgets] = useState<any[]>([]);
+  
+  // WhatsApp Lead Capture State
+  const [isLeadModalOpen, setIsLeadModalOpen] = useState(false);
+  const [waDefaultMessage, setWaDefaultMessage] = useState("");
+
+  // Tracking user journey
+  useEffect(() => {
+    analytics.trackPageView();
+  }, [currentView]);
+
+  const openWhatsAppModal = (message?: string) => {
+    setWaDefaultMessage(message || settings.whatsappGreeting || "Olá! Gostaria de mais informações.");
+    setIsLeadModalOpen(true);
+  };
 
   // Roteiro (Shopping Cart) Drawer States
   const [cart, setCart] = useState<BookingCartItem[]>([]);
@@ -412,6 +428,49 @@ export default function App() {
       await firestoreService.set("settings", "global", newSettings);
     } catch (e) {
       console.error("Firestore settings update failed:", e);
+    }
+  };
+
+  const updateAccommodations = async (newAcc: Accommodation[]) => {
+    const oldAcc = accommodations;
+    setAccommodations(newAcc);
+    localStorage.setItem("guidatrips_accommodations", JSON.stringify(newAcc));
+
+    try {
+      const oldIds = oldAcc.map(a => a.id);
+      const newIds = newAcc.map(a => a.id);
+      const deletedIds = oldIds.filter(id => !newIds.includes(id));
+
+      for (const delId of deletedIds) {
+        await firestoreService.delete("accommodations", delId);
+      }
+
+      for (const acc of newAcc) {
+        await firestoreService.set("accommodations", acc.id, acc);
+      }
+    } catch (e) {
+      console.error("Firestore accommodations update failed:", e);
+    }
+  };
+
+  const updateReservations = async (newRes: any[]) => {
+    const oldRes = osReservations;
+    setOsReservations(newRes);
+    // Reservations are handled individually in Wizard but here we might need bulk update for Admin
+    try {
+      const oldIds = oldRes.map(r => r.id);
+      const newIds = newRes.map(r => r.id);
+      const deletedIds = oldIds.filter(id => !newIds.includes(id));
+
+      for (const delId of deletedIds) {
+        await firestoreService.delete("reservations", delId);
+      }
+
+      for (const res of newRes) {
+        await firestoreService.set("reservations", res.id, res);
+      }
+    } catch (e) {
+      console.error("Firestore reservations update failed:", e);
     }
   };
 
@@ -723,6 +782,7 @@ export default function App() {
           cartCount={cart.length}
           onOpenCart={() => { setCurrentView("roteiro"); }}
           currentUser={currentUser}
+          onWhatsAppContact={openWhatsAppModal}
         />
       </header>
 
@@ -730,7 +790,7 @@ export default function App() {
       <main className="flex-grow">
         {currentView === "home" && (
           <HomeView 
-            settings={settings} 
+            settings={settings}
             onNavigate={handleNavigate} 
             onAddToCart={handleAddToCart} 
             experiences={experiences}
@@ -740,6 +800,7 @@ export default function App() {
             destinations={destinations}
             selectedDestinationId={selectedDestinationId}
             onUpdateSelectedDestinationId={updateSelectedDestinationId}
+            onWhatsAppContact={openWhatsAppModal}
           />
         )}
         {currentView === "experiencias" && (
@@ -759,6 +820,7 @@ export default function App() {
             destinations={destinations}
             selectedDestinationId={selectedDestinationId}
             onUpdateSelectedDestinationId={updateSelectedDestinationId}
+            onWhatsAppContact={openWhatsAppModal}
           />
         )}
         {currentView === "destino" && (
@@ -785,12 +847,14 @@ export default function App() {
             destinations={destinations}
             selectedDestinationId={selectedDestinationId}
             onUpdateSelectedDestinationId={updateSelectedDestinationId}
+            accommodations={accommodations}
           />
         )}
         {currentView === "hospedagens" && (
           <HospedagensView 
             whatsappNumber={settings.whatsappNumber} 
             accommodations={accommodations}
+            onWhatsAppContact={openWhatsAppModal}
           />
         )}
         {currentView === "sobre" && (
@@ -808,6 +872,7 @@ export default function App() {
           <ContactView 
             onAddLead={handleAddNewLead} 
             whatsappNumber={settings.whatsappNumber}
+            onWhatsAppContact={openWhatsAppModal}
           />
         )}
         {currentView === "admin" && (
@@ -817,11 +882,15 @@ export default function App() {
             posts={posts}
             settings={settings}
             destinations={destinations}
+            accommodations={accommodations}
+            reservations={osReservations}
             onUpdateExperiences={updateExperiences}
             onUpdatePosts={updatePosts}
             onUpdateLeads={updateLeads}
             onUpdateSettings={updateSettings}
             onUpdateDestinations={updateDestinations}
+            onUpdateAccommodations={updateAccommodations}
+            onUpdateReservations={updateReservations}
           />
         )}
         {currentView === "cliente" && (
@@ -860,7 +929,11 @@ export default function App() {
         )}
       </main>
 
-      <Footer onNavigate={handleNavigate} whatsappNumber={settings.whatsappNumber} />
+      <Footer 
+        onNavigate={handleNavigate} 
+        whatsappNumber={settings.whatsappNumber} 
+        onWhatsAppContact={openWhatsAppModal}
+      />
 
       {/* Client Authentication Modal */}
       <ClientAuthModal 
@@ -1347,6 +1420,12 @@ export default function App() {
         </div>
       )}
 
+      <LeadCaptureModal
+        isOpen={isLeadModalOpen}
+        onClose={() => setIsLeadModalOpen(false)}
+        whatsappNumber={settings.whatsappNumber}
+        defaultMessage={waDefaultMessage}
+      />
     </div>
   );
 }

@@ -14,9 +14,10 @@ import { Accommodation } from "../types";
 interface HospedagensViewProps {
   whatsappNumber: string;
   accommodations: Accommodation[];
+  onWhatsAppContact?: (message?: string) => void;
 }
 
-export default function HospedagensView({ whatsappNumber, accommodations }: HospedagensViewProps) {
+export default function HospedagensView({ whatsappNumber, accommodations, onWhatsAppContact }: HospedagensViewProps) {
   const [activeFilter, setActiveFilter] = useState<"todas" | "boutique" | "vista" | "pe-na-areia">("todas");
 
   // Map database accommodations to the local format if needed, or just use them directly
@@ -41,9 +42,7 @@ export default function HospedagensView({ whatsappNumber, accommodations }: Hosp
   );
 
   const handleBookNow = (msg: string) => {
-    const formattedNumber = whatsappNumber.replace(/\D/g, "");
-    const waUrl = `https://wa.me/${formattedNumber}?text=${encodeURIComponent(msg)}`;
-    window.open(waUrl, "_blank");
+    onWhatsAppContact?.(msg);
   };
 
   return (

@@ -11,9 +11,10 @@ import { motion } from "motion/react";
 interface ContactViewProps {
   onAddLead: (leadData: Omit<Lead, "id" | "origin" | "status" | "createdAt" | "updatedAt">) => void;
   whatsappNumber: string;
+  onWhatsAppContact?: (message?: string) => void;
 }
 
-export default function ContactView({ onAddLead, whatsappNumber }: ContactViewProps) {
+export default function ContactView({ onAddLead, whatsappNumber, onWhatsAppContact }: ContactViewProps) {
   // Form states
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -78,18 +79,16 @@ export default function ContactView({ onAddLead, whatsappNumber }: ContactViewPr
               <div className="space-y-4 font-sans text-xs">
                 
                 {/* Whatsapp CTA */}
-                <a 
-                  href={`https://wa.me/${whatsappNumber}`}
-                  target="_blank"
-                  referrerPolicy="no-referrer"
-                  className="flex items-center gap-4 p-4 bg-[#E8711A]/5 hover:bg-[#E8711A] hover:text-white text-[#0D1B2A] rounded-xl border border-[#E8711A]/20 transition-all cursor-pointer group"
+                <button 
+                  onClick={() => onWhatsAppContact?.("Olá! Gostaria de falar com um concierge.")}
+                  className="w-full flex items-center gap-4 p-4 bg-[#E8711A]/5 hover:bg-[#E8711A] hover:text-white text-[#0D1B2A] rounded-xl border border-[#E8711A]/20 transition-all cursor-pointer group text-left"
                 >
                   <MessageSquare className="w-5 h-5 text-[#E8711A] group-hover:text-white shrink-0" />
                   <div>
                     <h4 className="font-accent font-bold tracking-wider text-[10px] uppercase">Falar no WhatsApp</h4>
                     <span className="text-xs font-sans text-zinc-500 group-hover:text-white/90">Mandar mensagem agora (Resposta imediata)</span>
                   </div>
-                </a>
+                </button>
 
                 {/* Email Direct */}
                 <div className="flex items-center gap-4 p-4 bg-zinc-50 rounded-xl border border-zinc-150">

@@ -30,6 +30,25 @@ const app = initializeApp(firebaseConfig);
 // Initialize Firestore targeting the specific provisioned database
 export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId || "(default)");
 
+// Helper to remove undefined values before sending to Firestore
+const sanitizeData = (data: any): any => {
+  if (data === undefined) return null;
+  if (data === null || typeof data !== "object") return data;
+  
+  if (Array.isArray(data)) {
+    return data.map(sanitizeData);
+  }
+
+  const sanitized: any = {};
+  for (const key in data) {
+    if (Object.prototype.hasOwnProperty.call(data, key)) {
+      const value = data[key];
+      sanitized[key] = value === undefined ? null : sanitizeData(value);
+    }
+  }
+  return sanitized;
+};
+
 // Generic service helpers to fetch and write from firestore to make it super elegant in React
 export const firestoreService = {
   getAll: async <T>(collectionName: string): Promise<T[]> => {
@@ -46,7 +65,7 @@ export const firestoreService = {
   set: async (collectionName: string, id: string, data: any): Promise<void> => {
     try {
       const docRef = doc(db, collectionName, id);
-      await setDoc(docRef, data, { merge: true });
+      await setDoc(docRef, sanitizeData(data), { merge: true });
     } catch (error) {
       console.error(`Error setting document in ${collectionName}/${id}:`, error);
       throw error;
@@ -56,7 +75,7 @@ export const firestoreService = {
   add: async (collectionName: string, data: any): Promise<string> => {
     try {
       const colRef = collection(db, collectionName);
-      const docRef = await addDoc(colRef, data);
+      const docRef = await addDoc(colRef, sanitizeData(data));
       return docRef.id;
     } catch (error) {
       console.error(`Error adding document to ${collectionName}:`, error);
@@ -67,7 +86,7 @@ export const firestoreService = {
   update: async (collectionName: string, id: string, data: any): Promise<void> => {
     try {
       const docRef = doc(db, collectionName, id);
-      await updateDoc(docRef, data);
+      await updateDoc(docRef, sanitizeData(data));
     } catch (error) {
       console.error(`Error updating document ${collectionName}/${id}:`, error);
       throw error;
@@ -107,7 +126,7 @@ export const firestoreService = {
           // If the item has an id, use it as the document reference id
           const id = item.id || Math.random().toString(36).substring(2, 11);
           const docRef = doc(db, collectionName, id);
-          batch.set(docRef, item);
+          batch.set(docRef, sanitizeData(item));
         });
         await batch.commit();
       }

@@ -229,15 +229,71 @@ export interface Lead {
   id: string;
   name: string;
   phone: string;
-  email: string;
-  experienceInterest: string[]; // List of experience ids
+  email?: string;
+  experienceInterest?: string[]; // List of experience ids
   preferredDate?: string;
-  groupSize: number;
-  origin: "formulario" | "whatsapp" | "instagram";
+  groupSize?: number;
+  origin: "formulario" | "whatsapp" | "instagram" | "direct" | "google" | "ads" | "seo";
   status: "novo" | "atendendo" | "proposta" | "fechado" | "perdido";
+  
+  // Intelligent Tracking & Attribution
+  attribution?: {
+    source?: string; // UTM Source
+    medium?: string; // UTM Medium
+    campaign?: string; // UTM Campaign
+    term?: string; // UTM Term
+    content?: string; // UTM Content
+    referrer?: string;
+    entryPage?: string;
+    conversionPage?: string;
+    gclid?: string; // Google Click ID
+    fbclid?: string; // Facebook Click ID
+  };
+  
+  metadata?: {
+    device?: string;
+    browser?: string;
+    os?: string;
+    city?: string;
+    state?: string;
+    firstAccess?: string;
+    lastAccess?: string;
+    channel?: string;
+  };
+
+  tags?: string[]; // e.g. ["Instagram", "Google", "Página de Passeio"]
+  assignedTo?: string; // Staff member ID
+  history: LeadHistoryItem[];
   notes?: string[];
+  
   createdAt: string;
   updatedAt: string;
+}
+
+export interface LeadHistoryItem {
+  id: string;
+  timestamp: string;
+  type: "status_change" | "note_added" | "contact_attempt" | "proposal_sent" | "system_log";
+  description: string;
+  user?: string; // Responsible user (Staff)
+  metadata?: any;
+}
+
+export interface UserJourneyEvent {
+  id: string;
+  anonymousId?: string; // For non-logged users
+  userId?: string; // For logged users
+  timestamp: string;
+  type: "page_view" | "interaction" | "conversion" | "abandonment";
+  page: string;
+  action: string; // e.g. "visit_home", "click_whatsapp", "start_itinerary"
+  metadata?: {
+    duration?: number;
+    elementId?: string;
+    experienceId?: string;
+    path?: string;
+    [key: string]: any;
+  };
 }
 
 export interface BlogPost {
@@ -415,13 +471,16 @@ export interface ClientReservation {
   experienceId: string;
   date: string;
   time: string;
-  status: "confirmed" | "completed" | "cancelled";
+  status: "confirmed" | "completed" | "cancelled" | "pending" | "new";
   pax: number;
-  voucherCode: string;
-  meetingPoint: string;
-  rules: string[];
-  bringItems: string[];
-  avoidItems: string[];
+  voucherCode?: string;
+  meetingPoint?: string;
+  rules?: string[];
+  bringItems?: string[];
+  avoidItems?: string[];
+  adults?: number;
+  children?: number;
+  infants?: number;
 }
 
 export interface ClientPartner {

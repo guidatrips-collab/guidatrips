@@ -35,6 +35,7 @@ interface WizardViewProps {
   destinations: Destination[];
   selectedDestinationId: string | null;
   onUpdateSelectedDestinationId: (id: string) => void;
+  accommodations: Accommodation[];
 }
 
 export default function WizardView({
@@ -56,7 +57,8 @@ export default function WizardView({
   onTriggerAuthModal,
   destinations,
   selectedDestinationId,
-  onUpdateSelectedDestinationId
+  onUpdateSelectedDestinationId,
+  accommodations
 }: WizardViewProps) {
   // Master steps of the custom flow:
   // 0 = Escolha do Destino (Destination)
@@ -204,39 +206,17 @@ export default function WizardView({
     }
   ];
 
-  // Lodging Catalog recommended for Cabo Frio / Arraial
-  const hotels = [
-    {
-      id: "ohana-pousada",
-      name: "Ohana Pousada Boutique",
-      location: "Pontal do Atalaia",
-      rating: 5.0,
-      tag: "VISTA LENDÁRIA",
-      desc: "Jacuzzi infinita debruçada sobre as encostas místicas.",
-      img: "https://images.unsplash.com/photo-1584132967334-10e028bd69f7?auto=format&fit=crop&w=600&q=80",
-      whatsappMessage: "Olá, Guida Trips! Gostaria de consultar tarifas com benefícios na Ohana Pousada Boutique."
-    },
-    {
-      id: "pousada-timoneiro",
-      name: "Pousada do Timoneiro",
-      location: "Praia Grande",
-      rating: 4.9,
-      tag: "CONFORTO CLÁSSICO",
-      desc: "Piscina climatizada perto da beira da Praia Grande.",
-      img: "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=600&q=80",
-      whatsappMessage: "Olá, Guida Trips! Gostaria de consultar tarifas com benefícios exclusivos para a Pousada do Timoneiro."
-    },
-    {
-      id: "pousada-caminho-mar",
-      name: "Pousada Caminho do Mar",
-      location: "Praia dos Anjos",
-      rating: 4.8,
-      tag: "EMBARQUE PRÁTICO",
-      desc: "Conforto moderno pertinho do cais de embarque.",
-      img: "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?auto=format&fit=crop&w=600&q=80",
-      whatsappMessage: "Olá, Guida Trips! Gostaria de consultar tarifas com benefícios para a Pousada Caminho do Mar."
-    }
-  ];
+  // Lodging Catalog recommended for Cabo Frio / Arraial (Dynamic from database)
+  const hotels = accommodations.filter(acc => acc.status === "active").slice(0, 6).map(acc => ({
+    id: acc.id,
+    name: acc.name,
+    location: acc.location,
+    rating: 5.0,
+    tag: acc.typeTag,
+    desc: acc.description?.slice(0, 80) + "...",
+    img: acc.photos?.[0] || "https://images.unsplash.com/photo-1584132967334-10e028bd69f7",
+    whatsappMessage: `Olá, Guida Trips! Gostaria de consultar tarifas com benefícios na ${acc.name}.`
+  }));
 
   // Dynamic filter of experiences sorted according to the profile
   const getFilteredExperiences = () => {
@@ -378,7 +358,7 @@ export default function WizardView({
       for (const item of cart) {
         const exp = experiences.find(e => e.id === item.experienceId);
         const reservationId = `res-wizard-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-        const newReservation = {
+        const newReservation: ClientReservation = {
           id: reservationId,
           userId: userToSave.id,
           experienceId: item.experienceId,
@@ -387,15 +367,32 @@ export default function WizardView({
           adults: item.adults ?? 2,
           children: item.children ?? 0,
           infants: item.infants ?? 0,
-          people: item.people ?? 2,
+          pax: item.people ?? 2,
           notes: item.observations || "Agendado via Roteiro Inteligente!",
-          status: "novo",
+          status: "new",
           createdAt: new Date().toISOString(),
           bringItems: exp?.bringItems || ["Filtro Solar", "Toalha de Banho"],
-          avoidItems: exp?.notIncluded || ["Sapatos de Salto"]
+          avoidItems: exp?.notIncluded || ["Sapatos de Salto"],
+          meetingPoint: exp?.meetingPoint || "A combinar"
         };
         await firestoreService.set("reservations", reservationId, newReservation);
       }
+
+      // Also ensure a Lead exists for this conversion
+      const leadData: Lead = {
+        id: `lead-wizard-${userToSave.id}`,
+        name: userToSave.name || clientName || "Explorador Cadastrado",
+        email: userToSave.email || "Não informado",
+        phone: userToSave.phone || "Não informado",
+        experienceInterest: cart.map(item => item.experienceId),
+        status: "novo",
+        origin: "site",
+        metadata: analytics.getAttributionData(),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        notes: [`Checkout via plataforma realizado. Itinerário de ${cart.length} itens. Total estimado: ${formatBRL(calculateEstimatedTotal())}`]
+      };
+      await firestoreService.set("leads", leadData.id, leadData);
 
       alert("Parabéns! 🎉 Seu roteiro personalizado foi salvo com sucesso. Você será redirecionado para a Área do Cliente.");
       onNavigate("cliente");
@@ -407,12 +404,34 @@ export default function WizardView({
   };
 
   // Finalize WhatsApp Reservation (No Login required)
-  const handleFinalizeWhatsApp = () => {
+  const handleFinalizeWhatsApp = async () => {
     const formattedArrival = arrivalDate ? new Date(arrivalDate + "T00:00:00").toLocaleDateString("pt-BR") : "";
     const formattedDeparture = departureDate ? new Date(departureDate + "T00:00:00").toLocaleDateString("pt-BR") : "";
     
+    // Create Lead BEFORE opening WhatsApp
+    const leadId = `lead-wizard-wa-${Date.now()}`;
+    const leadData: Lead = {
+      id: leadId,
+      name: clientName || tempName || "Explorador Anônimo",
+      email: "Enviado via WhatsApp",
+      phone: "Informado via WhatsApp",
+      experienceInterest: cart.map(item => item.experienceId),
+      status: "novo",
+      origin: "whatsapp",
+      metadata: analytics.getAttributionData(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      notes: [
+        `Roteiro planejado via Wizard.`,
+        `Período: ${formattedArrival} - ${formattedDeparture}`,
+        `Hospedagem vinculada: ${selectedHotelId || "Não"}`,
+        `Total estimado: ${formatBRL(calculateEstimatedTotal())}`
+      ]
+    };
+    await firestoreService.set("leads", leadId, leadData);
+
     let text = `Olá Guida Trips! Acabo de planejar meu Roteiro Inteligente no site:\n\n`;
-    text += `👤 *Nome:* ${tempName || "Explorador"}\n`;
+    text += `👤 *Nome:* ${clientName || tempName || "Explorador"}\n`;
     text += `📍 *Origem:* ${tempCity || "Não informado"}\n`;
     text += `🗓 *Período:* ${formattedArrival} até ${formattedDeparture} (${stayDays} dias)\n`;
     text += `👥 *Passageiros:* ${adults} Adultos, ${children} Crianças, ${infants} Bebês\n`;

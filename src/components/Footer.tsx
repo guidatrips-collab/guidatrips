@@ -9,9 +9,10 @@ import { Instagram, Youtube, Phone, Mail, MapPin} from "lucide-react";
 interface FooterProps {
   onNavigate: (view: string) => void;
   whatsappNumber: string;
+  onWhatsAppContact?: (message?: string) => void;
 }
 
-export default function Footer({ onNavigate, whatsappNumber }: FooterProps) {
+export default function Footer({ onNavigate, whatsappNumber, onWhatsAppContact }: FooterProps) {
   return (
     <footer id="main-footer" className="bg-[#0A131C] border-t border-white/5 pt-16 pb-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -126,7 +127,12 @@ export default function Footer({ onNavigate, whatsappNumber }: FooterProps) {
               </li>
               <li className="flex items-center gap-2">
                 <Phone className="w-4 h-4 text-[#E8711A] shrink-0" />
-                <span>+55 (22) 99887-7666</span>
+                <button 
+                  onClick={() => onWhatsAppContact?.("Olá! Gostaria de falar com o suporte.")}
+                  className="hover:text-[#E8711A] transition-colors cursor-pointer"
+                >
+                  {whatsappNumber}
+                </button>
               </li>
               <li className="flex items-center gap-2">
                 <Mail className="w-4 h-4 text-[#E8711A] shrink-0" />
