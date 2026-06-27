@@ -3,10 +3,7 @@ import { DollarSign, TrendingUp, TrendingDown, Wallet, ArrowUpRight, ArrowDownRi
 import { FinancialTransaction } from '../../../types';
 import { firestoreService } from '../../../firebase';
 
-export function FinancialModule() {
-  const [transactions, setTransactions] = useState<FinancialTransaction[]>([]);
-  const [loading, setLoading] = useState(true);
-
+export function FinancialModule({ transactions }: { transactions: FinancialTransaction[] }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
 
@@ -17,22 +14,6 @@ export function FinancialModule() {
   const [date, setDate] = useState('');
   const [status, setStatus] = useState<FinancialTransaction["status"]>('pago');
   const [paymentMethod, setPaymentMethod] = useState<FinancialTransaction["paymentMethod"]>('pix');
-
-  useEffect(() => {
-    fetchTransactions();
-  }, []);
-
-  const fetchTransactions = async () => {
-    try {
-      const data = await firestoreService.getAll<FinancialTransaction>("financial");
-      // Sort descending by date
-      setTransactions(data.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const resetForm = () => {
     setType('receita');
@@ -76,7 +57,6 @@ export function FinancialModule() {
         trxData.createdAt = new Date().toISOString();
         await firestoreService.set("financial", trxData.id, trxData);
       }
-      await fetchTransactions();
       resetForm();
     } catch (err) {
       console.error("Error saving", err);
@@ -88,7 +68,6 @@ export function FinancialModule() {
     if (!confirm("Tem certeza que deseja excluir este lançamento?")) return;
     try {
       await firestoreService.delete("financial", id);
-      await fetchTransactions();
     } catch (err) {
       console.error("Error deleting", err);
       alert("Erro ao excluir.");
@@ -157,9 +136,7 @@ export function FinancialModule() {
             </tr>
           </thead>
           <tbody className="divide-y divide-zinc-800">
-            {loading ? (
-              <tr><td colSpan={6} className="text-center py-8 text-zinc-500">Carregando...</td></tr>
-            ) : transactions.length === 0 ? (
+            {transactions.length === 0 ? (
               <tr><td colSpan={6} className="text-center py-8 text-zinc-500">Nenhum lançamento encontrado.</td></tr>
             ) : (
               transactions.map(trx => (

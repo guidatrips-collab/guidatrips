@@ -12,8 +12,7 @@ interface Affiliate {
   status: 'active' | 'inactive';
 }
 
-export function AffiliatesModule() {
-  const [affiliates, setAffiliates] = useState<Affiliate[]>([]);
+export function AffiliatesModule({ affiliates }: { affiliates: Affiliate[] }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -22,19 +21,6 @@ export function AffiliatesModule() {
   const [name, setName] = useState('');
   const [slug, setSlug] = useState('');
   const [status, setStatus] = useState<Affiliate["status"]>('active');
-
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const fetchData = async () => {
-    try {
-      const data = await firestoreService.getAll<Affiliate>("affiliates");
-      setAffiliates(data);
-    } catch (err) {
-      console.error(err);
-    }
-  };
 
   const openCreate = () => {
     setEditingId(null);
@@ -71,7 +57,6 @@ export function AffiliatesModule() {
         aData.commissions = 0;
         await firestoreService.set("affiliates", aData.id, aData);
       }
-      await fetchData();
       setIsModalOpen(false);
     } catch (err) {
       console.error(err);
@@ -83,7 +68,6 @@ export function AffiliatesModule() {
     if (!confirm('Excluir afiliado?')) return;
     try {
       await firestoreService.delete("affiliates", id);
-      await fetchData();
     } catch (err) {
       console.error(err);
       alert('Erro ao excluir.');

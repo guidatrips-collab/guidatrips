@@ -3,9 +3,7 @@ import { BrainCircuit, Sparkles, Send, FileText, Plus, Search, Filter, Trash, Ed
 import { Budget, Experience } from '../../../types';
 import { firestoreService } from '../../../firebase';
 
-export function SmartItineraryModule() {
-  const [budgets, setBudgets] = useState<Budget[]>([]);
-  const [experiences, setExperiences] = useState<Experience[]>([]);
+export function SmartItineraryModule({ budgets, experiences }: { budgets: Budget[], experiences: Experience[] }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -15,21 +13,6 @@ export function SmartItineraryModule() {
   const [status, setStatus] = useState<Budget["status"]>('draft');
   const [items, setItems] = useState<Budget["items"]>([]);
   const [selectedExp, setSelectedExp] = useState('');
-
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const fetchData = async () => {
-    try {
-      const bData = await firestoreService.getAll<Budget>("budgets");
-      const eData = await firestoreService.getAll<Experience>("experiences");
-      setBudgets(bData);
-      setExperiences(eData);
-    } catch (err) {
-      console.error(err);
-    }
-  };
 
   const openCreate = () => {
     setEditingId(null);
@@ -51,7 +34,6 @@ export function SmartItineraryModule() {
     try {
       const copy = { ...b, id: `ORC-${Math.floor(Math.random() * 10000)}`, status: 'draft' as const };
       await firestoreService.set("budgets", copy.id, copy);
-      await fetchData();
     } catch (err) {
       console.error(err);
       alert('Erro ao duplicar.');
@@ -62,7 +44,6 @@ export function SmartItineraryModule() {
     if (!confirm('Excluir orçamento?')) return;
     try {
       await firestoreService.delete("budgets", id);
-      await fetchData();
     } catch (err) {
       console.error(err);
       alert('Erro ao excluir.');
@@ -125,7 +106,6 @@ export function SmartItineraryModule() {
         bData.id = `ORC-${Math.floor(Math.random() * 10000)}`;
         await firestoreService.set("budgets", bData.id, bData);
       }
-      await fetchData();
       setIsModalOpen(false);
     } catch (err) {
       console.error(err);

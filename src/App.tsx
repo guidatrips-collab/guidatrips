@@ -145,6 +145,14 @@ export default function App() {
   const [settings, setSettings] = useState<GlobalSettings>(INITIAL_SETTINGS);
   const [destinations, setDestinations] = useState<Destination[]>(INITIAL_DESTINATIONS);
 
+  // Additional OS Collections
+  const [accommodations, setAccommodations] = useState<any[]>([]);
+  const [partners, setPartners] = useState<any[]>([]);
+  const [osReservations, setOsReservations] = useState<any[]>([]);
+  const [financial, setFinancial] = useState<any[]>([]);
+  const [affiliates, setAffiliates] = useState<any[]>([]);
+  const [budgets, setBudgets] = useState<any[]>([]);
+
   // Roteiro (Shopping Cart) Drawer States
   const [cart, setCart] = useState<BookingCartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -206,70 +214,89 @@ export default function App() {
   const [editInfants, setEditInfants] = useState<number>(0);
   const [editObservations, setEditObservations] = useState("");
 
-  // Initialize data safely
+  // Initialize data safely with real-time sync
   useEffect(() => {
-    // 1. Sync load of local storage first to prevent UI flickering/delays
+    // 1. Sync load of local storage first for immediate UI
     try {
       const storedExps = localStorage.getItem("guidatrips_experiences");
       if (storedExps) setExperiences(JSON.parse(storedExps));
       
-      const storedPosts = localStorage.getItem("guidatrips_posts");
-      if (storedPosts) setPosts(JSON.parse(storedPosts));
-
       const storedLeads = localStorage.getItem("guidatrips_leads");
       if (storedLeads) setLeads(JSON.parse(storedLeads));
 
+      const storedPosts = localStorage.getItem("guidatrips_posts");
+      if (storedPosts) setPosts(JSON.parse(storedPosts));
+
       const storedSettings = localStorage.getItem("guidatrips_settings");
       if (storedSettings) setSettings(JSON.parse(storedSettings));
-
-      const storedCart = localStorage.getItem("guidatrips_cart");
-      if (storedCart) setCart(JSON.parse(storedCart));
     } catch (e) {
       console.warn("Local Storage read error:", e);
     }
 
-    // 2. Async Cloud Firestore Sync (Load and display real data directly from DB without modifications)
-    const syncFirestore = async () => {
-      try {
-        // C. Fetch real database items from Firestore
-        const dbExps = await firestoreService.getAll<Experience>("experiences");
-
-        if (dbExps) {
-          setExperiences(dbExps);
-          localStorage.setItem("guidatrips_experiences", JSON.stringify(dbExps));
-        }
-
-        const dbPosts = await firestoreService.getAll<BlogPost>("posts");
-        if (dbPosts) {
-          setPosts(dbPosts);
-          localStorage.setItem("guidatrips_posts", JSON.stringify(dbPosts));
-        }
-
-        const dbLeads = await firestoreService.getAll<Lead>("leads");
-        if (dbLeads) {
-          // Sort leads descending by default
-          const sortedLeads = dbLeads.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-          setLeads(sortedLeads);
-          localStorage.setItem("guidatrips_leads", JSON.stringify(sortedLeads));
-        }
-
-        // C. Fetch/Seed Global Settings
-        const dbSettings = await firestoreService.getAll<GlobalSettings & { id?: string }>("settings");
-        const docGlobal = dbSettings.find(s => s.id === "global");
-        if (docGlobal) {
-          setSettings(docGlobal);
-          localStorage.setItem("guidatrips_settings", JSON.stringify(docGlobal));
-        } else {
-          await firestoreService.set("settings", "global", INITIAL_SETTINGS);
-          setSettings(INITIAL_SETTINGS);
-          localStorage.setItem("guidatrips_settings", JSON.stringify(INITIAL_SETTINGS));
-        }
-      } catch (error) {
-        console.error("Failed to fully sync with Firestore:", error);
+    // 2. Database Seeding (if empty)
+    const seed = async () => {
+      await firestoreService.seedCollection("experiences", INITIAL_EXPERIENCES);
+      await firestoreService.seedCollection("posts", INITIAL_BLOG_POSTS);
+      await firestoreService.seedCollection("leads", INITIAL_LEADS);
+      await firestoreService.seedCollection("destinations", INITIAL_DESTINATIONS);
+      
+      // Special check for global settings
+      const settingsData = await firestoreService.getAll("settings");
+      if (!settingsData.find((s: any) => s.id === "global")) {
+        await firestoreService.set("settings", "global", INITIAL_SETTINGS);
       }
     };
+    seed();
 
-    syncFirestore();
+    // 3. Real-time Subscriptions
+    const unsubExps = firestoreService.subscribe("experiences", (data) => {
+      setExperiences(data as Experience[]);
+      localStorage.setItem("guidatrips_experiences", JSON.stringify(data));
+    });
+
+    const unsubPosts = firestoreService.subscribe("posts", (data) => {
+      setPosts(data as BlogPost[]);
+      localStorage.setItem("guidatrips_posts", JSON.stringify(data));
+    });
+
+    const unsubLeads = firestoreService.subscribe("leads", (data) => {
+      const sorted = (data as Lead[]).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      setLeads(sorted);
+      localStorage.setItem("guidatrips_leads", JSON.stringify(sorted));
+    });
+
+    const unsubSettings = firestoreService.subscribe("settings", (data) => {
+      const docGlobal = (data as any[]).find((s: any) => s.id === "global");
+      if (docGlobal) {
+        setSettings(docGlobal);
+        localStorage.setItem("guidatrips_settings", JSON.stringify(docGlobal));
+      }
+    });
+
+    const unsubDest = firestoreService.subscribe("destinations", (data) => {
+      setDestinations(data as Destination[]);
+    });
+
+    const unsubAcc = firestoreService.subscribe("accommodations", setAccommodations);
+    const unsubPartners = firestoreService.subscribe("partners", setPartners);
+    const unsubRes = firestoreService.subscribe("reservations", setOsReservations);
+    const unsubFin = firestoreService.subscribe("financial", setFinancial);
+    const unsubAff = firestoreService.subscribe("affiliates", setAffiliates);
+    const unsubBud = firestoreService.subscribe("budgets", setBudgets);
+
+    return () => {
+      unsubExps();
+      unsubPosts();
+      unsubLeads();
+      unsubSettings();
+      unsubDest();
+      unsubAcc();
+      unsubPartners();
+      unsubRes();
+      unsubFin();
+      unsubAff();
+      unsubBud();
+    };
   }, []);
 
   // Catch select blog post event from HomeView
@@ -669,7 +696,21 @@ export default function App() {
   };
 
   if (currentView === "os") {
-    return <GuidaOS onNavigateHome={() => setCurrentView("home")} experiences={experiences} leads={leads} />;
+    return (
+      <GuidaOS 
+        onNavigateHome={() => setCurrentView("home")} 
+        experiences={experiences} 
+        leads={leads}
+        accommodations={accommodations}
+        partners={partners}
+        reservations={osReservations}
+        financial={financial}
+        affiliates={affiliates}
+        budgets={budgets}
+        settings={settings}
+        onUpdateSettings={updateSettings}
+      />
+    );
   }
 
   return (

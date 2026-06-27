@@ -3,9 +3,7 @@ import { CalendarCheck, Search, Filter, Calendar as CalendarIcon, CheckCircle, C
 import { ClientReservation, Experience } from '../../../types';
 import { firestoreService } from '../../../firebase';
 
-export function ReservationsModule() {
-  const [reservations, setReservations] = useState<ClientReservation[]>([]);
-  const [experiences, setExperiences] = useState<Experience[]>([]);
+export function ReservationsModule({ reservations, experiences }: { reservations: ClientReservation[], experiences: Experience[] }) {
   const [searchTerm, setSearchTerm] = useState('');
   
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -19,21 +17,6 @@ export function ReservationsModule() {
   const [pax, setPax] = useState<number>(1);
   const [status, setStatus] = useState<ClientReservation["status"]>('confirmed');
   
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const fetchData = async () => {
-    try {
-      const resData = await firestoreService.getAll<ClientReservation>("reservations");
-      const expData = await firestoreService.getAll<Experience>("experiences");
-      setReservations(resData);
-      setExperiences(expData);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
   const getExperienceName = (id: string) => {
     const exp = experiences.find(e => e.id === id);
     return exp ? exp.name : 'Passeio não encontrado';
@@ -92,7 +75,6 @@ export function ReservationsModule() {
         resData.voucherCode = `VOUCHER-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
         await firestoreService.set("reservations", resData.id, resData);
       }
-      await fetchData();
       setIsModalOpen(false);
     } catch (err) {
       console.error(err);
@@ -104,7 +86,6 @@ export function ReservationsModule() {
     if (!confirm('Excluir esta reserva?')) return;
     try {
       await firestoreService.delete("reservations", id);
-      await fetchData();
     } catch (err) {
       console.error(err);
       alert('Erro ao excluir.');

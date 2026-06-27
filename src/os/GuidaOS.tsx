@@ -27,9 +27,29 @@ interface GuidaOSProps {
   onNavigateHome: () => void;
   experiences: Experience[];
   leads: Lead[];
+  accommodations: any[];
+  partners: any[];
+  reservations: any[];
+  financial: any[];
+  affiliates: any[];
+  budgets: any[];
+  settings: any;
+  onUpdateSettings: (s: any) => void;
 }
 
-export function GuidaOS({ onNavigateHome, experiences, leads }: GuidaOSProps) {
+export function GuidaOS({ 
+  onNavigateHome, 
+  experiences, 
+  leads,
+  accommodations,
+  partners,
+  reservations,
+  financial,
+  affiliates,
+  budgets,
+  settings,
+  onUpdateSettings
+}: GuidaOSProps) {
   const [activeModule, setActiveModule] = useState('dashboard');
 
   const navItems = [
@@ -125,21 +145,23 @@ export function GuidaOS({ onNavigateHome, experiences, leads }: GuidaOSProps) {
           <div className="max-w-7xl mx-auto h-full">
             {activeModule === 'products' && <ProductsModule experiences={experiences} />}
             {activeModule === 'crm' && <CRMModule leads={leads} />}
-            {activeModule === 'smart-itinerary' && <SmartItineraryModule />}
-            {activeModule === 'accommodations' && <AccommodationsModule />}
-            {activeModule === 'partners' && <PartnersModule />}
-            {activeModule === 'reservations' && <ReservationsModule />}
-            {activeModule === 'financial' && <FinancialModule />}
-            {activeModule === 'affiliates' && <AffiliatesModule />}
-            {activeModule === 'settings' && <SettingsModule />}
+            {activeModule === 'smart-itinerary' && <SmartItineraryModule experiences={experiences} budgets={budgets} />}
+            {activeModule === 'accommodations' && <AccommodationsModule accommodations={accommodations} />}
+            {activeModule === 'partners' && <PartnersModule partners={partners} />}
+            {activeModule === 'reservations' && <ReservationsModule reservations={reservations} experiences={experiences} />}
+            {activeModule === 'financial' && <FinancialModule transactions={financial} />}
+            {activeModule === 'affiliates' && <AffiliatesModule affiliates={affiliates} />}
+            {activeModule === 'settings' && <SettingsModule settings={settings} onUpdateSettings={onUpdateSettings} />}
 
             {activeModule === 'dashboard' && (
               <div className="grid gap-6 grid-cols-1 lg:grid-cols-3">
                 <div className="bg-[#121214] border border-zinc-800/80 rounded-xl p-6 shadow-sm">
-                  <h3 className="text-zinc-400 text-sm font-medium mb-2">Receita Hoje</h3>
-                  <p className="text-zinc-100 text-2xl font-semibold">R$ 0,00</p>
+                  <h3 className="text-zinc-400 text-sm font-medium mb-2">Receita Total (Paga)</h3>
+                  <p className="text-zinc-100 text-2xl font-semibold">
+                    R$ {financial.filter(t => t.type === 'receita' && t.status === 'pago').reduce((acc, curr) => acc + curr.amount, 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                  </p>
                   <div className="mt-4 pt-4 border-t border-zinc-800/50 text-emerald-500 text-sm">
-                    +0% vs ontem
+                    Fluxo consolidado
                   </div>
                 </div>
                 <div className="bg-[#121214] border border-zinc-800/80 rounded-xl p-6 shadow-sm">
@@ -150,10 +172,10 @@ export function GuidaOS({ onNavigateHome, experiences, leads }: GuidaOSProps) {
                   </div>
                 </div>
                 <div className="bg-[#121214] border border-zinc-800/80 rounded-xl p-6 shadow-sm">
-                  <h3 className="text-zinc-400 text-sm font-medium mb-2">Roteiros Pendentes (IA)</h3>
-                  <p className="text-zinc-100 text-2xl font-semibold">0</p>
+                  <h3 className="text-zinc-400 text-sm font-medium mb-2">Orçamentos Pendentes</h3>
+                  <p className="text-zinc-100 text-2xl font-semibold">{budgets.filter(b => b.status === 'draft' || b.status === 'sent').length}</p>
                   <div className="mt-4 pt-4 border-t border-zinc-800/50 text-zinc-500 text-sm">
-                    Tudo em dia
+                    Aguardando aprovação
                   </div>
                 </div>
               </div>

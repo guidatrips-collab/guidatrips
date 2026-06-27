@@ -3,8 +3,7 @@ import { Plus, Search, Filter, Map, Edit, Trash, Activity, X } from 'lucide-reac
 import { Experience } from '../../../types';
 import { firestoreService } from '../../../firebase';
 
-export function ProductsModule({ experiences: initialExperiences }: { experiences: Experience[] }) {
-  const [experiences, setExperiences] = useState<Experience[]>(initialExperiences);
+export function ProductsModule({ experiences }: { experiences: Experience[] }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState<'list' | 'create'>('list');
   const [loading, setLoading] = useState(false);
@@ -19,19 +18,6 @@ export function ProductsModule({ experiences: initialExperiences }: { experience
   const [netRate, setNetRate] = useState(0);
   const [sellRate, setSellRate] = useState(0);
   const [status, setStatus] = useState<Experience["status"]>('active');
-
-  useEffect(() => {
-    fetchExperiences();
-  }, []);
-
-  const fetchExperiences = async () => {
-    try {
-      const data = await firestoreService.getAll<Experience>("experiences");
-      setExperiences(data);
-    } catch (err) {
-      console.error(err);
-    }
-  };
 
   const resetForm = () => {
     setName('');
@@ -92,7 +78,6 @@ export function ProductsModule({ experiences: initialExperiences }: { experience
         expData.featured = false;
         await firestoreService.set("experiences", expData.id, expData);
       }
-      await fetchExperiences();
       resetForm();
     } catch (err) {
       console.error(err);
@@ -106,7 +91,6 @@ export function ProductsModule({ experiences: initialExperiences }: { experience
     if (!confirm('Tem certeza que deseja excluir?')) return;
     try {
       await firestoreService.delete("experiences", id);
-      await fetchExperiences();
     } catch (err) {
       console.error(err);
       alert('Erro ao excluir.');

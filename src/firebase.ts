@@ -8,7 +8,9 @@ import {
   addDoc, 
   updateDoc, 
   deleteDoc,
-  writeBatch
+  writeBatch,
+  onSnapshot,
+  query
 } from "firebase/firestore";
 
 // Config parsed directly from the applet environment setup with optional dynamic overrides for Vercel production
@@ -80,6 +82,17 @@ export const firestoreService = {
       console.error(`Error deleting document ${collectionName}/${id}:`, error);
       throw error;
     }
+  },
+
+  subscribe: (collectionName: string, callback: (data: any[]) => void): () => void => {
+    const colRef = collection(db, collectionName);
+    const q = query(colRef);
+    return onSnapshot(q, (snapshot) => {
+      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      callback(data);
+    }, (error) => {
+      console.error(`Error subscribing to ${collectionName}:`, error);
+    });
   },
 
   // Seed the database with our default values if it is empty

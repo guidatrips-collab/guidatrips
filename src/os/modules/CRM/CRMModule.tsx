@@ -3,8 +3,7 @@ import { Users, Search, Filter, Phone, MessageSquare, Mail, Calendar, ArrowRight
 import { Lead } from '../../../types';
 import { firestoreService } from '../../../firebase';
 
-export function CRMModule({ leads: initialLeads }: { leads: Lead[] }) {
-  const [leads, setLeads] = useState<Lead[]>(initialLeads);
+export function CRMModule({ leads }: { leads: Lead[] }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [draggedLeadId, setDraggedLeadId] = useState<string | null>(null);
 
@@ -18,19 +17,6 @@ export function CRMModule({ leads: initialLeads }: { leads: Lead[] }) {
   const [groupSize, setGroupSize] = useState<number>(2);
   const [preferredDate, setPreferredDate] = useState('');
   const [notes, setNotes] = useState('');
-
-  useEffect(() => {
-    fetchLeads();
-  }, []);
-
-  const fetchLeads = async () => {
-    try {
-      const data = await firestoreService.getAll<Lead>("leads");
-      setLeads(data.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
-    } catch (err) {
-      console.error(err);
-    }
-  };
 
   const handleDragStart = (e: React.DragEvent, id: string) => {
     setDraggedLeadId(id);
@@ -58,7 +44,6 @@ export function CRMModule({ leads: initialLeads }: { leads: Lead[] }) {
     } catch (err) {
       console.error(err);
       alert("Erro ao atualizar status");
-      setLeads(prevLeads);
     }
     
     setDraggedLeadId(null);
@@ -85,7 +70,6 @@ export function CRMModule({ leads: initialLeads }: { leads: Lead[] }) {
 
     try {
       await firestoreService.update("leads", editingLead.id, updatedData);
-      await fetchLeads();
       setIsModalOpen(false);
       setEditingLead(null);
     } catch (err) {

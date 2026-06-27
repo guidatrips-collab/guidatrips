@@ -3,32 +3,24 @@ import { Settings, Globe, Palette, Shield, CreditCard, Bell } from 'lucide-react
 import { GlobalSettings } from '../../../types';
 import { firestoreService } from '../../../firebase';
 
-export function SettingsModule() {
-  const [settings, setSettings] = useState<Partial<GlobalSettings>>({});
+export function SettingsModule({ settings: initialSettings, onUpdateSettings }: { settings: any, onUpdateSettings: (s: any) => void }) {
+  const [localSettings, setLocalSettings] = useState<Partial<GlobalSettings>>(initialSettings || {});
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const fetchSettings = async () => {
-      try {
-        const data = await firestoreService.getAll<GlobalSettings>("globalSettings");
-        if (data && data.length > 0) {
-          setSettings(data[0]); // ID: main
-        }
-      } catch (err) {
-        console.error("Erro ao buscar configurações", err);
-      }
-    };
-    fetchSettings();
-  }, []);
+    if (initialSettings) {
+      setLocalSettings(initialSettings);
+    }
+  }, [initialSettings]);
 
   const handleChange = (field: keyof GlobalSettings, value: any) => {
-    setSettings(prev => ({ ...prev, [field]: value }));
+    setLocalSettings(prev => ({ ...prev, [field]: value }));
   };
 
   const handleSave = async () => {
     setLoading(true);
     try {
-      await firestoreService.set("globalSettings", "main", { ...settings, id: "main" });
+      await onUpdateSettings({ ...localSettings, id: "global" });
       alert("Configurações salvas com sucesso!");
     } catch (err) {
       console.error(err);
@@ -82,17 +74,17 @@ export function SettingsModule() {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-zinc-400 mb-2">WhatsApp de Atendimento</label>
-                    <input type="text" value={settings.whatsappNumber || ''} onChange={e => handleChange('whatsappNumber', e.target.value)} className="w-full bg-zinc-900 border border-zinc-800 text-zinc-100 px-4 py-2 rounded-lg focus:outline-none focus:border-blue-500" placeholder="+55 22 9999-9999" />
+                    <input type="text" value={localSettings.whatsappNumber || ''} onChange={e => handleChange('whatsappNumber', e.target.value)} className="w-full bg-zinc-900 border border-zinc-800 text-zinc-100 px-4 py-2 rounded-lg focus:outline-none focus:border-blue-500" placeholder="+55 22 9999-9999" />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-zinc-400 mb-2">Google Analytics ID</label>
-                    <input type="text" value={settings.googleAnalyticsId || ''} onChange={e => handleChange('googleAnalyticsId', e.target.value)} className="w-full bg-zinc-900 border border-zinc-800 text-zinc-100 px-4 py-2 rounded-lg focus:outline-none focus:border-blue-500" placeholder="G-XXXXXXXX" />
+                    <input type="text" value={localSettings.googleAnalyticsId || ''} onChange={e => handleChange('googleAnalyticsId', e.target.value)} className="w-full bg-zinc-900 border border-zinc-800 text-zinc-100 px-4 py-2 rounded-lg focus:outline-none focus:border-blue-500" placeholder="G-XXXXXXXX" />
                   </div>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-zinc-400 mb-2">Mensagem Automática WhatsApp</label>
-                  <textarea value={settings.whatsappGreeting || ''} onChange={e => handleChange('whatsappGreeting', e.target.value)} className="w-full bg-zinc-900 border border-zinc-800 text-zinc-100 px-4 py-2 rounded-lg focus:outline-none focus:border-blue-500 h-24" placeholder="Olá, gostaria de saber mais sobre..." />
+                  <textarea value={localSettings.whatsappGreeting || ''} onChange={e => handleChange('whatsappGreeting', e.target.value)} className="w-full bg-zinc-900 border border-zinc-800 text-zinc-100 px-4 py-2 rounded-lg focus:outline-none focus:border-blue-500 h-24" placeholder="Olá, gostaria de saber mais sobre..." />
                 </div>
               </div>
             </>
@@ -105,17 +97,17 @@ export function SettingsModule() {
               <div className="space-y-6 max-w-2xl">
                 <div>
                   <label className="block text-sm font-medium text-zinc-400 mb-2">Título do Hero (Home)</label>
-                  <input type="text" value={settings.homeHeroTitle || ''} onChange={e => handleChange('homeHeroTitle', e.target.value)} className="w-full bg-zinc-900 border border-zinc-800 text-zinc-100 px-4 py-2 rounded-lg focus:outline-none focus:border-blue-500" placeholder="Descubra Arraial do Cabo" />
+                  <input type="text" value={localSettings.homeHeroTitle || ''} onChange={e => handleChange('homeHeroTitle', e.target.value)} className="w-full bg-zinc-900 border border-zinc-800 text-zinc-100 px-4 py-2 rounded-lg focus:outline-none focus:border-blue-500" placeholder="Descubra Arraial do Cabo" />
                 </div>
                 
                 <div>
                   <label className="block text-sm font-medium text-zinc-400 mb-2">Descrição do Hero</label>
-                  <textarea value={settings.homeHeroDesc || ''} onChange={e => handleChange('homeHeroDesc', e.target.value)} className="w-full bg-zinc-900 border border-zinc-800 text-zinc-100 px-4 py-2 rounded-lg focus:outline-none focus:border-blue-500 h-24" placeholder="A capital do mergulho..." />
+                  <textarea value={localSettings.homeHeroDesc || ''} onChange={e => handleChange('homeHeroDesc', e.target.value)} className="w-full bg-zinc-900 border border-zinc-800 text-zinc-100 px-4 py-2 rounded-lg focus:outline-none focus:border-blue-500 h-24" placeholder="A capital do mergulho..." />
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-zinc-400 mb-2">Imagem de Fundo Hero (URL)</label>
-                  <input type="url" value={settings.homeHeroImgUrl || ''} onChange={e => handleChange('homeHeroImgUrl', e.target.value)} className="w-full bg-zinc-900 border border-zinc-800 text-zinc-100 px-4 py-2 rounded-lg focus:outline-none focus:border-blue-500" placeholder="https://..." />
+                  <input type="url" value={localSettings.homeHeroImgUrl || ''} onChange={e => handleChange('homeHeroImgUrl', e.target.value)} className="w-full bg-zinc-900 border border-zinc-800 text-zinc-100 px-4 py-2 rounded-lg focus:outline-none focus:border-blue-500" placeholder="https://..." />
                 </div>
               </div>
             </>

@@ -3,9 +3,7 @@ import { Briefcase, Plus, Search, Building2, Phone, Mail, MoreHorizontal, X, Edi
 import { Partner } from '../../../types';
 import { firestoreService } from '../../../firebase';
 
-export function PartnersModule() {
-  const [partners, setPartners] = useState<Partner[]>([]);
-  const [loading, setLoading] = useState(true);
+export function PartnersModule({ partners }: { partners: Partner[] }) {
   const [searchTerm, setSearchTerm] = useState('');
   
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -22,21 +20,6 @@ export function PartnersModule() {
   const [commissionType, setCommissionType] = useState<"percent" | "fixed">('percent');
   const [commissionValue, setCommissionValue] = useState<number>(0);
   const [status, setStatus] = useState<"active" | "inactive">('active');
-
-  useEffect(() => {
-    fetchPartners();
-  }, []);
-
-  const fetchPartners = async () => {
-    try {
-      const data = await firestoreService.getAll<Partner>("partners");
-      setPartners(data);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const resetForm = () => {
     setCompanyName('');
@@ -94,7 +77,6 @@ export function PartnersModule() {
         partnerData.createdAt = new Date().toISOString();
         await firestoreService.set("partners", partnerData.id, partnerData);
       }
-      await fetchPartners();
       resetForm();
     } catch (err) {
       console.error("Error saving partner", err);
@@ -106,7 +88,6 @@ export function PartnersModule() {
     if (!confirm("Tem certeza que deseja excluir este parceiro?")) return;
     try {
       await firestoreService.delete("partners", id);
-      await fetchPartners();
     } catch (err) {
       console.error("Error deleting partner", err);
       alert("Erro ao excluir.");
@@ -161,9 +142,7 @@ export function PartnersModule() {
             </tr>
           </thead>
           <tbody className="divide-y divide-zinc-800">
-            {loading ? (
-              <tr><td colSpan={6} className="text-center py-8 text-zinc-500">Carregando parceiros...</td></tr>
-            ) : filtered.length === 0 ? (
+            {filtered.length === 0 ? (
               <tr><td colSpan={6} className="text-center py-8 text-zinc-500">Nenhum parceiro encontrado.</td></tr>
             ) : (
               filtered.map(partner => (

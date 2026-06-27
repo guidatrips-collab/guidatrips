@@ -3,9 +3,7 @@ import { Hotel, Plus, Search, MapPin, Star, X, Edit, Trash2 } from 'lucide-react
 import { Accommodation } from '../../../types';
 import { firestoreService } from '../../../firebase';
 
-export function AccommodationsModule() {
-  const [accommodations, setAccommodations] = useState<Accommodation[]>([]);
-  const [loading, setLoading] = useState(true);
+export function AccommodationsModule({ accommodations }: { accommodations: Accommodation[] }) {
   const [searchTerm, setSearchTerm] = useState('');
   
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -18,21 +16,6 @@ export function AccommodationsModule() {
   const [netRate, setNetRate] = useState<number>(0);
   const [sellRate, setSellRate] = useState<number>(0);
   const [status, setStatus] = useState<Accommodation["status"]>('active');
-
-  useEffect(() => {
-    fetchAccommodations();
-  }, []);
-
-  const fetchAccommodations = async () => {
-    try {
-      const data = await firestoreService.getAll<Accommodation>("accommodations");
-      setAccommodations(data);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const resetForm = () => {
     setName('');
@@ -86,7 +69,6 @@ export function AccommodationsModule() {
         accData.commission = 0;
         await firestoreService.set("accommodations", accData.id, accData);
       }
-      await fetchAccommodations();
       resetForm();
     } catch (err) {
       console.error("Error saving", err);
@@ -98,7 +80,6 @@ export function AccommodationsModule() {
     if (!confirm("Tem certeza que deseja excluir esta hospedagem?")) return;
     try {
       await firestoreService.delete("accommodations", id);
-      await fetchAccommodations();
     } catch (err) {
       console.error("Error deleting", err);
       alert("Erro ao excluir.");
@@ -140,9 +121,7 @@ export function AccommodationsModule() {
       </div>
 
       <div className="flex-1 overflow-y-auto">
-        {loading ? (
-          <div className="text-center py-8 text-zinc-500">Carregando hospedagens...</div>
-        ) : filtered.length === 0 ? (
+        {filtered.length === 0 ? (
           <div className="text-center py-8 text-zinc-500">Nenhuma hospedagem encontrada.</div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
