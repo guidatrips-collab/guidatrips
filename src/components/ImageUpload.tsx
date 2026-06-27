@@ -56,10 +56,18 @@ export default function ImageUpload({
   const handleRemove = async () => {
     if (!currentImageUrl) return;
     
-    // Optional: Delete from storage when removed from UI
-    // For now, we just trigger the callback
-    if (onRemove) {
-      onRemove();
+    try {
+      // Optional: Delete from storage when removed from UI
+      await storageService.deleteFile(currentImageUrl);
+      if (onRemove) {
+        onRemove();
+      }
+    } catch (err) {
+      console.error("Error deleting file:", err);
+      // Even if delete fails (e.g. CORS or already deleted), remove from UI
+      if (onRemove) {
+        onRemove();
+      }
     }
   };
 

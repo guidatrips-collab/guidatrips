@@ -1235,25 +1235,27 @@ export default function AdminView({
                     </div>
                   </div>
 
-                  <div className="space-y-3">
-                    <label className="font-accent text-[9px] text-[#ffefe6]/90 tracking-widest uppercase">Fotos da Galeria</label>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                      {(editingExperience.photos || []).map((photo, idx) => (
+                    <div className="space-y-3">
+                      <label className="font-accent text-[9px] text-[#ffefe6]/90 tracking-widest uppercase">Fotos da Galeria</label>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        {(editingExperience.photos || []).map((photo, idx) => (
+                          <div key={`photo-${idx}`}>
+                            <ImageUpload
+                              currentImageUrl={photo}
+                              onUploadComplete={(url) => {
+                                const newPhotos = [...(editingExperience.photos || [])];
+                                newPhotos[idx] = url;
+                                setEditingExperience({ ...editingExperience, photos: newPhotos });
+                              }}
+                              onRemove={() => {
+                                const newPhotos = (editingExperience.photos || []).filter((_, i) => i !== idx);
+                                setEditingExperience({ ...editingExperience, photos: newPhotos });
+                              }}
+                              folder="experiences"
+                            />
+                          </div>
+                        ))}
                         <ImageUpload
-                          currentImageUrl={photo}
-                          onUploadComplete={(url) => {
-                            const newPhotos = [...(editingExperience.photos || [])];
-                            newPhotos[idx] = url;
-                            setEditingExperience({ ...editingExperience, photos: newPhotos });
-                          }}
-                          onRemove={() => {
-                            const newPhotos = (editingExperience.photos || []).filter((_, i) => i !== idx);
-                            setEditingExperience({ ...editingExperience, photos: newPhotos });
-                          }}
-                          folder="experiences"
-                        />
-                      ))}
-                      <ImageUpload
                         onUploadComplete={(url) => {
                           setEditingExperience({ 
                             ...editingExperience, 
@@ -1562,19 +1564,21 @@ export default function AdminView({
                       <label className="block text-[10px] font-accent text-[#8A96A3] uppercase tracking-widest mb-1">Fotos da Hospedagem</label>
                       <div className="grid grid-cols-2 gap-3">
                         {(editingAccommodation.photos || []).map((photo, idx) => (
-                          <ImageUpload
-                            currentImageUrl={photo}
-                            onUploadComplete={(url) => {
-                              const newPhotos = [...(editingAccommodation.photos || [])];
-                              newPhotos[idx] = url;
-                              setEditingAccommodation({ ...editingAccommodation, photos: newPhotos });
-                            }}
-                            onRemove={() => {
-                              const newPhotos = (editingAccommodation.photos || []).filter((_, i) => i !== idx);
-                              setEditingAccommodation({ ...editingAccommodation, photos: newPhotos });
-                            }}
-                            folder="accommodations"
-                          />
+                          <div key={`acc-photo-${idx}`}>
+                            <ImageUpload
+                              currentImageUrl={photo}
+                              onUploadComplete={(url) => {
+                                const newPhotos = [...(editingAccommodation.photos || [])];
+                                newPhotos[idx] = url;
+                                setEditingAccommodation({ ...editingAccommodation, photos: newPhotos });
+                              }}
+                              onRemove={() => {
+                                const newPhotos = (editingAccommodation.photos || []).filter((_, i) => i !== idx);
+                                setEditingAccommodation({ ...editingAccommodation, photos: newPhotos });
+                              }}
+                              folder="accommodations"
+                            />
+                          </div>
                         ))}
                         <ImageUpload
                           onUploadComplete={(url) => {
