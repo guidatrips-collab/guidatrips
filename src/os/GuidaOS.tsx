@@ -12,12 +12,17 @@ import {
   BrainCircuit,
   Hotel
 } from 'lucide-react';
+import { ProductsModule } from './modules/Products/ProductsModule';
+import { CRMModule } from './modules/CRM/CRMModule';
+import { Experience, Lead } from '../types';
 
 interface GuidaOSProps {
   onNavigateHome: () => void;
+  experiences: Experience[];
+  leads: Lead[];
 }
 
-export function GuidaOS({ onNavigateHome }: GuidaOSProps) {
+export function GuidaOS({ onNavigateHome, experiences, leads }: GuidaOSProps) {
   const [activeModule, setActiveModule] = useState('dashboard');
 
   const navItems = [
@@ -110,40 +115,49 @@ export function GuidaOS({ onNavigateHome }: GuidaOSProps) {
 
         {/* Content Module Space */}
         <div className="flex-1 overflow-y-auto p-8">
-          <div className="max-w-7xl mx-auto">
-            {/* Placeholder for Modules */}
-            <div className="grid gap-6 grid-cols-1 lg:grid-cols-3">
-              <div className="bg-[#121214] border border-zinc-800/80 rounded-xl p-6 shadow-sm">
-                <h3 className="text-zinc-400 text-sm font-medium mb-2">Construindo Módulo</h3>
-                <p className="text-zinc-100 text-2xl font-semibold">{navItems.find(i => i.id === activeModule)?.label}</p>
-                <div className="mt-4 pt-4 border-t border-zinc-800/50 flex items-center gap-2 text-blue-500 text-sm">
-                  <span className="flex h-2 w-2 relative">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
-                  </span>
-                  Em desenvolvimento (Arquitetura SaaS)
-                </div>
-              </div>
+          <div className="max-w-7xl mx-auto h-full">
+            {activeModule === 'products' && (
+               <ProductsModule experiences={experiences} />
+            )}
+            
+            {activeModule === 'crm' && (
+               <CRMModule leads={leads} />
+            )}
 
-              {activeModule === 'dashboard' && (
-                <>
-                  <div className="bg-[#121214] border border-zinc-800/80 rounded-xl p-6 shadow-sm">
-                    <h3 className="text-zinc-400 text-sm font-medium mb-2">Receita Hoje</h3>
-                    <p className="text-zinc-100 text-2xl font-semibold">R$ 0,00</p>
-                    <div className="mt-4 pt-4 border-t border-zinc-800/50 text-emerald-500 text-sm">
-                      +0% vs ontem
-                    </div>
+            {activeModule !== 'products' && activeModule !== 'crm' && (
+              <div className="grid gap-6 grid-cols-1 lg:grid-cols-3">
+                <div className="bg-[#121214] border border-zinc-800/80 rounded-xl p-6 shadow-sm">
+                  <h3 className="text-zinc-400 text-sm font-medium mb-2">Construindo Módulo</h3>
+                  <p className="text-zinc-100 text-2xl font-semibold">{navItems.find(i => i.id === activeModule)?.label}</p>
+                  <div className="mt-4 pt-4 border-t border-zinc-800/50 flex items-center gap-2 text-blue-500 text-sm">
+                    <span className="flex h-2 w-2 relative">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+                    </span>
+                    Em desenvolvimento (Arquitetura SaaS)
                   </div>
-                  <div className="bg-[#121214] border border-zinc-800/80 rounded-xl p-6 shadow-sm">
-                    <h3 className="text-zinc-400 text-sm font-medium mb-2">Novos Leads</h3>
-                    <p className="text-zinc-100 text-2xl font-semibold">0</p>
-                    <div className="mt-4 pt-4 border-t border-zinc-800/50 text-zinc-500 text-sm">
-                      Aguardando processamento IA
+                </div>
+
+                {activeModule === 'dashboard' && (
+                  <>
+                    <div className="bg-[#121214] border border-zinc-800/80 rounded-xl p-6 shadow-sm">
+                      <h3 className="text-zinc-400 text-sm font-medium mb-2">Receita Hoje</h3>
+                      <p className="text-zinc-100 text-2xl font-semibold">R$ 0,00</p>
+                      <div className="mt-4 pt-4 border-t border-zinc-800/50 text-emerald-500 text-sm">
+                        +0% vs ontem
+                      </div>
                     </div>
-                  </div>
-                </>
-              )}
-            </div>
+                    <div className="bg-[#121214] border border-zinc-800/80 rounded-xl p-6 shadow-sm">
+                      <h3 className="text-zinc-400 text-sm font-medium mb-2">Novos Leads</h3>
+                      <p className="text-zinc-100 text-2xl font-semibold">{leads.filter(l => l.status === 'novo').length}</p>
+                      <div className="mt-4 pt-4 border-t border-zinc-800/50 text-zinc-500 text-sm">
+                        Aguardando contato
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
 
             {activeModule === 'dashboard' && (
                <div className="mt-8 bg-[#121214] border border-zinc-800/80 rounded-xl p-8 min-h-[400px] flex flex-col items-center justify-center text-center">
@@ -152,7 +166,7 @@ export function GuidaOS({ onNavigateHome }: GuidaOSProps) {
                   </div>
                   <h2 className="text-xl font-bold text-zinc-100 mb-2">Guida OS Inicializado</h2>
                   <p className="text-zinc-400 max-w-md">
-                    O ecossistema interno foi estruturado. O próximo passo é integrar os dados do Firebase aos módulos de CRM, Parceiros e Roteiro Inteligente, mantendo o site público intacto.
+                    O módulo CRM e Passeios já estão operacionais conectando os dados. Explore o menu lateral.
                   </p>
                </div>
             )}

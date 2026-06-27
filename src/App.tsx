@@ -737,7 +737,7 @@ export default function App() {
   };
 
   if (currentView === "os") {
-    return <GuidaOS onNavigateHome={() => setCurrentView("home")} />;
+    return <GuidaOS onNavigateHome={() => setCurrentView("home")} experiences={experiences} leads={leads} />;
   }
 
   return (

@@ -50,6 +50,96 @@ export interface MediaItem {
   title?: string;
 }
 
+export interface Partner {
+  id: string;
+  type: "passeio" | "hospedagem" | "transporte" | "fotografo" | "restaurante" | "outro";
+  companyName: string;
+  tradingName: string;
+  cnpj_cpf: string;
+  contactName: string;
+  phone: string;
+  whatsapp: string;
+  email: string;
+  address: string;
+  commissionType: "percent" | "fixed";
+  commissionValue: number;
+  pixKey?: string;
+  bankInfo?: string;
+  status: "active" | "inactive";
+  notes?: string;
+  contractUrl?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Accommodation {
+  id: string;
+  name: string;
+  slug: string;
+  category: "hotel" | "pousada" | "hostel" | "casa" | "apartamento";
+  destinationId: string;
+  partnerId: string;
+  description: string;
+  amenities: string[];
+  photos: string[];
+  location: string;
+  address: string;
+  coordinates?: { lat: number; lng: number };
+  netRate: number; // Tarifa custo
+  sellRate: number; // Tarifa venda
+  markup: number;
+  commission: number;
+  status: "active" | "paused" | "draft";
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface FinancialTransaction {
+  id: string;
+  type: "receita" | "despesa" | "comissao_parceiro" | "comissao_afiliado" | "imposto";
+  description: string;
+  amount: number;
+  date: string;
+  status: "pago" | "pendente" | "cancelado";
+  referenceId?: string; // ID da reserva, passeio, or partner
+  referenceType?: "reservation" | "partner" | "affiliate" | "system";
+  paymentMethod?: "pix" | "credit_card" | "boleto" | "transfer";
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Budget {
+  id: string;
+  clientId: string;
+  leadId?: string;
+  dateCreated: string;
+  validUntil: string;
+  status: "draft" | "sent" | "approved" | "rejected";
+  items: {
+    type: "experience" | "accommodation" | "transfer" | "other";
+    itemId: string;
+    name: string;
+    date: string;
+    pax: number;
+    netRate: number;
+    sellRate: number;
+    discount: number;
+    total: number;
+  }[];
+  totals: {
+    netTotal: number;
+    sellTotal: number;
+    discountTotal: number;
+    finalTotal: number;
+    profit: number;
+    profitMargin: number;
+  };
+  notes?: string;
+  paymentTerms?: string;
+}
+
+export type OSUserRole = "admin" | "staff" | "partner" | "affiliate" | "client";
+
 export interface Experience {
   id: string;
   name: string;
@@ -61,7 +151,13 @@ export interface Experience {
   fullDescription: string;
   duration: string;
   capacity: number;
-  priceFrom: number;
+  
+  // OS Financial Pricing Intelligence
+  netRate?: number; // Valor de custo com o parceiro
+  priceFrom: number; // Valor final de venda (Base)
+  promotionalPrice?: number;
+  markup?: number; // Percentage
+  
   included: string[];
   notIncluded: string[];
   meetingPoint: string;
@@ -71,8 +167,10 @@ export interface Experience {
   videoEmbed?: string;
   highlights?: string[];
   bringItems?: string[];
+  
+  partnerId?: string; // OS Partner integration
   partnerName?: string;
-  promotionalPrice?: number;
+  
   googleMapsUrl?: string;
   availability?: {
     type: "daily" | "specific_days";
