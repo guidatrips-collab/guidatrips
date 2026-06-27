@@ -35,10 +35,7 @@ export function CRMModule({ leads }: { leads: Lead[] }) {
     const leadToUpdate = leads.find(l => l.id === draggedLeadId);
     if (!leadToUpdate || leadToUpdate.status === statusId) return;
 
-    // Optimistic UI update
-    const prevLeads = [...leads];
-    setLeads(leads.map(l => l.id === draggedLeadId ? { ...l, status: statusId as any } : l));
-    
+    // Update in Firestore
     try {
       await firestoreService.update("leads", draggedLeadId, { status: statusId, updatedAt: new Date().toISOString() });
     } catch (err) {

@@ -9,60 +9,32 @@ import {
 } from "lucide-react";
 import { motion } from "motion/react";
 
+import { Accommodation } from "../types";
+
 interface HospedagensViewProps {
   whatsappNumber: string;
+  accommodations: Accommodation[];
 }
 
-export default function HospedagensView({ whatsappNumber }: HospedagensViewProps) {
+export default function HospedagensView({ whatsappNumber, accommodations }: HospedagensViewProps) {
   const [activeFilter, setActiveFilter] = useState<"todas" | "boutique" | "vista" | "pe-na-areia">("todas");
 
-  const pousadas = [
-    {
-      id: "pousada-timoneiro",
-      name: "Pousada do Timoneiro",
-      category: "boutique",
-      location: "Praia Grande, Arraial do Cabo",
-      rating: 4.9,
-      reviews: 184,
-      tag: "CONFORTO & TRADIÇÃO",
-      price: "A partir de R$ 380 / noite",
-      description: "Uma referência clássica de hospitalidade e elegância em Arraial. Famosa pela farta mesa de café da manhã colonial e o acolhimento caloroso da equipe de forma tátil.",
-      highlight: "Próxima ao maior calçadão do pôr do sol na beira da Praia Grande.",
-      amenities: ["Piscina climatizada", "Café da manhã artesanal", "Wi-Fi Fibra", "Estacionamento", "Ar-condicionado Split", "Espaço Zen"],
-      img: "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80",
-      whatsappMessage: "Olá, Guida Trips! Gostaria de consultar tarifas com benefícios exclusivos para a Pousada do Timoneiro."
-    },
-    {
-      id: "pousada-caminho-mar",
-      name: "Pousada Caminho do Mar",
-      category: "pe-na-areia",
-      location: "Praia dos Anjos, Arraial do Cabo",
-      rating: 4.8,
-      reviews: 142,
-      tag: "FÁCIL ACESSO A EMBARQUES",
-      price: "A partir de R$ 320 / noite",
-      description: "A poucos passos da Praia dos Anjos, é o refúgio perfeito para quem deseja dormir ao som suave da ressurgência marinha e ter acesso imediato às melhores expedições de barco e mergulho.",
-      highlight: "O melhor ponto de partida matinal com suítes recém-renovadas.",
-      amenities: ["Café da manhã regional", "Estacionamento privativo", "Wi-Fi ultraveloz", "Ar-condicionado", "Ducha de alta pressão", "Serviço de praia"],
-      img: "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?auto=format&fit=crop&w=800&q=80",
-      whatsappMessage: "Olá, Guida Trips! Gostaria de consultar tarifas com benefícios para a Pousada Caminho do Mar."
-    },
-    {
-      id: "ohana-pousada",
-      name: "Ohana Pousada Boutique",
-      category: "vista",
-      location: "Encosta do Pontal do Atalaia, Arraial do Cabo",
-      rating: 5.0,
-      reviews: 96,
-      tag: "RETRETE EXCLUSIVO COM VISTA",
-      price: "A partir de R$ 510 / noite",
-      description: "Erguida nas rochas sagradas do Pontal do Atalaia. Dispõe de um deck infinito de onde se contempla o pôr do sol mais lendário do Brasil e braguilhas de baleias jubartes na temporada costeira.",
-      highlight: "Deck panorâmico com jacuzzi flutuante debruçada no mar aberto.",
-      amenities: ["Deck Panorâmico", "Café da manhã flutuante", "Jacuzzi de borda infinita", "Wi-Fi Fibra", "Frigobar Premium", "Amenities L'Occitane"],
-      img: "https://images.unsplash.com/photo-1584132967334-10e028bd69f7?auto=format&fit=crop&w=800&q=80",
-      whatsappMessage: "Olá, Guida Trips! Gostaria de consultar tarifas com benefícios na Ohana Pousada Boutique."
-    }
-  ];
+  // Map database accommodations to the local format if needed, or just use them directly
+  const pousadas = accommodations.map(acc => ({
+    id: acc.id,
+    name: acc.name,
+    category: acc.typeTag || "todas",
+    location: acc.location,
+    rating: acc.rating || 5.0,
+    reviews: acc.reviews || 0,
+    tag: acc.tag || "CURADORIA EXCLUSIVA",
+    price: acc.priceDisplay || `A partir de R$ ${acc.sellRate} / noite`,
+    description: acc.description,
+    highlight: acc.highlight || "",
+    amenities: acc.amenities,
+    img: acc.photos?.[0] || "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80",
+    whatsappMessage: acc.whatsappMessage || `Olá, Guida Trips! Gostaria de consultar tarifas com benefícios exclusivos para a ${acc.name}.`
+  }));
 
   const filteredPousadas = pousadas.filter(
     (p) => activeFilter === "todas" || p.category === activeFilter

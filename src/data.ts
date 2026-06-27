@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Experience, ExperienceCategory, BlogPost, GlobalSettings, Destination } from "./types";
+import { Experience, ExperienceCategory, BlogPost, GlobalSettings, Destination, Accommodation } from "./types";
 
 export const INITIAL_DESTINATIONS: Destination[] = [
   {
@@ -49,6 +49,90 @@ export const INITIAL_DESTINATIONS: Destination[] = [
     status: "inactive",
     createdAt: "2026-06-25T12:00:00-03:00",
     updatedAt: "2026-06-25T12:00:00-03:00"
+  }
+];
+
+export const INITIAL_ACCOMMODATIONS: Accommodation[] = [
+  {
+    id: "pousada-timoneiro",
+    name: "Pousada do Timoneiro",
+    slug: "pousada-timoneiro",
+    category: "pousada",
+    typeTag: "boutique",
+    destinationId: "arraial-do-cabo",
+    partnerId: "timoneiro",
+    description: "Uma referência clássica de hospitalidade e elegância em Arraial. Famosa pela farta mesa de café da manhã colonial e o acolhimento caloroso da equipe de forma tátil.",
+    amenities: ["Piscina climatizada", "Café da manhã artesanal", "Wi-Fi Fibra", "Estacionamento", "Ar-condicionado Split", "Espaço Zen"],
+    photos: ["https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80"],
+    location: "Praia Grande, Arraial do Cabo",
+    address: "Rua das Flores, 123",
+    netRate: 300,
+    sellRate: 380,
+    markup: 26,
+    commission: 80,
+    status: "active",
+    tag: "CONFORTO & TRADIÇÃO",
+    rating: 4.9,
+    reviews: 184,
+    highlight: "Próxima ao maior calçadão do pôr do sol na beira da Praia Grande.",
+    whatsappMessage: "Olá, Guida Trips! Gostaria de consultar tarifas com benefícios exclusivos para a Pousada do Timoneiro.",
+    priceDisplay: "A partir de R$ 380 / noite",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  },
+  {
+    id: "pousada-caminho-mar",
+    name: "Pousada Caminho do Mar",
+    slug: "pousada-caminho-mar",
+    category: "pousada",
+    typeTag: "pe-na-areia",
+    destinationId: "arraial-do-cabo",
+    partnerId: "caminho-mar",
+    description: "A poucos passos da Praia dos Anjos, é o refúgio perfeito para quem deseja dormir ao som suave da ressurgência marinha e ter acesso imediato às melhores expedições de barco e mergulho.",
+    amenities: ["Café da manhã regional", "Estacionamento privativo", "Wi-Fi ultraveloz", "Ar-condicionado", "Ducha de alta pressão", "Serviço de praia"],
+    photos: ["https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?auto=format&fit=crop&w=800&q=80"],
+    location: "Praia dos Anjos, Arraial do Cabo",
+    address: "Rua do Porto, 456",
+    netRate: 250,
+    sellRate: 320,
+    markup: 28,
+    commission: 70,
+    status: "active",
+    tag: "FÁCIL ACESSO A EMBARQUES",
+    rating: 4.8,
+    reviews: 142,
+    highlight: "O melhor ponto de partida matinal com suítes recém-renovadas.",
+    whatsappMessage: "Olá, Guida Trips! Gostaria de consultar tarifas com benefícios para a Pousada Caminho do Mar.",
+    priceDisplay: "A partir de R$ 320 / noite",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  },
+  {
+    id: "ohana-pousada",
+    name: "Ohana Pousada Boutique",
+    slug: "ohana-pousada",
+    category: "pousada",
+    typeTag: "vista",
+    destinationId: "arraial-do-cabo",
+    partnerId: "ohana",
+    description: "Erguida nas rochas sagradas do Pontal do Atalaia. Dispõe de um deck infinito de onde se contempla o pôr do sol mais lendário do Brasil e braguilhas de baleias jubartes na temporada costeira.",
+    amenities: ["Deck Panorâmico", "Café da manhã flutuante", "Jacuzzi de borda infinita", "Wi-Fi Fibra", "Frigobar Premium", "Amenities L'Occitane"],
+    photos: ["https://images.unsplash.com/photo-1584132967334-10e028bd69f7?auto=format&fit=crop&w=800&q=80"],
+    location: "Encosta do Pontal do Atalaia, Arraial do Cabo",
+    address: "Pontal do Atalaia, s/n",
+    netRate: 400,
+    sellRate: 510,
+    markup: 27,
+    commission: 110,
+    status: "active",
+    tag: "RETRETE EXCLUSIVO COM VISTA",
+    rating: 5.0,
+    reviews: 96,
+    highlight: "Deck panorâmico com jacuzzi flutuante debruçada no mar aberto.",
+    whatsappMessage: "Olá, Guida Trips! Gostaria de consultar tarifas com benefícios na Ohana Pousada Boutique.",
+    priceDisplay: "A partir de R$ 510 / noite",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
   }
 ];
 

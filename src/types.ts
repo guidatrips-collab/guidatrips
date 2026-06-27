@@ -77,6 +77,7 @@ export interface Accommodation {
   name: string;
   slug: string;
   category: "hotel" | "pousada" | "hostel" | "casa" | "apartamento";
+  typeTag?: string; // e.g. "boutique", "pe-na-areia", "vista" - used for filtering
   destinationId: string;
   partnerId: string;
   description: string;
@@ -90,6 +91,15 @@ export interface Accommodation {
   markup: number;
   commission: number;
   status: "active" | "paused" | "draft";
+  
+  // Marketing & UI fields
+  tag?: string; // e.g. "CONFORTO & TRADIÇÃO"
+  rating?: number;
+  reviews?: number;
+  highlight?: string;
+  whatsappMessage?: string;
+  priceDisplay?: string; // e.g. "A partir de R$ 380 / noite"
+
   createdAt: string;
   updatedAt: string;
 }

@@ -25,7 +25,7 @@ import {
   getBrazilLocalDate, addDaysToBrazilDate, Destination
 } from "./types";
 import { 
-  INITIAL_EXPERIENCES, INITIAL_BLOG_POSTS, INITIAL_LEADS, INITIAL_SETTINGS, INITIAL_DESTINATIONS
+  INITIAL_EXPERIENCES, INITIAL_BLOG_POSTS, INITIAL_LEADS, INITIAL_SETTINGS, INITIAL_DESTINATIONS, INITIAL_ACCOMMODATIONS
 } from "./data";
 import { 
   X, ShoppingBag, Send, ChevronRight, MessageSquare, AlertTriangle 
@@ -239,6 +239,7 @@ export default function App() {
       await firestoreService.seedCollection("posts", INITIAL_BLOG_POSTS);
       await firestoreService.seedCollection("leads", INITIAL_LEADS);
       await firestoreService.seedCollection("destinations", INITIAL_DESTINATIONS);
+      await firestoreService.seedCollection("accommodations", INITIAL_ACCOMMODATIONS);
       
       // Special check for global settings
       const settingsData = await firestoreService.getAll("settings");
@@ -787,7 +788,10 @@ export default function App() {
           />
         )}
         {currentView === "hospedagens" && (
-          <HospedagensView whatsappNumber={settings.whatsappNumber} />
+          <HospedagensView 
+            whatsappNumber={settings.whatsappNumber} 
+            accommodations={accommodations}
+          />
         )}
         {currentView === "sobre" && (
           <AboutView />
