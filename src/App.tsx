@@ -18,6 +18,7 @@ import RoteiroView from "./components/RoteiroView";
 import WizardView from "./components/WizardView";
 import ClientPanelView from "./components/ClientPanelView";
 import ClientAuthModal from "./components/ClientAuthModal";
+import { GuidaOS } from "./os/GuidaOS";
 
 import { 
   Experience, BlogPost, Lead, GlobalSettings, BookingCartItem, ClientUser, ClientReservation,
@@ -734,6 +735,10 @@ export default function App() {
     // Redirect
     window.open(waUrl, "_blank");
   };
+
+  if (currentView === "os") {
+    return <GuidaOS onNavigateHome={() => setCurrentView("home")} />;
+  }
 
   return (
     <div className="flex flex-col min-h-screen text-[#0D1B2A] bg-[#FBF9F6] font-sans selection:bg-[#E8711A]/20">

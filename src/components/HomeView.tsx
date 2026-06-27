@@ -61,7 +61,7 @@ export default function HomeView({
             <p className="font-sans text-sm sm:text-base text-zinc-300 leading-relaxed max-w-lg">
               Monte seu roteiro perfeito, reserve passeios exclusivos em poucos minutos e receba atendimento personalizado pelo WhatsApp. A Guida Trips é a plataforma que organiza a sua viagem.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 pt-4">
+            <div className="flex flex-col sm:flex-row flex-wrap gap-4 pt-4">
               <button onClick={() => onNavigate("wizard")} className="px-6 py-4 bg-[#E8711A] hover:bg-white text-[#0D1B2A] font-accent text-xs font-bold tracking-widest uppercase transition-all rounded shadow-lg flex items-center justify-center gap-2.5 hover:scale-[1.02] cursor-pointer">
                 Monte seu Roteiro
               </button>
@@ -71,6 +71,9 @@ export default function HomeView({
                   window.open(`https://wa.me/${number}?text=${text}`, "_blank");
                 }} className="px-6 py-4 border border-white/20 hover:border-[#E8711A] text-white hover:text-[#E8711A] font-accent text-xs font-bold tracking-widest uppercase bg-transparent transition-colors rounded hover:bg-white/5 cursor-pointer">
                 Falar no WhatsApp
+              </button>
+              <button onClick={() => onNavigate("os")} className="px-6 py-4 bg-blue-600 hover:bg-blue-500 text-white font-accent text-xs font-bold tracking-widest uppercase transition-all rounded shadow-lg flex items-center justify-center gap-2.5 hover:scale-[1.02] cursor-pointer">
+                🚀 Acessar Guida OS (Preview)
               </button>
             </div>
           </div>
