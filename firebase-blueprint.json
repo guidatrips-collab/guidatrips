@@ -65,6 +65,7 @@
     },
     "settings": {
       "schema": {
+        "id": "string",
         "whatsappNumber": "string",
         "whatsappGreeting": "string",
         "businessHours": "string",
@@ -101,6 +102,129 @@
         "totalPrice": "number",
         "status": "string",
         "createdAt": "string"
+      }
+    },
+    "accommodations": {
+      "schema": {
+        "id": "string",
+        "name": "string",
+        "slug": "string",
+        "category": "string",
+        "destinationId": "string",
+        "partnerId": "string",
+        "description": "string",
+        "amenities": "array",
+        "photos": "array",
+        "location": "string",
+        "address": "string",
+        "coordinates": "map",
+        "netRate": "number",
+        "sellRate": "number",
+        "markup": "number",
+        "commission": "number",
+        "status": "string",
+        "createdAt": "string",
+        "updatedAt": "string"
+      }
+    },
+    "partners": {
+      "schema": {
+        "id": "string",
+        "type": "string",
+        "companyName": "string",
+        "tradingName": "string",
+        "cnpj_cpf": "string",
+        "contactName": "string",
+        "phone": "string",
+        "whatsapp": "string",
+        "email": "string",
+        "address": "string",
+        "commissionType": "string",
+        "commissionValue": "number",
+        "pixKey": "string",
+        "bankInfo": "string",
+        "status": "string",
+        "notes": "string",
+        "contractUrl": "string",
+        "createdAt": "string",
+        "updatedAt": "string"
+      }
+    },
+    "financial": {
+      "schema": {
+        "id": "string",
+        "type": "string",
+        "description": "string",
+        "amount": "number",
+        "date": "string",
+        "status": "string",
+        "referenceId": "string",
+        "referenceType": "string",
+        "paymentMethod": "string",
+        "createdAt": "string",
+        "updatedAt": "string"
+      }
+    },
+    "affiliates": {
+      "schema": {
+        "id": "string",
+        "name": "string",
+        "slug": "string",
+        "clicks": "number",
+        "conversions": "number",
+        "commissions": "number",
+        "status": "string"
+      }
+    },
+    "budgets": {
+      "schema": {
+        "id": "string",
+        "clientId": "string",
+        "leadId": "string",
+        "dateCreated": "string",
+        "validUntil": "string",
+        "status": "string",
+        "items": "array",
+        "totals": "map",
+        "notes": "string",
+        "paymentTerms": "string"
+      }
+    },
+    "destinations": {
+      "schema": {
+        "id": "string",
+        "name": "string",
+        "slug": "string",
+        "description": "string",
+        "shortDescription": "string",
+        "heroImage": "string",
+        "gallery": "array",
+        "institutionalText": "string",
+        "seo": "map",
+        "status": "string",
+        "createdAt": "string",
+        "updatedAt": "string"
+      }
+    },
+    "globalSettings": {
+      "schema": {
+        "id": "string",
+        "whatsappNumber": "string",
+        "whatsappGreeting": "string",
+        "businessHours": "string",
+        "googleAnalyticsId": "string",
+        "metaPixelId": "string",
+        "socialLinks": "map",
+        "diferencialTitle": "string",
+        "diferencialDescription": "string",
+        "homeHeroImgUrl": "string",
+        "homeHeroTitle": "string",
+        "homeHeroDesc": "string",
+        "homeHeroBtnText": "string",
+        "homeHeroStats": "array",
+        "homeFilosofiaTag": "string",
+        "homeFilosofiaTitle": "string",
+        "homeFilosofiaDesc": "string"
       }
     }
   }

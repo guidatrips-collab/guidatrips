@@ -228,61 +228,11 @@ export default function App() {
       console.warn("Local Storage read error:", e);
     }
 
-    // 2. Async Cloud Firestore Sync (Seed & Load)
+    // 2. Async Cloud Firestore Sync (Load and display real data directly from DB without modifications)
     const syncFirestore = async () => {
       try {
-        if (localStorage.getItem("db_wiped_v2") !== "true") {
-          console.log("Wiping database to start fresh as requested...");
-          const collectionsToWipe = ["experiences", "posts", "leads", "reservations", "accommodations", "partners", "financial", "affiliates"];
-          for (const col of collectionsToWipe) {
-            const docs = await firestoreService.getAll<any>(col);
-            for (const doc of docs) {
-              await firestoreService.delete(col, doc.id);
-            }
-          }
-          localStorage.setItem("db_wiped_v2", "true");
-        }
-
-        // C. Fetch real database items
-        let dbExps = await firestoreService.getAll<Experience>("experiences");
-
-        // D. Auto-populate availability for all tours from day 25 to 30 (for client testing)
-        let hasUpdatedCalendars = false;
-        const testDates = ["2026-06-25", "2026-06-26", "2026-06-27", "2026-06-28", "2026-06-29", "2026-06-30"];
-        for (const exp of dbExps) {
-          let updatedThisExp = false;
-          const cal = exp.calendar ? { ...exp.calendar } : {};
-          for (const d of testDates) {
-            const dateVal = cal[d];
-            if (!dateVal || dateVal.adultPrice !== 100 || dateVal.childPrice !== 50 || dateVal.babyPrice !== 0 || dateVal.status !== "open") {
-              cal[d] = {
-                status: "open",
-                adultPrice: 100,
-                childPrice: 50,
-                babyPrice: 0
-              };
-              updatedThisExp = true;
-            }
-          }
-          if (updatedThisExp) {
-            exp.calendar = cal;
-            // Also ensure fallback properties reflect R$ 100
-            exp.priceFrom = 100;
-            if (!exp.pricing) {
-              exp.pricing = { adultPrice: 100, childPrice: 50, babyPrice: 0 };
-            } else {
-              exp.pricing.adultPrice = 100;
-              exp.pricing.childPrice = 50;
-              exp.pricing.babyPrice = 0;
-            }
-            await firestoreService.set("experiences", exp.id, exp);
-            hasUpdatedCalendars = true;
-          }
-        }
-        if (hasUpdatedCalendars) {
-          console.log("Automatically synchronized testing calendars to 100/50/0 BRL for days 25 to 30");
-          dbExps = await firestoreService.getAll<Experience>("experiences");
-        }
+        // C. Fetch real database items from Firestore
+        const dbExps = await firestoreService.getAll<Experience>("experiences");
 
         if (dbExps) {
           setExperiences(dbExps);
