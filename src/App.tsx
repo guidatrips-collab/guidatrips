@@ -231,32 +231,20 @@ export default function App() {
     // 2. Async Cloud Firestore Sync (Seed & Load)
     const syncFirestore = async () => {
       try {
-        // A. Check for old default experiences to perform a automatic migration/reset
-        let dbExps = await firestoreService.getAll<Experience>("experiences");
-        const containsOld = dbExps.some(e => e.id === "passeio-barco-premium");
-        if (containsOld) {
-          console.log("Old experiences detected. Migrating database to the new 7 tours...");
-          // Delete all old ones
-          for (const exp of dbExps) {
-            await firestoreService.delete("experiences", exp.id);
+        if (localStorage.getItem("db_wiped_v2") !== "true") {
+          console.log("Wiping database to start fresh as requested...");
+          const collectionsToWipe = ["experiences", "posts", "leads", "reservations", "accommodations", "partners", "financial", "affiliates"];
+          for (const col of collectionsToWipe) {
+            const docs = await firestoreService.getAll<any>(col);
+            for (const doc of docs) {
+              await firestoreService.delete(col, doc.id);
+            }
           }
-          // Seed the new ones
-          for (const newExp of INITIAL_EXPERIENCES) {
-            await firestoreService.set("experiences", newExp.id, newExp);
-          }
-          // Re-fetch
-          dbExps = await firestoreService.getAll<Experience>("experiences");
+          localStorage.setItem("db_wiped_v2", "true");
         }
-
-        // B. Seed collections if empty
-        await firestoreService.seedCollection("experiences", INITIAL_EXPERIENCES);
-        await firestoreService.seedCollection("posts", INITIAL_BLOG_POSTS);
-        await firestoreService.seedCollection("leads", INITIAL_LEADS);
 
         // C. Fetch real database items
-        if (dbExps.length === 0) {
-          dbExps = await firestoreService.getAll<Experience>("experiences");
-        }
+        let dbExps = await firestoreService.getAll<Experience>("experiences");
 
         // D. Auto-populate availability for all tours from day 25 to 30 (for client testing)
         let hasUpdatedCalendars = false;
@@ -296,29 +284,23 @@ export default function App() {
           dbExps = await firestoreService.getAll<Experience>("experiences");
         }
 
-        if (dbExps && dbExps.length > 0) {
+        if (dbExps) {
           setExperiences(dbExps);
           localStorage.setItem("guidatrips_experiences", JSON.stringify(dbExps));
-        } else if (!localStorage.getItem("guidatrips_experiences")) {
-          setExperiences(INITIAL_EXPERIENCES);
         }
 
         const dbPosts = await firestoreService.getAll<BlogPost>("posts");
-        if (dbPosts && dbPosts.length > 0) {
+        if (dbPosts) {
           setPosts(dbPosts);
           localStorage.setItem("guidatrips_posts", JSON.stringify(dbPosts));
-        } else if (!localStorage.getItem("guidatrips_posts")) {
-          setPosts(INITIAL_BLOG_POSTS);
         }
 
         const dbLeads = await firestoreService.getAll<Lead>("leads");
-        if (dbLeads && dbLeads.length > 0) {
+        if (dbLeads) {
           // Sort leads descending by default
           const sortedLeads = dbLeads.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
           setLeads(sortedLeads);
           localStorage.setItem("guidatrips_leads", JSON.stringify(sortedLeads));
-        } else if (!localStorage.getItem("guidatrips_leads")) {
-          setLeads(INITIAL_LEADS);
         }
 
         // C. Fetch/Seed Global Settings
