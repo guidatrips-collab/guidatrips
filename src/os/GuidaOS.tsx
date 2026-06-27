@@ -14,6 +14,13 @@ import {
 } from 'lucide-react';
 import { ProductsModule } from './modules/Products/ProductsModule';
 import { CRMModule } from './modules/CRM/CRMModule';
+import { SmartItineraryModule } from './modules/SmartItinerary/SmartItineraryModule';
+import { AccommodationsModule } from './modules/Accommodations/AccommodationsModule';
+import { PartnersModule } from './modules/Partners/PartnersModule';
+import { ReservationsModule } from './modules/Reservations/ReservationsModule';
+import { FinancialModule } from './modules/Financial/FinancialModule';
+import { AffiliatesModule } from './modules/Affiliates/AffiliatesModule';
+import { SettingsModule } from './modules/Settings/SettingsModule';
 import { Experience, Lead } from '../types';
 
 interface GuidaOSProps {
@@ -116,46 +123,39 @@ export function GuidaOS({ onNavigateHome, experiences, leads }: GuidaOSProps) {
         {/* Content Module Space */}
         <div className="flex-1 overflow-y-auto p-8">
           <div className="max-w-7xl mx-auto h-full">
-            {activeModule === 'products' && (
-               <ProductsModule experiences={experiences} />
-            )}
-            
-            {activeModule === 'crm' && (
-               <CRMModule leads={leads} />
-            )}
+            {activeModule === 'products' && <ProductsModule experiences={experiences} />}
+            {activeModule === 'crm' && <CRMModule leads={leads} />}
+            {activeModule === 'smart-itinerary' && <SmartItineraryModule />}
+            {activeModule === 'accommodations' && <AccommodationsModule />}
+            {activeModule === 'partners' && <PartnersModule />}
+            {activeModule === 'reservations' && <ReservationsModule />}
+            {activeModule === 'financial' && <FinancialModule />}
+            {activeModule === 'affiliates' && <AffiliatesModule />}
+            {activeModule === 'settings' && <SettingsModule />}
 
-            {activeModule !== 'products' && activeModule !== 'crm' && (
+            {activeModule === 'dashboard' && (
               <div className="grid gap-6 grid-cols-1 lg:grid-cols-3">
                 <div className="bg-[#121214] border border-zinc-800/80 rounded-xl p-6 shadow-sm">
-                  <h3 className="text-zinc-400 text-sm font-medium mb-2">Construindo Módulo</h3>
-                  <p className="text-zinc-100 text-2xl font-semibold">{navItems.find(i => i.id === activeModule)?.label}</p>
-                  <div className="mt-4 pt-4 border-t border-zinc-800/50 flex items-center gap-2 text-blue-500 text-sm">
-                    <span className="flex h-2 w-2 relative">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
-                    </span>
-                    Em desenvolvimento (Arquitetura SaaS)
+                  <h3 className="text-zinc-400 text-sm font-medium mb-2">Receita Hoje</h3>
+                  <p className="text-zinc-100 text-2xl font-semibold">R$ 0,00</p>
+                  <div className="mt-4 pt-4 border-t border-zinc-800/50 text-emerald-500 text-sm">
+                    +0% vs ontem
                   </div>
                 </div>
-
-                {activeModule === 'dashboard' && (
-                  <>
-                    <div className="bg-[#121214] border border-zinc-800/80 rounded-xl p-6 shadow-sm">
-                      <h3 className="text-zinc-400 text-sm font-medium mb-2">Receita Hoje</h3>
-                      <p className="text-zinc-100 text-2xl font-semibold">R$ 0,00</p>
-                      <div className="mt-4 pt-4 border-t border-zinc-800/50 text-emerald-500 text-sm">
-                        +0% vs ontem
-                      </div>
-                    </div>
-                    <div className="bg-[#121214] border border-zinc-800/80 rounded-xl p-6 shadow-sm">
-                      <h3 className="text-zinc-400 text-sm font-medium mb-2">Novos Leads</h3>
-                      <p className="text-zinc-100 text-2xl font-semibold">{leads.filter(l => l.status === 'novo').length}</p>
-                      <div className="mt-4 pt-4 border-t border-zinc-800/50 text-zinc-500 text-sm">
-                        Aguardando contato
-                      </div>
-                    </div>
-                  </>
-                )}
+                <div className="bg-[#121214] border border-zinc-800/80 rounded-xl p-6 shadow-sm">
+                  <h3 className="text-zinc-400 text-sm font-medium mb-2">Novos Leads</h3>
+                  <p className="text-zinc-100 text-2xl font-semibold">{leads.filter(l => l.status === 'novo').length}</p>
+                  <div className="mt-4 pt-4 border-t border-zinc-800/50 text-zinc-500 text-sm">
+                    Aguardando contato
+                  </div>
+                </div>
+                <div className="bg-[#121214] border border-zinc-800/80 rounded-xl p-6 shadow-sm">
+                  <h3 className="text-zinc-400 text-sm font-medium mb-2">Roteiros Pendentes (IA)</h3>
+                  <p className="text-zinc-100 text-2xl font-semibold">0</p>
+                  <div className="mt-4 pt-4 border-t border-zinc-800/50 text-zinc-500 text-sm">
+                    Tudo em dia
+                  </div>
+                </div>
               </div>
             )}
 
@@ -164,9 +164,9 @@ export function GuidaOS({ onNavigateHome, experiences, leads }: GuidaOSProps) {
                   <div className="w-16 h-16 bg-blue-600/10 rounded-2xl flex items-center justify-center mb-6 text-blue-500">
                     <BrainCircuit size={32} />
                   </div>
-                  <h2 className="text-xl font-bold text-zinc-100 mb-2">Guida OS Inicializado</h2>
+                  <h2 className="text-xl font-bold text-zinc-100 mb-2">Guida OS Totalmente Inicializado</h2>
                   <p className="text-zinc-400 max-w-md">
-                    O módulo CRM e Passeios já estão operacionais conectando os dados. Explore o menu lateral.
+                    Todos os módulos do Sistema Operacional foram instanciados. O Guida OS já é o cérebro da operação. Explore o menu lateral.
                   </p>
                </div>
             )}
