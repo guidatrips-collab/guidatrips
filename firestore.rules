@@ -19,5 +19,26 @@ service cloud.firestore {
     match /reservations/{document} {
       allow read, write: if true;
     }
+    match /accommodations/{document} {
+      allow read, write: if true;
+    }
+    match /partners/{document} {
+      allow read, write: if true;
+    }
+    match /financial/{document} {
+      allow read, write: if true;
+    }
+    match /affiliates/{document} {
+      allow read, write: if true;
+    }
+    match /budgets/{document} {
+      allow read, write: if true;
+    }
+    match /destinations/{document} {
+      allow read, write: if true;
+    }
+    match /globalSettings/{document} {
+      allow read, write: if true;
+    }
   }
 }
