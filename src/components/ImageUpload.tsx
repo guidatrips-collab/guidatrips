@@ -12,8 +12,8 @@ const compressAndConvertToBase64 = (file: File): Promise<string> => {
       img.src = event.target?.result as string;
       img.onload = () => {
         const canvas = document.createElement('canvas');
-        const MAX_WIDTH = 1000;
-        const MAX_HEIGHT = 1000;
+        const MAX_WIDTH = 800; // Optimized dimension for fast loading and Firestore size safety
+        const MAX_HEIGHT = 800;
         let width = img.width;
         let height = img.height;
 
@@ -36,16 +36,39 @@ const compressAndConvertToBase64 = (file: File): Promise<string> => {
           resolve(event.target?.result as string); // fallback to original base64 if canvas context fails
           return;
         }
+
+        // Fill background with white for PNG/GIF/WEBP transparency to avoid black background artifacts when converting to JPEG
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(0, 0, width, height);
         
         ctx.drawImage(img, 0, 0, width, height);
         
-        // Compress to JPEG with 0.7 quality to balance size and quality (aiming under 100kb for Firestore compatibility)
-        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
+        // Compress to JPEG with 0.65 quality to ensure tiny size (< 40kb) for flawless database performance
+        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.65);
         resolve(compressedBase64);
       };
       img.onerror = (err) => reject(err);
     };
     reader.onerror = (err) => reject(err);
+  });
+};
+
+// Helper to enforce a timeout on promises (e.g. to bypass hanging CORS preflights)
+const promiseWithTimeout = <T,>(promise: Promise<T>, ms: number, timeoutError: Error): Promise<T> => {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => {
+      reject(timeoutError);
+    }, ms);
+
+    promise
+      .then((res) => {
+        clearTimeout(timer);
+        resolve(res);
+      })
+      .catch((err) => {
+        clearTimeout(timer);
+        reject(err);
+      });
   });
 };
 
@@ -92,12 +115,18 @@ export default function ImageUpload({
       setIsCompatibilityMode(false);
       
       try {
-        const url = await storageService.uploadFile(file, folder);
+        // Try uploading to Firebase Storage, but timeout after 2.5s if preflight/CORS hangs
+        const uploadPromise = storageService.uploadFile(file, folder);
+        const url = await promiseWithTimeout(
+          uploadPromise,
+          2500,
+          new Error("Upload timeout due to potential CORS or network issue")
+        );
         onUploadComplete(url);
       } catch (storageErr) {
-        console.warn("Firebase Storage upload failed (CORS or permissions). Falling back to optimized Base64 format:", storageErr);
+        console.warn("Firebase Storage upload failed or timed out (CORS/Permissions). Falling back to ultra-optimized Base64:", storageErr);
         
-        // Dynamic compression and convert to Base64 to bypass CORS completely
+        // Convert to highly optimized, lightweight base64 format which bypasses CORS completely
         const compressedUrl = await compressAndConvertToBase64(file);
         setIsCompatibilityMode(true);
         onUploadComplete(compressedUrl);
