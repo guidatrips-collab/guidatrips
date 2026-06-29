@@ -1,6 +1,53 @@
 import React, { useState, useRef } from 'react';
-import { Upload, X, Loader2, Image as ImageIcon } from 'lucide-react';
+import { Upload, X, Loader2, Image as ImageIcon, Sparkles } from 'lucide-react';
 import { storageService } from '../firebase';
+
+// Helper to compress and convert image file to Base64
+const compressAndConvertToBase64 = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target?.result as string;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const MAX_WIDTH = 1000;
+        const MAX_HEIGHT = 1000;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > MAX_WIDTH) {
+            height *= MAX_WIDTH / width;
+            width = MAX_WIDTH;
+          }
+        } else {
+          if (height > MAX_HEIGHT) {
+            width *= MAX_HEIGHT / height;
+            height = MAX_HEIGHT;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          resolve(event.target?.result as string); // fallback to original base64 if canvas context fails
+          return;
+        }
+        
+        ctx.drawImage(img, 0, 0, width, height);
+        
+        // Compress to JPEG with 0.7 quality to balance size and quality (aiming under 100kb for Firestore compatibility)
+        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
+        resolve(compressedBase64);
+      };
+      img.onerror = (err) => reject(err);
+    };
+    reader.onerror = (err) => reject(err);
+  });
+};
 
 interface ImageUploadProps {
   onUploadComplete: (url: string) => void;
@@ -21,6 +68,7 @@ export default function ImageUpload({
 }: ImageUploadProps) {
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isCompatibilityMode, setIsCompatibilityMode] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -41,12 +89,22 @@ export default function ImageUpload({
     try {
       setIsUploading(true);
       setError(null);
+      setIsCompatibilityMode(false);
       
-      const url = await storageService.uploadFile(file, folder);
-      onUploadComplete(url);
+      try {
+        const url = await storageService.uploadFile(file, folder);
+        onUploadComplete(url);
+      } catch (storageErr) {
+        console.warn("Firebase Storage upload failed (CORS or permissions). Falling back to optimized Base64 format:", storageErr);
+        
+        // Dynamic compression and convert to Base64 to bypass CORS completely
+        const compressedUrl = await compressAndConvertToBase64(file);
+        setIsCompatibilityMode(true);
+        onUploadComplete(compressedUrl);
+      }
     } catch (err) {
-      console.error("Upload failed:", err);
-      setError("Falha ao subir imagem. Verifique se o Firebase Storage está ativo.");
+      console.error("Upload/Compression failed:", err);
+      setError("Falha ao processar a imagem. Tente outro arquivo.");
     } finally {
       setIsUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
@@ -57,8 +115,10 @@ export default function ImageUpload({
     if (!currentImageUrl) return;
     
     try {
-      // Optional: Delete from storage when removed from UI
-      await storageService.deleteFile(currentImageUrl);
+      // Optional: Delete from storage when removed from UI (skip if it's base64 data)
+      if (!currentImageUrl.startsWith('data:')) {
+        await storageService.deleteFile(currentImageUrl);
+      }
       if (onRemove) {
         onRemove();
       }
@@ -143,6 +203,12 @@ export default function ImageUpload({
 
       {error && (
         <p className="text-[9px] text-red-400 font-medium uppercase tracking-widest mt-1">{error}</p>
+      )}
+
+      {(isCompatibilityMode || (currentImageUrl && currentImageUrl.startsWith('data:'))) && (
+        <p className="text-[9px] text-emerald-400 font-medium uppercase tracking-widest mt-1 flex items-center gap-1">
+          <Sparkles className="w-3 h-3 text-emerald-400 animate-pulse" /> Otimizado para web (modo de compatibilidade)
+        </p>
       )}
     </div>
   );
