@@ -59,7 +59,7 @@ export function LeadCaptureModal({
         updatedAt: new Date().toISOString()
       };
 
-      await firestoreService.add("leads", newLead);
+      await firestoreService.set("leads", newLead.id, newLead);
       await analytics.trackEvent("conversion", "whatsapp_conversion", { name, phone });
 
       if (onLeadCaptured) onLeadCaptured(newLead);

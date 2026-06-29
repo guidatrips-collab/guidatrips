@@ -1,4 +1,5 @@
 import { initializeApp } from "firebase/app";
+import { getAuth } from "firebase/auth";
 import { 
   getFirestore, 
   collection, 
@@ -34,11 +35,61 @@ const firebaseConfig = {
 // Initialize App
 const app = initializeApp(firebaseConfig);
 
+// Initialize Auth
+export const auth = getAuth(app);
+
 // Initialize Firestore targeting the specific provisioned database
 export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId || "(default)");
 
 // Initialize Storage
 export const storage = getStorage(app);
+
+export enum OperationType {
+  CREATE = 'create',
+  UPDATE = 'update',
+  DELETE = 'delete',
+  LIST = 'list',
+  GET = 'get',
+  WRITE = 'write',
+}
+
+export interface FirestoreErrorInfo {
+  error: string;
+  operationType: OperationType;
+  path: string | null;
+  authInfo: {
+    userId?: string | null;
+    email?: string | null;
+    emailVerified?: boolean | null;
+    isAnonymous?: boolean | null;
+    tenantId?: string | null;
+    providerInfo?: {
+      providerId?: string | null;
+      email?: string | null;
+    }[];
+  }
+}
+
+export function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null): never {
+  const errInfo: FirestoreErrorInfo = {
+    error: error instanceof Error ? error.message : String(error),
+    authInfo: {
+      userId: auth.currentUser?.uid,
+      email: auth.currentUser?.email,
+      emailVerified: auth.currentUser?.emailVerified,
+      isAnonymous: auth.currentUser?.isAnonymous,
+      tenantId: auth.currentUser?.tenantId,
+      providerInfo: auth.currentUser?.providerData?.map(provider => ({
+        providerId: provider.providerId,
+        email: provider.email,
+      })) || []
+    },
+    operationType,
+    path
+  };
+  console.error('Firestore Error: ', JSON.stringify(errInfo));
+  throw new Error(JSON.stringify(errInfo));
+}
 
 // Helper to remove undefined values before sending to Firestore
 const sanitizeData = (data: any): any => {
@@ -68,7 +119,7 @@ export const firestoreService = {
       return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }) as T);
     } catch (error) {
       console.error(`Error fetching collection ${collectionName}:`, error);
-      throw error;
+      handleFirestoreError(error, OperationType.LIST, collectionName);
     }
   },
 
@@ -78,7 +129,7 @@ export const firestoreService = {
       await setDoc(docRef, sanitizeData(data), { merge: true });
     } catch (error) {
       console.error(`Error setting document in ${collectionName}/${id}:`, error);
-      throw error;
+      handleFirestoreError(error, OperationType.WRITE, `${collectionName}/${id}`);
     }
   },
 
@@ -89,7 +140,7 @@ export const firestoreService = {
       return docRef.id;
     } catch (error) {
       console.error(`Error adding document to ${collectionName}:`, error);
-      throw error;
+      handleFirestoreError(error, OperationType.WRITE, collectionName);
     }
   },
 
@@ -99,7 +150,7 @@ export const firestoreService = {
       await updateDoc(docRef, sanitizeData(data));
     } catch (error) {
       console.error(`Error updating document ${collectionName}/${id}:`, error);
-      throw error;
+      handleFirestoreError(error, OperationType.WRITE, `${collectionName}/${id}`);
     }
   },
 
@@ -109,7 +160,7 @@ export const firestoreService = {
       await deleteDoc(docRef);
     } catch (error) {
       console.error(`Error deleting document ${collectionName}/${id}:`, error);
-      throw error;
+      handleFirestoreError(error, OperationType.DELETE, `${collectionName}/${id}`);
     }
   },
 
@@ -121,6 +172,7 @@ export const firestoreService = {
       callback(data);
     }, (error) => {
       console.error(`Error subscribing to ${collectionName}:`, error);
+      handleFirestoreError(error, OperationType.LIST, collectionName);
     });
   },
 
