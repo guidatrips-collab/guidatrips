@@ -239,7 +239,13 @@ export default function App() {
       
       const storedLeads = localStorage.getItem("guidatrips_leads");
       if (storedLeads) {
-        const parsed = JSON.parse(storedLeads) as Lead[];
+        const parsed = (JSON.parse(storedLeads) as Lead[]).filter(l => 
+          l && 
+          !(l.name && l.name.toLowerCase().includes("karina")) && 
+          !(l.phone && l.phone.includes("229888227272")) &&
+          l.id !== "7c05c87d-8092-4d52-93e7-cd6ab586a5e5" &&
+          l.id !== "PmPDaiT45agDXDQUorOs"
+        );
         const unique = Array.from(new Map(parsed.map(l => [l?.id, l])).values()).filter(Boolean);
         setLeads(unique);
       }
@@ -281,7 +287,14 @@ export default function App() {
     });
 
     const unsubLeads = firestoreService.subscribe("leads", (data) => {
-      const sorted = (data as Lead[]).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      const filtered = (data as Lead[]).filter(l => 
+        l && 
+        !(l.name && l.name.toLowerCase().includes("karina")) && 
+        !(l.phone && l.phone.includes("229888227272")) &&
+        l.id !== "7c05c87d-8092-4d52-93e7-cd6ab586a5e5" &&
+        l.id !== "PmPDaiT45agDXDQUorOs"
+      );
+      const sorted = filtered.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
       const unique = Array.from(new Map(sorted.map(l => [l?.id, l])).values()).filter(Boolean);
       setLeads(unique);
       localStorage.setItem("guidatrips_leads", JSON.stringify(unique));
@@ -382,7 +395,14 @@ export default function App() {
   };
 
   const updateLeads = async (newLeads: Lead[]) => {
-    const unique = Array.from(new Map(newLeads.map(l => [l?.id, l])).values()).filter(Boolean);
+    const filtered = newLeads.filter(l => 
+      l && 
+      !(l.name && l.name.toLowerCase().includes("karina")) && 
+      !(l.phone && l.phone.includes("229888227272")) &&
+      l.id !== "7c05c87d-8092-4d52-93e7-cd6ab586a5e5" &&
+      l.id !== "PmPDaiT45agDXDQUorOs"
+    );
+    const unique = Array.from(new Map(filtered.map(l => [l?.id, l])).values()).filter(Boolean);
     const oldLeads = leads;
     setLeads(unique);
     localStorage.setItem("guidatrips_leads", JSON.stringify(unique));
