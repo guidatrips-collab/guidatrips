@@ -125,8 +125,8 @@ export default function ExperiencesView({
     const expDestId = exp.destinationId || "arraial-do-cabo";
     const matchesLocation = selectedLocation === "todos" || expDestId === selectedLocation || (exp.location && exp.location === selectedLocation);
     const matchesSearch =
-      exp.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      exp.shortDescription.toLowerCase().includes(searchQuery.toLowerCase());
+      (exp.name || "").toLowerCase().includes((searchQuery || "").toLowerCase()) ||
+      (exp.shortDescription || "").toLowerCase().includes((searchQuery || "").toLowerCase());
     
     // Default to only showing the globally selected destination unless "todos" or another destination is actively chosen in this view
     const globalDestMatch = selectedLocation === "todos" ? (expDestId === selectedDestinationId) : true;

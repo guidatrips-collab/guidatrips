@@ -153,7 +153,7 @@ export function SmartItineraryModule({ budgets, experiences }: { budgets: Budget
             </tr>
           </thead>
           <tbody className="divide-y divide-zinc-800">
-            {budgets.filter(b => b.id.toLowerCase().includes(searchTerm.toLowerCase()) || b.clientId.toLowerCase().includes(searchTerm.toLowerCase())).map((b) => (
+            {budgets.filter(b => b && ((b.id || "").toLowerCase().includes((searchTerm || "").toLowerCase()) || (b.clientId || "").toLowerCase().includes((searchTerm || "").toLowerCase()))).map((b) => (
               <tr key={b.id} className="hover:bg-zinc-800/30 transition-colors">
                 <td className="px-6 py-4">
                   <div className="font-mono text-zinc-500 text-xs mb-1">#{b.id}</div>

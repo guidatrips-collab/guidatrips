@@ -133,7 +133,7 @@ export function AffiliatesModule({ affiliates }: { affiliates: Affiliate[] }) {
             </tr>
           </thead>
           <tbody className="divide-y divide-zinc-800">
-            {affiliates.filter(a => a.name.toLowerCase().includes(searchTerm.toLowerCase())).map((a) => (
+            {affiliates.filter(a => a && (a.name || "").toLowerCase().includes((searchTerm || "").toLowerCase())).map((a) => (
               <tr key={a.id} className="hover:bg-zinc-800/30 transition-colors">
                 <td className="px-6 py-4">
                   <div className="font-medium text-zinc-100">{a.name}</div>

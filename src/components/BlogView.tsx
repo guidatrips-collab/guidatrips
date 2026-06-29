@@ -30,9 +30,9 @@ export default function BlogView({ posts, onNavigateToContact, selectedSlug, onS
 
   const filteredPosts = posts.filter((post) => {
     const matchesSearch =
-      post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      post.excerpt.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      post.body.toLowerCase().includes(searchQuery.toLowerCase());
+      (post.title || "").toLowerCase().includes((searchQuery || "").toLowerCase()) ||
+      (post.excerpt || "").toLowerCase().includes((searchQuery || "").toLowerCase()) ||
+      (post.body || "").toLowerCase().includes((searchQuery || "").toLowerCase());
     return matchesSearch && post.status === "published";
   });
 

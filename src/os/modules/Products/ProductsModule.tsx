@@ -147,7 +147,7 @@ export function ProductsModule({ experiences }: { experiences: Experience[] }) {
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-800">
-                {experiences.filter(e => e.name.toLowerCase().includes(searchTerm.toLowerCase())).map((exp) => {
+                {experiences.filter(e => e && (e.name || "").toLowerCase().includes((searchTerm || "").toLowerCase())).map((exp) => {
                   const netRate = exp.netRate || (exp.priceFrom * 0.7); // Mock if missing
                   const margin = exp.priceFrom - netRate;
                   const marginPercent = exp.priceFrom > 0 ? ((margin / exp.priceFrom) * 100).toFixed(1) : '0.0';

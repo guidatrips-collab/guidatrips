@@ -224,20 +224,20 @@ export default function WizardView({
     let list = experiences.filter(exp => exp.status === "active");
     if (profile === "casal") {
       list = [...list].sort((a, b) => {
-        if (a.id.includes("sunset") || a.name.toLowerCase().includes("pôr") || a.name.toLowerCase().includes("sunset")) return -1;
-        if (b.id.includes("sunset") || b.name.toLowerCase().includes("pôr") || b.name.toLowerCase().includes("sunset")) return 1;
+        if ((a.id || "").includes("sunset") || (a.name || "").toLowerCase().includes("pôr") || (a.name || "").toLowerCase().includes("sunset")) return -1;
+        if ((b.id || "").includes("sunset") || (b.name || "").toLowerCase().includes("pôr") || (b.name || "").toLowerCase().includes("sunset")) return 1;
         return 0;
       });
     } else if (profile === "familia") {
       list = [...list].sort((a, b) => {
-        if (a.name.toLowerCase().includes("premium") || a.name.toLowerCase().includes("conforto")) return -1;
-        if (b.name.toLowerCase().includes("premium") || b.name.toLowerCase().includes("conforto")) return 1;
+        if ((a.name || "").toLowerCase().includes("premium") || (a.name || "").toLowerCase().includes("conforto")) return -1;
+        if ((b.name || "").toLowerCase().includes("premium") || (b.name || "").toLowerCase().includes("conforto")) return 1;
         return 0;
       });
     } else if (profile === "grupo") {
       list = [...list].sort((a, b) => {
-        if (a.id.includes("buggy") || a.name.toLowerCase().includes("mergulho") || a.id.includes("mergulho")) return -1;
-        if (b.id.includes("buggy") || b.name.toLowerCase().includes("mergulho") || b.id.includes("mergulho")) return 1;
+        if ((a.id || "").includes("buggy") || (a.name || "").toLowerCase().includes("mergulho") || (a.id || "").includes("mergulho")) return -1;
+        if ((b.id || "").includes("buggy") || (b.name || "").toLowerCase().includes("mergulho") || (b.id || "").includes("mergulho")) return 1;
         return 0;
       });
     }

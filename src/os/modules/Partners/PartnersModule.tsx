@@ -95,9 +95,11 @@ export function PartnersModule({ partners }: { partners: Partner[] }) {
   };
 
   const filtered = partners.filter(p => 
-    p.companyName.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    p.tradingName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    p.contactName.toLowerCase().includes(searchTerm.toLowerCase())
+    p && (
+      (p.companyName || "").toLowerCase().includes((searchTerm || "").toLowerCase()) || 
+      (p.tradingName || "").toLowerCase().includes((searchTerm || "").toLowerCase()) ||
+      (p.contactName || "").toLowerCase().includes((searchTerm || "").toLowerCase())
+    )
   );
 
   return (

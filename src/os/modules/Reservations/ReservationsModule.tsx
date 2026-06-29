@@ -135,7 +135,7 @@ export function ReservationsModule({ reservations, experiences }: { reservations
             </tr>
           </thead>
           <tbody className="divide-y divide-zinc-800">
-            {reservations.filter(r => r.id?.toLowerCase().includes(searchTerm.toLowerCase())).map((res) => {
+            {reservations.filter(r => r && (r.id || "").toLowerCase().includes((searchTerm || "").toLowerCase())).map((res) => {
               const total = getExperiencePrice(res.experienceId) * (res.pax || 1);
               return (
                 <tr key={res.id} className="hover:bg-zinc-800/30 transition-colors">

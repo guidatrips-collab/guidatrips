@@ -87,8 +87,10 @@ export function AccommodationsModule({ accommodations }: { accommodations: Accom
   };
 
   const filtered = accommodations.filter(a => 
-    a.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    a.location.toLowerCase().includes(searchTerm.toLowerCase())
+    a && (
+      (a.name || "").toLowerCase().includes((searchTerm || "").toLowerCase()) || 
+      (a.location || "").toLowerCase().includes((searchTerm || "").toLowerCase())
+    )
   );
 
   return (
