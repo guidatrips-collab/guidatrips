@@ -100,7 +100,7 @@ export default function AdminView({
   ];
 
   // Active submodule
-  const [activeTab, setActiveTab] = useState<"overview" | "destinations" | "experiences" | "hospedagens" | "calendar" | "leads" | "blog" | "settings" | "client">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "destinations" | "calendar" | "leads" | "blog" | "settings" | "client">("overview");
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
 
   // CRM status labels
@@ -528,8 +528,6 @@ export default function AdminView({
             {[
               { id: "overview", label: "Visão Geral", icon: TrendingUp },
               { id: "destinations", label: "Destinos", icon: MapPin },
-              { id: "experiences", label: "Passeios", icon: Compass },
-              { id: "hospedagens", label: "Hospedagens", icon: Waves },
               { id: "leads", label: "Leads CRM", icon: Users, alertCount: activeLeadsCount },
               { id: "reservations", label: "Reservas", icon: Ticket },
               { id: "blog", label: "Revista/Blog", icon: FileText },

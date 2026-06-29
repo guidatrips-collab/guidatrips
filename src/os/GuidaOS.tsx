@@ -24,7 +24,7 @@ import { ReservationsModule } from './modules/Reservations/ReservationsModule';
 import { FinancialModule } from './modules/Financial/FinancialModule';
 import { AffiliatesModule } from './modules/Affiliates/AffiliatesModule';
 import { SettingsModule } from './modules/Settings/SettingsModule';
-import { Experience, Lead } from '../types';
+import { Experience, Lead, Destination } from '../types';
 
 interface GuidaOSProps {
   onNavigateHome: () => void;
@@ -37,6 +37,7 @@ interface GuidaOSProps {
   affiliates: any[];
   budgets: any[];
   settings: any;
+  destinations: Destination[];
   onUpdateSettings: (s: any) => void;
 }
 
@@ -51,6 +52,7 @@ export function GuidaOS({
   affiliates,
   budgets,
   settings,
+  destinations,
   onUpdateSettings
 }: GuidaOSProps) {
   const [activeModule, setActiveModule] = useState('dashboard');
@@ -147,7 +149,7 @@ export function GuidaOS({
         {/* Content Module Space */}
         <div className="flex-1 overflow-y-auto p-8">
           <div className="max-w-7xl mx-auto h-full">
-            {activeModule === 'products' && <ProductsModule experiences={experiences} />}
+            {activeModule === 'products' && <ProductsModule experiences={experiences} destinations={destinations} />}
             {activeModule === 'calendar' && (
               <CalendarPricingView 
                 experiences={experiences} 
@@ -166,7 +168,7 @@ export function GuidaOS({
             )}
             {activeModule === 'crm' && <CRMModule leads={leads} experiences={experiences} />}
             {activeModule === 'smart-itinerary' && <SmartItineraryModule experiences={experiences} budgets={budgets} />}
-            {activeModule === 'accommodations' && <AccommodationsModule accommodations={accommodations} />}
+            {activeModule === 'accommodations' && <AccommodationsModule accommodations={accommodations} destinations={destinations} />}
             {activeModule === 'partners' && <PartnersModule partners={partners} />}
             {activeModule === 'reservations' && <ReservationsModule reservations={reservations} experiences={experiences} />}
             {activeModule === 'financial' && <FinancialModule transactions={financial} />}

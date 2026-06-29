@@ -1,45 +1,171 @@
-import React, { useState, useEffect } from 'react';
-import { Plus, Search, Filter, Map, Edit, Trash, Activity, X } from 'lucide-react';
-import { Experience } from '../../../types';
+import React, { useState } from 'react';
+import { 
+  Plus, 
+  Search, 
+  Filter, 
+  Map, 
+  Edit, 
+  Trash, 
+  Activity, 
+  X, 
+  Save, 
+  Clock, 
+  Compass, 
+  Users, 
+  MapPin, 
+  Calendar,
+  AlertCircle
+} from 'lucide-react';
+import { Experience, Destination, ExperienceCategory } from '../../../types';
 import { firestoreService } from '../../../firebase';
+import ImageUpload from '../../../components/ImageUpload';
 
-export function ProductsModule({ experiences }: { experiences: Experience[] }) {
+interface ProductsModuleProps {
+  experiences: Experience[];
+  destinations: Destination[];
+}
+
+export function ProductsModule({ experiences, destinations }: ProductsModuleProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState<'list' | 'create'>('list');
   const [loading, setLoading] = useState(false);
 
   const [editingId, setEditingId] = useState<string | null>(null);
 
-  // Form
+  // Form States
   const [name, setName] = useState('');
-  const [category, setCategory] = useState('');
-  const [location, setLocation] = useState('');
+  const [slug, setSlug] = useState('');
+  const [destinationId, setDestinationId] = useState('');
+  const [category, setCategory] = useState('nautico');
+  const [duration, setDuration] = useState('2 horas');
+  const [departureCity, setDepartureCity] = useState('');
+  const [minAge, setMinAge] = useState('');
+  const [maxAge, setMaxAge] = useState('');
+  const [priceFrom, setPriceFrom] = useState(0);
+  const [promotionalPrice, setPromotionalPrice] = useState<number | undefined>(undefined);
+  
+  // Pricing
+  const [adultPrice, setAdultPrice] = useState(0);
+  const [childPrice, setChildPrice] = useState(0);
+  const [babyPrice, setBabyPrice] = useState(0);
+
+  // Availability
+  const [availType, setAvailType] = useState<'daily' | 'specific_days'>('daily');
+  const [daysOfWeekStr, setDaysOfWeekStr] = useState('');
+  const [schedulesStr, setSchedulesStr] = useState('');
+  const [checkInMinutesBefore, setCheckInMinutesBefore] = useState<number | undefined>(undefined);
+  const [durationMinutes, setDurationMinutes] = useState<number | undefined>(undefined);
+  const [safetyBufferMinutes, setSafetyBufferMinutes] = useState<number | undefined>(undefined);
+
+  const [partnerName, setPartnerName] = useState('');
+  const [googleMapsUrl, setGoogleMapsUrl] = useState('');
+  const [capacity, setCapacity] = useState(10);
+  const [badge, setBadge] = useState<'mais-vendido' | 'novidade' | 'temporada' | ''>('');
   const [shortDesc, setShortDesc] = useState('');
+  const [fullDesc, setFullDesc] = useState('');
+  const [meetingPoint, setMeetingPoint] = useState('');
+  const [videoEmbed, setVideoEmbed] = useState('');
+  const [photos, setPhotos] = useState<string[]>([]);
+  
+  // Lists
+  const [highlightsStr, setHighlightsStr] = useState('');
+  const [bringItemsStr, setBringItemsStr] = useState('');
+  const [includedStr, setIncludedStr] = useState('');
+  const [notIncludedStr, setNotIncludedStr] = useState('');
+  const [itineraryStr, setItineraryStr] = useState('');
+
+  const [status, setStatus] = useState<'active' | 'paused' | 'draft'>('active');
+  const [location, setLocation] = useState('Arraial do Cabo');
+  const [featured, setFeatured] = useState(false);
   const [netRate, setNetRate] = useState(0);
-  const [sellRate, setSellRate] = useState(0);
-  const [status, setStatus] = useState<Experience["status"]>('active');
 
   const resetForm = () => {
-    setName('');
-    setCategory('nautico');
-    setLocation('');
-    setShortDesc('');
-    setNetRate(0);
-    setSellRate(0);
-    setStatus('active');
     setEditingId(null);
+    setName('');
+    setSlug('');
+    setDestinationId(destinations[0]?.id || '');
+    setCategory('nautico');
+    setDuration('2 horas');
+    setDepartureCity('');
+    setMinAge('');
+    setMaxAge('');
+    setPriceFrom(0);
+    setPromotionalPrice(undefined);
+    setAdultPrice(0);
+    setChildPrice(0);
+    setBabyPrice(0);
+    setAvailType('daily');
+    setDaysOfWeekStr('');
+    setSchedulesStr('');
+    setCheckInMinutesBefore(undefined);
+    setDurationMinutes(undefined);
+    setSafetyBufferMinutes(undefined);
+    setPartnerName('');
+    setGoogleMapsUrl('');
+    setCapacity(10);
+    setBadge('');
+    setShortDesc('');
+    setFullDesc('');
+    setMeetingPoint('');
+    setVideoEmbed('');
+    setPhotos([]);
+    setHighlightsStr('');
+    setBringItemsStr('');
+    setIncludedStr('');
+    setNotIncludedStr('');
+    setItineraryStr('');
+    setStatus('active');
+    setLocation('Arraial do Cabo');
+    setFeatured(false);
+    setNetRate(0);
     setActiveTab('list');
   };
 
   const openEdit = (exp: Experience) => {
-    setName(exp.name);
-    setCategory(exp.category);
-    setLocation(exp.location || '');
-    setShortDesc(exp.shortDescription || '');
-    setNetRate(exp.netRate || 0);
-    setSellRate(exp.priceFrom || 0);
-    setStatus(exp.status);
     setEditingId(exp.id);
+    setName(exp.name || '');
+    setSlug(exp.slug || '');
+    setDestinationId(exp.destinationId || '');
+    setCategory(exp.category || 'nautico');
+    setDuration(exp.duration || '2 horas');
+    setDepartureCity(exp.departureCity || '');
+    setMinAge(exp.minAge || '');
+    setMaxAge(exp.maxAge || '');
+    setPriceFrom(exp.priceFrom || 0);
+    setPromotionalPrice(exp.promotionalPrice);
+    
+    setAdultPrice(exp.pricing?.adultPrice || 0);
+    setChildPrice(exp.pricing?.childPrice || 0);
+    setBabyPrice(exp.pricing?.babyPrice || 0);
+
+    setAvailType(exp.availability?.type || 'daily');
+    setDaysOfWeekStr(exp.availability?.daysOfWeek?.join(', ') || '');
+    setSchedulesStr(exp.schedules?.join(', ') || '');
+    setCheckInMinutesBefore(exp.checkInMinutesBefore);
+    setDurationMinutes(exp.durationMinutes);
+    setSafetyBufferMinutes(exp.safetyBufferMinutes);
+
+    setPartnerName(exp.partnerName || '');
+    setGoogleMapsUrl(exp.googleMapsUrl || '');
+    setCapacity(exp.capacity || 10);
+    setBadge(exp.badge || '');
+    setShortDesc(exp.shortDescription || '');
+    setFullDesc(exp.fullDescription || '');
+    setMeetingPoint(exp.meetingPoint || '');
+    setVideoEmbed(exp.videoEmbed || '');
+    setPhotos(exp.photos || []);
+    
+    setHighlightsStr(exp.highlights?.join('\n') || '');
+    setBringItemsStr(exp.bringItems?.join('\n') || '');
+    setIncludedStr(exp.included?.join('\n') || '');
+    setNotIncludedStr(exp.notIncluded?.join('\n') || '');
+    setItineraryStr(exp.itinerary?.join('\n') || '');
+
+    setStatus(exp.status || 'active');
+    setLocation(exp.location || 'Arraial do Cabo');
+    setFeatured(exp.featured || false);
+    setNetRate(exp.netRate || 0);
+
     setActiveTab('create');
   };
 
@@ -47,18 +173,62 @@ export function ProductsModule({ experiences }: { experiences: Experience[] }) {
     e.preventDefault();
     setLoading(true);
 
-    const markup = sellRate > 0 ? ((sellRate - netRate) / netRate) * 100 : 0;
-    
+    const markup = priceFrom > 0 && netRate > 0 ? ((priceFrom - netRate) / netRate) * 100 : 20;
+
+    const daysOfWeek = daysOfWeekStr.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n));
+    const schedules = schedulesStr.split(',').map(s => s.trim()).filter(Boolean);
+    const highlights = highlightsStr.split('\n').map(s => s.trim()).filter(Boolean);
+    const bringItems = bringItemsStr.split('\n').map(s => s.trim()).filter(Boolean);
+    const included = includedStr.split('\n').map(s => s.trim()).filter(Boolean);
+    const notIncluded = notIncludedStr.split('\n').map(s => s.trim()).filter(Boolean);
+    const itinerary = itineraryStr.split('\n').map(s => s.trim()).filter(Boolean);
+
+    const generatedSlug = slug || name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+
     const expData: Partial<Experience> = {
       name,
-      slug: name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+      slug: generatedSlug,
+      destinationId: destinationId || destinations[0]?.id || '',
       category,
-      location,
-      shortDescription: shortDesc,
+      duration,
+      departureCity,
+      minAge,
+      maxAge,
+      priceFrom,
+      promotionalPrice: promotionalPrice || undefined,
       netRate,
-      priceFrom: sellRate,
       markup,
+      pricing: {
+        adultPrice: adultPrice || priceFrom,
+        childPrice: childPrice || undefined,
+        babyPrice: babyPrice || undefined
+      },
+      availability: {
+        type: availType,
+        daysOfWeek: availType === 'specific_days' ? daysOfWeek : [],
+        slots: schedules.map(time => ({ time, capacity }))
+      },
+      schedules,
+      checkInMinutesBefore: checkInMinutesBefore !== undefined ? checkInMinutesBefore : undefined,
+      durationMinutes: durationMinutes !== undefined ? durationMinutes : undefined,
+      safetyBufferMinutes: safetyBufferMinutes !== undefined ? safetyBufferMinutes : undefined,
+      partnerName,
+      googleMapsUrl,
+      capacity,
+      badge: badge || "",
+      shortDescription: shortDesc,
+      fullDescription: fullDesc,
+      meetingPoint: meetingPoint || 'A combinar',
+      videoEmbed,
+      photos: photos.length > 0 ? photos : ["https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=600&q=80"],
+      highlights,
+      bringItems,
+      included,
+      notIncluded,
+      itinerary,
       status,
+      location,
+      featured,
       updatedAt: new Date().toISOString()
     };
 
@@ -66,48 +236,45 @@ export function ProductsModule({ experiences }: { experiences: Experience[] }) {
       if (editingId) {
         await firestoreService.update("experiences", editingId, expData);
       } else {
-        expData.id = Math.random().toString(36).substring(2, 9);
-        expData.fullDescription = '';
-        expData.duration = '2h';
-        expData.capacity = 10;
-        expData.included = [];
-        expData.notIncluded = [];
-        expData.meetingPoint = '';
-        expData.coordinates = { lat: 0, lng: 0 };
-        expData.photos = [];
-        expData.featured = false;
-        await firestoreService.set("experiences", expData.id, expData);
+        const newId = `exp-${Date.now()}`;
+        const finalExpData = {
+          ...expData,
+          id: newId,
+          createdAt: new Date().toISOString(),
+          coordinates: { lat: -22.9715, lng: -42.0224 }
+        };
+        await firestoreService.set("experiences", newId, finalExpData);
       }
       resetForm();
     } catch (err) {
       console.error(err);
-      alert('Erro ao salvar.');
+      alert('Erro ao salvar as informações do passeio.');
     } finally {
       setLoading(false);
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Tem certeza que deseja excluir?')) return;
+    if (!confirm('Deseja realmente remover esta experiência? Todos os canais de venda serão afetados.')) return;
     try {
       await firestoreService.delete("experiences", id);
     } catch (err) {
       console.error(err);
-      alert('Erro ao excluir.');
+      alert('Erro ao excluir passeio do catálogo.');
     }
   };
 
   return (
-    <div className="w-full h-full flex flex-col relative">
+    <div className="w-full h-full flex flex-col relative text-zinc-100">
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h2 className="text-2xl font-bold text-zinc-100">Catálogo de Passeios</h2>
-          <p className="text-zinc-400 text-sm">Gerencie experiências, tarifários e disponibilidade.</p>
+          <h2 className="text-2xl font-bold text-zinc-100">Catálogo de Passeios (Tours)</h2>
+          <p className="text-zinc-400 text-sm">Controle de saídas, tarifas, lotações e exibição integrada no site.</p>
         </div>
         {activeTab === 'list' && (
           <button 
             onClick={() => { resetForm(); setActiveTab('create'); }}
-            className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-colors"
+            className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2.5 rounded-lg font-medium flex items-center gap-2 transition-all cursor-pointer"
           >
             <Plus size={18} />
             Novo Passeio
@@ -128,10 +295,6 @@ export function ProductsModule({ experiences }: { experiences: Experience[] }) {
                 className="w-full bg-[#121214] border border-zinc-800 text-zinc-100 pl-10 pr-4 py-2 rounded-lg focus:outline-none focus:border-blue-500 transition-colors"
               />
             </div>
-            <button className="bg-[#121214] border border-zinc-800 hover:border-zinc-700 text-zinc-300 px-4 py-2 rounded-lg flex items-center gap-2 transition-colors">
-              <Filter size={18} />
-              Filtros
-            </button>
           </div>
 
           <div className="bg-[#121214] border border-zinc-800 rounded-xl overflow-hidden flex-1 overflow-y-auto">
@@ -139,7 +302,7 @@ export function ProductsModule({ experiences }: { experiences: Experience[] }) {
               <thead className="bg-zinc-900/50 text-zinc-400 text-xs uppercase font-semibold border-b border-zinc-800">
                 <tr>
                   <th className="px-6 py-4">Passeio</th>
-                  <th className="px-6 py-4">Tarifa Neto</th>
+                  <th className="px-6 py-4">Tarifa Neto (Custo)</th>
                   <th className="px-6 py-4">Tarifa Venda</th>
                   <th className="px-6 py-4">Margem</th>
                   <th className="px-6 py-4">Status</th>
@@ -148,22 +311,31 @@ export function ProductsModule({ experiences }: { experiences: Experience[] }) {
               </thead>
               <tbody className="divide-y divide-zinc-800">
                 {experiences.filter(e => e && (e.name || "").toLowerCase().includes((searchTerm || "").toLowerCase())).map((exp) => {
-                  const netRate = exp.netRate || (exp.priceFrom * 0.7); // Mock if missing
-                  const margin = exp.priceFrom - netRate;
-                  const marginPercent = exp.priceFrom > 0 ? ((margin / exp.priceFrom) * 100).toFixed(1) : '0.0';
+                  const estNetRate = exp.netRate || 0;
+                  const margin = exp.priceFrom - estNetRate;
+                  const marginPercent = estNetRate > 0 ? ((margin / estNetRate) * 100).toFixed(1) : '0.0';
 
                   return (
                     <tr key={exp.id} className="hover:bg-zinc-800/30 transition-colors">
                       <td className="px-6 py-4">
-                        <div className="font-medium text-zinc-100">{exp.name}</div>
-                        <div className="text-zinc-500 text-xs flex items-center gap-1 mt-1">
-                          <Map size={12} /> {exp.location || 'Destino Padrão'}
+                        <div className="flex items-center gap-3">
+                          <img src={exp.photos?.[0]} className="w-12 h-12 object-cover rounded" alt="Cover" />
+                          <div>
+                            <div className="font-medium text-zinc-100">{exp.name}</div>
+                            <div className="text-zinc-500 text-xs flex items-center gap-1 mt-1">
+                              <Map size={12} /> {exp.location || 'Arraial do Cabo'}
+                              <span className="mx-1">•</span>
+                              <Compass size={12} /> {exp.category}
+                            </div>
+                          </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 font-mono text-zinc-400">R$ {netRate.toFixed(2)}</td>
+                      <td className="px-6 py-4 font-mono text-zinc-400">
+                        {estNetRate > 0 ? `R$ ${estNetRate.toFixed(2)}` : 'Não definido'}
+                      </td>
                       <td className="px-6 py-4 font-mono text-emerald-400 font-medium">R$ {exp.priceFrom.toFixed(2)}</td>
                       <td className="px-6 py-4">
-                        <span className="bg-zinc-800 text-zinc-300 px-2 py-1 rounded text-xs">
+                        <span className="bg-zinc-800 text-zinc-300 px-2 py-1 rounded text-xs font-mono">
                           {marginPercent}%
                         </span>
                       </td>
@@ -178,8 +350,8 @@ export function ProductsModule({ experiences }: { experiences: Experience[] }) {
                       </td>
                       <td className="px-6 py-4 text-right">
                         <div className="flex justify-end gap-3">
-                          <button onClick={() => openEdit(exp)} className="text-zinc-400 hover:text-blue-400 transition-colors"><Edit size={16} /></button>
-                          <button onClick={() => handleDelete(exp.id)} className="text-zinc-400 hover:text-red-400 transition-colors"><Trash size={16} /></button>
+                          <button onClick={() => openEdit(exp)} className="p-2 text-zinc-400 hover:text-blue-400 transition-colors" title="Editar"><Edit size={16} /></button>
+                          <button onClick={() => handleDelete(exp.id)} className="p-2 text-zinc-400 hover:text-red-400 transition-colors" title="Excluir"><Trash size={16} /></button>
                         </div>
                       </td>
                     </tr>
@@ -188,7 +360,7 @@ export function ProductsModule({ experiences }: { experiences: Experience[] }) {
                 {experiences.length === 0 && (
                   <tr>
                     <td colSpan={6} className="px-6 py-8 text-center text-zinc-500">
-                      Nenhum passeio encontrado.
+                      Nenhum passeio cadastrado.
                     </td>
                   </tr>
                 )}
@@ -199,82 +371,348 @@ export function ProductsModule({ experiences }: { experiences: Experience[] }) {
       )}
 
       {activeTab === 'create' && (
-        <div className="bg-[#121214] border border-zinc-800 rounded-xl p-6 flex-1 overflow-y-auto">
-          <div className="flex items-center gap-3 mb-6 border-b border-zinc-800 pb-4">
-            <button onClick={resetForm} className="text-zinc-400 hover:text-white transition-colors">&larr; Voltar</button>
-            <h3 className="text-xl font-bold text-zinc-100">{editingId ? 'Editar Passeio' : 'Cadastrar Novo Passeio'}</h3>
-          </div>
-          
-          <form id="exp-form" onSubmit={handleSave} className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div className="col-span-2 space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-zinc-400 mb-2">Nome do Passeio</label>
-                <input required type="text" value={name} onChange={e => setName(e.target.value)} className="w-full bg-zinc-900 border border-zinc-800 text-zinc-100 px-4 py-2 rounded-lg focus:border-blue-500 focus:outline-none" placeholder="Ex: Passeio de Lancha VIP" />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                 <div>
-                  <label className="block text-sm font-medium text-zinc-400 mb-2">Categoria</label>
-                  <select value={category} onChange={e => setCategory(e.target.value)} className="w-full bg-zinc-900 border border-zinc-800 text-zinc-100 px-4 py-2 rounded-lg focus:border-blue-500 focus:outline-none">
-                    <option value="nautico">Náutico</option>
-                    <option value="off-road">Off-Road (Aventura)</option>
-                    <option value="cultura">Cultura / Histórico</option>
-                    <option value="gastronomia">Gastronomia</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-zinc-400 mb-2">Destino / Cidade</label>
-                  <input required type="text" value={location} onChange={e => setLocation(e.target.value)} className="w-full bg-zinc-900 border border-zinc-800 text-zinc-100 px-4 py-2 rounded-lg focus:border-blue-500 focus:outline-none" placeholder="Ex: Arraial do Cabo" />
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-zinc-400 mb-2">Descrição Resumida</label>
-                <textarea required value={shortDesc} onChange={e => setShortDesc(e.target.value)} className="w-full bg-zinc-900 border border-zinc-800 text-zinc-100 px-4 py-2 rounded-lg focus:border-blue-500 focus:outline-none h-24" placeholder="Descrição curta para o card..." />
-              </div>
+        <form onSubmit={handleSave} className="bg-[#121214] border border-zinc-800 rounded-xl p-6 flex-1 overflow-y-auto space-y-8">
+          <div className="flex items-center justify-between border-b border-zinc-800 pb-4">
+            <div className="flex items-center gap-3">
+              <button type="button" onClick={resetForm} className="text-zinc-400 hover:text-white transition-colors">&larr; Voltar</button>
+              <h3 className="text-xl font-bold text-zinc-100">{editingId ? 'Editar Passeio' : 'Cadastrar Novo Passeio'}</h3>
             </div>
-
-            <div className="space-y-6">
-              <div className="bg-zinc-900/50 border border-zinc-800 rounded-lg p-5">
-                <h4 className="text-zinc-100 font-semibold mb-4 flex items-center gap-2">
-                  <Activity size={18} className="text-emerald-500" />
-                  Tarifário
-                </h4>
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-xs font-medium text-zinc-400 mb-1">Tarifa Neto (Custo Parceiro)</label>
-                    <div className="relative">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500">R$</span>
-                      <input required type="number" step="0.01" value={netRate} onChange={e => setNetRate(Number(e.target.value))} className="w-full bg-zinc-900 border border-zinc-800 text-zinc-100 pl-10 pr-4 py-2 rounded-lg focus:border-blue-500 focus:outline-none" placeholder="0.00" />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-zinc-400 mb-1">Tarifa Venda (Cliente)</label>
-                    <div className="relative">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500">R$</span>
-                      <input required type="number" step="0.01" value={sellRate} onChange={e => setSellRate(Number(e.target.value))} className="w-full bg-zinc-900 border border-zinc-800 text-emerald-400 font-bold pl-10 pr-4 py-2 rounded-lg focus:border-emerald-500 focus:outline-none" placeholder="0.00" />
-                    </div>
-                  </div>
-                  <div className="pt-2 border-t border-zinc-800 flex justify-between items-center text-sm">
-                    <span className="text-zinc-400">Margem Estimada</span>
-                    <span className="text-emerald-400 font-semibold">{sellRate > 0 ? (((sellRate - netRate) / netRate) * 100).toFixed(1) : 0}%</span>
-                  </div>
-                </div>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-zinc-400 mb-2">Status</label>
-                <select value={status} onChange={e => setStatus(e.target.value as any)} className="w-full bg-zinc-900 border border-zinc-800 text-zinc-100 px-4 py-2 rounded-lg focus:border-blue-500 focus:outline-none">
-                  <option value="active">Ativo (Publicado)</option>
-                  <option value="paused">Pausado</option>
-                  <option value="draft">Rascunho</option>
-                </select>
-              </div>
-
-              <button disabled={loading} type="submit" className="w-full bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-semibold py-3 rounded-lg transition-colors">
-                {loading ? 'Salvando...' : 'Salvar Passeio'}
+            <div className="flex gap-2">
+              <button 
+                type="button" 
+                onClick={resetForm} 
+                className="px-4 py-2 border border-zinc-800 rounded-lg text-zinc-300 hover:bg-zinc-800 transition-all"
+              >
+                Cancelar
+              </button>
+              <button 
+                type="submit" 
+                disabled={loading}
+                className="bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-medium px-6 py-2 rounded-lg flex items-center gap-2 transition-all cursor-pointer"
+              >
+                <Save size={18} />
+                {loading ? 'Salvando...' : 'Salvar Alterações'}
               </button>
             </div>
-          </form>
-        </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-2 space-y-6">
+              
+              {/* SECTION: BASIC INFO */}
+              <div className="bg-zinc-900/40 border border-zinc-800/60 rounded-xl p-5 space-y-4">
+                <h4 className="text-zinc-200 font-semibold border-b border-zinc-800 pb-2">Informações Principais</h4>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="col-span-2 md:col-span-1">
+                    <label className="block text-xs font-medium text-zinc-400 mb-1">Nome do Passeio / Experiência *</label>
+                    <input required type="text" value={name} onChange={e => setName(e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 text-zinc-100 px-4 py-2 rounded-lg focus:border-blue-500 focus:outline-none" placeholder="Ex: Passeio de Lancha VIP" />
+                  </div>
+                  <div className="col-span-2 md:col-span-1">
+                    <label className="block text-xs font-medium text-zinc-400 mb-1">Slug URL (Gerado automático se vazio)</label>
+                    <input type="text" value={slug} onChange={e => setSlug(e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 text-zinc-100 px-4 py-2 rounded-lg focus:border-blue-500 focus:outline-none" placeholder="passeio-lancha-vip" />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-xs font-medium text-zinc-400 mb-1">Destino Vinculado</label>
+                    <select value={destinationId} onChange={e => setDestinationId(e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 text-zinc-100 px-4 py-2 rounded-lg focus:border-blue-500 focus:outline-none">
+                      <option value="">(Selecione)</option>
+                      {destinations.map(d => (
+                        <option key={d.id} value={d.id}>{d.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-zinc-400 mb-1">Categoria</label>
+                    <select value={category} onChange={e => setCategory(e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 text-zinc-100 px-4 py-2 rounded-lg focus:border-blue-500 focus:outline-none">
+                      <option value="nautico">🚤 Náutico</option>
+                      <option value="off-road">🚙 Off-Road</option>
+                      <option value="cultura">🏛️ Cultura</option>
+                      <option value="gastronomia">🍴 Gastronomia</option>
+                      <option value="temporada">🐋 Temporada</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-zinc-400 mb-1">Cidade de Partida</label>
+                    <input type="text" value={departureCity} onChange={e => setDepartureCity(e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 text-zinc-100 px-4 py-2 rounded-lg focus:border-blue-500 focus:outline-none" placeholder="Ex: Arraial do Cabo RJ" />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-xs font-medium text-zinc-400 mb-1">Duração Textual</label>
+                    <input type="text" value={duration} onChange={e => setDuration(e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 text-zinc-100 px-4 py-2 rounded-lg focus:border-blue-500 focus:outline-none" placeholder="Ex: 4 horas" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-zinc-400 mb-1">Idade Mínima</label>
+                    <input type="text" value={minAge} onChange={e => setMinAge(e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 text-zinc-100 px-4 py-2 rounded-lg focus:border-blue-500 focus:outline-none" placeholder="Ex: 2 anos" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-zinc-400 mb-1">Idade Máxima</label>
+                    <input type="text" value={maxAge} onChange={e => setMaxAge(e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 text-zinc-100 px-4 py-2 rounded-lg focus:border-blue-500 focus:outline-none" placeholder="Ex: 70 anos" />
+                  </div>
+                </div>
+              </div>
+
+              {/* SECTION: DESCRIPTIONS & CONTENT */}
+              <div className="bg-zinc-900/40 border border-zinc-800/60 rounded-xl p-5 space-y-4">
+                <h4 className="text-zinc-200 font-semibold border-b border-zinc-800 pb-2">Conteúdo Literário & Descrições</h4>
+                
+                <div>
+                  <label className="block text-xs font-medium text-zinc-400 mb-1">Breve Resumo (cards de listagem - máx 150 caracteres)</label>
+                  <input type="text" value={shortDesc} onChange={e => setShortDesc(e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 text-zinc-100 px-4 py-2 rounded-lg focus:border-blue-500 focus:outline-none" placeholder="Resumo simples..." />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-zinc-400 mb-1">Descrição Completa e Detalhes da Aventura</label>
+                  <textarea rows={6} value={fullDesc} onChange={e => setFullDesc(e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 text-zinc-100 px-4 py-2 rounded-lg focus:border-blue-500 focus:outline-none font-sans text-sm" placeholder="Detalhes completos que encantam o cliente..." />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-medium text-zinc-400 mb-1">Ponto de Encontro Oficial</label>
+                    <input type="text" value={meetingPoint} onChange={e => setMeetingPoint(e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 text-zinc-100 px-4 py-2 rounded-lg focus:border-blue-500 focus:outline-none" placeholder="Ex: Píer da Praia dos Anjos" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-zinc-400 mb-1">Vídeo de Destaque (Link do YouTube/Vimeo)</label>
+                    <input type="text" value={videoEmbed} onChange={e => setVideoEmbed(e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 text-zinc-100 px-4 py-2 rounded-lg focus:border-blue-500 focus:outline-none" placeholder="https://..." />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                  <div>
+                    <label className="block text-xs font-medium text-zinc-400 mb-1">Destaques Principais (Um por linha)</label>
+                    <textarea rows={3} value={highlightsStr} onChange={e => setHighlightsStr(e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 text-zinc-100 px-4 py-2 rounded-lg focus:border-blue-500 focus:outline-none text-xs" placeholder="Ex: Guia Local Credenciado&#10;Equipamentos de snorkel inclusos" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-zinc-400 mb-1">O que levar (Um por linha)</label>
+                    <textarea rows={3} value={bringItemsStr} onChange={e => setBringItemsStr(e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 text-zinc-100 px-4 py-2 rounded-lg focus:border-blue-500 focus:outline-none text-xs" placeholder="Ex: Toalha de banho&#10;Protetor Solar" />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-medium text-zinc-400 mb-1">O que está Incluso (Um por linha)</label>
+                    <textarea rows={3} value={includedStr} onChange={e => setIncludedStr(e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 text-zinc-100 px-4 py-2 rounded-lg focus:border-blue-500 focus:outline-none text-xs" placeholder="Ex: Água mineral liberada&#10;Colete salva-vidas" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-zinc-400 mb-1">O que NÃO está incluso (Um por linha)</label>
+                    <textarea rows={3} value={notIncludedStr} onChange={e => setNotIncludedStr(e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 text-zinc-100 px-4 py-2 rounded-lg focus:border-blue-500 focus:outline-none text-xs" placeholder="Ex: Taxa de embarque da prefeitura&#10;Almoço" />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-zinc-400 mb-1">Roteiro Completo (Título: Descrição - Um por linha)</label>
+                  <textarea rows={4} value={itineraryStr} onChange={e => setItineraryStr(e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 text-zinc-100 px-4 py-2 rounded-lg focus:border-blue-500 focus:outline-none text-xs font-sans" placeholder="Ex: Parada na Praia do Forno: 40 min para mergulho livre.&#10;Parada nas Prainhas: Desembarque direto na areia." />
+                </div>
+              </div>
+
+              {/* SECTION: MEDIA GALLERY */}
+              <div className="bg-zinc-900/40 border border-zinc-800/60 rounded-xl p-5 space-y-4">
+                <h4 className="text-zinc-200 font-semibold border-b border-zinc-800 pb-2">Galeria de Fotos do Passeio</h4>
+                
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                  {photos.map((photo, idx) => (
+                    <div key={`photo-${idx}`} className="relative group">
+                      <ImageUpload
+                        currentImageUrl={photo}
+                        onUploadComplete={(url) => {
+                          const newPhotos = [...photos];
+                          newPhotos[idx] = url;
+                          setPhotos(newPhotos);
+                        }}
+                        onRemove={() => {
+                          const newPhotos = photos.filter((_, i) => i !== idx);
+                          setPhotos(newPhotos);
+                        }}
+                        folder="experiences"
+                      />
+                    </div>
+                  ))}
+                  <ImageUpload
+                    onUploadComplete={(url) => setPhotos([...photos, url])}
+                    folder="experiences"
+                    label="Nova Foto"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* SIDEBAR COLUMNS */}
+            <div className="space-y-6">
+              
+              {/* STATUS & HOME DISPLAY */}
+              <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-5 space-y-4">
+                <h4 className="text-zinc-100 font-semibold mb-2">Visibilidade & Status</h4>
+                
+                <div>
+                  <label className="block text-xs font-medium text-zinc-400 mb-1">Status Operacional</label>
+                  <select value={status} onChange={e => setStatus(e.target.value as any)} className="w-full bg-zinc-950 border border-zinc-800 text-zinc-100 px-4 py-2 rounded-lg focus:border-blue-500 focus:outline-none">
+                    <option value="active">🟢 Ativo (Exibir no site)</option>
+                    <option value="paused">⏸️ Pausado (Indisponível)</option>
+                    <option value="draft">📁 Rascunho (Oculto)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-zinc-400 mb-1">Cidade / Região do Site</label>
+                  <select value={location} onChange={e => setLocation(e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 text-zinc-100 px-4 py-2 rounded-lg focus:border-blue-500 focus:outline-none">
+                    <option value="Arraial do Cabo">Arraial do Cabo</option>
+                    <option value="Cabo Frio">Cabo Frio</option>
+                    <option value="Búzios">Búzios</option>
+                    <option value="Rio de Janeiro">Rio de Janeiro</option>
+                    <option value="Angra dos Reis">Angra dos Reis</option>
+                    <option value="Paraty">Paraty</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-zinc-400 mb-1">Tag Promocional / Badge</label>
+                  <select value={badge} onChange={e => setBadge(e.target.value as any)} className="w-full bg-zinc-950 border border-zinc-800 text-zinc-100 px-4 py-2 rounded-lg focus:border-blue-500 focus:outline-none">
+                    <option value="">Nenhuma</option>
+                    <option value="mais-vendido">🔥 Mais vendido</option>
+                    <option value="novidade">✨ Novidade</option>
+                    <option value="temporada">🐋 Temporada</option>
+                  </select>
+                </div>
+
+                <div className="flex items-center gap-2 pt-2">
+                  <input
+                    type="checkbox"
+                    id="feat"
+                    checked={featured}
+                    onChange={e => setFeatured(e.target.checked)}
+                    className="w-4 h-4 bg-zinc-950 border border-zinc-800 accent-blue-600 rounded"
+                  />
+                  <label htmlFor="feat" className="text-xs text-zinc-300 font-medium cursor-pointer">Destacar na Home do site?</label>
+                </div>
+              </div>
+
+              {/* LOGISTICS */}
+              <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-5 space-y-4">
+                <h4 className="text-zinc-100 font-semibold mb-2">Operação & Logística</h4>
+
+                <div>
+                  <label className="block text-xs font-medium text-zinc-400 mb-1">Parceiro Operador Responsável</label>
+                  <input type="text" value={partnerName} onChange={e => setPartnerName(e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 text-zinc-100 px-4 py-2 rounded-lg focus:border-blue-500 focus:outline-none" placeholder="Ex: Passeios Incríveis Ltda" />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-zinc-400 mb-1">Link Google Maps do Ponto</label>
+                  <input type="text" value={googleMapsUrl} onChange={e => setGoogleMapsUrl(e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 text-zinc-100 px-4 py-2 rounded-lg focus:border-blue-500 focus:outline-none" placeholder="https://maps.app.goo.gl/..." />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-medium text-zinc-400 mb-1">Lotação Máx.</label>
+                    <input type="number" value={capacity} onChange={e => setCapacity(parseInt(e.target.value) || 10)} className="w-full bg-zinc-950 border border-zinc-800 text-zinc-100 px-4 py-2 rounded-lg focus:border-blue-500 focus:outline-none" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-zinc-400 mb-1">Check-In Antecip. (min)</label>
+                    <input type="number" placeholder="Ex: 30" value={checkInMinutesBefore !== undefined ? checkInMinutesBefore : ''} onChange={e => setCheckInMinutesBefore(e.target.value === '' ? undefined : parseInt(e.target.value))} className="w-full bg-zinc-950 border border-zinc-800 text-zinc-100 px-4 py-2 rounded-lg focus:border-blue-500 focus:outline-none" />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-medium text-zinc-400 mb-1">Duração Est. (min)</label>
+                    <input type="number" placeholder="Ex: 240" value={durationMinutes !== undefined ? durationMinutes : ''} onChange={e => setDurationMinutes(e.target.value === '' ? undefined : parseInt(e.target.value))} className="w-full bg-zinc-950 border border-zinc-800 text-zinc-100 px-4 py-2 rounded-lg focus:border-blue-500 focus:outline-none" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-zinc-400 mb-1">Segurança Buffer (min)</label>
+                    <input type="number" placeholder="Ex: 60" value={safetyBufferMinutes !== undefined ? safetyBufferMinutes : ''} onChange={e => setSafetyBufferMinutes(e.target.value === '' ? undefined : parseInt(e.target.value))} className="w-full bg-zinc-950 border border-zinc-800 text-zinc-100 px-4 py-2 rounded-lg focus:border-blue-500 focus:outline-none" />
+                  </div>
+                </div>
+              </div>
+
+              {/* PRICING INTELLIGENCE */}
+              <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-5 space-y-4">
+                <h4 className="text-zinc-100 font-semibold mb-2 flex items-center gap-2">
+                  <Activity size={18} className="text-emerald-500" />
+                  Inteligência Tarifária (Adultos, Crianças)
+                </h4>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-medium text-zinc-400 mb-1">Custo Neto (Parceiro)</label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 text-xs">R$</span>
+                      <input required type="number" step="0.01" value={netRate} onChange={e => setNetRate(Number(e.target.value))} className="w-full bg-zinc-950 border border-zinc-800 text-zinc-100 pl-8 pr-3 py-2 rounded-lg focus:border-blue-500 focus:outline-none text-sm" />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-zinc-400 mb-1">Preço Venda Base</label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 text-xs">R$</span>
+                      <input required type="number" step="0.01" value={priceFrom} onChange={e => setPriceFrom(Number(e.target.value))} className="w-full bg-zinc-950 border border-zinc-800 text-zinc-100 pl-8 pr-3 py-2 rounded-lg focus:border-blue-500 focus:outline-none text-sm" />
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-zinc-400 mb-1">Preço Promocional (Opcional)</label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 text-xs">R$</span>
+                    <input type="number" step="0.01" value={promotionalPrice !== undefined ? promotionalPrice : ''} onChange={e => setPromotionalPrice(e.target.value === '' ? undefined : Number(e.target.value))} className="w-full bg-zinc-950 border border-zinc-800 text-zinc-100 pl-8 pr-3 py-2 rounded-lg focus:border-blue-500 focus:outline-none text-sm" />
+                  </div>
+                </div>
+
+                <div className="pt-2 border-t border-zinc-800 text-xs space-y-3">
+                  <p className="text-zinc-400">Preços Detalhados do Grid:</p>
+                  <div className="grid grid-cols-3 gap-2">
+                    <div>
+                      <label className="block text-[10px] text-zinc-400 mb-0.5">Adulto *</label>
+                      <input required type="number" value={adultPrice} onChange={e => setAdultPrice(parseInt(e.target.value) || 0)} className="w-full bg-zinc-950 border border-zinc-800 text-zinc-100 px-2 py-1.5 rounded text-xs" />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] text-zinc-400 mb-0.5">Criança</label>
+                      <input type="number" value={childPrice} onChange={e => setChildPrice(parseInt(e.target.value) || 0)} className="w-full bg-zinc-950 border border-zinc-800 text-zinc-100 px-2 py-1.5 rounded text-xs" />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] text-zinc-400 mb-0.5">Bebê</label>
+                      <input type="number" value={babyPrice} onChange={e => setBabyPrice(parseInt(e.target.value) || 0)} className="w-full bg-zinc-950 border border-zinc-800 text-zinc-100 px-2 py-1.5 rounded text-xs" />
+                    </div>
+                  </div>
+                  
+                  <div className="flex justify-between items-center text-xs pt-1">
+                    <span className="text-zinc-500">Margem Comercial:</span>
+                    <span className="text-emerald-400 font-bold font-mono">
+                      {priceFrom > 0 && netRate > 0 ? (((priceFrom - netRate) / netRate) * 100).toFixed(1) : '20'}%
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* SCHEDULE FREQUENCY */}
+              <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-5 space-y-4">
+                <h4 className="text-zinc-100 font-semibold mb-2">Frequência & Horários</h4>
+
+                <div>
+                  <label className="block text-xs font-medium text-zinc-400 mb-1">Tipo de Frequência</label>
+                  <select value={availType} onChange={e => setAvailType(e.target.value as any)} className="w-full bg-zinc-950 border border-zinc-800 text-zinc-100 px-4 py-2 rounded-lg focus:border-blue-500 focus:outline-none">
+                    <option value="daily">Todos os dias</option>
+                    <option value="specific_days">Dias Específicos da Semana</option>
+                  </select>
+                </div>
+
+                {availType === 'specific_days' && (
+                  <div>
+                    <label className="block text-xs font-medium text-zinc-400 mb-1">Dias Permitidos (0=Dom, 6=Sáb, separe por vírgula)</label>
+                    <input type="text" value={daysOfWeekStr} onChange={e => setDaysOfWeekStr(e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 text-zinc-100 px-4 py-2 rounded-lg focus:border-blue-500 focus:outline-none" placeholder="Ex: 1, 2, 3, 4, 5 (Seg a Sex)" />
+                  </div>
+                )}
+
+                <div>
+                  <label className="block text-xs font-medium text-zinc-400 mb-1">Horários de Saída (Separe por vírgula)</label>
+                  <input required type="text" value={schedulesStr} onChange={e => setSchedulesStr(e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 text-zinc-100 px-4 py-2 rounded-lg focus:border-blue-500 focus:outline-none" placeholder="Ex: 08:30, 11:30, 14:30" />
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </form>
       )}
     </div>
   );

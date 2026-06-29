@@ -795,6 +795,7 @@ export default function App() {
         affiliates={affiliates}
         budgets={budgets}
         settings={settings}
+        destinations={destinations}
         onUpdateSettings={updateSettings}
       />
     );
