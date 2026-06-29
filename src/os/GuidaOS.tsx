@@ -10,8 +10,11 @@ import {
   Settings,
   LogOut,
   BrainCircuit,
-  Hotel
+  Hotel,
+  Calendar
 } from 'lucide-react';
+import { CalendarPricingView } from '../components/CalendarPricingView';
+import { firestoreService } from '../firebase';
 import { ProductsModule } from './modules/Products/ProductsModule';
 import { CRMModule } from './modules/CRM/CRMModule';
 import { SmartItineraryModule } from './modules/SmartItinerary/SmartItineraryModule';
@@ -57,6 +60,7 @@ export function GuidaOS({
     { id: 'crm', label: 'CRM & Leads', icon: Users },
     { id: 'smart-itinerary', label: 'Roteiro IA', icon: BrainCircuit },
     { id: 'products', label: 'Passeios', icon: Map },
+    { id: 'calendar', label: 'Tarifário', icon: Calendar },
     { id: 'accommodations', label: 'Hospedagens', icon: Hotel },
     { id: 'partners', label: 'Parceiros', icon: Briefcase },
     { id: 'reservations', label: 'Reservas', icon: CalendarCheck },
@@ -144,6 +148,22 @@ export function GuidaOS({
         <div className="flex-1 overflow-y-auto p-8">
           <div className="max-w-7xl mx-auto h-full">
             {activeModule === 'products' && <ProductsModule experiences={experiences} />}
+            {activeModule === 'calendar' && (
+              <CalendarPricingView 
+                experiences={experiences} 
+                onUpdateExperience={async (updatedExp) => {
+                  try {
+                    await firestoreService.update("experiences", updatedExp.id, {
+                      calendar: updatedExp.calendar || {},
+                      updatedAt: new Date().toISOString()
+                    });
+                  } catch (err) {
+                    console.error(err);
+                    alert("Erro ao atualizar o tarifário no banco de dados.");
+                  }
+                }} 
+              />
+            )}
             {activeModule === 'crm' && <CRMModule leads={leads} experiences={experiences} />}
             {activeModule === 'smart-itinerary' && <SmartItineraryModule experiences={experiences} budgets={budgets} />}
             {activeModule === 'accommodations' && <AccommodationsModule accommodations={accommodations} />}

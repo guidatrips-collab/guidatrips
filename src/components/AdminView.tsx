@@ -10,7 +10,6 @@ import {
   X, AlertTriangle, Play, HelpCircle, Save, Phone, MessageSquare, Image, User, Calendar, MapPin, Waves, Map, Mail
 } from "lucide-react";
 import { Experience, Lead, BlogPost, GlobalSettings, ExperienceCategory, Destination, Accommodation, LeadHistoryItem } from "../types";
-import { CalendarPricingView } from "./CalendarPricingView";
 import ImageUpload from "./ImageUpload";
 import { firestoreService, storageService } from "../firebase";
 import { motion, AnimatePresence } from "motion/react";
@@ -531,7 +530,6 @@ export default function AdminView({
               { id: "destinations", label: "Destinos", icon: MapPin },
               { id: "experiences", label: "Passeios", icon: Compass },
               { id: "hospedagens", label: "Hospedagens", icon: Waves },
-              { id: "calendar", label: "Tarifário", icon: Calendar },
               { id: "leads", label: "Leads CRM", icon: Users, alertCount: activeLeadsCount },
               { id: "reservations", label: "Reservas", icon: Ticket },
               { id: "blog", label: "Revista/Blog", icon: FileText },
@@ -1616,13 +1614,7 @@ export default function AdminView({
           </div>
         )}
 
-        {/* -------------------- TAB: CALENDAR TARIFÁRIO -------------------- */}
-        {activeTab === "calendar" && (
-          <CalendarPricingView 
-            experiences={experiences} 
-            onUpdateExperience={handleUpdateSingleExperience} 
-          />
-        )}
+
 
         {/* -------------------- TAB: LEADS CRM GESTOR -------------------- */}
         {activeTab === "leads" && (
