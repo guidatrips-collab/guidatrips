@@ -1,11 +1,25 @@
-import React, { useState, useEffect } from 'react';
-import { Users, Search, Filter, Phone, MessageSquare, Mail, Calendar, ArrowRight, Edit, X } from 'lucide-react';
-import { Lead } from '../../../types';
+import React, { useState } from 'react';
+import { 
+  Users, Search, Filter, Phone, MessageSquare, Mail, Calendar, 
+  ArrowRight, Edit, X, Clock, FileText, CheckCircle2, AlertCircle, ShoppingBag, DollarSign
+} from 'lucide-react';
+import { Lead, Experience, ClientReservation, FinancialTransaction, LeadHistoryItem } from '../../../types';
 import { firestoreService } from '../../../firebase';
 
-export function CRMModule({ leads }: { leads: Lead[] }) {
+interface CRMModuleProps {
+  leads: Lead[];
+  experiences?: Experience[];
+}
+
+export function CRMModule({ leads, experiences = [] }: CRMModuleProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [draggedLeadId, setDraggedLeadId] = useState<string | null>(null);
+
+  // Status transition state (for mandatory observation modal)
+  const [pendingStatusChange, setPendingStatusChange] = useState<{ lead: Lead; targetStatus: string } | null>(null);
+  const [statusObservation, setStatusObservation] = useState('');
+  const [isSubmittingStatus, setIsSubmittingStatus] = useState(false);
+  const [statusSuccessMessage, setStatusSuccessMessage] = useState('');
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingLead, setEditingLead] = useState<Lead | null>(null);
@@ -16,7 +30,8 @@ export function CRMModule({ leads }: { leads: Lead[] }) {
   const [email, setEmail] = useState('');
   const [groupSize, setGroupSize] = useState<number>(2);
   const [preferredDate, setPreferredDate] = useState('');
-  const [notes, setNotes] = useState('');
+  const [newObservation, setNewObservation] = useState('');
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
 
   const handleDragStart = (e: React.DragEvent, id: string) => {
     setDraggedLeadId(id);
@@ -28,22 +43,148 @@ export function CRMModule({ leads }: { leads: Lead[] }) {
     e.dataTransfer.dropEffect = 'move';
   };
 
-  const handleDrop = async (e: React.DragEvent, statusId: string) => {
+  const handleDrop = (e: React.DragEvent, statusId: string) => {
     e.preventDefault();
     if (!draggedLeadId) return;
 
     const leadToUpdate = leads.find(l => l.id === draggedLeadId);
     if (!leadToUpdate || leadToUpdate.status === statusId) return;
 
-    // Update in Firestore
+    // Trigger mandatory observation modal
+    setPendingStatusChange({ lead: leadToUpdate, targetStatus: statusId });
+    setStatusObservation('');
+    setStatusSuccessMessage('');
+    setDraggedLeadId(null);
+  };
+
+  const getStageLabel = (statusId: string) => {
+    switch (statusId) {
+      case 'novo': return 'Novos';
+      case 'atendendo': return 'Em Atendimento';
+      case 'proposta': return 'Proposta Enviada';
+      case 'fechado': return 'Fechado (Ganho)';
+      case 'perdido': return 'Perdido';
+      default: return statusId;
+    }
+  };
+
+  const handleConfirmStatusChange = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!pendingStatusChange || !statusObservation.trim()) return;
+
+    const { lead, targetStatus } = pendingStatusChange;
+    setIsSubmittingStatus(true);
+
     try {
-      await firestoreService.update("leads", draggedLeadId, { status: statusId, updatedAt: new Date().toISOString() });
+      // 1. Prepare history item
+      const historyItem: LeadHistoryItem = {
+        id: 'hist-' + Math.random().toString(36).substring(2, 9),
+        timestamp: new Date().toISOString(),
+        type: 'status_change',
+        description: `Status alterado de "${getStageLabel(lead.status)}" para "${getStageLabel(targetStatus)}". Observação: ${statusObservation.trim()}`,
+        user: 'Equipe de Vendas'
+      };
+
+      const updatedHistory = [...(lead.history || []), historyItem];
+      const updatedNotes = [...(lead.notes || []), statusObservation.trim()];
+
+      const leadUpdate: Partial<Lead> = {
+        status: targetStatus as any,
+        notes: updatedNotes,
+        history: updatedHistory,
+        updatedAt: new Date().toISOString()
+      };
+
+      // 2. Perform integrations if status is 'fechado' (Closed/Won)
+      let integrationNotes = '';
+      if (targetStatus === 'fechado') {
+        const interests = lead.experienceInterest || [];
+        if (interests.length > 0) {
+          let createdCount = 0;
+          let financialTotal = 0;
+
+          for (const expId of interests) {
+            const exp = experiences.find(e => e.id === expId);
+            if (exp) {
+              const resId = `res-crm-${lead.id}-${exp.id}-${Date.now().toString().slice(-4)}`;
+              const finalDate = lead.preferredDate || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+              
+              // Create ClientReservation
+              const newReservation: ClientReservation = {
+                id: resId,
+                userId: lead.id,
+                experienceId: exp.id,
+                date: finalDate,
+                time: '08:00',
+                status: 'confirmed',
+                pax: lead.groupSize || 2,
+                meetingPoint: exp.meetingPoint || 'A combinar',
+                bringItems: exp.bringItems || [],
+                avoidItems: exp.notIncluded || [],
+                rules: exp.included || [],
+                adults: lead.groupSize || 2,
+                children: 0,
+                infants: 0
+              };
+              await firestoreService.set("reservations", resId, newReservation);
+
+              // Create FinancialTransaction
+              const transId = `fin-crm-${lead.id}-${exp.id}-${Date.now().toString().slice(-4)}`;
+              const unitPrice = exp.promotionalPrice || exp.priceFrom || 0;
+              const totalAmount = unitPrice * (lead.groupSize || 2);
+              financialTotal += totalAmount;
+
+              const newTransaction: FinancialTransaction = {
+                id: transId,
+                type: 'receita',
+                description: `Venda Passeio: ${exp.name} - Cliente: ${lead.name}`,
+                amount: totalAmount,
+                date: new Date().toISOString().split('T')[0],
+                status: 'pago',
+                referenceId: resId,
+                referenceType: 'reservation',
+                paymentMethod: 'pix',
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+              };
+              await firestoreService.set("financial", transId, newTransaction);
+              createdCount++;
+            }
+          }
+
+          if (createdCount > 0) {
+            integrationNotes = `\n\n[OS Integração] Criadas ${createdCount} reservas e lançamentos de receita totalizando R$ ${financialTotal.toFixed(2)} no Guida OS!`;
+            
+            // Add system log history item
+            const systemLog: LeadHistoryItem = {
+              id: 'hist-' + Math.random().toString(36).substring(2, 9),
+              timestamp: new Date().toISOString(),
+              type: 'system_log',
+              description: `Integração OS: ${createdCount} reservas confirmadas e R$ ${financialTotal.toFixed(2)} lançados no financeiro.`,
+              user: 'Sistema Guida OS'
+            };
+            leadUpdate.history = [...updatedHistory, systemLog];
+            leadUpdate.notes = [...updatedNotes, `Reserva e lançamento de receita criados automaticamente no Guida OS (R$ ${financialTotal.toFixed(2)})`];
+          }
+        }
+      }
+
+      // 3. Update in Firestore
+      await firestoreService.update("leads", lead.id, leadUpdate);
+
+      setStatusSuccessMessage(`Status atualizado com sucesso!${integrationNotes}`);
+      setTimeout(() => {
+        setPendingStatusChange(null);
+        setStatusObservation('');
+        setStatusSuccessMessage('');
+      }, 3000);
+
     } catch (err) {
       console.error(err);
-      alert("Erro ao atualizar status");
+      alert("Erro ao atualizar o lead e integrar dados.");
+    } finally {
+      setIsSubmittingStatus(false);
     }
-    
-    setDraggedLeadId(null);
   };
 
   const openEdit = (lead: Lead) => {
@@ -53,25 +194,47 @@ export function CRMModule({ leads }: { leads: Lead[] }) {
     setEmail(lead.email || '');
     setGroupSize(lead.groupSize || 2);
     setPreferredDate(lead.preferredDate || '');
-    setNotes(lead.notes || '');
+    setNewObservation('');
     setIsModalOpen(true);
   };
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!editingLead) return;
+    if (!editingLead || !newObservation.trim()) return;
 
-    const updatedData: Partial<Lead> = {
-      name, phone, email, groupSize, preferredDate, notes, updatedAt: new Date().toISOString()
-    };
+    setIsSavingEdit(true);
 
     try {
+      const historyItem: LeadHistoryItem = {
+        id: 'hist-' + Math.random().toString(36).substring(2, 9),
+        timestamp: new Date().toISOString(),
+        type: 'note_added',
+        description: `Nova observação inserida: ${newObservation.trim()}`,
+        user: 'Equipe de Vendas'
+      };
+
+      const updatedHistory = [...(editingLead.history || []), historyItem];
+      const updatedNotes = [...(editingLead.notes || []), newObservation.trim()];
+
+      const updatedData: Partial<Lead> = {
+        name,
+        phone,
+        email,
+        groupSize,
+        preferredDate,
+        notes: updatedNotes,
+        history: updatedHistory,
+        updatedAt: new Date().toISOString()
+      };
+
       await firestoreService.update("leads", editingLead.id, updatedData);
       setIsModalOpen(false);
       setEditingLead(null);
     } catch (err) {
       console.error(err);
       alert("Erro ao salvar lead.");
+    } finally {
+      setIsSavingEdit(false);
     }
   };
   
@@ -88,7 +251,7 @@ export function CRMModule({ leads }: { leads: Lead[] }) {
       <div className="flex justify-between items-center mb-6">
         <div>
           <h2 className="text-2xl font-bold text-zinc-100">CRM & Leads</h2>
-          <p className="text-zinc-400 text-sm">Gestão de contatos, orçamentos e conversão. (Arraste para mudar o status)</p>
+          <p className="text-zinc-400 text-sm">Gestão de contatos, orçamentos e conversão. (Arraste para mudar o status - Observações são obrigatórias)</p>
         </div>
       </div>
 
@@ -125,7 +288,7 @@ export function CRMModule({ leads }: { leads: Lead[] }) {
                   <span className="bg-zinc-800 text-zinc-400 text-xs px-2 py-0.5 rounded-full">{stageLeads.length}</span>
                 </div>
                 
-                <div className="p-3 flex-1 overflow-y-auto space-y-3">
+                <div className="p-3 flex-1 overflow-y-auto space-y-3 min-h-[400px]">
                   {stageLeads.map(lead => (
                     <div 
                       key={lead.id} 
@@ -145,6 +308,11 @@ export function CRMModule({ leads }: { leads: Lead[] }) {
                         <div className="flex items-center gap-2 text-xs text-zinc-400">
                           <Calendar size={12} className="flex-shrink-0" /> Viagem: {lead.preferredDate || 'A definir'} ({lead.groupSize} pax)
                         </div>
+                        {lead.experienceInterest && lead.experienceInterest.length > 0 && (
+                          <div className="flex items-center gap-2 text-xs text-zinc-400">
+                            <ShoppingBag size={12} className="flex-shrink-0" /> {lead.experienceInterest.length} passeio(s) de interesse
+                          </div>
+                        )}
                       </div>
                       
                       <div className="flex items-center justify-between border-t border-zinc-800/80 pt-3">
@@ -177,58 +345,186 @@ export function CRMModule({ leads }: { leads: Lead[] }) {
         </div>
       </div>
 
+      {/* Mandatory Status Observation Modal */}
+      {pendingStatusChange && (
+        <div className="fixed inset-0 bg-black/85 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-[#18181b] border border-zinc-800 rounded-2xl w-full max-w-md flex flex-col shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+            <div className="p-6 border-b border-zinc-800 bg-zinc-900/50">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-blue-600/10 flex items-center justify-center text-blue-500">
+                  <Clock size={20} />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-zinc-100">Atualizar Status de Lead</h3>
+                  <p className="text-zinc-400 text-xs">A equipe de vendas exige justificativa obrigatória.</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-6 space-y-4">
+              <div className="bg-zinc-900/80 border border-zinc-800 p-4 rounded-xl space-y-2 text-sm text-zinc-300">
+                <p><strong>Lead:</strong> {pendingStatusChange.lead.name}</p>
+                <div className="flex items-center gap-2 text-xs mt-1">
+                  <span className="px-2 py-0.5 rounded bg-zinc-800 text-zinc-400">{getStageLabel(pendingStatusChange.lead.status)}</span>
+                  <ArrowRight size={12} className="text-zinc-500" />
+                  <span className="px-2 py-0.5 rounded bg-blue-600/20 text-blue-400 font-semibold">{getStageLabel(pendingStatusChange.targetStatus)}</span>
+                </div>
+              </div>
+
+              {pendingStatusChange.targetStatus === 'fechado' && (
+                <div className="bg-emerald-950/20 border border-emerald-900/30 p-4 rounded-xl text-xs text-emerald-400 flex gap-2.5">
+                  <AlertCircle size={16} className="flex-shrink-0 mt-0.5" />
+                  <div>
+                    <span className="font-semibold block">Atenção - Conversão de Venda!</span>
+                    Ao fechar este lead como Ganho, o sistema gerará automaticamente as reservas e os lançamentos financeiros de receita correspondentes a este cliente no Guida OS.
+                  </div>
+                </div>
+              )}
+
+              {statusSuccessMessage ? (
+                <div className="p-4 bg-emerald-950/30 border border-emerald-900/50 rounded-xl text-sm text-emerald-300 flex items-start gap-2.5 animate-in fade-in duration-300">
+                  <CheckCircle2 className="text-emerald-500 flex-shrink-0 mt-0.5" size={18} />
+                  <div className="whitespace-pre-wrap">{statusSuccessMessage}</div>
+                </div>
+              ) : (
+                <form onSubmit={handleConfirmStatusChange} className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-1.5">
+                      Observação / Justificativa <span className="text-red-500">*</span>
+                    </label>
+                    <textarea
+                      required
+                      value={statusObservation}
+                      onChange={e => setStatusObservation(e.target.value)}
+                      placeholder="Ex: Cliente fechou o roteiro por telefone. Entrada via Pix confirmada."
+                      rows={3}
+                      className="w-full bg-zinc-900 border border-zinc-800 text-zinc-100 px-4 py-2.5 rounded-lg focus:outline-none focus:border-blue-500 text-sm placeholder-zinc-600"
+                    />
+                  </div>
+
+                  <div className="flex justify-end gap-3 pt-2">
+                    <button 
+                      type="button" 
+                      onClick={() => setPendingStatusChange(null)}
+                      className="px-4 py-2 rounded-lg font-medium text-zinc-400 hover:bg-zinc-800 hover:text-white text-sm transition-colors"
+                      disabled={isSubmittingStatus}
+                    >
+                      Cancelar
+                    </button>
+                    <button 
+                      type="submit" 
+                      disabled={!statusObservation.trim() || isSubmittingStatus}
+                      className="bg-blue-600 hover:bg-blue-500 disabled:bg-zinc-800 disabled:text-zinc-600 text-white px-5 py-2 rounded-lg font-semibold text-sm transition-colors flex items-center gap-1.5"
+                    >
+                      {isSubmittingStatus ? 'Salvando...' : 'Confirmar e Atualizar'}
+                    </button>
+                  </div>
+                </form>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Lead Modal with Observations History & Mandatory New Observation */}
       {isModalOpen && editingLead && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-[#18181b] border border-zinc-800 rounded-2xl w-full max-w-lg flex flex-col shadow-2xl">
-            <div className="p-6 border-b border-zinc-800 flex justify-between items-center">
-              <h3 className="text-xl font-bold text-zinc-100">Editar Lead: {editingLead.name}</h3>
+          <div className="bg-[#18181b] border border-zinc-800 rounded-2xl w-full max-w-2xl flex flex-col shadow-2xl h-[90vh] overflow-hidden">
+            <div className="p-6 border-b border-zinc-800 flex justify-between items-center bg-zinc-900/50">
+              <div>
+                <h3 className="text-xl font-bold text-zinc-100">Editar Lead: {editingLead.name}</h3>
+                <p className="text-zinc-400 text-xs">Mantenha os dados atualizados e registre novas interações.</p>
+              </div>
               <button onClick={() => setIsModalOpen(false)} className="text-zinc-400 hover:text-white transition-colors">
                 <X size={24} />
               </button>
             </div>
             
-            <div className="p-6 flex-1">
-              <form id="lead-form" onSubmit={handleSave} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-zinc-400 mb-1">Nome</label>
-                  <input required type="text" value={name} onChange={e => setName(e.target.value)} className="w-full bg-zinc-900 border border-zinc-800 text-zinc-100 px-4 py-2 rounded-lg focus:outline-none focus:border-blue-500" />
+            <div className="p-6 overflow-y-auto flex-1 space-y-6">
+              <form id="lead-edit-form" onSubmit={handleSave} className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-1">Nome</label>
+                    <input required type="text" value={name} onChange={e => setName(e.target.value)} className="w-full bg-zinc-900 border border-zinc-800 text-zinc-100 px-4 py-2 rounded-lg focus:outline-none focus:border-blue-500 text-sm" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-1">Telefone</label>
+                    <input required type="text" value={phone} onChange={e => setPhone(e.target.value)} className="w-full bg-zinc-900 border border-zinc-800 text-zinc-100 px-4 py-2 rounded-lg focus:outline-none focus:border-blue-500 text-sm" />
+                  </div>
                 </div>
                 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-zinc-400 mb-1">Telefone</label>
-                    <input required type="text" value={phone} onChange={e => setPhone(e.target.value)} className="w-full bg-zinc-900 border border-zinc-800 text-zinc-100 px-4 py-2 rounded-lg focus:outline-none focus:border-blue-500" />
+                    <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-1">Email</label>
+                    <input type="email" value={email} onChange={e => setEmail(e.target.value)} className="w-full bg-zinc-900 border border-zinc-800 text-zinc-100 px-4 py-2 rounded-lg focus:outline-none focus:border-blue-500 text-sm" />
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-zinc-400 mb-1">Email</label>
-                    <input type="email" value={email} onChange={e => setEmail(e.target.value)} className="w-full bg-zinc-900 border border-zinc-800 text-zinc-100 px-4 py-2 rounded-lg focus:outline-none focus:border-blue-500" />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-zinc-400 mb-1">Data Viagem (Mês/Ano)</label>
-                    <input type="text" value={preferredDate} onChange={e => setPreferredDate(e.target.value)} className="w-full bg-zinc-900 border border-zinc-800 text-zinc-100 px-4 py-2 rounded-lg focus:outline-none focus:border-blue-500" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-zinc-400 mb-1">Quantidade de Pessoas</label>
-                    <input type="number" min="1" value={groupSize} onChange={e => setGroupSize(Number(e.target.value))} className="w-full bg-zinc-900 border border-zinc-800 text-zinc-100 px-4 py-2 rounded-lg focus:outline-none focus:border-blue-500" />
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-1 truncate">Data (Mês/Ano)</label>
+                      <input type="text" value={preferredDate} onChange={e => setPreferredDate(e.target.value)} className="w-full bg-zinc-900 border border-zinc-800 text-zinc-100 px-4 py-2 rounded-lg focus:outline-none focus:border-blue-500 text-sm" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-1">Pessoas</label>
+                      <input type="number" min="1" value={groupSize} onChange={e => setGroupSize(Number(e.target.value))} className="w-full bg-zinc-900 border border-zinc-800 text-zinc-100 px-4 py-2 rounded-lg focus:outline-none focus:border-blue-500 text-sm" />
+                    </div>
                   </div>
                 </div>
 
+                {/* Historical Timeline of Notes & History */}
+                <div className="bg-zinc-900/40 border border-zinc-800 rounded-xl p-4">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-300 mb-3 flex items-center gap-1.5">
+                    <Clock size={14} className="text-blue-500" /> Histórico de Observações e Atividades
+                  </h4>
+                  <div className="space-y-3 max-h-48 overflow-y-auto pr-1">
+                    {/* Render Lead Notes as clean history entries */}
+                    {editingLead.notes && editingLead.notes.length > 0 ? (
+                      editingLead.notes.map((note, index) => (
+                        <div key={`note-${index}`} className="text-xs bg-zinc-900/60 p-2.5 rounded-lg border border-zinc-800 text-zinc-300 relative pl-6">
+                          <span className="absolute left-2.5 top-3.5 w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+                          <p className="font-medium text-zinc-400 text-[10px] mb-0.5">Nota #{index + 1}</p>
+                          <p className="whitespace-pre-wrap">{note}</p>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-xs text-zinc-500 italic py-2 text-center">Nenhuma nota anterior registrada.</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Mandatory New Observation Field */}
                 <div>
-                  <label className="block text-sm font-medium text-zinc-400 mb-1">Observações</label>
-                  <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={3} className="w-full bg-zinc-900 border border-zinc-800 text-zinc-100 px-4 py-2 rounded-lg focus:outline-none focus:border-blue-500"></textarea>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-300 mb-1.5 flex items-center justify-between">
+                    <span>Nova Observação (Obrigatória para salvar) <span className="text-red-500">*</span></span>
+                    <span className="text-[10px] text-zinc-500 font-normal normal-case">Descreva o contato recente ou andamento da conversa</span>
+                  </label>
+                  <textarea 
+                    required 
+                    value={newObservation} 
+                    onChange={e => setNewObservation(e.target.value)} 
+                    placeholder="Adicione um novo comentário detalhado sobre este cliente..."
+                    rows={3} 
+                    className="w-full bg-zinc-900 border border-zinc-800 text-zinc-100 px-4 py-2.5 rounded-lg focus:outline-none focus:border-blue-500 text-sm placeholder-zinc-600"
+                  ></textarea>
                 </div>
               </form>
             </div>
             
-            <div className="p-6 border-t border-zinc-800 flex justify-end gap-3">
-              <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 rounded-lg font-medium text-zinc-300 hover:bg-zinc-800 transition-colors">
+            <div className="p-6 border-t border-zinc-800 flex justify-end gap-3 bg-zinc-900/30">
+              <button 
+                type="button" 
+                onClick={() => setIsModalOpen(false)} 
+                className="px-4 py-2 rounded-lg font-medium text-zinc-400 hover:bg-zinc-800 hover:text-white transition-colors text-sm"
+                disabled={isSavingEdit}
+              >
                 Cancelar
               </button>
-              <button type="submit" form="lead-form" className="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2 rounded-lg font-medium transition-colors">
-                Salvar Alterações
+              <button 
+                type="submit" 
+                form="lead-edit-form" 
+                disabled={!newObservation.trim() || isSavingEdit}
+                className="bg-blue-600 hover:bg-blue-500 disabled:bg-zinc-800 disabled:text-zinc-600 text-white px-6 py-2 rounded-lg font-semibold transition-colors text-sm"
+              >
+                {isSavingEdit ? 'Salvando...' : 'Salvar Alterações'}
               </button>
             </div>
           </div>

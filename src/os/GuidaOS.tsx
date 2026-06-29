@@ -144,7 +144,7 @@ export function GuidaOS({
         <div className="flex-1 overflow-y-auto p-8">
           <div className="max-w-7xl mx-auto h-full">
             {activeModule === 'products' && <ProductsModule experiences={experiences} />}
-            {activeModule === 'crm' && <CRMModule leads={leads} />}
+            {activeModule === 'crm' && <CRMModule leads={leads} experiences={experiences} />}
             {activeModule === 'smart-itinerary' && <SmartItineraryModule experiences={experiences} budgets={budgets} />}
             {activeModule === 'accommodations' && <AccommodationsModule accommodations={accommodations} />}
             {activeModule === 'partners' && <PartnersModule partners={partners} />}
