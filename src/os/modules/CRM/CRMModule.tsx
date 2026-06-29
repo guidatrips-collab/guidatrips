@@ -290,7 +290,7 @@ export function CRMModule({ leads, experiences = [] }: CRMModuleProps) {
       <div className="flex-1 overflow-x-auto pb-4">
         <div className="flex gap-4 min-w-max h-full">
           {funnelStages.map(stage => {
-            const stageLeads = leads.filter(l => l.status === stage.id && l.name.toLowerCase().includes(searchTerm.toLowerCase()));
+            const stageLeads = leads.filter(l => l && l.status === stage.id && (l.name || "").toLowerCase().includes((searchTerm || "").toLowerCase()));
             
             return (
               <div 

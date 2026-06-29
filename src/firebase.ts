@@ -147,7 +147,7 @@ export const firestoreService = {
   update: async (collectionName: string, id: string, data: any): Promise<void> => {
     try {
       const docRef = doc(db, collectionName, id);
-      await updateDoc(docRef, sanitizeData(data));
+      await setDoc(docRef, sanitizeData(data), { merge: true });
     } catch (error) {
       console.error(`Error updating document ${collectionName}/${id}:`, error);
       handleFirestoreError(error, OperationType.WRITE, `${collectionName}/${id}`);

@@ -238,7 +238,11 @@ export default function App() {
       if (storedExps) setExperiences(JSON.parse(storedExps));
       
       const storedLeads = localStorage.getItem("guidatrips_leads");
-      if (storedLeads) setLeads(JSON.parse(storedLeads));
+      if (storedLeads) {
+        const parsed = JSON.parse(storedLeads) as Lead[];
+        const unique = Array.from(new Map(parsed.map(l => [l?.id, l])).values()).filter(Boolean);
+        setLeads(unique);
+      }
 
       const storedPosts = localStorage.getItem("guidatrips_posts");
       if (storedPosts) setPosts(JSON.parse(storedPosts));
@@ -278,8 +282,9 @@ export default function App() {
 
     const unsubLeads = firestoreService.subscribe("leads", (data) => {
       const sorted = (data as Lead[]).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-      setLeads(sorted);
-      localStorage.setItem("guidatrips_leads", JSON.stringify(sorted));
+      const unique = Array.from(new Map(sorted.map(l => [l?.id, l])).values()).filter(Boolean);
+      setLeads(unique);
+      localStorage.setItem("guidatrips_leads", JSON.stringify(unique));
     });
 
     const unsubSettings = firestoreService.subscribe("settings", (data) => {
@@ -377,20 +382,21 @@ export default function App() {
   };
 
   const updateLeads = async (newLeads: Lead[]) => {
+    const unique = Array.from(new Map(newLeads.map(l => [l?.id, l])).values()).filter(Boolean);
     const oldLeads = leads;
-    setLeads(newLeads);
-    localStorage.setItem("guidatrips_leads", JSON.stringify(newLeads));
+    setLeads(unique);
+    localStorage.setItem("guidatrips_leads", JSON.stringify(unique));
 
     try {
-      const oldIds = oldLeads.map(l => l.id);
-      const newIds = newLeads.map(l => l.id);
+      const oldIds = oldLeads.map(l => l?.id).filter(Boolean);
+      const newIds = unique.map(l => l?.id).filter(Boolean);
       const deletedIds = oldIds.filter(id => !newIds.includes(id));
 
       for (const delId of deletedIds) {
         await firestoreService.delete("leads", delId);
       }
 
-      for (const lead of newLeads) {
+      for (const lead of unique) {
         await firestoreService.set("leads", lead.id, lead);
       }
     } catch (e) {

@@ -40,5 +40,8 @@ service cloud.firestore {
     match /globalSettings/{document} {
       allow read, write: if true;
     }
+    match /events/{document} {
+      allow read, write: if true;
+    }
   }
 }
