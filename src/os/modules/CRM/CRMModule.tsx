@@ -15,6 +15,12 @@ export function CRMModule({ leads, experiences = [] }: CRMModuleProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [draggedLeadId, setDraggedLeadId] = useState<string | null>(null);
 
+  // Seller State
+  const [activeSeller, setActiveSeller] = useState(() => {
+    return localStorage.getItem('guida_active_seller') || '';
+  });
+  const [assignedTo, setAssignedTo] = useState('');
+
   // Status transition state (for mandatory observation modal)
   const [pendingStatusChange, setPendingStatusChange] = useState<{ lead: Lead; targetStatus: string } | null>(null);
   const [statusObservation, setStatusObservation] = useState('');
@@ -70,10 +76,11 @@ export function CRMModule({ leads, experiences = [] }: CRMModuleProps) {
 
   const handleConfirmStatusChange = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!pendingStatusChange || !statusObservation.trim()) return;
+    if (!pendingStatusChange || !statusObservation.trim() || !activeSeller.trim()) return;
 
     const { lead, targetStatus } = pendingStatusChange;
     setIsSubmittingStatus(true);
+    const finalSeller = activeSeller.trim();
 
     try {
       // 1. Prepare history item
@@ -82,16 +89,21 @@ export function CRMModule({ leads, experiences = [] }: CRMModuleProps) {
         timestamp: new Date().toISOString(),
         type: 'status_change',
         description: `Status alterado de "${getStageLabel(lead.status)}" para "${getStageLabel(targetStatus)}". Observação: ${statusObservation.trim()}`,
-        user: 'Equipe de Vendas'
+        user: finalSeller
       };
 
       const updatedHistory = [...(lead.history || []), historyItem];
-      const updatedNotes = [...(lead.notes || []), statusObservation.trim()];
+      const noteWithSeller = `[Vendedor: ${finalSeller}] ${statusObservation.trim()}`;
+      const updatedNotes = [...(lead.notes || []), noteWithSeller];
+
+      // First update on Novos (or any update) sets assignedTo if empty
+      const updatedAssignedTo = lead.assignedTo || finalSeller;
 
       const leadUpdate: Partial<Lead> = {
         status: targetStatus as any,
         notes: updatedNotes,
         history: updatedHistory,
+        assignedTo: updatedAssignedTo,
         updatedAt: new Date().toISOString()
       };
 
@@ -194,15 +206,17 @@ export function CRMModule({ leads, experiences = [] }: CRMModuleProps) {
     setEmail(lead.email || '');
     setGroupSize(lead.groupSize || 2);
     setPreferredDate(lead.preferredDate || '');
+    setAssignedTo(lead.assignedTo || '');
     setNewObservation('');
     setIsModalOpen(true);
   };
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!editingLead || !newObservation.trim()) return;
+    if (!editingLead || !newObservation.trim() || !activeSeller.trim()) return;
 
     setIsSavingEdit(true);
+    const finalSeller = activeSeller.trim();
 
     try {
       const historyItem: LeadHistoryItem = {
@@ -210,11 +224,15 @@ export function CRMModule({ leads, experiences = [] }: CRMModuleProps) {
         timestamp: new Date().toISOString(),
         type: 'note_added',
         description: `Nova observação inserida: ${newObservation.trim()}`,
-        user: 'Equipe de Vendas'
+        user: finalSeller
       };
 
       const updatedHistory = [...(editingLead.history || []), historyItem];
-      const updatedNotes = [...(editingLead.notes || []), newObservation.trim()];
+      const noteWithSeller = `[Vendedor: ${finalSeller}] ${newObservation.trim()}`;
+      const updatedNotes = [...(editingLead.notes || []), noteWithSeller];
+
+      // First update on Novos (or any update) sets assignedTo if empty
+      const updatedAssignedTo = assignedTo.trim() || editingLead.assignedTo || finalSeller;
 
       const updatedData: Partial<Lead> = {
         name,
@@ -222,6 +240,7 @@ export function CRMModule({ leads, experiences = [] }: CRMModuleProps) {
         email,
         groupSize,
         preferredDate,
+        assignedTo: updatedAssignedTo,
         notes: updatedNotes,
         history: updatedHistory,
         updatedAt: new Date().toISOString()
@@ -301,7 +320,7 @@ export function CRMModule({ leads, experiences = [] }: CRMModuleProps) {
                         <span className="text-xs text-zinc-500 bg-zinc-800 px-2 py-0.5 rounded capitalize flex-shrink-0">{lead.origin}</span>
                       </div>
                       
-                      <div className="space-y-1.5 mb-4">
+                      <div className="space-y-1.5 mb-3">
                         <div className="flex items-center gap-2 text-xs text-zinc-400 truncate">
                           <Phone size={12} className="flex-shrink-0" /> {lead.phone}
                         </div>
@@ -314,6 +333,30 @@ export function CRMModule({ leads, experiences = [] }: CRMModuleProps) {
                           </div>
                         )}
                       </div>
+
+                      {/* Vendedor Responsável */}
+                      <div className="flex items-center gap-2 text-[11px] border-t border-zinc-800/40 pt-2 mb-2 text-zinc-400">
+                        <Users size={11} className="text-zinc-500 flex-shrink-0" />
+                        <span>Vendedor: <span className={lead.assignedTo ? "text-blue-400 font-semibold" : "text-zinc-500 italic"}>{lead.assignedTo || "Não atribuído"}</span></span>
+                      </div>
+
+                      {/* Última Observação */}
+                      {lead.notes && lead.notes.length > 0 && (
+                        <div className="mb-3 text-[11px] text-zinc-400 bg-zinc-950/30 border border-zinc-800/60 p-2 rounded-lg italic line-clamp-2">
+                          {(() => {
+                            const lastNote = lead.notes[lead.notes.length - 1];
+                            const match = lastNote.match(/^\[Vendedor:\s*([^\]]+)\]\s*(.*)$/s);
+                            if (match) {
+                              return (
+                                <span>
+                                  <strong className="text-blue-400 font-medium not-italic">@{match[1]}:</strong> {match[2]}
+                                </span>
+                              );
+                            }
+                            return lastNote;
+                          })()}
+                        </div>
+                      )}
                       
                       <div className="flex items-center justify-between border-t border-zinc-800/80 pt-3">
                         <div className="flex gap-2">
@@ -390,6 +433,43 @@ export function CRMModule({ leads, experiences = [] }: CRMModuleProps) {
                 <form onSubmit={handleConfirmStatusChange} className="space-y-4">
                   <div>
                     <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-1.5">
+                      Seu Nome (Vendedor) <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      required
+                      type="text"
+                      value={activeSeller}
+                      onChange={e => {
+                        setActiveSeller(e.target.value);
+                        localStorage.setItem('guida_active_seller', e.target.value);
+                      }}
+                      placeholder="Quem está atualizando este lead?"
+                      className="w-full bg-zinc-900 border border-zinc-800 text-zinc-100 px-4 py-2 rounded-lg focus:outline-none focus:border-blue-500 text-sm mb-1.5"
+                    />
+                    <div className="flex flex-wrap gap-1 items-center">
+                      <span className="text-[10px] text-zinc-500 mr-1">Rápido:</span>
+                      {["Yuri Guida", "Carlos", "Fernanda", "Mariana", "Pedro"].map(name => (
+                        <button
+                          key={name}
+                          type="button"
+                          onClick={() => {
+                            setActiveSeller(name);
+                            localStorage.setItem('guida_active_seller', name);
+                          }}
+                          className={`text-[10px] px-2 py-0.5 rounded border transition-colors ${
+                            activeSeller === name
+                              ? "bg-blue-600/20 text-blue-400 border-blue-500/40"
+                              : "bg-zinc-800 text-zinc-400 border-zinc-700/60 hover:border-zinc-500"
+                          }`}
+                        >
+                          {name}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-1.5">
                       Observação / Justificativa <span className="text-red-500">*</span>
                     </label>
                     <textarea
@@ -413,7 +493,7 @@ export function CRMModule({ leads, experiences = [] }: CRMModuleProps) {
                     </button>
                     <button 
                       type="submit" 
-                      disabled={!statusObservation.trim() || isSubmittingStatus}
+                      disabled={!statusObservation.trim() || !activeSeller.trim() || isSubmittingStatus}
                       className="bg-blue-600 hover:bg-blue-500 disabled:bg-zinc-800 disabled:text-zinc-600 text-white px-5 py-2 rounded-lg font-semibold text-sm transition-colors flex items-center gap-1.5"
                     >
                       {isSubmittingStatus ? 'Salvando...' : 'Confirmar e Atualizar'}
@@ -458,6 +538,19 @@ export function CRMModule({ leads, experiences = [] }: CRMModuleProps) {
                     <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-1">E-mail ou Contato</label>
                     <input type="text" value={email} onChange={e => setEmail(e.target.value)} className="w-full bg-zinc-900 border border-zinc-800 text-zinc-100 px-4 py-2 rounded-lg focus:outline-none focus:border-blue-500 text-sm" />
                   </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-1">Vendedor Responsável pelo Lead</label>
+                    <input 
+                      type="text" 
+                      value={assignedTo} 
+                      onChange={e => setAssignedTo(e.target.value)} 
+                      placeholder="Sem vendedor atribuído" 
+                      className="w-full bg-zinc-900 border border-zinc-800 text-zinc-100 px-4 py-2 rounded-lg focus:outline-none focus:border-blue-500 text-sm" 
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="grid grid-cols-2 gap-2">
                     <div>
                       <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-1 truncate">Data (Mês/Ano)</label>
@@ -466,6 +559,40 @@ export function CRMModule({ leads, experiences = [] }: CRMModuleProps) {
                     <div>
                       <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-1">Pessoas</label>
                       <input type="number" min="1" value={groupSize} onChange={e => setGroupSize(Number(e.target.value))} className="w-full bg-zinc-900 border border-zinc-800 text-zinc-100 px-4 py-2 rounded-lg focus:outline-none focus:border-blue-500 text-sm" />
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-1">Seu Nome (Vendedor Atual) <span className="text-red-500">*</span></label>
+                    <input 
+                      required 
+                      type="text" 
+                      value={activeSeller} 
+                      onChange={e => {
+                        setActiveSeller(e.target.value);
+                        localStorage.setItem('guida_active_seller', e.target.value);
+                      }} 
+                      placeholder="Quem está escrevendo a nova observação?" 
+                      className="w-full bg-zinc-900 border border-zinc-800 text-zinc-100 px-4 py-2 rounded-lg focus:outline-none focus:border-blue-500 text-sm mb-1.5" 
+                    />
+                    <div className="flex flex-wrap gap-1 items-center">
+                      {["Yuri Guida", "Carlos", "Fernanda", "Mariana", "Pedro"].map(name => (
+                        <button
+                          key={name}
+                          type="button"
+                          onClick={() => {
+                            setActiveSeller(name);
+                            localStorage.setItem('guida_active_seller', name);
+                          }}
+                          className={`text-[9px] px-1.5 py-0.5 rounded border transition-colors ${
+                            activeSeller === name
+                              ? "bg-blue-600/20 text-blue-400 border-blue-500/40"
+                              : "bg-zinc-800 text-zinc-400 border-zinc-700/60 hover:border-zinc-500"
+                          }`}
+                        >
+                          {name}
+                        </button>
+                      ))}
                     </div>
                   </div>
                 </div>
@@ -482,7 +609,20 @@ export function CRMModule({ leads, experiences = [] }: CRMModuleProps) {
                         <div key={`note-${index}`} className="text-xs bg-zinc-900/60 p-2.5 rounded-lg border border-zinc-800 text-zinc-300 relative pl-6">
                           <span className="absolute left-2.5 top-3.5 w-1.5 h-1.5 rounded-full bg-blue-500"></span>
                           <p className="font-medium text-zinc-400 text-[10px] mb-0.5">Nota #{index + 1}</p>
-                          <p className="whitespace-pre-wrap">{note}</p>
+                          {(() => {
+                            const match = note.match(/^\[Vendedor:\s*([^\]]+)\]\s*(.*)$/s);
+                            if (match) {
+                              return (
+                                <div>
+                                  <span className="text-[9px] font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20 px-1.5 py-0.5 rounded uppercase tracking-wide">
+                                    Vendedor: {match[1]}
+                                  </span>
+                                  <p className="whitespace-pre-wrap text-zinc-200 mt-1">{match[2]}</p>
+                                </div>
+                              );
+                            }
+                            return <p className="whitespace-pre-wrap">{note}</p>;
+                          })()}
                         </div>
                       ))
                     ) : (
@@ -521,7 +661,7 @@ export function CRMModule({ leads, experiences = [] }: CRMModuleProps) {
               <button 
                 type="submit" 
                 form="lead-edit-form" 
-                disabled={!newObservation.trim() || isSavingEdit}
+                disabled={!newObservation.trim() || !activeSeller.trim() || isSavingEdit}
                 className="bg-blue-600 hover:bg-blue-500 disabled:bg-zinc-800 disabled:text-zinc-600 text-white px-6 py-2 rounded-lg font-semibold transition-colors text-sm"
               >
                 {isSavingEdit ? 'Salvando...' : 'Salvar Alterações'}
