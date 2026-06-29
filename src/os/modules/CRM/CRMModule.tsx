@@ -395,7 +395,7 @@ export function CRMModule({ leads, experiences = [] }: CRMModuleProps) {
                       
                       <div className="flex items-center justify-between border-t border-zinc-800/80 pt-3">
                         <div className="flex gap-2">
-                          <a href={`https://wa.me/${lead.phone.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" className="w-7 h-7 rounded bg-emerald-500/10 text-emerald-500 flex items-center justify-center hover:bg-emerald-500/20 transition-colors" title="WhatsApp">
+                          <a href={`https://wa.me/${(lead.phone || "").replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" className="w-7 h-7 rounded bg-emerald-500/10 text-emerald-500 flex items-center justify-center hover:bg-emerald-500/20 transition-colors" title="WhatsApp">
                             <MessageSquare size={14} />
                           </a>
                           {lead.email && (

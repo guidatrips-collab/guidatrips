@@ -1742,7 +1742,7 @@ export default function AdminView({
                           
                           {/* Botão de deep links direct WA */}
                           <a
-                            href={`https://wa.me/${lead.phone.replace(/\D/g, "")}`}
+                            href={`https://wa.me/${(lead.phone || "").replace(/\D/g, "")}`}
                             target="_blank"
                             referrerPolicy="no-referrer"
                             className="p-2 bg-green-500/10 hover:bg-green-500/20 rounded inline-block text-green-400"
@@ -1796,7 +1796,7 @@ export default function AdminView({
                             </div>
                             <div className="font-bold text-white text-[11px] mb-1">{lead.name}</div>
                             <div className="text-[10px] text-[#8A96A3] mb-2 truncate">
-                              {lead.experienceInterest.map(id => experiences.find(e => e.id === id)?.name || id).join(", ")}
+                              {(lead.experienceInterest || []).map(id => experiences.find(e => e.id === id)?.name || id).join(", ")}
                             </div>
                             
                             <div className="flex items-center justify-between text-[9px] text-[#8A96A3]">
@@ -1805,13 +1805,13 @@ export default function AdminView({
                                 {lead.preferredDate ? lead.preferredDate.split("-").reverse().join("/") : "A decidir"}
                               </div>
                               <div className="flex items-center gap-1 text-[#E8711A]">
-                                <Phone className="w-2.5 h-2.5" /> {lead.phone.slice(-4)}
+                                <Phone className="w-2.5 h-2.5" /> {lead.phone ? String(lead.phone).slice(-4) : ""}
                               </div>
                             </div>
 
                             <div className="mt-3 pt-2 border-t border-white/5 flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                               <a
-                                href={`https://wa.me/${lead.phone.replace(/\D/g, "")}`}
+                                href={`https://wa.me/${(lead.phone || "").replace(/\D/g, "")}`}
                                 target="_blank"
                                 onClick={(e) => e.stopPropagation()}
                                 className="p-1.5 bg-green-500/10 text-green-400 rounded hover:bg-green-500/20"
@@ -2008,7 +2008,7 @@ export default function AdminView({
                         <FileText className="w-3.5 h-3.5" /> Adicionar Nota
                       </button>
                       <a 
-                        href={`https://wa.me/${selectedLead.phone.replace(/\D/g, "")}`}
+                        href={`https://wa.me/${(selectedLead.phone || "").replace(/\D/g, "")}`}
                         target="_blank"
                         className="px-4 py-2 bg-green-500/10 hover:bg-green-500/20 text-green-400 rounded text-[10px] font-accent font-bold uppercase tracking-widest transition-colors flex items-center gap-2"
                       >
