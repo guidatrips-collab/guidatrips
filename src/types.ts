@@ -268,6 +268,7 @@ export interface Lead {
   
   createdAt: string;
   updatedAt: string;
+  archived?: boolean;
 }
 
 export interface LeadHistoryItem {

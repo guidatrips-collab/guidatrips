@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { 
   Users, Search, Filter, Phone, MessageSquare, Mail, Calendar, 
-  ArrowRight, Edit, X, Clock, FileText, CheckCircle2, AlertCircle, ShoppingBag, DollarSign
+  ArrowRight, Edit, X, Clock, FileText, CheckCircle2, AlertCircle, ShoppingBag, DollarSign, Trash2
 } from 'lucide-react';
 import { Lead, Experience, ClientReservation, FinancialTransaction, LeadHistoryItem } from '../../../types';
 import { firestoreService } from '../../../firebase';
@@ -14,6 +14,7 @@ interface CRMModuleProps {
 export function CRMModule({ leads, experiences = [] }: CRMModuleProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [draggedLeadId, setDraggedLeadId] = useState<string | null>(null);
+  const [filterMode, setFilterMode] = useState<'ativos' | 'arquivados'>('ativos');
 
   // Seller State
   const [activeSeller, setActiveSeller] = useState(() => {
@@ -274,7 +275,7 @@ export function CRMModule({ leads, experiences = [] }: CRMModuleProps) {
         </div>
       </div>
 
-      <div className="flex gap-4 mb-6">
+      <div className="flex flex-col sm:flex-row gap-4 mb-6 sm:items-center sm:justify-between">
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" size={18} />
           <input
@@ -285,12 +286,46 @@ export function CRMModule({ leads, experiences = [] }: CRMModuleProps) {
             className="w-full bg-[#121214] border border-zinc-800 text-zinc-100 pl-10 pr-4 py-2 rounded-lg focus:outline-none focus:border-blue-500 transition-colors"
           />
         </div>
+
+        <div className="flex bg-[#121214] rounded-lg p-1 border border-zinc-800">
+          <button
+            onClick={() => setFilterMode('ativos')}
+            className={`px-4 py-1.5 text-xs font-semibold rounded-md transition-all ${
+              filterMode === 'ativos'
+                ? "bg-blue-600 text-white shadow font-bold"
+                : "text-zinc-400 hover:text-zinc-200"
+            }`}
+          >
+            Ativos
+          </button>
+          <button
+            onClick={() => setFilterMode('arquivados')}
+            className={`px-4 py-1.5 text-xs font-semibold rounded-md transition-all flex items-center gap-1.5 ${
+              filterMode === 'arquivados'
+                ? "bg-zinc-700 text-white shadow font-bold"
+                : "text-zinc-400 hover:text-zinc-200"
+            }`}
+          >
+            <Clock size={12} /> Arquivados
+          </button>
+        </div>
       </div>
 
       <div className="flex-1 overflow-x-auto pb-4">
         <div className="flex gap-4 min-w-max h-full">
           {funnelStages.map(stage => {
-            const stageLeads = leads.filter(l => l && l.status === stage.id && (l.name || "").toLowerCase().includes((searchTerm || "").toLowerCase()));
+            const stageLeads = leads.filter(l => {
+              if (!l) return false;
+              const isArchived = !!l.archived;
+              if (filterMode === 'ativos' && isArchived) return false;
+              if (filterMode === 'arquivados' && !isArchived) return false;
+
+              const nameMatch = (l.name || "").toLowerCase().includes((searchTerm || "").toLowerCase());
+              const phoneMatch = (l.phone || "").toLowerCase().includes((searchTerm || "").toLowerCase());
+              const emailMatch = (l.email || "").toLowerCase().includes((searchTerm || "").toLowerCase());
+
+              return l.status === stage.id && (nameMatch || phoneMatch || emailMatch);
+            });
             
             return (
               <div 
@@ -649,23 +684,99 @@ export function CRMModule({ leads, experiences = [] }: CRMModuleProps) {
               </form>
             </div>
             
-            <div className="p-6 border-t border-zinc-800 flex justify-end gap-3 bg-zinc-900/30">
-              <button 
-                type="button" 
-                onClick={() => setIsModalOpen(false)} 
-                className="px-4 py-2 rounded-lg font-medium text-zinc-400 hover:bg-zinc-800 hover:text-white transition-colors text-sm"
-                disabled={isSavingEdit}
-              >
-                Cancelar
-              </button>
-              <button 
-                type="submit" 
-                form="lead-edit-form" 
-                disabled={!newObservation.trim() || !activeSeller.trim() || isSavingEdit}
-                className="bg-blue-600 hover:bg-blue-500 disabled:bg-zinc-800 disabled:text-zinc-600 text-white px-6 py-2 rounded-lg font-semibold transition-colors text-sm"
-              >
-                {isSavingEdit ? 'Salvando...' : 'Salvar Alterações'}
-              </button>
+            <div className="p-6 border-t border-zinc-800 flex flex-wrap justify-between items-center gap-3 bg-zinc-900/30">
+              {/* Special Actions on the Left */}
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={async () => {
+                    if (!editingLead) return;
+                    if (confirm(editingLead.archived ? "Deseja reativar este lead? Ele voltará para a lista de leads ativos." : "Deseja arquivar este lead? Ele será ocultado dos leads ativos.")) {
+                      try {
+                        setIsSavingEdit(true);
+                        const isArchived = !editingLead.archived;
+                        
+                        const historyItem: LeadHistoryItem = {
+                          id: 'hist-' + Math.random().toString(36).substring(2, 9),
+                          timestamp: new Date().toISOString(),
+                          type: 'system_log',
+                          description: isArchived ? 'Lead arquivado' : 'Lead desarquivado (reativado)',
+                          user: activeSeller.trim() || 'Sistema'
+                        };
+                        
+                        const updatedData: Partial<Lead> = {
+                          archived: isArchived,
+                          history: [...(editingLead.history || []), historyItem],
+                          updatedAt: new Date().toISOString()
+                        };
+                        
+                        await firestoreService.update("leads", editingLead.id, updatedData);
+                        setIsModalOpen(false);
+                        setEditingLead(null);
+                      } catch (err) {
+                        console.error(err);
+                        alert("Erro ao alterar estado de arquivamento.");
+                      } finally {
+                        setIsSavingEdit(false);
+                      }
+                    }
+                  }}
+                  disabled={isSavingEdit}
+                  className={`px-3 py-2 rounded-lg font-medium text-xs border transition-colors flex items-center gap-1.5 ${
+                    editingLead.archived 
+                      ? "border-amber-500/30 text-amber-400 hover:bg-amber-500/10" 
+                      : "border-zinc-700 text-zinc-300 hover:bg-zinc-800"
+                  }`}
+                >
+                  <Clock size={14} />
+                  {editingLead.archived ? "Reativar Lead" : "Arquivar Lead"}
+                </button>
+                
+                <button
+                  type="button"
+                  onClick={async () => {
+                    if (!editingLead) return;
+                    if (confirm(`ATENÇÃO: Tem certeza que deseja EXCLUIR DEFINITIVAMENTE o lead "${editingLead.name}" do banco de dados? Esta ação não pode ser desfeita!`)) {
+                      try {
+                        setIsSavingEdit(true);
+                        await firestoreService.delete("leads", editingLead.id);
+                        setIsModalOpen(false);
+                        setEditingLead(null);
+                      } catch (err) {
+                        console.error(err);
+                        alert("Erro ao excluir lead do banco de dados.");
+                      } finally {
+                        setIsSavingEdit(false);
+                      }
+                    }
+                  }}
+                  disabled={isSavingEdit}
+                  className="px-3 py-2 rounded-lg font-medium text-xs border border-red-500/30 text-red-400 hover:bg-red-500/10 transition-colors flex items-center gap-1.5"
+                >
+                  <Trash2 size={14} />
+                  Excluir Definitivamente
+                </button>
+              </div>
+
+              {/* Standard Save/Cancel on the Right */}
+              <div className="flex gap-3">
+                <button 
+                  type="button" 
+                  onClick={() => setIsModalOpen(false)} 
+                  className="px-4 py-2 rounded-lg font-medium text-zinc-400 hover:bg-zinc-800 hover:text-white transition-colors text-sm"
+                  disabled={isSavingEdit}
+                >
+                  Cancelar
+                </button>
+                <button 
+                  type="submit" 
+                  form="lead-edit-form" 
+                  disabled={!newObservation.trim() || !activeSeller.trim() || isSavingEdit}
+                  className="bg-blue-600 hover:bg-blue-500 disabled:bg-zinc-800 disabled:text-zinc-600 text-white px-6 py-2 rounded-lg font-semibold transition-colors text-sm"
+                >
+                  {isSavingEdit ? 'Salvando...' : 'Salvar Alterações'}
+                </button>
+              </div>
             </div>
           </div>
         </div>

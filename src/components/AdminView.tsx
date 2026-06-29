@@ -119,6 +119,7 @@ export default function AdminView({
   const [editingDestination, setEditingDestination] = useState<Partial<Destination> | null>(null);
   const [editingAccommodation, setEditingAccommodation] = useState<Partial<Accommodation> | null>(null);
   const [leadsViewMode, setLeadsViewMode] = useState<"table" | "pipeline">("pipeline");
+  const [showArchivedInAdmin, setShowArchivedInAdmin] = useState(false);
   const [tempSettings, setTempSettings] = useState<GlobalSettings>({
     ...settings,
     homeFilosofiaPillars: settings.homeFilosofiaPillars || defaultFilosofiaPillars,
@@ -1626,8 +1627,21 @@ export default function AdminView({
         {/* -------------------- TAB: LEADS CRM GESTOR -------------------- */}
         {activeTab === "leads" && (
           <div className="space-y-6 text-left">
-            <div className="bg-[#132033] border border-white/5 p-4 rounded-sm flex justify-between items-center">
-              <span className="font-accent text-xs font-bold text-[#8A96A3] uppercase">Gestão de Leads CRM ({leads.length})</span>
+            <div className="bg-[#132033] border border-white/5 p-4 rounded-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <div className="flex items-center gap-4">
+                <span className="font-accent text-xs font-bold text-[#8A96A3] uppercase">Gestão de Leads CRM ({leads.length})</span>
+                <button
+                  type="button"
+                  onClick={() => setShowArchivedInAdmin(!showArchivedInAdmin)}
+                  className={`px-3 py-1.5 text-[10px] font-accent uppercase tracking-wider rounded border transition-all ${
+                    showArchivedInAdmin 
+                      ? "bg-amber-500/20 text-amber-400 border-amber-500/30 font-bold" 
+                      : "bg-white/5 text-[#8A96A3] border-white/5 hover:bg-white/10"
+                  }`}
+                >
+                  {showArchivedInAdmin ? "Mostrando Arquivados" : "Mostrar Arquivados"}
+                </button>
+              </div>
               <div className="flex bg-black/40 rounded p-1 border border-white/5">
                 <button
                   onClick={() => setLeadsViewMode("table")}
@@ -1664,7 +1678,7 @@ export default function AdminView({
                     </tr>
                   </thead>
                   <tbody className="font-sans text-xs">
-                    {leads.map((lead) => (
+                    {leads.filter(l => showArchivedInAdmin ? !!l.archived : !l.archived).map((lead) => (
                       <tr key={lead.id} className="border-b border-white/5 hover:bg-white/[0.01]">
                         <td className="p-4 font-mono font-bold text-[#8A96A3]">
                           #{lead.id.slice(-6).toUpperCase()}
@@ -1753,7 +1767,7 @@ export default function AdminView({
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-5 gap-4 min-h-[600px] overflow-x-auto pb-4 custom-scrollbar">
                 {leadStatuses.map((status) => {
-                  const filteredLeads = leads.filter(l => l.status === status.id);
+                  const filteredLeads = leads.filter(l => l.status === status.id && (showArchivedInAdmin ? !!l.archived : !l.archived));
                   return (
                     <div key={status.id} className="flex flex-col bg-[#132033]/40 border border-white/5 rounded-sm min-w-[200px]">
                       <div className={`p-3 border-b border-white/5 ${status.color} flex justify-between items-center`}>
