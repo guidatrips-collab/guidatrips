@@ -415,6 +415,8 @@ export default function WizardView({
         return;
       }
 
+      const affiliateRef = localStorage.getItem('guidatrips_affiliate_ref');
+
       for (const item of cart) {
         const exp = experiences.find(e => e.id === item.experienceId);
         const reservationId = `res-wizard-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
@@ -431,7 +433,8 @@ export default function WizardView({
           status: "new",
           bringItems: exp?.bringItems || ["Filtro Solar", "Toalha de Banho"],
           avoidItems: exp?.notIncluded || ["Sapatos de Salto"],
-          meetingPoint: exp?.meetingPoint || "A combinar"
+          meetingPoint: exp?.meetingPoint || "A combinar",
+          ...(affiliateRef ? { affiliateRef } : {})
         };
         await firestoreService.set("reservations", reservationId, newReservation);
       }
@@ -457,7 +460,8 @@ export default function WizardView({
         createdAt: new Date().toISOString(),
         items: cart,
         destinationName: destName,
-        status: "Aguardando atendimento"
+        status: "Aguardando atendimento",
+        ...(affiliateRef ? { affiliateRef } : {})
       };
       await firestoreService.set("itineraries", itineraryId, itineraryData);
       localStorage.setItem("guidatrips_saved_itinerary", JSON.stringify(itineraryData));
@@ -475,6 +479,7 @@ export default function WizardView({
         status: "novo",
         origin: "formulario",
         metadata: analytics.getAttributionData().metadata,
+        attribution: affiliateRef ? { affiliateRef } : undefined,
         history: [],
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),

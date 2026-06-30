@@ -267,6 +267,7 @@ export interface Lead {
     conversionPage?: string;
     gclid?: string; // Google Click ID
     fbclid?: string; // Facebook Click ID
+    affiliateRef?: string; // Slug of the affiliate
   };
   
   metadata?: {
@@ -501,6 +502,7 @@ export interface ClientReservation {
   adults?: number;
   children?: number;
   infants?: number;
+  affiliateRef?: string;
 }
 
 export interface SavedItinerary {
@@ -520,6 +522,7 @@ export interface SavedItinerary {
   items: BookingCartItem[];
   destinationName?: string;
   status?: "Aguardando atendimento" | "Em negociação" | "Confirmado";
+  affiliateRef?: string;
 }
 
 export interface ClientPartner {

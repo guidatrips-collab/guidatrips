@@ -4,6 +4,7 @@
  */
 
 import React, { useState, useEffect } from "react";
+import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import HomeView from "./components/HomeView";
@@ -119,7 +120,7 @@ export default function App() {
     setUserReservations([]);
     setSavedItinerary(null);
     localStorage.removeItem("guidatrips_saved_itinerary");
-    setCurrentView("home");
+    navigate("/");
   };
 
   const handleAuthSuccess = (user: ClientUser) => {
@@ -129,7 +130,7 @@ export default function App() {
     // Resolve any pending protected actions
     if (pendingAuthAction) {
       if (pendingAuthAction.type === "navigate") {
-        setCurrentView(pendingAuthAction.view);
+        handleNavigate(pendingAuthAction.view);
       } else if (pendingAuthAction.type === "add_to_cart") {
         const item = pendingAuthAction.item;
         const normalizedItem: BookingCartItem = {
@@ -157,7 +158,7 @@ export default function App() {
       // mantemos ele onde ele estava para não quebrar o fluxo de navegação do cliente.
       const viewsToKeep = ["wizard", "experiencias", "roteiro", "hospedagens"];
       if (!viewsToKeep.includes(currentView)) {
-        setCurrentView("cliente");
+        handleNavigate("cliente");
       }
     }
   };
@@ -169,8 +170,28 @@ export default function App() {
         setIsAuthModalOpen(true);
         return;
       }
+      navigate('/dashboard');
+      setSelectedPostSlug(null);
+      return;
     }
-    setCurrentView(view);
+    
+    let path = '/';
+    switch (view) {
+      case 'home': path = '/'; break;
+      case 'destino': path = '/lugares'; break;
+      case 'experiencias': path = '/passeios'; break;
+      case 'wizard': path = '/roteiro-inteligente'; break;
+      case 'roteiro': path = '/meu-roteiro'; break;
+      case 'hospedagens': path = '/hospedagens'; break;
+      case 'sobre': path = '/sobre'; break;
+      case 'blog': path = '/blog'; break;
+      case 'contato': path = '/contato'; break;
+      case 'admin': path = '/admin'; break;
+      case 'os': path = '/guideos/dashboard'; break;
+      case 'confirmacao-roteiro': path = '/confirmacao-roteiro'; break;
+      default: path = '/';
+    }
+    navigate(path);
     setSelectedPostSlug(null);
   };
 
@@ -179,8 +200,34 @@ export default function App() {
     setIsAuthModalOpen(true);
   };
 
-  // Navigation & State Routing
-  const [currentView, setCurrentView] = useState<string>("home");
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const getCurrentViewFromPath = (pathname: string) => {
+    if (pathname.startsWith('/guideos')) return 'os';
+    if (pathname === '/lugares' || pathname === '/restaurantes' || pathname === '/eventos') return 'destino';
+    if (pathname === '/passeios') return 'experiencias';
+    if (pathname === '/roteiro-inteligente') return 'wizard';
+    if (pathname === '/meu-roteiro') return 'roteiro';
+    if (pathname === '/dashboard' || pathname === '/perfil') return 'cliente';
+    if (pathname === '/hospedagens') return 'hospedagens';
+    if (pathname === '/sobre') return 'sobre';
+    if (pathname === '/blog') return 'blog';
+    if (pathname === '/contato') return 'contato';
+    if (pathname === '/admin') return 'admin';
+    if (pathname === '/confirmacao-roteiro') return 'confirmacao-roteiro';
+    return 'home';
+  };
+  const currentView = getCurrentViewFromPath(location.pathname);
+
+  // Affiliate Tracking
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const ref = params.get('ref');
+    if (ref) {
+      localStorage.setItem('guidatrips_affiliate_ref', ref);
+    }
+  }, []);
   const [selectedPostSlug, setSelectedPostSlug] = useState<string | null>(null);
 
   // Core CRM / Experiential Data loaded initially or from LocalStorage
@@ -390,7 +437,7 @@ export default function App() {
       const customEvent = e as CustomEvent<string>;
       if (customEvent.detail) {
         setSelectedPostSlug(customEvent.detail);
-        setCurrentView("blog");
+        handleNavigate("blog");
       }
     };
     window.addEventListener("guidatrips_select_post", handleSelectPost);
@@ -700,6 +747,7 @@ export default function App() {
 
   // Submit Lead via direct inline forms
   const handleAddNewLead = (leadData: Omit<Lead, "id" | "origin" | "status" | "createdAt" | "updatedAt">) => {
+    const affiliateRef = localStorage.getItem('guidatrips_affiliate_ref');
     const newLead: Lead = {
       ...leadData,
       id: `lead-${Date.now()}`,
@@ -708,6 +756,11 @@ export default function App() {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
+    
+    if (affiliateRef) {
+      newLead.attribution = { ...newLead.attribution, affiliateRef };
+    }
+    
     const updated = [newLead, ...leads];
     updateLeads(updated);
   };
@@ -850,6 +903,8 @@ export default function App() {
 
     // 2. Automatically save all itinerary cart items as reservations in Firestore under this active user
     if (activeUser) {
+      const affiliateRef = localStorage.getItem('guidatrips_affiliate_ref');
+
       for (let idx = 0; idx < cart.length; idx++) {
         const item = cart[idx];
         const exp = experiences.find(e => e.id === item.experienceId);
@@ -867,7 +922,8 @@ export default function App() {
           status: "new",
           bringItems: exp?.bringItems || ["Filtro Solar", "Toalha de Banho"],
           avoidItems: exp?.notIncluded || ["Sapatos de Salto"],
-          meetingPoint: exp?.meetingPoint || "A combinar"
+          meetingPoint: exp?.meetingPoint || "A combinar",
+          ...(affiliateRef ? { affiliateRef } : {})
         };
         try {
           await firestoreService.set("reservations", reservationId, newReservation);
@@ -895,7 +951,8 @@ export default function App() {
           createdAt: new Date().toISOString(),
           items: cart,
           destinationName: defaultDest?.name || "Destino",
-          status: "Aguardando atendimento"
+          status: "Aguardando atendimento",
+          ...(affiliateRef ? { affiliateRef } : {})
         };
         await firestoreService.set("itineraries", itineraryId, itineraryData);
         localStorage.setItem("guidatrips_saved_itinerary", JSON.stringify(itineraryData));
@@ -963,13 +1020,13 @@ export default function App() {
     window.open(waUrl, "_blank");
 
     // Redirect immediately to confirmation view
-    setCurrentView("confirmacao-roteiro");
+    handleNavigate("confirmacao-roteiro");
   };
 
   if (currentView === "os") {
     return (
       <GuidaOS 
-        onNavigateHome={() => setCurrentView("home")} 
+        onNavigateHome={() => handleNavigate("home")} 
         experiences={experiences} 
         leads={leads}
         accommodations={accommodations}
@@ -992,7 +1049,7 @@ export default function App() {
           currentView={currentView}
           onNavigate={handleNavigate}
           cartCount={cart.length}
-          onOpenCart={() => { setCurrentView("roteiro"); }}
+          onOpenCart={() => { handleNavigate("roteiro"); }}
           currentUser={currentUser}
           onWhatsAppContact={openWhatsAppModal}
         />
@@ -1021,7 +1078,7 @@ export default function App() {
             cart={cart}
             onAddToCart={handleAddToCart}
             onRemoveFromCart={handleRemoveFromCart}
-            onOpenCart={() => { setCurrentView("roteiro"); }}
+            onOpenCart={() => { handleNavigate("roteiro"); }}
             whatsappNumber={settings.whatsappNumber}
             settings={settings}
             onUpdateSettings={updateSettings}
@@ -1171,7 +1228,7 @@ export default function App() {
       {/* COMPONENTE FLOATING ROTERIO (TRIGGER DRAWERS) */}
       {(cart.length > 0 || selectedHotelId) && currentView !== "roteiro" && (
         <button
-          onClick={() => { setCurrentView("roteiro"); }}
+          onClick={() => { handleNavigate("roteiro"); }}
           className="fixed bottom-6 right-6 z-40 bg-gradient-to-r from-[#E8711A] to-[#FF8A3F] text-white px-6 py-4 rounded-full font-sans text-sm font-bold tracking-normal flex items-center gap-2.5 shadow-[0_10px_30px_rgba(232,113,26,0.35)] hover:shadow-[0_12px_35px_rgba(232,113,26,0.5)] hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer select-none border border-white/20"
         >
           <span>🗺️ MEU ROTEIRO</span>
@@ -1579,7 +1636,7 @@ export default function App() {
                 <div className="text-center py-16 space-y-4">
                   <p className="font-sans text-xs text-[#5C6874]">Você não possui passeios no roteiro.</p>
                   <button
-                    onClick={() => { setIsCartOpen(false); setCurrentView("experiencias"); }}
+                    onClick={() => { setIsCartOpen(false); handleNavigate("experiencias"); }}
                     className="px-6 py-2 border border-[#E8711A] text-[#E8711A] hover:bg-[#E8711A] hover:text-[#0D1B2A] font-accent text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer"
                   >
                     Adicionar Experiência
@@ -1633,7 +1690,7 @@ export default function App() {
                     <Send className="w-4 h-4" /> SOLICITAR ESSE ROTEIRO INTEGRAL &rarr;
                   </button>
                   <button
-                    onClick={() => { setIsCartOpen(false); setCurrentView("experiencias"); }}
+                    onClick={() => { setIsCartOpen(false); handleNavigate("experiencias"); }}
                     className="w-full py-2.5 text-center font-accent text-[10px] text-zinc-500 hover:text-[#0D1B2A] uppercase tracking-wider transition-colors"
                   >
                     + ADICIONAR MAIS EXPERIÊNCIAS

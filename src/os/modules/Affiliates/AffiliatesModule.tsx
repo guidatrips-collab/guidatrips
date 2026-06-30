@@ -137,7 +137,7 @@ export function AffiliatesModule({ affiliates }: { affiliates: Affiliate[] }) {
               <tr key={a.id} className="hover:bg-zinc-800/30 transition-colors">
                 <td className="px-6 py-4">
                   <div className="font-medium text-zinc-100">{a.name}</div>
-                  <div className="text-xs text-zinc-500 flex items-center gap-1 mt-1"><LinkIcon size={10} /> guiadatrips.com.br/{a.slug}</div>
+                  <div className="text-xs text-zinc-500 flex items-center gap-1 mt-1"><LinkIcon size={10} /> guiadatrips.com.br/?ref={a.slug}</div>
                 </td>
                 <td className="px-6 py-4 text-center font-mono text-zinc-400">{a.clicks || 0}</td>
                 <td className="px-6 py-4 text-center font-mono text-zinc-400">{a.conversions || 0}</td>
@@ -181,7 +181,7 @@ export function AffiliatesModule({ affiliates }: { affiliates: Affiliate[] }) {
                 <div>
                   <label className="block text-sm font-medium text-zinc-400 mb-1">Slug (Link único)</label>
                   <input required type="text" value={slug} onChange={e => setSlug(e.target.value)} className="w-full bg-zinc-900 border border-zinc-800 text-zinc-100 px-4 py-2 rounded-lg focus:outline-none focus:border-blue-500" placeholder="ex: joao-viajante" />
-                  <p className="text-xs text-zinc-500 mt-1">O link ficará: guiadatrips.com.br/{slug || '...'}</p>
+                  <p className="text-xs text-zinc-500 mt-1">O link ficará: guiadatrips.com.br/?ref={slug || '...'}</p>
                 </div>
 
                 <div>
