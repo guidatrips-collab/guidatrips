@@ -26,6 +26,7 @@ interface WizardViewProps {
   onAddToCart: (item: BookingCartItem) => void;
   onRemoveFromCart: (index: number) => void;
   onUpdateCartItem?: (index: number, fields: Partial<BookingCartItem>) => void;
+  onSaveItinerary?: (itinerary: SavedItinerary) => void;
   onNavigate: (view: string) => void;
   onSetClientName?: (name: string) => void;
   onSetClientCity?: (city: string) => void;
@@ -51,6 +52,7 @@ export default function WizardView({
   onAddToCart,
   onRemoveFromCart,
   onUpdateCartItem,
+  onSaveItinerary,
   onNavigate,
   onSetClientName,
   onSetClientCity,
@@ -73,24 +75,42 @@ export default function WizardView({
   // 4 = Hospedagem Recomendada (Hotel)
   // 5 = Construção do Roteiro Inteligente Dia a Dia (Day-by-Day planning)
   // 6 = Finalização (Checkout Choice)
+  // Read from saved itinerary to restore state if available
+  const savedItineraryData = (() => {
+    try {
+      const stored = localStorage.getItem("guidatrips_saved_itinerary");
+      return stored ? JSON.parse(stored) as SavedItinerary : null;
+    } catch {
+      return null;
+    }
+  })();
+
   const [step, setStep] = useState<number>(0);
-  const [profile, setProfile] = useState<"casal" | "familia" | "grupo" | "solo">("casal");
+  const [profile, setProfile] = useState<"casal" | "familia" | "grupo" | "solo">(
+    (savedItineraryData?.profile as any) || "casal"
+  );
 
   // Date picker states (Step 2)
   const [arrivalDate, setArrivalDate] = useState<string>(() => {
-    return addDaysToBrazilDate(getBrazilLocalDate(), 1);
+    return savedItineraryData?.arrivalDate || addDaysToBrazilDate(getBrazilLocalDate(), 1);
   });
   const [departureDate, setDepartureDate] = useState<string>(() => {
-    return addDaysToBrazilDate(getBrazilLocalDate(), 5);
+    return savedItineraryData?.departureDate || addDaysToBrazilDate(getBrazilLocalDate(), 5);
   });
 
-  // Passenger state counts (Step 3)
-  const [adults, setAdults] = useState<number>(2);
-  const [children, setChildren] = useState<number>(0);
-  const [infants, setInfants] = useState<number>(0);
+  // Passenger state counts (Step 3) - Derive from cart items or defaults
+  const initialAdults = savedItineraryData?.items?.[0]?.adults ?? 2;
+  const initialChildren = savedItineraryData?.items?.[0]?.children ?? 0;
+  const initialInfants = savedItineraryData?.items?.[0]?.infants ?? 0;
+
+  const [adults, setAdults] = useState<number>(initialAdults);
+  const [children, setChildren] = useState<number>(initialChildren);
+  const [infants, setInfants] = useState<number>(initialInfants);
 
   // Accommodation interest state (Step 4)
-  const [hasHotelAnswer, setHasHotelAnswer] = useState<"no" | "yes" | null>(null);
+  const [hasHotelAnswer, setHasHotelAnswer] = useState<"no" | "yes" | null>(
+    savedItineraryData ? (savedItineraryData.selectedHotelId ? "yes" : "no") : null
+  );
 
   // Step 5 progress day state (Day-by-Day Construction)
   const [currentPlanningDay, setCurrentPlanningDay] = useState<number>(1);
@@ -441,6 +461,9 @@ export default function WizardView({
       };
       await firestoreService.set("itineraries", itineraryId, itineraryData);
       localStorage.setItem("guidatrips_saved_itinerary", JSON.stringify(itineraryData));
+      if (onSaveItinerary) {
+        onSaveItinerary(itineraryData);
+      }
 
       // Also ensure a Lead exists for this conversion
       const leadData: Lead = {
@@ -553,6 +576,9 @@ export default function WizardView({
         };
         await firestoreService.set("itineraries", itineraryId, itineraryData);
         localStorage.setItem("guidatrips_saved_itinerary", JSON.stringify(itineraryData));
+        if (onSaveItinerary) {
+          onSaveItinerary(itineraryData);
+        }
       } catch (saveErr) {
         console.error("Erro ao salvar reservas ou roteiro de WhatsApp no Firestore:", saveErr);
       }

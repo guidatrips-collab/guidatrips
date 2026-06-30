@@ -875,6 +875,34 @@ export default function App() {
           console.error("Erro ao salvar reserva no banco:", dbErr);
         }
       }
+
+      try {
+        const itineraryId = `itinerary-${activeUser.id}`;
+        const defaultDest = destinations.find(d => d.id === selectedDestinationId) || destinations[0];
+        const itineraryData: SavedItinerary = {
+          id: itineraryId,
+          userId: activeUser.id,
+          clientName: activeUser.name || finalName,
+          clientPhone: activeUser.phone || clientPhone || "Não informado",
+          clientCity: finalCity || "Não informado",
+          arrivalDate: getBrazilLocalDate(),
+          departureDate: addDaysToBrazilDate(getBrazilLocalDate(), stayDays),
+          stayDays,
+          budget: "Moderado",
+          profile: "personalizado",
+          selectedHotelId,
+          totalEstimate,
+          createdAt: new Date().toISOString(),
+          items: cart,
+          destinationName: defaultDest?.name || "Destino",
+          status: "Aguardando atendimento"
+        };
+        await firestoreService.set("itineraries", itineraryId, itineraryData);
+        localStorage.setItem("guidatrips_saved_itinerary", JSON.stringify(itineraryData));
+        setSavedItinerary(itineraryData);
+      } catch (err) {
+        console.error("Erro ao salvar roteiro:", err);
+      }
     }
 
     // 3. Register this WhatsApp click event as a Lead in our Admin Dashboard CRM to keep metrics active!
@@ -928,9 +956,7 @@ export default function App() {
     const formattedNumber = settings.whatsappNumber.replace(/\D/g, "");
     const waUrl = `https://wa.me/${formattedNumber}?text=${encodeURIComponent(textMessage)}`;
     
-    // Clear cart and close drawer
-    setCart([]);
-    localStorage.removeItem("guidatrips_cart");
+    // Close drawer, but keep the cart so the itinerary is still editable
     setIsCartOpen(false);
     
     // Open WhatsApp
@@ -1023,6 +1049,7 @@ export default function App() {
             onAddToCart={handleAddToCart}
             onRemoveFromCart={handleRemoveFromCart}
             onUpdateCartItem={handleUpdateCartItem}
+            onSaveItinerary={setSavedItinerary}
             onNavigate={handleNavigate}
             onSetClientName={setClientName}
             onSetClientCity={setClientCity}
