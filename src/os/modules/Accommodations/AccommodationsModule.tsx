@@ -12,8 +12,10 @@ import {
   DollarSign, 
   Tag, 
   Coffee, 
-  Info 
+  Info,
+  Calendar
 } from 'lucide-react';
+import { CalendarPricingView } from '../../../components/CalendarPricingView';
 import { Accommodation, Destination } from '../../../types';
 import { firestoreService } from '../../../firebase';
 import ImageUpload from '../../../components/ImageUpload';
@@ -25,7 +27,7 @@ interface AccommodationsModuleProps {
 
 export function AccommodationsModule({ accommodations, destinations }: AccommodationsModuleProps) {
   const [searchTerm, setSearchTerm] = useState('');
-  const [activeTab, setActiveTab] = useState<'list' | 'create'>('list');
+  const [activeTab, setActiveTab] = useState<'list' | 'create' | 'calendar'>('list');
   const [loading, setLoading] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
 
@@ -60,6 +62,11 @@ export function AccommodationsModule({ accommodations, destinations }: Accommoda
   const [reviews, setReviews] = useState<number>(0);
   const [highlight, setHighlight] = useState('');
   const [whatsappMessage, setWhatsappMessage] = useState('');
+  
+  // Accommodation Specific Rules
+  const [policiesStr, setPoliciesStr] = useState('');
+  const [restrictionsStr, setRestrictionsStr] = useState('');
+  const [occupancyRules, setOccupancyRules] = useState('');
 
   const resetForm = () => {
     setEditingId(null);
@@ -83,6 +90,9 @@ export function AccommodationsModule({ accommodations, destinations }: Accommoda
     setReviews(0);
     setHighlight('');
     setWhatsappMessage('');
+    setPoliciesStr('');
+    setRestrictionsStr('');
+    setOccupancyRules('');
     setActiveTab('list');
   };
 
@@ -109,6 +119,9 @@ export function AccommodationsModule({ accommodations, destinations }: Accommoda
     setReviews(acc.reviews || 0);
     setHighlight(acc.highlight || '');
     setWhatsappMessage(acc.whatsappMessage || '');
+    setPoliciesStr(acc.policies?.join('\n') || '');
+    setRestrictionsStr(acc.restrictions?.join('\n') || '');
+    setOccupancyRules(acc.occupancyRules || '');
     setActiveTab('create');
   };
 
@@ -118,6 +131,8 @@ export function AccommodationsModule({ accommodations, destinations }: Accommoda
 
     const markup = sellRate > 0 && netRate > 0 ? ((sellRate - netRate) / netRate) * 100 : 20;
     const amenities = amenitiesStr.split(',').map(s => s.trim()).filter(Boolean);
+    const policies = policiesStr.split('\n').map(s => s.trim()).filter(Boolean);
+    const restrictions = restrictionsStr.split('\n').map(s => s.trim()).filter(Boolean);
     const generatedSlug = slug || name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
     const priceDisplay = `A partir de R$ ${sellRate} / noite`;
 
@@ -144,6 +159,9 @@ export function AccommodationsModule({ accommodations, destinations }: Accommoda
       highlight,
       whatsappMessage,
       priceDisplay,
+      policies,
+      restrictions,
+      occupancyRules,
       updatedAt: new Date().toISOString()
     };
 
@@ -192,15 +210,35 @@ export function AccommodationsModule({ accommodations, destinations }: Accommoda
           <h2 className="text-2xl font-bold text-zinc-100">Hospedagens Curadas</h2>
           <p className="text-zinc-400 text-sm">Gerencie hotéis, pousadas, casas e apartamentos curados parceiros.</p>
         </div>
-        {activeTab === 'list' && (
-          <button 
-            onClick={() => { resetForm(); setActiveTab('create'); }}
-            className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2.5 rounded-lg font-medium flex items-center gap-2 transition-all cursor-pointer"
-          >
-            <Plus size={18} />
-            Nova Hospedagem
-          </button>
-        )}
+        <div className="flex gap-2">
+          {activeTab === 'list' && (
+            <>
+              <button 
+                onClick={() => setActiveTab('calendar')}
+                className="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2.5 rounded-lg font-medium flex items-center gap-2 transition-all cursor-pointer"
+              >
+                <Calendar size={18} />
+                Tarifário
+              </button>
+              <button 
+                onClick={() => { resetForm(); setActiveTab('create'); }}
+                className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2.5 rounded-lg font-medium flex items-center gap-2 transition-all cursor-pointer"
+              >
+                <Plus size={18} />
+                Nova Hospedagem
+              </button>
+            </>
+          )}
+          {activeTab !== 'list' && (
+            <button 
+              onClick={() => setActiveTab('list')}
+              className="bg-zinc-800 hover:bg-zinc-700 text-white px-4 py-2.5 rounded-lg font-medium flex items-center gap-2 transition-all cursor-pointer"
+            >
+              <X size={18} />
+              Fechar
+            </button>
+          )}
+        </div>
       </div>
 
       {activeTab === 'list' && (
@@ -382,6 +420,26 @@ export function AccommodationsModule({ accommodations, destinations }: Accommoda
                 </div>
               </div>
 
+              {/* SECTION: RULES & POLICIES */}
+              <div className="bg-zinc-900/40 border border-zinc-800/60 rounded-xl p-5 space-y-4">
+                <h4 className="text-zinc-200 font-semibold border-b border-zinc-800 pb-2">Regras e Políticas da Hospedagem</h4>
+                
+                <div>
+                  <label className="block text-xs font-medium text-zinc-400 mb-1">Políticas Gerais (Uma por linha)</label>
+                  <textarea rows={3} value={policiesStr} onChange={e => setPoliciesStr(e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 text-zinc-100 px-4 py-2 rounded-lg focus:border-blue-500 focus:outline-none text-sm font-sans" placeholder="Ex: Cancelamento gratuito até 7 dias\nCheck-in a partir das 14h\nCheck-out até 11h" />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-zinc-400 mb-1">Restrições (Uma por linha)</label>
+                  <textarea rows={2} value={restrictionsStr} onChange={e => setRestrictionsStr(e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 text-zinc-100 px-4 py-2 rounded-lg focus:border-blue-500 focus:outline-none text-sm font-sans" placeholder="Ex: Não é permitido animais (No Pet)\nProibido fumar nos quartos" />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-zinc-400 mb-1">Regras de Ocupação (Descrição única)</label>
+                  <input type="text" value={occupancyRules} onChange={e => setOccupancyRules(e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 text-zinc-100 px-4 py-2 rounded-lg focus:border-blue-500 focus:outline-none" placeholder="Ex: Quarto Duplo Standard acomoda até 2 adultos e 1 criança até 5 anos" />
+                </div>
+              </div>
+
               {/* SECTION: PHOTO GALLERY */}
               <div className="bg-zinc-900/40 border border-zinc-800/60 rounded-xl p-5 space-y-4">
                 <h4 className="text-zinc-200 font-semibold border-b border-zinc-800 pb-2">Galeria de Imagens da Hospedagem</h4>
@@ -495,6 +553,28 @@ export function AccommodationsModule({ accommodations, destinations }: Accommoda
             </div>
           </div>
         </form>
+      )}
+
+      {activeTab === 'calendar' && (
+        <div className="flex-1 overflow-y-auto">
+          <CalendarPricingView 
+            items={accommodations as any[]} 
+            onUpdateItem={async (updatedAcc: any) => {
+              try {
+                await firestoreService.update("accommodations", updatedAcc.id, {
+                  calendar: updatedAcc.calendar || {},
+                  pricing: updatedAcc.pricing || {},
+                  updatedAt: new Date().toISOString()
+                });
+              } catch (err) {
+                console.error(err);
+                alert("Erro ao atualizar o tarifário da hospedagem no banco de dados.");
+              }
+            }} 
+            title="Tarifário e Disponibilidade (Hospedagens)"
+            itemTypeLabel="hospedagem"
+          />
+        </div>
       )}
     </div>
   );

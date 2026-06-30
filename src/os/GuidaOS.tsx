@@ -159,8 +159,8 @@ export function GuidaOS({
             {activeModule === 'products' && <ProductsModule experiences={experiences} destinations={destinations} />}
             {activeModule === 'calendar' && (
               <CalendarPricingView 
-                experiences={experiences} 
-                onUpdateExperience={async (updatedExp) => {
+                items={experiences} 
+                onUpdateItem={async (updatedExp: any) => {
                   try {
                     await firestoreService.update("experiences", updatedExp.id, {
                       calendar: updatedExp.calendar || {},
@@ -171,6 +171,8 @@ export function GuidaOS({
                     alert("Erro ao atualizar o tarifário no banco de dados.");
                   }
                 }} 
+                title="Tarifário e Disponibilidade (Passeios)"
+                itemTypeLabel="experiência"
               />
             )}
             {activeModule === 'crm' && <CRMModule leads={leads} experiences={experiences} />}

@@ -86,11 +86,30 @@ export interface Accommodation {
   location: string;
   address: string;
   coordinates?: { lat: number; lng: number };
-  netRate: number; // Tarifa custo
-  sellRate: number; // Tarifa venda
+  netRate: number; // Tarifa custo base
+  sellRate: number; // Tarifa venda base (Valor por diária)
   markup: number;
   commission: number;
   status: "active" | "paused" | "draft";
+  
+  // OS Financial Pricing Intelligence - reused from passeios
+  calendar?: Record<string, {
+    status: "open" | "closed";
+    adultPrice: number;
+    childPrice: number;
+    babyPrice: number;
+  }>;
+  pricing?: {
+    adultPrice: number; // Valor da diária base
+    childPrice?: number;
+    babyPrice?: number;
+    promotionalAdultPrice?: number;
+  };
+
+  // Accommodation Specific Rules
+  policies?: string[];
+  restrictions?: string[];
+  occupancyRules?: string;
   
   // Marketing & UI fields
   tag?: string; // e.g. "CONFORTO & TRADIÇÃO"

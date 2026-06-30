@@ -1,18 +1,22 @@
 import React, { useState, useMemo } from 'react';
-import { Calendar, ChevronLeft, ChevronRight, Save, X, Edit, Copy, Trash2 } from 'lucide-react';
-import { Experience, getBrazilLocalDate } from '../types';
+import { Calendar, ChevronLeft, ChevronRight, Save, Trash2 } from 'lucide-react';
+import { Experience, Accommodation, getBrazilLocalDate } from '../types';
+
+type PricingItem = Experience | Accommodation;
 
 interface CalendarPricingViewProps {
-  experiences: Experience[];
-  onUpdateExperience: (updatedExp: Experience) => void;
+  items: PricingItem[];
+  onUpdateItem: (updatedItem: PricingItem) => void;
+  title?: string;
+  itemTypeLabel?: string;
 }
 
-export function CalendarPricingView({ experiences, onUpdateExperience }: CalendarPricingViewProps) {
-  const [selectedExpId, setSelectedExpId] = useState<string>("");
+export function CalendarPricingView({ items, onUpdateItem, title = "Tarifário e Disponibilidade", itemTypeLabel = "experiência" }: CalendarPricingViewProps) {
+  const [selectedItemId, setSelectedItemId] = useState<string>("");
   
-  const selectedExp = useMemo(() => {
-    return experiences.find(e => e.id === selectedExpId) || null;
-  }, [experiences, selectedExpId]);
+  const selectedItem = useMemo(() => {
+    return items.find(e => e.id === selectedItemId) || null;
+  }, [items, selectedItemId]);
 
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDates, setSelectedDates] = useState<string[]>([]);
@@ -73,26 +77,27 @@ export function CalendarPricingView({ experiences, onUpdateExperience }: Calenda
   };
 
   const handleApplyToSelection = () => {
-    if (!selectedExp || selectedDates.length === 0) return;
+    if (!selectedItem || selectedDates.length === 0) return;
     
     // Ensure the calendar object exists
-    const currentCalendar = selectedExp.calendar || {};
+    const currentCalendar = selectedItem.calendar || {};
     
     const newCalendar = { ...currentCalendar };
     
     selectedDates.forEach(date => {
+      const basePrice = 'priceFrom' in selectedItem ? selectedItem.priceFrom : ('sellRate' in selectedItem ? selectedItem.sellRate : 0);
       newCalendar[date] = {
         status: status,
-        adultPrice: Number(adultPrice) || (selectedExp.pricing?.adultPrice ?? selectedExp.priceFrom),
-        childPrice: Number(childPrice) || (selectedExp.pricing?.childPrice ?? 0),
-        babyPrice: Number(babyPrice) || (selectedExp.pricing?.babyPrice ?? 0),
+        adultPrice: Number(adultPrice) || (selectedItem.pricing?.adultPrice ?? basePrice),
+        childPrice: Number(childPrice) || (selectedItem.pricing?.childPrice ?? 0),
+        babyPrice: Number(babyPrice) || (selectedItem.pricing?.babyPrice ?? 0),
       };
     });
 
-    onUpdateExperience({
-      ...selectedExp,
+    onUpdateItem({
+      ...selectedItem,
       calendar: newCalendar
-    });
+    } as any);
     
     clearSelection();
     setIsEditing(false);
@@ -109,29 +114,29 @@ export function CalendarPricingView({ experiences, onUpdateExperience }: Calenda
 
   return (
     <div className="space-y-6">
-      {/* HEADER / SELECT EXP */}
+      {/* HEADER / SELECT ITEM */}
       <div className="bg-[#0D1B2A]/40 border border-white/5 p-6 rounded-lg space-y-4">
         <h3 className="font-serif text-xl font-bold text-[#F4EFE6] flex items-center gap-2">
-          <Calendar className="w-5 h-5 text-[#E8711A]" /> Tarifário e Disponibilidade
+          <Calendar className="w-5 h-5 text-[#E8711A]" /> {title}
         </h3>
-        <p className="font-sans text-xs text-zinc-400">Selecione uma experiência para gerenciar preços específicos por data e abrir/fechar o calendário.</p>
+        <p className="font-sans text-xs text-zinc-400">Selecione uma {itemTypeLabel} para gerenciar preços específicos por data e abrir/fechar o calendário.</p>
         
         <select 
-          value={selectedExpId}
+          value={selectedItemId}
           onChange={(e) => {
-            setSelectedExpId(e.target.value);
+            setSelectedItemId(e.target.value);
             clearSelection();
           }}
           className="w-full md:w-1/2 bg-[#0D1B2A] border border-white/10 p-3 text-sm text-white rounded-md outline-none focus:border-[#E8711A]"
         >
-          <option value="">-- Escolha a Experiência --</option>
-          {experiences.map(exp => (
-            <option key={exp.id} value={exp.id}>{exp.name}</option>
+          <option value="">-- Escolha --</option>
+          {items.map(item => (
+            <option key={item.id} value={item.id}>{item.name}</option>
           ))}
         </select>
       </div>
 
-      {selectedExp && (
+      {selectedItem && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           
           {/* CALENDAR */}
@@ -159,7 +164,7 @@ export function CalendarPricingView({ experiences, onUpdateExperience }: Calenda
               {days.map(day => {
                 const dateStr = formatDate(new Date(year, month, day));
                 const isSelected = selectedDates.includes(dateStr);
-                const dayData = selectedExp.calendar?.[dateStr];
+                const dayData = selectedItem.calendar?.[dateStr];
                 
                 const isClosed = dayData?.status === 'closed';
                 
@@ -242,10 +247,12 @@ export function CalendarPricingView({ experiences, onUpdateExperience }: Calenda
                 {status === "open" && (
                   <>
                     <div className="space-y-1.5">
-                      <label className="font-accent text-[9px] text-[#ffefe6]/90 tracking-widest uppercase">Preço Adulto (R$)</label>
+                      <label className="font-accent text-[9px] text-[#ffefe6]/90 tracking-widest uppercase">
+                        {'sellRate' in selectedItem ? 'Valor da Diária (R$)' : 'Preço Adulto (R$)'}
+                      </label>
                       <input
                         type="number"
-                        placeholder={selectedExp.pricing?.adultPrice?.toString() || selectedExp.priceFrom.toString()}
+                        placeholder={(selectedItem.pricing?.adultPrice || ('priceFrom' in selectedItem ? selectedItem.priceFrom : selectedItem.sellRate))?.toString()}
                         value={adultPrice}
                         onChange={(e) => setAdultPrice(e.target.value ? Number(e.target.value) : "")}
                         className="w-full bg-[#0D1B2A] border border-white/10 p-2 text-xs text-white rounded outline-none"
@@ -253,10 +260,12 @@ export function CalendarPricingView({ experiences, onUpdateExperience }: Calenda
                     </div>
                     
                     <div className="space-y-1.5">
-                      <label className="font-accent text-[9px] text-[#ffefe6]/90 tracking-widest uppercase">Preço Criança (R$)</label>
+                      <label className="font-accent text-[9px] text-[#ffefe6]/90 tracking-widest uppercase">
+                        {'sellRate' in selectedItem ? 'Taxa Extra p/ Criança (R$)' : 'Preço Criança (R$)'}
+                      </label>
                       <input
                         type="number"
-                        placeholder={selectedExp.pricing?.childPrice?.toString() || "0"}
+                        placeholder={selectedItem.pricing?.childPrice?.toString() || "0"}
                         value={childPrice}
                         onChange={(e) => setChildPrice(e.target.value ? Number(e.target.value) : "")}
                         className="w-full bg-[#0D1B2A] border border-white/10 p-2 text-xs text-white rounded outline-none"
@@ -264,10 +273,12 @@ export function CalendarPricingView({ experiences, onUpdateExperience }: Calenda
                     </div>
 
                     <div className="space-y-1.5">
-                      <label className="font-accent text-[9px] text-[#ffefe6]/90 tracking-widest uppercase">Preço Bebê (R$)</label>
+                      <label className="font-accent text-[9px] text-[#ffefe6]/90 tracking-widest uppercase">
+                        {'sellRate' in selectedItem ? 'Taxa Extra p/ Bebê (R$)' : 'Preço Bebê (R$)'}
+                      </label>
                       <input
                         type="number"
-                        placeholder={selectedExp.pricing?.babyPrice?.toString() || "0"}
+                        placeholder={selectedItem.pricing?.babyPrice?.toString() || "0"}
                         value={babyPrice}
                         onChange={(e) => setBabyPrice(e.target.value ? Number(e.target.value) : "")}
                         className="w-full bg-[#0D1B2A] border border-white/10 p-2 text-xs text-white rounded outline-none"
@@ -287,10 +298,10 @@ export function CalendarPricingView({ experiences, onUpdateExperience }: Calenda
 
                   <button 
                     onClick={() => {
-                      if (!selectedExp) return;
-                      const newCalendar = { ...selectedExp.calendar };
+                      if (!selectedItem) return;
+                      const newCalendar = { ...selectedItem.calendar };
                       selectedDates.forEach(d => delete newCalendar[d]);
-                      onUpdateExperience({ ...selectedExp, calendar: newCalendar });
+                      onUpdateItem({ ...selectedItem, calendar: newCalendar } as any);
                       clearSelection();
                     }}
                     className="w-full py-3 bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs font-accent tracking-widest uppercase font-bold rounded-md transition-colors flex items-center justify-center gap-2"
