@@ -1024,6 +1024,30 @@ export default function App() {
   };
 
   if (currentView === "os") {
+    if (!currentUser) {
+      return (
+        <div className="min-h-screen bg-[#0D1B2A] flex flex-col items-center justify-center text-white">
+          <p className="mb-4">Autenticação necessária para acessar o GuideOS.</p>
+          <button 
+            onClick={() => setIsAuthModalOpen(true)}
+            className="px-6 py-2 bg-[#E8711A] rounded-lg font-bold hover:bg-[#FF8A3F] transition-colors cursor-pointer"
+          >
+            Fazer Login
+          </button>
+          {isAuthModalOpen && (
+            <ClientAuthModal
+              isOpen={isAuthModalOpen}
+              onClose={() => {
+                setIsAuthModalOpen(false);
+                handleNavigate("home");
+              }}
+              onSuccess={handleAuthSuccess}
+            />
+          )}
+        </div>
+      );
+    }
+
     return (
       <GuidaOS 
         onNavigateHome={() => handleNavigate("home")} 
@@ -1038,6 +1062,7 @@ export default function App() {
         settings={settings}
         destinations={destinations}
         onUpdateSettings={updateSettings}
+        currentUser={currentUser}
       />
     );
   }

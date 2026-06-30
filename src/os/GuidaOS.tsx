@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { 
   LayoutDashboard, 
   Users, 
@@ -24,7 +25,7 @@ import { ReservationsModule } from './modules/Reservations/ReservationsModule';
 import { FinancialModule } from './modules/Financial/FinancialModule';
 import { AffiliatesModule } from './modules/Affiliates/AffiliatesModule';
 import { SettingsModule } from './modules/Settings/SettingsModule';
-import { Experience, Lead, Destination } from '../types';
+import { Experience, Lead, Destination, User } from '../types';
 
 interface GuidaOSProps {
   onNavigateHome: () => void;
@@ -39,6 +40,7 @@ interface GuidaOSProps {
   settings: any;
   destinations: Destination[];
   onUpdateSettings: (s: any) => void;
+  currentUser: User;
 }
 
 export function GuidaOS({ 
@@ -53,9 +55,29 @@ export function GuidaOS({
   budgets,
   settings,
   destinations,
-  onUpdateSettings
+  onUpdateSettings,
+  currentUser
 }: GuidaOSProps) {
-  const [activeModule, setActiveModule] = useState('dashboard');
+  const navigate = useNavigate();
+  const location = useLocation();
+  const isAdmin = currentUser.roles.includes('admin') || currentUser.roles.includes('equipe');
+  const isAffiliate = currentUser.roles.includes('afiliado');
+  const isTourPartner = currentUser.roles.includes('parceiro_passeio');
+  const isHotelPartner = currentUser.roles.includes('parceiro_hospedagem');
+
+  // Extract activeModule from pathname or fallback to default
+  const activeModule = location.pathname.split('/guideos/')[1] || (() => {
+    if (isAdmin) return 'dashboard';
+    if (isAffiliate) return 'affiliates';
+    if (isTourPartner) return 'products';
+    if (isHotelPartner) return 'accommodations';
+    return 'dashboard';
+  })();
+
+  const handleNavigateToModule = (id: string) => {
+    navigate(`/guideos/${id}`);
+  };
+
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -64,19 +86,29 @@ export function GuidaOS({
     }
   }, [activeModule]);
 
-  const navItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'crm', label: 'CRM & Leads', icon: Users },
-    { id: 'smart-itinerary', label: 'Roteiro IA', icon: BrainCircuit },
-    { id: 'products', label: 'Passeios', icon: Map },
-    { id: 'calendar', label: 'Tarifário', icon: Calendar },
-    { id: 'accommodations', label: 'Hospedagens', icon: Hotel },
-    { id: 'partners', label: 'Parceiros', icon: Briefcase },
-    { id: 'reservations', label: 'Reservas', icon: CalendarCheck },
-    { id: 'financial', label: 'Financeiro', icon: DollarSign },
-    { id: 'affiliates', label: 'Afiliados', icon: Share2 },
-    { id: 'settings', label: 'Configurações', icon: Settings },
+  const allNavItems = [
+    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, allowed: isAdmin },
+    { id: 'crm', label: 'CRM & Leads', icon: Users, allowed: isAdmin },
+    { id: 'smart-itinerary', label: 'Roteiro IA', icon: BrainCircuit, allowed: isAdmin },
+    { id: 'products', label: 'Passeios', icon: Map, allowed: isAdmin || isTourPartner },
+    { id: 'calendar', label: 'Tarifário', icon: Calendar, allowed: isAdmin || isTourPartner || isHotelPartner },
+    { id: 'accommodations', label: 'Hospedagens', icon: Hotel, allowed: isAdmin || isHotelPartner },
+    { id: 'partners', label: 'Parceiros', icon: Briefcase, allowed: isAdmin },
+    { id: 'reservations', label: 'Reservas', icon: CalendarCheck, allowed: isAdmin || isTourPartner || isHotelPartner },
+    { id: 'financial', label: 'Financeiro', icon: DollarSign, allowed: isAdmin },
+    { id: 'affiliates', label: 'Afiliados', icon: Share2, allowed: isAdmin || isAffiliate },
+    { id: 'settings', label: 'Configurações', icon: Settings, allowed: isAdmin },
   ];
+
+  const navItems = allNavItems.filter(item => item.allowed);
+
+  // Helper to get initials
+  const initials = currentUser.name
+    .split(' ')
+    .map(n => n[0])
+    .join('')
+    .substring(0, 2)
+    .toUpperCase();
 
   return (
     <div className="flex h-screen w-full bg-[#09090b] text-zinc-100 font-sans overflow-hidden">
@@ -96,7 +128,7 @@ export function GuidaOS({
           {navItems.map((item) => (
             <button
               key={item.id}
-              onClick={() => setActiveModule(item.id)}
+              onClick={() => handleNavigateToModule(item.id)}
               className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors text-sm font-medium ${
                 activeModule === item.id 
                   ? 'bg-blue-600/10 text-blue-500' 
@@ -111,12 +143,16 @@ export function GuidaOS({
 
         <div className="p-4 border-t border-zinc-800">
           <div className="flex items-center gap-3 mb-4 px-2">
-            <div className="w-9 h-9 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-300 font-bold">
-              AD
+            <div className="w-9 h-9 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-300 font-bold overflow-hidden">
+              {currentUser.photoUrl ? (
+                <img src={currentUser.photoUrl} alt="User" className="w-full h-full object-cover" />
+              ) : (
+                initials
+              )}
             </div>
-            <div className="flex flex-col">
-              <span className="text-sm font-medium text-zinc-200">Admin</span>
-              <span className="text-xs text-zinc-500">admin@guidatrips.com</span>
+            <div className="flex flex-col truncate">
+              <span className="text-sm font-medium text-zinc-200 truncate">{currentUser.name}</span>
+              <span className="text-xs text-zinc-500 truncate">{currentUser.email}</span>
             </div>
           </div>
           <button 

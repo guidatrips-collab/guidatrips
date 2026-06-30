@@ -58,7 +58,9 @@ export default function ClientAuthModal({ isOpen, onClose, onSuccess, title, sub
         phone: foundUser.phone || "",
         photoUrl: foundUser.photoUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(foundUser.name)}`,
         preferences: foundUser.preferences || [],
-        favorites: foundUser.favorites || []
+        favorites: foundUser.favorites || [],
+        roles: foundUser.roles || ["cliente"],
+        permissions: foundUser.permissions || []
       };
 
       setSuccess(`Bem-vindo(a) de volta, ${foundUser.name.split(" ")[0]}!`);
@@ -112,6 +114,8 @@ export default function ClientAuthModal({ isOpen, onClose, onSuccess, title, sub
         photoUrl: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(name)}`,
         preferences: [],
         favorites: [],
+        roles: ["cliente"],
+        permissions: [],
         createdAt: new Date().toISOString()
       };
 
@@ -141,7 +145,9 @@ export default function ClientAuthModal({ isOpen, onClose, onSuccess, title, sub
         phone: newUser.phone,
         photoUrl: newUser.photoUrl,
         preferences: newUser.preferences,
-        favorites: newUser.favorites
+        favorites: newUser.favorites,
+        roles: newUser.roles as any,
+        permissions: newUser.permissions as any
       };
 
       setSuccess("Conta criada com sucesso! Redirecionando...");

@@ -475,8 +475,29 @@ export interface BookingCartItem {
   dayIndex?: number; // Manual sequence organizer (Day 1, Day 2 etc)
 }
 
-// Client Area / Viagem Entities
-export interface ClientUser {
+// User Roles and Permissions Architecture
+export type UserRole = 
+  | "cliente"
+  | "admin"
+  | "equipe"
+  | "afiliado"
+  | "parceiro_passeio"
+  | "parceiro_hospedagem"
+  | "restaurante"
+  | "fotografo"
+  | "transfer"
+  | "prestador_servico";
+
+export type UserPermission = 
+  | "access_guideos"
+  | "manage_experiences"
+  | "manage_accommodations"
+  | "manage_leads"
+  | "manage_affiliates"
+  | "manage_financials"
+  | "view_reports";
+
+export interface User {
   id: string;
   name: string;
   email: string;
@@ -484,7 +505,11 @@ export interface ClientUser {
   photoUrl?: string;
   preferences?: string[];
   favorites?: string[]; // IDs of experiences, partners, posts
+  roles: UserRole[];
+  permissions?: UserPermission[];
 }
+
+export type ClientUser = User; // Backward compatibility alias
 
 export interface ClientReservation {
   id: string;
