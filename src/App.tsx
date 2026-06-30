@@ -159,9 +159,10 @@ export default function App() {
   const [isLeadModalOpen, setIsLeadModalOpen] = useState(false);
   const [waDefaultMessage, setWaDefaultMessage] = useState("");
 
-  // Tracking user journey
+  // Tracking user journey and scroll to top on navigation change
   useEffect(() => {
     analytics.trackPageView();
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }, [currentView]);
 
   const openWhatsAppModal = (message?: string) => {

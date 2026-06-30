@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { 
   LayoutDashboard, 
   Users, 
@@ -56,6 +56,13 @@ export function GuidaOS({
   onUpdateSettings
 }: GuidaOSProps) {
   const [activeModule, setActiveModule] = useState('dashboard');
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [activeModule]);
 
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -147,7 +154,7 @@ export function GuidaOS({
         </header>
 
         {/* Content Module Space */}
-        <div className="flex-1 overflow-y-auto p-8">
+        <div ref={scrollContainerRef} className="flex-1 overflow-y-auto p-8">
           <div className="max-w-7xl mx-auto h-full">
             {activeModule === 'products' && <ProductsModule experiences={experiences} destinations={destinations} />}
             {activeModule === 'calendar' && (

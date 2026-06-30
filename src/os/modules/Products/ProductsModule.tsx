@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Plus, 
   Search, 
@@ -31,6 +31,14 @@ export function ProductsModule({ experiences, destinations }: ProductsModuleProp
   const [loading, setLoading] = useState(false);
 
   const [editingId, setEditingId] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Scroll parent container to top when tab or editing state changes
+    const container = document.querySelector('.overflow-y-auto');
+    if (container) {
+      container.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [activeTab, editingId]);
 
   // Form States
   const [name, setName] = useState('');

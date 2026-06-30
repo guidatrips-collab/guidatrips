@@ -37,6 +37,14 @@ export function SettingsModule({ settings: initialSettings, onUpdateSettings }: 
   
   const [activeTab, setActiveTab] = useState('geral');
 
+  useEffect(() => {
+    // Scroll parent container to top when tab changes
+    const container = document.querySelector('.overflow-y-auto');
+    if (container) {
+      container.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [activeTab]);
+
   return (
     <div className="w-full h-full flex flex-col">
       <div className="flex justify-between items-center mb-6">

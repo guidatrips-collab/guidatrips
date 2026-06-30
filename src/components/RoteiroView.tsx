@@ -113,6 +113,11 @@ export default function RoteiroView({
     }
   }, [showDaySelectionModal]);
 
+  // Scroll to top when activeStepDay or step mode changes (UX Scroll Fix)
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [activeStepDay, isStepMode]);
+
   const toggleIntercurso = (id: string) => {
     setExpandedIntercuso(prev => ({ ...prev, [id]: !prev[id] }));
   };

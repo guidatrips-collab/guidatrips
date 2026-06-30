@@ -125,6 +125,11 @@ export default function WizardView({
     if (onSetClientCity) onSetClientCity(tempCity);
   }, [tempCity]);
 
+  // Scroll to top whenever step or currentPlanningDay changes (Roteiro Inteligente UX improvement)
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [step, currentPlanningDay]);
+
   // Synchronize computed stay days when dates change
   useEffect(() => {
     if (arrivalDate && departureDate) {
