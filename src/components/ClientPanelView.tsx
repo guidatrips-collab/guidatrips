@@ -516,7 +516,10 @@ export default function ClientPanelView({
                                           </span>
                                           <span className="flex items-center gap-1">
                                             <User className="w-3 h-3 text-zinc-400" />
-                                            <span>{(item.adults ?? 2) + (item.children ?? 0)} Integrantes</span>
+                                            <span>
+                                              {(item.adults ?? 2)} {(item.adults ?? 2) === 1 ? 'adulto' : 'adultos'}
+                                              {(item.children ?? 0) > 0 ? `, ${item.children} ${item.children === 1 ? 'criança' : 'crianças'}` : ''}
+                                            </span>
                                           </span>
                                         </div>
                                       </div>

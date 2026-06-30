@@ -25,6 +25,7 @@ interface WizardViewProps {
   onUpdateStayDays: (days: number) => void;
   onAddToCart: (item: BookingCartItem) => void;
   onRemoveFromCart: (index: number) => void;
+  onUpdateCartItem?: (index: number, fields: Partial<BookingCartItem>) => void;
   onNavigate: (view: string) => void;
   onSetClientName?: (name: string) => void;
   onSetClientCity?: (city: string) => void;
@@ -49,6 +50,7 @@ export default function WizardView({
   onUpdateStayDays,
   onAddToCart,
   onRemoveFromCart,
+  onUpdateCartItem,
   onNavigate,
   onSetClientName,
   onSetClientCity,
@@ -629,7 +631,23 @@ export default function WizardView({
       }
     }
     
-    text += `\n💰 *Valor Estimado:* ${formatBRL(calculateEstimatedTotal())}\n\n`;
+    text += `\n💰 *ESTIMATIVA FINANCEIRA:*`;
+    cart.forEach(item => {
+      const exp = experiences.find(e => e.id === item.experienceId);
+      if (exp) {
+        const adPrice = exp.pricing?.adultPrice || exp.priceFrom || 150;
+        const chPrice = exp.pricing?.childPrice ?? (adPrice * 0.7);
+        const itemPriceTotal = (item.adults ?? 2) * adPrice + (item.children ?? 0) * chPrice;
+        text += `\n  • _${exp.name}_ (${(item.adults ?? 2) + (item.children ?? 0)} pessoas) — ${formatBRL(itemPriceTotal)}`;
+      }
+    });
+    if (selectedHotelId) {
+      const hotel = hotels.find(h => h.id === selectedHotelId);
+      text += `\n  • _Hospedagem:_ ${hotel?.name || "Pousada Parceira"} (mimos + tarifas especiais)`;
+    } else {
+      text += `\n  • _Hospedagem:_ Própria (curadoria opcional)`;
+    }
+    text += `\n\n*TOTAL ESTIMADO DA VIAGEM:* ${formatBRL(calculateEstimatedTotal())}\n\n`;
     text += `Gostaria de fechar este pacote e garantir as minhas vagas e benefícios!`;
 
     const encoded = encodeURIComponent(text);
@@ -1758,7 +1776,12 @@ export default function WizardView({
                       const config = getBookingConfig(exp.id);
                       
                       // Check if already in cart on this specific day
-                      const isAlreadyInCart = cart.some(item => item.experienceId === exp.id && item.dayIndex === currentPlanningDay);
+                      const indexInCart = cart.findIndex(item => item.experienceId === exp.id && item.dayIndex === currentPlanningDay);
+                      const isAlreadyInCart = indexInCart !== -1;
+                      const cartItem = isAlreadyInCart ? cart[indexInCart] : null;
+                      
+                      const currentAdults = cartItem ? (cartItem.adults ?? 2) : config.adults;
+                      const currentChildren = cartItem ? (cartItem.children ?? 0) : config.children;
                       
                       const chosenSchedule = cardSchedules[exp.id] || (exp.schedules && exp.schedules.length > 0 ? exp.schedules[0] : "08:00");
 
@@ -1868,13 +1891,78 @@ export default function WizardView({
                                 </span>
                                 <select
                                   value={chosenSchedule}
-                                  onChange={(e) => setCardSchedules(prev => ({ ...prev, [exp.id]: e.target.value }))}
+                                  onChange={(e) => {
+                                    const newTime = e.target.value;
+                                    setCardSchedules(prev => ({ ...prev, [exp.id]: newTime }));
+                                    if (isAlreadyInCart && onUpdateCartItem) {
+                                      onUpdateCartItem(indexInCart, { schedule: newTime });
+                                    }
+                                  }}
                                   className="bg-white border border-zinc-200 rounded-lg p-1.5 text-[11px] text-zinc-800 font-bold cursor-pointer focus:outline-none focus:border-[#E8711A]"
                                 >
                                   {(exp.schedules && exp.schedules.length > 0 ? exp.schedules : ["08:00", "13:30"]).map(time => (
                                     <option key={time} value={time}>{time}</option>
                                   ))}
                                 </select>
+                              </div>
+
+                              {/* Quantity of People Selector */}
+                              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-t border-zinc-150/40 pt-2.5">
+                                <span className="text-zinc-500 font-bold uppercase text-[9px] tracking-wider flex items-center gap-1">
+                                  <Users className="w-3.5 h-3.5 text-zinc-400" />
+                                  Participantes
+                                </span>
+                                <div className="flex items-center gap-2">
+                                  {/* Adults */}
+                                  <div className="flex items-center gap-1 bg-white border border-zinc-200 rounded-lg px-2 py-0.5">
+                                    <span className="text-zinc-400 text-[9px]">Adultos:</span>
+                                    <select
+                                      value={currentAdults}
+                                      onChange={(e) => {
+                                        const val = parseInt(e.target.value, 10);
+                                        if (isAlreadyInCart && onUpdateCartItem) {
+                                          onUpdateCartItem(indexInCart, { adults: val });
+                                        } else {
+                                          updateBookingConfig(exp.id, { adults: val });
+                                        }
+                                      }}
+                                      className="bg-transparent text-[11px] text-zinc-800 font-bold cursor-pointer focus:outline-none"
+                                    >
+                                      {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 15, 20].map(n => (
+                                        <option key={n} value={n}>{n}</option>
+                                      ))}
+                                    </select>
+                                  </div>
+                                  
+                                  {/* Children */}
+                                  <div className="flex items-center gap-1 bg-white border border-zinc-200 rounded-lg px-2 py-0.5">
+                                    <span className="text-zinc-400 text-[9px]">Crianças:</span>
+                                    <select
+                                      value={currentChildren}
+                                      onChange={(e) => {
+                                        const val = parseInt(e.target.value, 10);
+                                        if (isAlreadyInCart && onUpdateCartItem) {
+                                          onUpdateCartItem(indexInCart, { children: val });
+                                        } else {
+                                          updateBookingConfig(exp.id, { children: val });
+                                        }
+                                      }}
+                                      className="bg-transparent text-[11px] text-zinc-800 font-bold cursor-pointer focus:outline-none"
+                                    >
+                                      {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(n => (
+                                        <option key={n} value={n}>{n}</option>
+                                      ))}
+                                    </select>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Dynamic Price Preview */}
+                              <div className="flex items-center justify-between border-t border-zinc-150/40 pt-2 text-[10px]">
+                                <span className="text-zinc-400 font-medium">Subtotal do Passeio:</span>
+                                <span className="font-mono font-black text-[#0D1B2A] text-xs">
+                                  {formatBRL(currentAdults * (exp.pricing?.adultPrice || exp.priceFrom || 150) + currentChildren * (exp.pricing?.childPrice ?? ((exp.pricing?.adultPrice || exp.priceFrom || 150) * 0.7)))}
+                                </span>
                               </div>
 
                               {/* Alert / Validator Box */}

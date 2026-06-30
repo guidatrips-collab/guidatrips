@@ -598,6 +598,25 @@ export default function App() {
     localStorage.setItem("guidatrips_cart", JSON.stringify(updated));
   };
 
+  const handleUpdateCartItem = (index: number, fields: Partial<BookingCartItem>) => {
+    const updated = cart.map((item, idx) => {
+      if (idx === index) {
+        const adults = fields.adults !== undefined ? fields.adults : (item.adults ?? 2);
+        const children = fields.children !== undefined ? fields.children : (item.children ?? 0);
+        const infants = fields.infants !== undefined ? fields.infants : (item.infants ?? 0);
+        const people = adults + children + infants;
+        return {
+          ...item,
+          ...fields,
+          people
+        };
+      }
+      return item;
+    });
+    setCart(updated);
+    localStorage.setItem("guidatrips_cart", JSON.stringify(updated));
+  };
+
   const handleChangeItemDay = (index: number, day: number) => {
     const updated = cart.map((item, idx) => {
       if (idx === index) {
@@ -1003,6 +1022,7 @@ export default function App() {
             onUpdateStayDays={updateStayDays}
             onAddToCart={handleAddToCart}
             onRemoveFromCart={handleRemoveFromCart}
+            onUpdateCartItem={handleUpdateCartItem}
             onNavigate={handleNavigate}
             onSetClientName={setClientName}
             onSetClientCity={setClientCity}
