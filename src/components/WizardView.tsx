@@ -239,7 +239,10 @@ export default function WizardView({
   ];
 
   // Lodging Catalog recommended for Cabo Frio / Arraial (Dynamic from database)
-  const hotels = accommodations.filter(acc => acc.status === "active").slice(0, 6).map(acc => ({
+  const hotels = accommodations
+    .filter(acc => acc.status === "active" && (!selectedDestinationId || acc.destinationId === selectedDestinationId))
+    .slice(0, 6)
+    .map(acc => ({
     id: acc.id,
     name: acc.name,
     location: acc.location,
@@ -253,6 +256,9 @@ export default function WizardView({
   // Dynamic filter of experiences sorted according to the profile
   const getFilteredExperiences = () => {
     let list = experiences.filter(exp => exp.status === "active");
+    if (selectedDestinationId) {
+      list = list.filter(exp => exp.destinationId === selectedDestinationId);
+    }
     if (profile === "casal") {
       list = [...list].sort((a, b) => {
         if ((a.id || "").includes("sunset") || (a.name || "").toLowerCase().includes("pôr") || (a.name || "").toLowerCase().includes("sunset")) return -1;
@@ -689,6 +695,19 @@ export default function WizardView({
           <p className="text-[9px] text-[#E8711A] font-black uppercase tracking-widest">Etapas de Planejamento</p>
           
           <div className="space-y-2">
+            {/* Destino */}
+            <div className="flex items-center justify-between text-xs py-1 border-b border-white/5">
+              <div className="flex items-center gap-2">
+                <span className="w-4.5 h-4.5 rounded-full flex items-center justify-center text-[10px] font-black bg-emerald-500 text-white">
+                  ✓
+                </span>
+                <span className="text-zinc-400 font-medium">Destino Principal</span>
+              </div>
+              <span className="font-bold text-[#E8711A]">
+                {selectedDestObj ? selectedDestObj.name : "Arraial do Cabo"}
+              </span>
+            </div>
+
             {/* 1. Perfil */}
             <div className="flex items-center justify-between text-xs py-1 border-b border-white/5">
               <div className="flex items-center gap-2">
@@ -876,6 +895,8 @@ export default function WizardView({
               onClick={() => {
                 if (step > 1) {
                   setStep(step - 1);
+                } else if (step === 1) {
+                  setStep(0);
                 } else {
                   onNavigate("home");
                 }
@@ -883,8 +904,18 @@ export default function WizardView({
               className="flex items-center gap-1 text-zinc-500 hover:text-[#E8711A] text-xs font-bold uppercase transition-all py-1.5 px-3 hover:bg-zinc-100 rounded-full cursor-pointer"
             >
               <ChevronLeft className="w-4 h-4" />
-              <span>{step === 1 ? "Início" : "Voltar"}</span>
+              <span>{step === 1 ? "Destino" : "Voltar"}</span>
             </button>
+
+            {/* Selected Destination Context Badge */}
+            {selectedDestObj && (
+              <div className="flex items-center gap-1.5 bg-[#E8711A]/8 border border-[#E8711A]/20 px-3 py-1 rounded-full text-xs">
+                <MapPin className="w-3 h-3 text-[#E8711A]" />
+                <span className="font-accent text-[9px] font-black uppercase tracking-wider text-[#0D1B2A]">
+                  Destino: <strong className="text-[#E8711A]">{selectedDestObj.name}</strong>
+                </span>
+              </div>
+            )}
 
             {/* Stepper text and markers */}
             <div className="hidden md:flex items-center gap-3">
@@ -1409,7 +1440,7 @@ export default function WizardView({
                   Deseja incluir hospedagem em seu plano?
                 </h2>
                 <p className="text-xs sm:text-sm text-zinc-500 text-center">
-                  Parcerias exclusivas da Guida Trips garantem mimos de boas-vindas, late check-out e as melhores tarifas garantidas nas pousadas parceiras de Arraial e Cabo Frio.
+                  Parcerias exclusivas da Guida Trips garantem mimos de boas-vindas, late check-out e as melhores tarifas garantidas nas pousadas parceiras de {selectedDestObj?.name || "nossos destinos"}.
                 </p>
               </div>
 
@@ -1463,64 +1494,74 @@ export default function WizardView({
                       </div>
 
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-                        {hotels.map((pousada) => {
-                          const isSelected = selectedHotelId === pousada.id;
+                        {hotels.length === 0 ? (
+                          <div className="col-span-1 sm:col-span-3 bg-zinc-50 border border-zinc-200 rounded-2xl p-8 text-center space-y-3">
+                            <span className="text-3xl block">🏨</span>
+                            <h6 className="font-serif text-base font-extrabold text-[#0D1B2A]">Nenhuma pousada parceira listada para {selectedDestObj?.name || 'este destino'} ainda</h6>
+                            <p className="text-xs text-zinc-500 max-w-md mx-auto">
+                              Nossa equipe de curadoria está credenciando hotéis com vantagens exclusivas para você nesta cidade. Fale conosco pelo WhatsApp caso queira recomendações diretas de hospedagem!
+                            </p>
+                          </div>
+                        ) : (
+                          hotels.map((pousada) => {
+                            const isSelected = selectedHotelId === pousada.id;
 
-                          return (
-                            <div
-                              key={pousada.id}
-                              className={`bg-white border rounded-2xl overflow-hidden shadow-xs hover:shadow-sm transition-all flex flex-col justify-between group ${
-                                isSelected ? "border-[#E8711A] ring-1 ring-[#E8711A]/20" : "border-zinc-200"
-                              }`}
-                            >
-                              <div className="h-32 overflow-hidden relative select-none">
-                                <img
-                                  src={pousada.img}
-                                  alt={pousada.name}
-                                  className="w-full h-full object-cover group-hover:scale-103 transition-transform duration-500"
-                                  referrerPolicy="no-referrer"
-                                />
-                                <span className="absolute bottom-2 left-2 bg-[#0D1B2A]/90 text-white text-[8px] font-accent tracking-widest px-2.5 py-1 rounded-sm">
-                                  {pousada.tag}
-                                </span>
-                                <div className="absolute top-2 right-2 bg-white/95 text-[#0D1B2A] text-[9px] font-bold px-2 py-0.5 rounded shadow-xs flex items-center gap-0.5">
-                                  <span className="text-yellow-500">★</span>
-                                  <span>{pousada.rating}</span>
+                            return (
+                              <div
+                                key={pousada.id}
+                                className={`bg-white border rounded-2xl overflow-hidden shadow-xs hover:shadow-sm transition-all flex flex-col justify-between group ${
+                                  isSelected ? "border-[#E8711A] ring-1 ring-[#E8711A]/20" : "border-zinc-200"
+                                }`}
+                              >
+                                <div className="h-32 overflow-hidden relative select-none">
+                                  <img
+                                    src={pousada.img}
+                                    alt={pousada.name}
+                                    className="w-full h-full object-cover group-hover:scale-103 transition-transform duration-500"
+                                    referrerPolicy="no-referrer"
+                                  />
+                                  <span className="absolute bottom-2 left-2 bg-[#0D1B2A]/90 text-white text-[8px] font-accent tracking-widest px-2.5 py-1 rounded-sm">
+                                    {pousada.tag}
+                                  </span>
+                                  <div className="absolute top-2 right-2 bg-white/95 text-[#0D1B2A] text-[9px] font-bold px-2 py-0.5 rounded shadow-xs flex items-center gap-0.5">
+                                    <span className="text-yellow-500">★</span>
+                                    <span>{pousada.rating}</span>
+                                  </div>
+                                </div>
+
+                                <div className="p-4 space-y-4 flex-grow flex flex-col justify-between">
+                                  <div className="space-y-1 text-left">
+                                    <span className="text-[9px] uppercase tracking-wider font-extrabold text-zinc-400">{pousada.location}</span>
+                                    <h6 className="font-serif text-sm font-extrabold text-[#0D1B2A] leading-tight group-hover:text-[#E8711A] transition-colors line-clamp-1">
+                                      {pousada.name}
+                                    </h6>
+                                    <p className="font-sans text-[11px] text-zinc-500 leading-relaxed line-clamp-2">
+                                      {pousada.desc}
+                                    </p>
+                                  </div>
+
+                                  <div className="space-y-1.5 pt-2 border-t border-zinc-100">
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        if (onChangeHotelId) {
+                                          onChangeHotelId(isSelected ? null : pousada.id);
+                                        }
+                                      }}
+                                      className={`w-full py-2 rounded-xl font-accent text-[9px] font-extrabold tracking-wider uppercase transition-all flex items-center justify-center gap-1 cursor-pointer ${
+                                        isSelected
+                                          ? "bg-[#E8711A] text-[#0D1B2A] font-black"
+                                          : "bg-[#0D1B2A] hover:bg-[#E8711A] hover:text-[#0D1B2A] text-white"
+                                      }`}
+                                    >
+                                      {isSelected ? "✨ SELECIONADO" : "VINCULAR POUSADA"}
+                                    </button>
+                                  </div>
                                 </div>
                               </div>
-
-                              <div className="p-4 space-y-4 flex-grow flex flex-col justify-between">
-                                <div className="space-y-1 text-left">
-                                  <span className="text-[9px] uppercase tracking-wider font-extrabold text-zinc-400">{pousada.location}</span>
-                                  <h6 className="font-serif text-sm font-extrabold text-[#0D1B2A] leading-tight group-hover:text-[#E8711A] transition-colors line-clamp-1">
-                                    {pousada.name}
-                                  </h6>
-                                  <p className="font-sans text-[11px] text-zinc-500 leading-relaxed line-clamp-2">
-                                    {pousada.desc}
-                                  </p>
-                                </div>
-
-                                <div className="space-y-1.5 pt-2 border-t border-zinc-100">
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      if (onChangeHotelId) {
-                                        onChangeHotelId(isSelected ? null : pousada.id);
-                                      }
-                                    }}
-                                    className={`w-full py-2 rounded-xl font-accent text-[9px] font-extrabold tracking-wider uppercase transition-all flex items-center justify-center gap-1 cursor-pointer ${
-                                      isSelected
-                                        ? "bg-[#E8711A] text-[#0D1B2A] font-black"
-                                        : "bg-[#0D1B2A] hover:bg-[#E8711A] hover:text-[#0D1B2A] text-white"
-                                    }`}
-                                  >
-                                    {isSelected ? "✨ SELECIONADO" : "VINCULAR POUSADA"}
-                                  </button>
-                                </div>
-                              </div>
-                            </div>
-                          );
-                        })}
+                            );
+                          })
+                        )}
                       </div>
                     </div>
                   )}
@@ -1599,7 +1640,14 @@ export default function WizardView({
                 </p>
 
                 {/* Travel Profile Elegant Curated Indicator */}
-                <div className="flex justify-center items-center gap-2 pt-1">
+                <div className="flex flex-wrap justify-center items-center gap-2 pt-1">
+                  {selectedDestObj && (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#E8711A]/8 border border-[#E8711A]/20 rounded-full text-[10px] text-[#0D1B2A] font-bold">
+                      <MapPin className="w-3 h-3 text-[#E8711A]" />
+                      <span className="text-zinc-400 font-medium">Destino:</span>
+                      <span>{selectedDestObj.name}</span>
+                    </span>
+                  )}
                   <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-zinc-100 border border-zinc-200/50 rounded-full text-[10px] text-[#0D1B2A] font-bold">
                     <Sparkles className="w-3 h-3 text-[#E8711A]" />
                     <span className="text-zinc-400 font-medium">Recomendações para:</span>
@@ -1688,7 +1736,7 @@ export default function WizardView({
                   {/* Human Curated Greeting */}
                   <div className="border-b border-zinc-200 pb-3 flex items-center justify-between">
                     <p className="text-xs text-zinc-500 font-medium italic">
-                      Selecione uma atividade principal para preencher o dia com o melhor de Arraial.
+                      Selecione uma atividade principal para preencher o dia com o melhor de {selectedDestObj?.name || "Arraial"}.
                     </p>
                     <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest bg-zinc-150 px-2.5 py-0.5 rounded">
                       {filteredExps.length} opções
@@ -1696,6 +1744,15 @@ export default function WizardView({
                   </div>
 
                   <div className="space-y-6">
+                    {filteredExps.length === 0 && (
+                      <div className="bg-white border border-zinc-200 rounded-3xl p-8 text-center space-y-4">
+                        <MapPin className="w-12 h-12 text-[#E8711A] mx-auto opacity-60 animate-bounce" />
+                        <h3 className="font-serif text-lg font-bold text-[#0D1B2A]">Nenhum passeio ativo cadastrado para {selectedDestObj?.name}</h3>
+                        <p className="text-xs text-zinc-500 max-w-md mx-auto leading-relaxed">
+                          Nossos especialistas em turismo estão mapeando as melhores experiências locais para esta região. Em breve teremos passeios incríveis aqui!
+                        </p>
+                      </div>
+                    )}
                     {filteredExps.map((exp) => {
                       const activePhotoIndex = expPhotoCache[exp.id] || 0;
                       const config = getBookingConfig(exp.id);
