@@ -1,9 +1,9 @@
 import React, { useState } from "react";
-import { Experience, BlogPost, ClientUser, ClientReservation, ClientPartner, GlobalSettings, Destination } from "../types";
+import { Experience, BlogPost, ClientUser, ClientReservation, ClientPartner, GlobalSettings, Destination, SavedItinerary } from "../types";
 import { 
   Compass, Map, Ticket, Star, User, Heart, ChevronRight, 
   MapPin, Clock, Calendar, CheckCircle, Info, Video, Gift, Search,
-  AlertTriangle, ExternalLink, PlayCircle
+  AlertTriangle, ExternalLink, PlayCircle, ClipboardList, Flame, Briefcase
 } from "lucide-react";
 
 interface ClientPanelViewProps {
@@ -16,6 +16,7 @@ interface ClientPanelViewProps {
   userReservations?: ClientReservation[];
   destinations?: Destination[];
   selectedDestinationId?: string | null;
+  savedItinerary?: SavedItinerary | null;
 }
 
 export default function ClientPanelView({ 
@@ -27,10 +28,27 @@ export default function ClientPanelView({
   onLogout,
   userReservations,
   destinations = [],
-  selectedDestinationId
+  selectedDestinationId,
+  savedItinerary
 }: ClientPanelViewProps) {
-  const [activeTab, setActiveTab] = useState<"dashboard" | "viagem" | "dicas" | "beneficios" | "perfil">("dashboard");
+  const [activeTab, setActiveTab] = useState<"dashboard" | "roteiro" | "viagem" | "dicas" | "beneficios" | "perfil">(() => {
+    const stored = localStorage.getItem("guidatrips_saved_itinerary");
+    return stored ? "roteiro" : "dashboard";
+  });
   const [selectedReservationId, setSelectedReservationId] = useState<string | null>(null);
+
+  const resolvedItinerary = savedItinerary || (() => {
+    try {
+      const stored = localStorage.getItem("guidatrips_saved_itinerary");
+      return stored ? JSON.parse(stored) as SavedItinerary : null;
+    } catch {
+      return null;
+    }
+  })();
+
+  const formatBRL = (value: number) => {
+    return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+  };
 
   // Use configured data or fallback to mock
   const clientUser: ClientUser = currentUser || settings?.clientUser || {
@@ -133,6 +151,16 @@ export default function ClientPanelView({
             <Compass className="w-5 h-5 shrink-0 mx-auto md:mx-0" />
             <span className="font-accent text-[8px] md:text-[10px] uppercase tracking-widest block font-bold">Painel</span>
           </button>
+
+          <button
+            onClick={() => setActiveTab("roteiro")}
+            className={`flex flex-col md:flex-row items-center gap-1 md:gap-3 px-2 md:px-4 py-2 md:py-3 rounded text-center md:text-left transition-colors flex-1 md:flex-none ${
+              activeTab === "roteiro" ? "md:bg-[#E8711A] md:text-[#0D1B2A] text-[#E8711A] md:shadow-md md:font-bold" : "text-zinc-400 hover:bg-white/5 hover:text-white"
+            }`}
+          >
+            <ClipboardList className="w-5 h-5 shrink-0 mx-auto md:mx-0" />
+            <span className="font-accent text-[8px] md:text-[10px] uppercase tracking-widest block font-bold">Meu Roteiro</span>
+          </button>
           
           <button
             onClick={() => { setActiveTab("viagem"); setSelectedReservationId(clientReservations[0]?.id || null); }}
@@ -186,6 +214,34 @@ export default function ClientPanelView({
               <h1 className="font-serif text-3xl md:text-4xl font-bold text-[#0D1B2A]">Olá, {clientUser.name.split(" ")[0]}! 🌊</h1>
               <p className="font-sans text-sm text-[#5C6874]">Faltam <strong className="text-[#E8711A]">12 dias</strong> para a sua experiência incrível em {destName} começar.</p>
             </header>
+
+            {/* SAVED ITINERARY PROMINENT ACTION CARD */}
+            {savedItinerary && (
+              <div className="bg-gradient-to-r from-[#FAF8F5] via-[#FCFBF9] to-[#FFF] border-2 border-[#E8711A]/20 rounded-2xl p-6 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative overflow-hidden group">
+                <div className="absolute top-0 right-0 w-36 h-36 bg-[#E8711A]/3 rounded-bl-full pointer-events-none transition-transform group-hover:scale-105 duration-300" />
+                <div className="space-y-3 relative z-10">
+                  <div className="flex items-center gap-2">
+                    <span className="bg-[#E8711A]/10 text-[#E8711A] text-[10px] font-accent uppercase tracking-widest font-black px-2.5 py-1 rounded-sm">
+                      ✨ Roteiro Inteligente Salvo
+                    </span>
+                    <span className="text-zinc-400 text-xs font-mono">• Recém-atualizado</span>
+                  </div>
+                  <h2 className="font-serif text-2xl font-extrabold text-[#0D1B2A] leading-tight">
+                    Seu Roteiro de Viagem para {destName} está salvo!
+                  </h2>
+                  <p className="font-sans text-sm text-[#5C6874] leading-relaxed max-w-2xl">
+                    Período de <strong className="text-[#0D1B2A]">{savedItinerary.arrivalDate ? formatDate(savedItinerary.arrivalDate) : "A definir"}</strong> até <strong className="text-[#0D1B2A]">{savedItinerary.departureDate ? formatDate(savedItinerary.departureDate) : "A definir"}</strong> ({savedItinerary.stayDays} dias) • Perfil: <strong className="capitalize">{savedItinerary.profile}</strong> • <strong className="text-[#0D1B2A]">{savedItinerary.items?.length || 0} passeios</strong> selecionados.
+                  </p>
+                </div>
+                <button
+                  onClick={() => setActiveTab("roteiro")}
+                  className="px-6 py-3 bg-[#0D1B2A] hover:bg-[#E8711A] text-white hover:text-[#0D1B2A] font-accent text-[11px] font-black uppercase tracking-wider rounded-xl transition-all shadow-md group-hover:translate-x-1 shrink-0 flex items-center gap-2 cursor-pointer z-10"
+                >
+                  <span>Visualizar Roteiro Completo</span>
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            )}
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Próximo Passeio Card */}
@@ -258,6 +314,184 @@ export default function ClientPanelView({
                 ))}
               </div>
             </div>
+          </div>
+        )}
+
+        {/* MEU ROTEIRO TAB */}
+        {activeTab === "roteiro" && (
+          <div className="space-y-8 animate-fade-in max-w-5xl mx-auto pb-12">
+            <header className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-zinc-200 pb-6">
+              <div>
+                <h1 className="font-serif text-3xl font-bold text-[#0D1B2A]">Meu Roteiro Inteligente</h1>
+                <p className="font-sans text-sm text-[#5C6874] mt-2">Seu itinerário completo sob medida planejado exclusivamente para sua viagem.</p>
+              </div>
+              {resolvedItinerary && (
+                <button
+                  onClick={() => onNavigate("wizard")}
+                  className="px-4 py-2 border border-[#E8711A] text-[#E8711A] hover:bg-[#E8711A] hover:text-white font-accent text-[10px] font-bold uppercase tracking-widest rounded-lg transition-colors cursor-pointer"
+                >
+                  Refazer ou Ajustar Roteiro 🔄
+                </button>
+              )}
+            </header>
+
+            {!resolvedItinerary ? (
+              <div className="bg-white border border-zinc-200 rounded-2xl p-8 text-center space-y-6 max-w-lg mx-auto shadow-sm">
+                <div className="mx-auto w-16 h-16 rounded-full bg-[#E8711A]/5 flex items-center justify-center text-[#E8711A]">
+                  <ClipboardList className="w-8 h-8" />
+                </div>
+                <div className="space-y-2">
+                  <h3 className="font-serif text-lg font-bold text-[#0D1B2A]">Nenhum Roteiro Encontrado</h3>
+                  <p className="font-sans text-sm text-zinc-500 leading-relaxed">
+                    Você ainda não possui um Roteiro Inteligente salvo. Nosso roteirizador inteligente pode criar um roteiro perfeito para o seu perfil em segundos!
+                  </p>
+                </div>
+                <button
+                  onClick={() => onNavigate("wizard")}
+                  className="px-6 py-3 bg-[#E8711A] hover:bg-[#C45E12] text-white font-accent text-xs font-black tracking-widest uppercase rounded-xl transition-all shadow-sm cursor-pointer"
+                >
+                  Criar Meu Roteiro Inteligente 🚀
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-8">
+                {/* Resumo do Roteiro Header */}
+                <div className="bg-white rounded-2xl border border-zinc-200 p-6 md:p-8 shadow-xs grid grid-cols-2 md:grid-cols-4 gap-6">
+                  <div className="space-y-1">
+                    <span className="text-zinc-400 text-[9px] uppercase tracking-widest font-bold font-sans block">Período da Viagem</span>
+                    <span className="font-serif text-sm font-bold text-[#0D1B2A]">
+                      {resolvedItinerary.arrivalDate ? formatDate(resolvedItinerary.arrivalDate) : "A definir"}<br/>
+                      <span className="text-zinc-400 text-xs font-sans font-medium">até</span> {resolvedItinerary.departureDate ? formatDate(resolvedItinerary.departureDate) : "A definir"}
+                    </span>
+                    <span className="bg-[#E8711A]/5 text-[#E8711A] text-[9px] font-accent font-black uppercase px-2 py-0.5 rounded-sm inline-block mt-1">
+                      {resolvedItinerary.stayDays} dias de duração
+                    </span>
+                  </div>
+
+                  <div className="space-y-1">
+                    <span className="text-zinc-400 text-[9px] uppercase tracking-widest font-bold font-sans block">Perfil de Viagem</span>
+                    <span className="font-serif text-sm font-bold text-[#0D1B2A] flex items-center gap-1.5 capitalize">
+                      <Flame className="w-4 h-4 text-[#E8711A]" />
+                      <span>{resolvedItinerary.profile}</span>
+                    </span>
+                    <span className="text-zinc-500 text-xs font-sans block">Curadoria personalizada</span>
+                  </div>
+
+                  <div className="space-y-1">
+                    <span className="text-zinc-400 text-[9px] uppercase tracking-widest font-bold font-sans block">Hospedagem Selecionada</span>
+                    <span className="font-serif text-sm font-bold text-[#0D1B2A] block line-clamp-1">
+                      {resolvedItinerary.selectedHotelId ? (
+                        experiences.find(e => e.id === resolvedItinerary.selectedHotelId)?.name || "Vila da Praia"
+                      ) : (
+                        "Hospedagem Própria"
+                      )}
+                    </span>
+                    <span className="text-zinc-500 text-xs font-sans block">Ponto de partida dos passeios</span>
+                  </div>
+
+                  <div className="space-y-1">
+                    <span className="text-zinc-400 text-[9px] uppercase tracking-widest font-bold font-sans block">Valor Total Estimado</span>
+                    <span className="font-serif text-lg font-black text-[#E8711A] block">
+                      {formatBRL(resolvedItinerary.totalEstimate)}
+                    </span>
+                    <span className="text-zinc-500 text-[10px] font-sans block">Estilo: Moderado</span>
+                  </div>
+                </div>
+
+                {/* Day-by-day Itinerary Grid */}
+                <div className="space-y-6">
+                  <h2 className="font-serif text-xl font-bold text-[#0D1B2A] flex items-center gap-2">
+                    <Calendar className="w-5 h-5 text-[#E8711A]" />
+                    <span>Seu Cronograma de Atividades</span>
+                  </h2>
+
+                  <div className="space-y-6 relative border-l-2 border-zinc-200 pl-6 ml-4">
+                    {Array.from({ length: resolvedItinerary.stayDays }).map((_, index) => {
+                      const dayNumber = index + 1;
+                      const dayItems = resolvedItinerary.items?.filter(item => item.dayIndex === dayNumber) || [];
+
+                      return (
+                        <div key={dayNumber} className="relative space-y-4">
+                          {/* Dot marker */}
+                          <span className="absolute -left-[31px] top-1.5 w-4.5 h-4.5 rounded-full border-2 border-white bg-[#0D1B2A] text-white flex items-center justify-center font-accent text-[9px] font-bold shadow-xs">
+                            {dayNumber}
+                          </span>
+
+                          <div>
+                            <h3 className="font-serif text-lg font-black text-[#0D1B2A]">
+                              Dia {dayNumber}
+                            </h3>
+                            <p className="font-sans text-xs text-zinc-500 mt-0.5">
+                              {dayItems.length === 0 ? "Dia livre para curtir as praias ou relaxar" : `${dayItems.length} atividade(s) planejada(s)`}
+                            </p>
+                          </div>
+
+                          {dayItems.length === 0 ? (
+                            <div className="bg-[#FAF8F5] border border-zinc-150 rounded-xl p-5 text-sm text-zinc-500 font-sans leading-relaxed flex items-center justify-between">
+                              <span>Fique à vontade para descansar, explorar o comércio local ou mergulhar nas praias da região!</span>
+                              <button
+                                onClick={() => onNavigate("experiencias")}
+                                className="text-xs text-[#E8711A] hover:underline font-bold"
+                              >
+                                Adicionar Passeio &rarr;
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              {dayItems.map((item, idx) => {
+                                const exp = experiences.find(e => e.id === item.experienceId);
+                                return (
+                                  <div key={idx} className="bg-white border border-zinc-200 rounded-xl overflow-hidden shadow-xs flex">
+                                    <div className="w-24 h-24 sm:w-28 sm:h-28 shrink-0 relative bg-zinc-100">
+                                      {exp?.photos?.[0] ? (
+                                        <img src={exp.photos[0]} alt={exp.name} className="w-full h-full object-cover" />
+                                      ) : (
+                                        <div className="w-full h-full bg-[#0D1B2A]/10 text-[#0D1B2A] flex items-center justify-center text-xs">Passeio</div>
+                                      )}
+                                    </div>
+                                    <div className="p-4 flex-1 flex flex-col justify-between min-w-0">
+                                      <div className="space-y-1">
+                                        <h4 className="font-serif text-sm font-bold text-[#0D1B2A] truncate leading-tight leading-none">{exp?.name || "Passeio Customizado"}</h4>
+                                        <div className="flex flex-wrap gap-x-3 gap-y-1 text-[10px] text-zinc-500 font-sans">
+                                          <span className="flex items-center gap-1 font-medium text-[#E8711A]">
+                                            <Clock className="w-3 h-3" />
+                                            <span>{item.schedule || "08:00"}</span>
+                                          </span>
+                                          <span className="flex items-center gap-1">
+                                            <User className="w-3 h-3 text-zinc-400" />
+                                            <span>{(item.adults ?? 2) + (item.children ?? 0)} Integrantes</span>
+                                          </span>
+                                        </div>
+                                      </div>
+                                      {item.observations ? (
+                                        <p className="text-[10px] text-zinc-400 font-sans italic line-clamp-1">"{item.observations}"</p>
+                                      ) : (
+                                        <p className="text-[10px] text-zinc-400 font-sans italic line-clamp-1">"Vagas sendo garantidas pela Guida Trips"</p>
+                                      )}
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Important notices */}
+                <div className="bg-[#FAF8F5] border border-[#E8711A]/20 rounded-xl p-5 space-y-3">
+                  <h3 className="font-serif text-sm font-bold text-[#0D1B2A] flex items-center gap-1.5">
+                    <Info className="w-4 h-4 text-[#E8711A]" />
+                    <span>Garanta sua Viagem com Segurança</span>
+                  </h3>
+                  <p className="font-sans text-xs text-zinc-500 leading-relaxed">
+                    Este roteiro foi sincronizado com seu painel de cliente e está salvo com total segurança. Nossos guias e marinheiros já reservaram horários específicos e mimos exclusivos para sua data de chegada! Caso queira realizar alterações, basta falar diretamente com seu consultor de viagem no WhatsApp a qualquer momento.
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
         )}
 

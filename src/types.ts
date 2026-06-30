@@ -484,6 +484,23 @@ export interface ClientReservation {
   infants?: number;
 }
 
+export interface SavedItinerary {
+  id: string;
+  userId: string;
+  clientName: string;
+  clientPhone: string;
+  clientCity: string;
+  arrivalDate: string;
+  departureDate: string;
+  stayDays: number;
+  budget?: string;
+  profile?: string;
+  selectedHotelId?: string | null;
+  totalEstimate: number;
+  createdAt: string;
+  items: BookingCartItem[];
+}
+
 export interface ClientPartner {
   id: string;
   category: "restaurantes" | "cafeterias" | "fotografos" | "buggy" | "mergulho" | "hospedagem";

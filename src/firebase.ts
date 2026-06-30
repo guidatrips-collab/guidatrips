@@ -4,6 +4,7 @@ import {
   getFirestore, 
   collection, 
   getDocs, 
+  getDoc,
   setDoc, 
   doc, 
   addDoc, 
@@ -112,6 +113,20 @@ const sanitizeData = (data: any): any => {
 
 // Generic service helpers to fetch and write from firestore to make it super elegant in React
 export const firestoreService = {
+  get: async <T>(collectionName: string, id: string): Promise<T | null> => {
+    try {
+      const docRef = doc(db, collectionName, id);
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        return { id: docSnap.id, ...docSnap.data() } as T;
+      }
+      return null;
+    } catch (error) {
+      console.error(`Error fetching document ${collectionName}/${id}:`, error);
+      handleFirestoreError(error, OperationType.GET, `${collectionName}/${id}`);
+    }
+  },
+
   getAll: async <T>(collectionName: string): Promise<T[]> => {
     try {
       const colRef = collection(db, collectionName);

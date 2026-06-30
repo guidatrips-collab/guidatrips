@@ -11,7 +11,7 @@ import {
   Compass, X, ArrowRight, Home, MessageSquare, Hotel, Trash2, 
   CheckCircle2, Bed, Baby, User, ShieldCheck, Map
 } from "lucide-react";
-import { Experience, BookingCartItem, checkSchedulingConflict, getTourScheduleDetails, getBrazilLocalDate, addDaysToBrazilDate, Destination, Accommodation, Lead, ClientReservation } from "../types";
+import { Experience, BookingCartItem, checkSchedulingConflict, getTourScheduleDetails, getBrazilLocalDate, addDaysToBrazilDate, Destination, Accommodation, Lead, ClientReservation, SavedItinerary } from "../types";
 import { firestoreService } from "../firebase";
 import { analytics } from "../lib/analytics";
 import ExperienceMediaGallery from "./ExperienceMediaGallery";
@@ -32,6 +32,7 @@ interface WizardViewProps {
   onChangeHotelId?: (id: string | null) => void;
   whatsappNumber?: string;
   currentUser?: any;
+  onSetCurrentUser?: (user: any) => void;
   onTriggerAuthModal?: (action: { type: string; action: () => void }) => void;
   destinations: Destination[];
   selectedDestinationId: string | null;
@@ -55,6 +56,7 @@ export default function WizardView({
   onChangeHotelId,
   whatsappNumber = "552299887766",
   currentUser,
+  onSetCurrentUser,
   onTriggerAuthModal,
   destinations,
   selectedDestinationId,
@@ -133,15 +135,13 @@ export default function WizardView({
   useEffect(() => {
     if (step !== 7) return;
 
-    setCountdown(5);
+    setCountdown(3);
 
     const interval = setInterval(() => {
       setCountdown((prev) => {
         if (prev <= 1) {
           clearInterval(interval);
-          if (generatedWhatsAppLink) {
-            window.open(generatedWhatsAppLink, "_blank");
-          }
+          onNavigate("cliente");
           return 0;
         }
         return prev - 1;
@@ -149,7 +149,7 @@ export default function WizardView({
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [step, generatedWhatsAppLink]);
+  }, [step, onNavigate]);
 
   // Scroll to top whenever step or currentPlanningDay changes (Roteiro Inteligente UX improvement)
   useEffect(() => {
@@ -408,6 +408,27 @@ export default function WizardView({
         await firestoreService.set("reservations", reservationId, newReservation);
       }
 
+      // Save cohesive SavedItinerary document in Firestore under itineraries collection
+      const itineraryId = `itinerary-${userToSave.id}`;
+      const itineraryData: SavedItinerary = {
+        id: itineraryId,
+        userId: userToSave.id,
+        clientName: userToSave.name || tempName || clientName || "Explorador",
+        clientPhone: userToSave.phone || tempPhone || "Não informado",
+        clientCity: tempCity || "Não informado",
+        arrivalDate: arrivalDate || getBrazilLocalDate(),
+        departureDate: departureDate || getBrazilLocalDate(),
+        stayDays,
+        budget: "Moderado",
+        profile,
+        selectedHotelId,
+        totalEstimate: calculateEstimatedTotal(),
+        createdAt: new Date().toISOString(),
+        items: cart
+      };
+      await firestoreService.set("itineraries", itineraryId, itineraryData);
+      localStorage.setItem("guidatrips_saved_itinerary", JSON.stringify(itineraryData));
+
       // Also ensure a Lead exists for this conversion
       const leadData: Lead = {
         id: `lead-wizard-${userToSave.id}`,
@@ -439,6 +460,86 @@ export default function WizardView({
     const formattedArrival = arrivalDate ? new Date(arrivalDate + "T00:00:00").toLocaleDateString("pt-BR") : "";
     const formattedDeparture = departureDate ? new Date(departureDate + "T00:00:00").toLocaleDateString("pt-BR") : "";
     
+    // 1. Determine active user (or create beautiful guest user in database so they can access their dashboard!)
+    let activeUser = currentUser;
+    if (!activeUser) {
+      const finalName = tempName || clientName || "Explorador";
+      const guestId = `user-guest-${Date.now()}`;
+      const guestEmail = `guest-${Date.now()}@guidatrips.com.br`;
+      const guestUser = {
+        id: guestId,
+        name: finalName,
+        email: guestEmail,
+        password: "guest",
+        phone: tempPhone || "Não informado",
+        photoUrl: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(finalName)}`,
+        preferences: [],
+        favorites: [],
+        createdAt: new Date().toISOString()
+      };
+      
+      try {
+        await firestoreService.set("users", guestId, guestUser);
+        if (onSetCurrentUser) {
+          onSetCurrentUser(guestUser);
+        }
+        localStorage.setItem("guidatrips_logged_in_user", JSON.stringify(guestUser));
+        activeUser = guestUser;
+      } catch (err) {
+        console.error("Erro ao registrar usuário temporário:", err);
+      }
+    }
+
+    // 2. Automatically save all itinerary cart items as reservations in Firestore under this active user
+    if (activeUser) {
+      try {
+        for (let idx = 0; idx < cart.length; idx++) {
+          const item = cart[idx];
+          const exp = experiences.find(e => e.id === item.experienceId);
+          const reservationId = `res-wizard-wa-${Date.now()}-${idx}-${Math.floor(Math.random() * 100)}`;
+          const newReservation: ClientReservation = {
+            id: reservationId,
+            userId: activeUser.id,
+            experienceId: item.experienceId,
+            date: item.date || getBrazilLocalDate(),
+            time: item.schedule || "08:00",
+            adults: item.adults ?? 2,
+            children: item.children ?? 0,
+            infants: item.infants ?? 0,
+            pax: (item.adults ?? 2) + (item.children ?? 0) + (item.infants ?? 0),
+            status: "new",
+            bringItems: exp?.bringItems || ["Filtro Solar", "Toalha de Banho"],
+            avoidItems: exp?.notIncluded || ["Sapatos de Salto"],
+            meetingPoint: exp?.meetingPoint || "A combinar"
+          };
+          await firestoreService.set("reservations", reservationId, newReservation);
+        }
+
+        // Save cohesive SavedItinerary document in Firestore under itineraries collection
+        const itineraryId = `itinerary-${activeUser.id}`;
+        const itineraryData: SavedItinerary = {
+          id: itineraryId,
+          userId: activeUser.id,
+          clientName: activeUser.name || tempName || clientName || "Explorador",
+          clientPhone: activeUser.phone || tempPhone || "Não informado",
+          clientCity: tempCity || "Não informado",
+          arrivalDate: arrivalDate || getBrazilLocalDate(),
+          departureDate: departureDate || getBrazilLocalDate(),
+          stayDays,
+          budget: "Moderado",
+          profile,
+          selectedHotelId,
+          totalEstimate: calculateEstimatedTotal(),
+          createdAt: new Date().toISOString(),
+          items: cart
+        };
+        await firestoreService.set("itineraries", itineraryId, itineraryData);
+        localStorage.setItem("guidatrips_saved_itinerary", JSON.stringify(itineraryData));
+      } catch (saveErr) {
+        console.error("Erro ao salvar reservas ou roteiro de WhatsApp no Firestore:", saveErr);
+      }
+    }
+
     // Create detailed Lead BEFORE opening WhatsApp
     const leadId = `lead-wizard-wa-${Date.now()}`;
     const leadData: Lead = {
@@ -1952,10 +2053,10 @@ export default function WizardView({
                 {/* Confirmations Messages */}
                 <div className="space-y-3">
                   <h2 className="font-serif text-3.5xl font-extrabold text-[#0D1B2A] leading-tight">
-                    Perfeito! Seu roteiro foi recebido com sucesso.
+                    🎉 Seu roteiro foi enviado com sucesso!
                   </h2>
                   <p className="text-sm text-zinc-500 font-sans leading-relaxed">
-                    Estamos abrindo nosso WhatsApp para que nossa equipe de especialistas continue seu atendimento de forma totalmente personalizada.
+                    Estamos preparando seu atendimento e liberando seu acesso ao painel.
                   </p>
                 </div>
 
@@ -1963,7 +2064,7 @@ export default function WizardView({
                 <div className="space-y-4 py-2">
                   <div className="flex justify-between items-center text-xs text-zinc-400 font-bold uppercase tracking-wider">
                     <span>Progresso do Envio</span>
-                    <span>{countdown > 0 ? `Redirecionando em ${countdown}s...` : "Pronto!"}</span>
+                    <span>{countdown > 0 ? `Acessando painel em ${countdown}s...` : "Pronto!"}</span>
                   </div>
                   
                   {/* Progress bar loader */}
@@ -1971,7 +2072,7 @@ export default function WizardView({
                     <motion.div
                       initial={{ width: "0%" }}
                       animate={{ width: "100%" }}
-                      transition={{ duration: 5, ease: "linear" }}
+                      transition={{ duration: 3, ease: "linear" }}
                       className="h-full bg-[#E8711A]"
                     />
                   </div>

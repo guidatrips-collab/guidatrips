@@ -24,7 +24,7 @@ import { LeadCaptureModal } from "./components/LeadCaptureModal";
 import { analytics } from "./lib/analytics";
 
 import { 
-  Experience, BlogPost, Lead, GlobalSettings, BookingCartItem, ClientUser, ClientReservation,
+  Experience, BlogPost, Lead, GlobalSettings, BookingCartItem, ClientUser, ClientReservation, SavedItinerary,
   getBrazilLocalDate, addDaysToBrazilDate, Destination, Accommodation, LeadHistoryItem
 } from "./types";
 import { 
@@ -73,10 +73,52 @@ export default function App() {
     fetchReservations();
   }, [currentUser]);
 
+  const [savedItinerary, setSavedItinerary] = useState<SavedItinerary | null>(() => {
+    try {
+      const stored = localStorage.getItem("guidatrips_saved_itinerary");
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      return null;
+    }
+  });
+
+  // Sync load of itinerary from Firestore
+  useEffect(() => {
+    const fetchItinerary = async () => {
+      if (!currentUser) {
+        return;
+      }
+      try {
+        const itineraryId = `itinerary-${currentUser.id}`;
+        const docSnap = await firestoreService.get<SavedItinerary>("itineraries", itineraryId);
+        if (docSnap) {
+          setSavedItinerary(docSnap);
+          localStorage.setItem("guidatrips_saved_itinerary", JSON.stringify(docSnap));
+        } else {
+          // If not in Firestore, but we have one in localStorage, save it under this user
+          const stored = localStorage.getItem("guidatrips_saved_itinerary");
+          if (stored) {
+            const parsed = JSON.parse(stored) as SavedItinerary;
+            parsed.userId = currentUser.id;
+            parsed.id = `itinerary-${currentUser.id}`;
+            await firestoreService.set("itineraries", parsed.id, parsed);
+            setSavedItinerary(parsed);
+            localStorage.setItem("guidatrips_saved_itinerary", JSON.stringify(parsed));
+          }
+        }
+      } catch (err) {
+        console.error("Error loading user itinerary from Firestore:", err);
+      }
+    };
+    fetchItinerary();
+  }, [currentUser]);
+
   const handleLogout = () => {
     setCurrentUser(null);
     localStorage.removeItem("guidatrips_logged_in_user");
     setUserReservations([]);
+    setSavedItinerary(null);
+    localStorage.removeItem("guidatrips_saved_itinerary");
     setCurrentView("home");
   };
 
@@ -968,6 +1010,7 @@ export default function App() {
             onChangeHotelId={handleUpdateHotelId}
             whatsappNumber={settings.whatsappNumber}
             currentUser={currentUser}
+            onSetCurrentUser={setCurrentUser}
             onTriggerAuthModal={handleTriggerAuthModalForCheckout}
             destinations={destinations}
             selectedDestinationId={selectedDestinationId}
@@ -1029,6 +1072,7 @@ export default function App() {
             userReservations={userReservations}
             destinations={destinations}
             selectedDestinationId={selectedDestinationId}
+            savedItinerary={savedItinerary}
           />
         )}
         {currentView === "roteiro" && (
