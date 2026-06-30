@@ -19,6 +19,7 @@ interface RoteiroViewProps {
   stayDays: number;
   clientName: string;
   clientCity: string;
+  clientPhone: string;
   whatsappNumber: string;
   onUpdateStayDays: (days: number) => void;
   onRemoveFromCart: (index: number) => void;
@@ -27,6 +28,7 @@ interface RoteiroViewProps {
   onAddToCart: (item: BookingCartItem) => void;
   onSetClientName: (name: string) => void;
   onSetClientCity: (city: string) => void;
+  onSetClientPhone: (phone: string) => void;
   onTriggerWhatsapp: () => void;
   onNavigate: (view: string) => void;
   selectedHotelId?: string | null;
@@ -39,6 +41,7 @@ export default function RoteiroView({
   stayDays,
   clientName,
   clientCity,
+  clientPhone,
   whatsappNumber,
   onUpdateStayDays,
   onRemoveFromCart,
@@ -47,6 +50,7 @@ export default function RoteiroView({
   onAddToCart,
   onSetClientName,
   onSetClientCity,
+  onSetClientPhone,
   onTriggerWhatsapp,
   onNavigate,
   selectedHotelId = null,
@@ -1058,6 +1062,19 @@ export default function RoteiroView({
                     />
                   </div>
 
+                  {/* Phone/WhatsApp Input - Large and bold */}
+                  <div className="space-y-1">
+                    <label className="text-xs text-[#0D1B2A] block font-bold">Seu WhatsApp / Telefone *</label>
+                    <input
+                      type="tel"
+                      required
+                      placeholder="Ex: (21) 99999-9999"
+                      value={clientPhone}
+                      onChange={(e) => onSetClientPhone(e.target.value)}
+                      className="w-full bg-zinc-50 border border-zinc-200 p-3.5 text-sm text-[#0D1B2A] rounded-2xl focus:outline-none focus:border-[#E8711A] focus:bg-white transition-colors h-12"
+                    />
+                  </div>
+
                   {/* City Input - Large and bold */}
                   <div className="space-y-1">
                     <label className="text-xs text-[#0D1B2A] block font-bold">De qual cidade você vem? *</label>
@@ -1121,9 +1138,9 @@ export default function RoteiroView({
                 <div className="space-y-3.5">
                   <button
                     onClick={onTriggerWhatsapp}
-                    disabled={!clientName.trim() || !clientCity.trim()}
+                    disabled={!clientName.trim() || !clientCity.trim() || !clientPhone.trim()}
                     className={`w-full py-4 text-center font-bold tracking-wide rounded-2xl shadow-md transition-all flex items-center justify-center gap-2 h-14 cursor-pointer text-sm ${
-                      clientName.trim() && clientCity.trim()
+                      clientName.trim() && clientCity.trim() && clientPhone.trim()
                         ? "bg-[#E8711A] hover:bg-[#0D1B2A] text-[#0D1B2A] hover:text-white"
                         : "bg-zinc-100 text-zinc-400 border border-zinc-200 cursor-not-allowed shadow-none"
                     }`}

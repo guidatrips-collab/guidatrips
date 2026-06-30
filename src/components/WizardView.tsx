@@ -1978,7 +1978,7 @@ export default function WizardView({
                 </div>
 
                 {/* Call to Action Button */}
-                <div className="space-y-3">
+                <div className="space-y-4">
                   <a
                     href={generatedWhatsAppLink}
                     target="_blank"
@@ -1987,8 +1987,16 @@ export default function WizardView({
                   >
                     Abrir WhatsApp 💬
                   </a>
-                  <p className="text-[11px] text-zinc-400 font-sans">
-                    Caso o WhatsApp não abra automaticamente, por favor clique no botão acima para iniciar a conversa.
+                  
+                  <button
+                    onClick={() => onNavigate("cliente")}
+                    className="w-full py-4 bg-[#0D1B2A] hover:bg-[#E8711A] text-white hover:text-[#0D1B2A] font-accent text-sm font-black tracking-wider uppercase rounded-2xl transition-all shadow-md flex items-center justify-center gap-2 hover:scale-102 cursor-pointer"
+                  >
+                    Acessar meu painel 🚀
+                  </button>
+
+                  <p className="text-xs text-zinc-500 font-sans leading-relaxed">
+                    No painel, você poderá ver seu roteiro, acompanhar suas informações e acessar tudo o que foi preparado para sua viagem.
                   </p>
                 </div>
 

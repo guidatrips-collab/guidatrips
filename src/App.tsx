@@ -18,6 +18,7 @@ import RoteiroView from "./components/RoteiroView";
 import WizardView from "./components/WizardView";
 import ClientPanelView from "./components/ClientPanelView";
 import ClientAuthModal from "./components/ClientAuthModal";
+import ConfirmacaoRoteiroView from "./components/ConfirmacaoRoteiroView";
 import { GuidaOS } from "./os/GuidaOS";
 import { LeadCaptureModal } from "./components/LeadCaptureModal";
 import { analytics } from "./lib/analytics";
@@ -175,6 +176,12 @@ export default function App() {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [clientName, setClientName] = useState("");
   const [clientCity, setClientCity] = useState("");
+  const [clientPhone, setClientPhone] = useState("");
+  const [lastItineraryRecap, setLastItineraryRecap] = useState<{
+    clientName: string;
+    itemsCount: number;
+    totalEstimate: number;
+  } | null>(null);
 
   // Selected hotel in the itinerary
   const [selectedHotelId, setSelectedHotelId] = useState<string | null>(() => {
@@ -645,7 +652,7 @@ export default function App() {
   };
 
   // Build beautiful WhatsApp message according to spec section 7, day-by-day sequence
-  const handleTriggerWhatsapp = () => {
+  const handleTriggerWhatsapp = async () => {
     if (cart.length === 0 && !selectedHotelId) return;
 
     // Calculate total estimate
@@ -753,23 +760,109 @@ export default function App() {
     textMessage += `💰 *Valor Estimado do Roteiro:* R$ ${totalEstimate.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}\n\n`;
     textMessage += `Por favor, confirmem a disponibilidade das vagas e os valores para finalizarmos! Obrigado!`;
 
-    // Also register this WhatsApp click event as a Lead in our Admin Dashboard CRM to keep metrics active!
+    // 1. Determine active user (or create beautiful guest user in database so they can access their dashboard!)
+    let activeUser = currentUser;
+    if (!activeUser) {
+      const guestId = `user-guest-${Date.now()}`;
+      const guestEmail = `guest-${Date.now()}@guidatrips.com.br`;
+      const guestUser = {
+        id: guestId,
+        name: finalName,
+        email: guestEmail,
+        password: "guest",
+        phone: clientPhone || "Não informado",
+        photoUrl: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(finalName)}`,
+        preferences: [],
+        favorites: [],
+        createdAt: new Date().toISOString()
+      };
+      
+      try {
+        await firestoreService.set("users", guestId, guestUser);
+        setCurrentUser(guestUser);
+        localStorage.setItem("guidatrips_logged_in_user", JSON.stringify(guestUser));
+        activeUser = guestUser;
+      } catch (err) {
+        console.error("Erro ao registrar usuário temporário:", err);
+      }
+    }
+
+    // 2. Automatically save all itinerary cart items as reservations in Firestore under this active user
+    if (activeUser) {
+      for (let idx = 0; idx < cart.length; idx++) {
+        const item = cart[idx];
+        const exp = experiences.find(e => e.id === item.experienceId);
+        const reservationId = `res-roteiro-${Date.now()}-${idx}-${Math.floor(Math.random() * 100)}`;
+        const newReservation: ClientReservation = {
+          id: reservationId,
+          userId: activeUser.id,
+          experienceId: item.experienceId,
+          date: item.date || new Date().toISOString().split("T")[0],
+          time: item.schedule || "08:00",
+          pax: (item.adults ?? 2) + (item.children ?? 0) + (item.infants ?? 0),
+          adults: item.adults ?? 2,
+          children: item.children ?? 0,
+          infants: item.infants ?? 0,
+          status: "new",
+          bringItems: exp?.bringItems || ["Filtro Solar", "Toalha de Banho"],
+          avoidItems: exp?.notIncluded || ["Sapatos de Salto"],
+          meetingPoint: exp?.meetingPoint || "A combinar"
+        };
+        try {
+          await firestoreService.set("reservations", reservationId, newReservation);
+        } catch (dbErr) {
+          console.error("Erro ao salvar reserva no banco:", dbErr);
+        }
+      }
+    }
+
+    // 3. Register this WhatsApp click event as a Lead in our Admin Dashboard CRM to keep metrics active!
     const waLead: Lead = {
       id: `lead-wa-${Date.now()}`,
       name: finalName,
-      phone: "Informado no WhatsApp",
-      email: "Enviado via WhatsApp",
+      phone: clientPhone || "Informado no WhatsApp",
+      email: activeUser?.email || "Enviado via WhatsApp",
       experienceInterest: cart.map(item => item.experienceId),
       preferredDate: cart[0]?.date,
       groupSize: cart.reduce((acc, item) => acc + item.people, 0),
       origin: "whatsapp",
       status: "novo",
-      notes: [`Cliente originou contato WhatsApp com roteiro de ${cart.length} itens. Origem: ${finalCity}. Estadia: ${stayDays} dias. Escrito dia a dia.`],
-      history: [],
+      history: [
+        {
+          id: `hist-${Date.now()}`,
+          timestamp: new Date().toISOString(),
+          type: "status_change",
+          description: `Solicitação de Roteiro via WhatsApp. Origem: ${finalCity}. Estadia de ${stayDays} dias.`
+        }
+      ],
       createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
+      notes: [
+        `Cliente originou contato WhatsApp com roteiro de ${cart.length} itens.`,
+        `Origem: ${finalCity}`,
+        `Estadia: ${stayDays} dias.`,
+        `Data/Horário da solicitação: ${new Date().toLocaleString("pt-BR")}`,
+        `Total estimado: R$ ${totalEstimate.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`,
+        `Atividades diárias:\n` + cart.map(item => {
+          const exp = experiences.find(e => e.id === item.experienceId);
+          return `- Dia ${item.dayIndex}: ${exp?.name || "Passeio"} às ${item.schedule} (${item.adults} adultos, ${item.children} crianças)`;
+        }).join('\n')
+      ]
     };
+
+    try {
+      await firestoreService.set("leads", waLead.id, waLead);
+    } catch (dbErr) {
+      console.error("Erro ao salvar lead no banco de dados:", dbErr);
+    }
     updateLeads([waLead, ...leads]);
+
+    // Store recap details for confirmation view
+    setLastItineraryRecap({
+      clientName: finalName,
+      itemsCount: cart.length,
+      totalEstimate: totalEstimate
+    });
 
     const formattedNumber = settings.whatsappNumber.replace(/\D/g, "");
     const waUrl = `https://wa.me/${formattedNumber}?text=${encodeURIComponent(textMessage)}`;
@@ -779,8 +872,11 @@ export default function App() {
     localStorage.removeItem("guidatrips_cart");
     setIsCartOpen(false);
     
-    // Redirect
+    // Open WhatsApp
     window.open(waUrl, "_blank");
+
+    // Redirect immediately to confirmation view
+    setCurrentView("confirmacao-roteiro");
   };
 
   if (currentView === "os") {
@@ -942,6 +1038,7 @@ export default function App() {
             stayDays={stayDays}
             clientName={clientName}
             clientCity={clientCity}
+            clientPhone={clientPhone}
             whatsappNumber={settings.whatsappNumber}
             onUpdateStayDays={updateStayDays}
             onRemoveFromCart={handleRemoveFromCart}
@@ -950,10 +1047,19 @@ export default function App() {
             onAddToCart={handleAddToCart}
             onSetClientName={setClientName}
             onSetClientCity={setClientCity}
+            onSetClientPhone={setClientPhone}
             onTriggerWhatsapp={handleTriggerWhatsapp}
             onNavigate={handleNavigate}
             selectedHotelId={selectedHotelId}
             onChangeHotelId={handleUpdateHotelId}
+          />
+        )}
+        {currentView === "confirmacao-roteiro" && (
+          <ConfirmacaoRoteiroView
+            onNavigate={handleNavigate}
+            clientName={lastItineraryRecap?.clientName}
+            totalEstimate={lastItineraryRecap?.totalEstimate}
+            itemsCount={lastItineraryRecap?.itemsCount}
           />
         )}
       </main>
