@@ -499,6 +499,8 @@ export interface SavedItinerary {
   totalEstimate: number;
   createdAt: string;
   items: BookingCartItem[];
+  destinationName?: string;
+  status?: "Aguardando atendimento" | "Em negociação" | "Confirmado";
 }
 
 export interface ClientPartner {

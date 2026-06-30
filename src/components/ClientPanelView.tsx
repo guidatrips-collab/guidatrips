@@ -119,6 +119,20 @@ export default function ClientPanelView({
     }
   };
 
+  const getItineraryDateLabel = (dateStr?: string) => {
+    if (!dateStr) return "Criado hoje";
+    try {
+      const createdDate = new Date(dateStr);
+      const today = new Date();
+      if (createdDate.toDateString() === today.toDateString()) {
+        return "Criado hoje";
+      }
+      return `Criado em ${createdDate.toLocaleDateString("pt-BR")}`;
+    } catch {
+      return "Criado hoje";
+    }
+  };
+
   const currentReservation = selectedReservationId 
     ? clientReservations.find(r => r.id === selectedReservationId)
     : clientReservations[0];
@@ -216,30 +230,73 @@ export default function ClientPanelView({
             </header>
 
             {/* SAVED ITINERARY PROMINENT ACTION CARD */}
-            {savedItinerary && (
-              <div className="bg-gradient-to-r from-[#FAF8F5] via-[#FCFBF9] to-[#FFF] border-2 border-[#E8711A]/20 rounded-2xl p-6 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative overflow-hidden group">
-                <div className="absolute top-0 right-0 w-36 h-36 bg-[#E8711A]/3 rounded-bl-full pointer-events-none transition-transform group-hover:scale-105 duration-300" />
-                <div className="space-y-3 relative z-10">
-                  <div className="flex items-center gap-2">
-                    <span className="bg-[#E8711A]/10 text-[#E8711A] text-[10px] font-accent uppercase tracking-widest font-black px-2.5 py-1 rounded-sm">
-                      ✨ Roteiro Inteligente Salvo
-                    </span>
-                    <span className="text-zinc-400 text-xs font-mono">• Recém-atualizado</span>
+            {resolvedItinerary && (
+              <div className="bg-white border border-zinc-200 rounded-2xl overflow-hidden shadow-xs hover:shadow-md transition-all">
+                <div className="bg-gradient-to-r from-[#FAF8F5] via-[#FCFBF9] to-white p-6 md:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative">
+                  <div className="absolute top-0 right-0 w-48 h-48 bg-[#E8711A]/2 rounded-bl-full pointer-events-none" />
+                  
+                  <div className="space-y-4 relative z-10 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="bg-[#E8711A]/10 text-[#E8711A] text-[9px] font-accent uppercase tracking-widest font-black px-2.5 py-1 rounded-md">
+                        🗺️ Roteiro Ativo
+                      </span>
+                      <span className="bg-zinc-100 text-zinc-600 text-[9px] font-sans px-2.5 py-1 rounded-md font-bold">
+                        {getItineraryDateLabel(resolvedItinerary.createdAt)}
+                      </span>
+                      
+                      <span className={`text-[10px] font-accent font-black uppercase tracking-wider px-2.5 py-1 rounded-md border flex items-center gap-1.5 ${
+                        resolvedItinerary.status === "Confirmado"
+                          ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                          : resolvedItinerary.status === "Em negociação"
+                          ? "bg-blue-50 text-blue-700 border-blue-200"
+                          : "bg-amber-50 text-amber-700 border-amber-200"
+                      }`}>
+                        <span className={`w-1.5 h-1.5 rounded-full ${
+                          resolvedItinerary.status === "Confirmado"
+                            ? "bg-emerald-500"
+                            : resolvedItinerary.status === "Em negociação"
+                            ? "bg-blue-500"
+                            : "bg-amber-500 animate-pulse"
+                        }`} />
+                        <span>Status: {resolvedItinerary.status || "Aguardando atendimento"}</span>
+                      </span>
+                    </div>
+
+                    <div className="space-y-1">
+                      <h2 className="font-serif text-2.5xl font-black text-[#0D1B2A] leading-tight">
+                        Roteiro {resolvedItinerary.destinationName || destName}
+                      </h2>
+                      <p className="font-sans text-sm text-[#5C6874] leading-relaxed max-w-3xl">
+                        Duração de <strong className="text-[#0D1B2A]">{resolvedItinerary.stayDays} dias</strong> • Período: <strong className="text-[#0D1B2A]">{resolvedItinerary.arrivalDate ? formatDate(resolvedItinerary.arrivalDate) : "A definir"}</strong> até <strong className="text-[#0D1B2A]">{resolvedItinerary.departureDate ? formatDate(resolvedItinerary.departureDate) : "A definir"}</strong> • Perfil: <strong className="capitalize">{resolvedItinerary.profile || "Explorador"}</strong> • Contém <strong className="text-[#0D1B2A]">{resolvedItinerary.items?.length || 0} passeios selecionados</strong>.
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-2 max-w-lg pt-2">
+                      <div className="space-y-1">
+                        <div className="h-1 bg-[#E8711A] rounded-full" />
+                        <span className="text-[9px] font-accent uppercase tracking-wider font-bold text-[#E8711A]">Solicitado</span>
+                      </div>
+                      <div className="space-y-1">
+                        <div className={`h-1 rounded-full ${resolvedItinerary.status === "Em negociação" || resolvedItinerary.status === "Confirmado" ? "bg-blue-500" : "bg-zinc-200"}`} />
+                        <span className={`text-[9px] font-accent uppercase tracking-wider font-bold ${resolvedItinerary.status === "Em negociação" || resolvedItinerary.status === "Confirmado" ? "text-blue-500" : "text-zinc-400"}`}>Em Negociação</span>
+                      </div>
+                      <div className="space-y-1">
+                        <div className={`h-1 rounded-full ${resolvedItinerary.status === "Confirmado" ? "bg-emerald-500" : "bg-zinc-200"}`} />
+                        <span className={`text-[9px] font-accent uppercase tracking-wider font-bold ${resolvedItinerary.status === "Confirmado" ? "text-emerald-500" : "text-zinc-400"}`}>Confirmado</span>
+                      </div>
+                    </div>
                   </div>
-                  <h2 className="font-serif text-2xl font-extrabold text-[#0D1B2A] leading-tight">
-                    Seu Roteiro de Viagem para {destName} está salvo!
-                  </h2>
-                  <p className="font-sans text-sm text-[#5C6874] leading-relaxed max-w-2xl">
-                    Período de <strong className="text-[#0D1B2A]">{savedItinerary.arrivalDate ? formatDate(savedItinerary.arrivalDate) : "A definir"}</strong> até <strong className="text-[#0D1B2A]">{savedItinerary.departureDate ? formatDate(savedItinerary.departureDate) : "A definir"}</strong> ({savedItinerary.stayDays} dias) • Perfil: <strong className="capitalize">{savedItinerary.profile}</strong> • <strong className="text-[#0D1B2A]">{savedItinerary.items?.length || 0} passeios</strong> selecionados.
-                  </p>
+
+                  <div className="flex flex-col sm:flex-row gap-3 relative z-10 shrink-0">
+                    <button
+                      onClick={() => setActiveTab("roteiro")}
+                      className="px-6 py-3.5 bg-[#0D1B2A] hover:bg-[#E8711A] text-white hover:text-[#0D1B2A] font-accent text-[11px] font-black uppercase tracking-wider rounded-xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer"
+                    >
+                      <span>Abrir Roteiro Completo</span>
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
-                <button
-                  onClick={() => setActiveTab("roteiro")}
-                  className="px-6 py-3 bg-[#0D1B2A] hover:bg-[#E8711A] text-white hover:text-[#0D1B2A] font-accent text-[11px] font-black uppercase tracking-wider rounded-xl transition-all shadow-md group-hover:translate-x-1 shrink-0 flex items-center gap-2 cursor-pointer z-10"
-                >
-                  <span>Visualizar Roteiro Completo</span>
-                  <ChevronRight className="w-4 h-4" />
-                </button>
               </div>
             )}
 

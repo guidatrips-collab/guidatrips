@@ -409,6 +409,9 @@ export default function WizardView({
       }
 
       // Save cohesive SavedItinerary document in Firestore under itineraries collection
+      const destObj = destinations.find(d => d.id === selectedDestinationId);
+      const destName = destObj?.name || "Arraial do Cabo";
+
       const itineraryId = `itinerary-${userToSave.id}`;
       const itineraryData: SavedItinerary = {
         id: itineraryId,
@@ -424,7 +427,9 @@ export default function WizardView({
         selectedHotelId,
         totalEstimate: calculateEstimatedTotal(),
         createdAt: new Date().toISOString(),
-        items: cart
+        items: cart,
+        destinationName: destName,
+        status: "Aguardando atendimento"
       };
       await firestoreService.set("itineraries", itineraryId, itineraryData);
       localStorage.setItem("guidatrips_saved_itinerary", JSON.stringify(itineraryData));
@@ -516,6 +521,9 @@ export default function WizardView({
         }
 
         // Save cohesive SavedItinerary document in Firestore under itineraries collection
+        const destObj = destinations.find(d => d.id === selectedDestinationId);
+        const destName = destObj?.name || "Arraial do Cabo";
+
         const itineraryId = `itinerary-${activeUser.id}`;
         const itineraryData: SavedItinerary = {
           id: itineraryId,
@@ -531,7 +539,9 @@ export default function WizardView({
           selectedHotelId,
           totalEstimate: calculateEstimatedTotal(),
           createdAt: new Date().toISOString(),
-          items: cart
+          items: cart,
+          destinationName: destName,
+          status: "Aguardando atendimento"
         };
         await firestoreService.set("itineraries", itineraryId, itineraryData);
         localStorage.setItem("guidatrips_saved_itinerary", JSON.stringify(itineraryData));
