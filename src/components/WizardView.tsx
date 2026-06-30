@@ -110,10 +110,14 @@ export default function WizardView({
   // Save Name / City to parent components for CRM leads sync
   const [tempName, setTempName] = useState(clientName || "");
   const [tempCity, setTempCity] = useState(clientCity || "");
+  const [tempPhone, setTempPhone] = useState("");
+  const [generatedWhatsAppLink, setGeneratedWhatsAppLink] = useState("");
+  const [countdown, setCountdown] = useState<number>(5);
 
   useEffect(() => {
     if (currentUser) {
       if (!tempName && currentUser.name) setTempName(currentUser.name);
+      if (!tempPhone && currentUser.phone) setTempPhone(currentUser.phone);
     }
   }, [currentUser]);
 
@@ -124,6 +128,28 @@ export default function WizardView({
   useEffect(() => {
     if (onSetClientCity) onSetClientCity(tempCity);
   }, [tempCity]);
+
+  // Handle step 7 auto-redirect countdown
+  useEffect(() => {
+    if (step !== 7) return;
+
+    setCountdown(5);
+
+    const interval = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          if (generatedWhatsAppLink) {
+            window.open(generatedWhatsAppLink, "_blank");
+          }
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [step, generatedWhatsAppLink]);
 
   // Scroll to top whenever step or currentPlanningDay changes (Roteiro Inteligente UX improvement)
   useEffect(() => {
@@ -413,31 +439,53 @@ export default function WizardView({
     const formattedArrival = arrivalDate ? new Date(arrivalDate + "T00:00:00").toLocaleDateString("pt-BR") : "";
     const formattedDeparture = departureDate ? new Date(departureDate + "T00:00:00").toLocaleDateString("pt-BR") : "";
     
-    // Create Lead BEFORE opening WhatsApp
+    // Create detailed Lead BEFORE opening WhatsApp
     const leadId = `lead-wizard-wa-${Date.now()}`;
     const leadData: Lead = {
       id: leadId,
-      name: clientName || tempName || "Explorador Anônimo",
+      name: tempName || clientName || "Explorador Anônimo",
       email: "Enviado via WhatsApp",
-      phone: "Informado via WhatsApp",
+      phone: tempPhone || "Informado via WhatsApp",
       experienceInterest: cart.map(item => item.experienceId),
       status: "novo",
       origin: "whatsapp",
-      metadata: analytics.getAttributionData().metadata,
-      history: [],
+      metadata: {
+        ...analytics.getAttributionData().metadata,
+        city: tempCity || undefined
+      },
+      history: [
+        {
+          id: `hist-${Date.now()}`,
+          timestamp: new Date().toISOString(),
+          type: "status_change",
+          description: "Criado via Roteiro Inteligente: O cliente finalizou a montagem de seu Roteiro Inteligente e solicitou atendimento via WhatsApp."
+        }
+      ],
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       notes: [
-        `Roteiro planejado via Wizard.`,
-        `Período: ${formattedArrival} - ${formattedDeparture}`,
-        `Hospedagem vinculada: ${selectedHotelId || "Não"}`,
-        `Total estimado: ${formatBRL(calculateEstimatedTotal())}`
+        `Roteiro Inteligente personalizado criado com sucesso!`,
+        `Período: ${formattedArrival} - ${formattedDeparture} (${stayDays} dias)`,
+        `Grupo: ${adults} Adultos, ${children} Crianças, ${infants} Bebês`,
+        `Perfil de Preferências: ${profile.toUpperCase()}`,
+        `Hospedagem vinculada: ${selectedHotelId ? (hotels.find(h => h.id === selectedHotelId)?.name || "Sim") : "Não (possui própria)"}`,
+        `Total estimado: ${formatBRL(calculateEstimatedTotal())}`,
+        `Atividades diárias:\n` + cart.map(item => {
+          const exp = experiences.find(e => e.id === item.experienceId);
+          return `- Dia ${item.dayIndex}: ${exp?.name || "Passeio"} às ${item.schedule} (${item.adults} adultos, ${item.children} crianças)`;
+        }).join('\n')
       ]
     };
-    await firestoreService.set("leads", leadId, leadData);
+
+    try {
+      await firestoreService.set("leads", leadId, leadData);
+    } catch (dbErr) {
+      console.error("Erro ao salvar lead no banco de dados:", dbErr);
+    }
 
     let text = `Olá Guida Trips! Acabo de planejar meu Roteiro Inteligente no site:\n\n`;
-    text += `👤 *Nome:* ${clientName || tempName || "Explorador"}\n`;
+    text += `👤 *Nome:* ${tempName || clientName || "Explorador"}\n`;
+    text += `📞 *WhatsApp:* ${tempPhone || "Não informado"}\n`;
     text += `📍 *Origem:* ${tempCity || "Não informado"}\n`;
     text += `🗓 *Período:* ${formattedArrival} até ${formattedDeparture} (${stayDays} dias)\n`;
     text += `👥 *Passageiros:* ${adults} Adultos, ${children} Crianças, ${infants} Bebês\n`;
@@ -469,6 +517,11 @@ export default function WizardView({
 
     const encoded = encodeURIComponent(text);
     const link = `https://wa.me/${whatsappNumber}?text=${encoded}`;
+    
+    setGeneratedWhatsAppLink(link);
+    setStep(7); // Show confirmation view
+    
+    // Attempt to open WhatsApp automatically right away
     window.open(link, "_blank");
   };
 
@@ -705,79 +758,87 @@ export default function WizardView({
       </div>
       
       {/* Dynamic Sub-header Navigation Stepper */}
-      <div className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-zinc-200 py-3 px-4 shadow-xs text-left">
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <button 
-            onClick={() => {
-              if (step > 1) {
-                setStep(step - 1);
-              } else {
-                onNavigate("home");
-              }
-            }}
-            className="flex items-center gap-1 text-zinc-500 hover:text-[#E8711A] text-xs font-bold uppercase transition-all py-1.5 px-3 hover:bg-zinc-100 rounded-full cursor-pointer"
-          >
-            <ChevronLeft className="w-4 h-4" />
-            <span>{step === 1 ? "Início" : "Voltar"}</span>
-          </button>
+      {step > 0 && step < 7 && (
+        <div className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-zinc-200 py-3 px-4 shadow-xs text-left">
+          <div className="max-w-6xl mx-auto flex items-center justify-between">
+            <button 
+              onClick={() => {
+                if (step > 1) {
+                  setStep(step - 1);
+                } else {
+                  onNavigate("home");
+                }
+              }}
+              className="flex items-center gap-1 text-zinc-500 hover:text-[#E8711A] text-xs font-bold uppercase transition-all py-1.5 px-3 hover:bg-zinc-100 rounded-full cursor-pointer"
+            >
+              <ChevronLeft className="w-4 h-4" />
+              <span>{step === 1 ? "Início" : "Voltar"}</span>
+            </button>
 
-          {/* Stepper text and markers */}
-          <div className="hidden md:flex items-center gap-3">
-            {[
-              { num: 1, label: "Perfil" },
-              { num: 2, label: "Datas" },
-              { num: 3, label: "Grupo" },
-              { num: 4, label: "Hospedagem" },
-              { num: 5, label: "Montar Roteiro" },
-              { num: 6, label: "Finalização" }
-            ].map((s) => (
-              <div key={s.num} className="flex items-center gap-1.5">
-                <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-black ${
-                  step === s.num
-                    ? "bg-[#0D1B2A] text-white ring-2 ring-[#0D1B2A]/10 scale-105 font-bold"
-                    : step > s.num
-                      ? "bg-emerald-500 text-white font-bold"
-                      : "bg-zinc-200 text-zinc-500"
-                }`}>
-                  {step > s.num ? <Check className="w-3 h-3 stroke-[3]" /> : s.num}
-                </span>
-                <span className={`text-[11px] font-bold ${
-                  step === s.num ? "text-[#0D1B2A]" : "text-zinc-400"
-                }`}>{s.label}</span>
-                {s.num < 6 && <span className="w-4 h-px bg-zinc-200" />}
-              </div>
-            ))}
-          </div>
+            {/* Stepper text and markers */}
+            <div className="hidden md:flex items-center gap-3">
+              {[
+                { num: 1, label: "Perfil" },
+                { num: 2, label: "Datas" },
+                { num: 3, label: "Grupo" },
+                { num: 4, label: "Hospedagem" },
+                { num: 5, label: "Montar Roteiro" },
+                { num: 6, label: "Finalização" }
+              ].map((s) => (
+                <div key={s.num} className="flex items-center gap-1.5">
+                  <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-black ${
+                    step === s.num
+                      ? "bg-[#0D1B2A] text-white ring-2 ring-[#0D1B2A]/10 scale-105 font-bold"
+                      : step > s.num
+                        ? "bg-emerald-500 text-white font-bold"
+                        : "bg-zinc-200 text-zinc-500"
+                  }`}>
+                    {step > s.num ? <Check className="w-3 h-3 stroke-[3]" /> : s.num}
+                  </span>
+                  <span className={`text-[11px] font-bold ${
+                    step === s.num ? "text-[#0D1B2A]" : "text-zinc-400"
+                  }`}>{s.label}</span>
+                  {s.num < 6 && <span className="w-4 h-px bg-zinc-200" />}
+                </div>
+              ))}
+            </div>
 
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-zinc-400 md:hidden font-bold">Etapa {step} de 6</span>
-            {step < 5 ? (
-              <button 
-                onClick={() => {
-                  if (step === 2 && !tempName.trim()) {
-                    alert("Por favor, informe seu nome para prosseguirmos com seu roteiro personalizado!");
-                    return;
-                  }
-                  setStep(step + 1);
-                }}
-                className="bg-[#0D1B2A] hover:bg-[#E8711A] text-white hover:text-[#0D1B2A] px-4.5 py-1.5 rounded-full text-xs font-bold uppercase transition-all cursor-pointer"
-              >
-                Avançar
-              </button>
-            ) : step === 5 ? (
-              <button
-                onClick={() => setStep(6)}
-                className="bg-[#E8711A] hover:bg-[#C45E12] text-white px-5 py-1.5 rounded-full text-xs font-bold uppercase transition-all shadow cursor-pointer flex items-center gap-1"
-              >
-                <span>Concluir Roteiro ({cart.length})</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </button>
-            ) : (
-              <span className="text-xs text-zinc-400 font-bold uppercase">Resumo Pronto</span>
-            )}
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-zinc-400 md:hidden font-bold">Etapa {step} de 6</span>
+              {step < 5 ? (
+                <button 
+                  onClick={() => {
+                    if (step === 2) {
+                      if (!tempName.trim()) {
+                        alert("Por favor, informe seu nome para prosseguirmos com seu roteiro personalizado!");
+                        return;
+                      }
+                      if (!tempPhone.trim()) {
+                        alert("Por favor, informe seu WhatsApp/Telefone para prosseguirmos com seu roteiro personalizado!");
+                        return;
+                      }
+                    }
+                    setStep(step + 1);
+                  }}
+                  className="bg-[#0D1B2A] hover:bg-[#E8711A] text-white hover:text-[#0D1B2A] px-4.5 py-1.5 rounded-full text-xs font-bold uppercase transition-all cursor-pointer"
+                >
+                  Avançar
+                </button>
+              ) : step === 5 ? (
+                <button
+                  onClick={() => setStep(6)}
+                  className="bg-[#E8711A] hover:bg-[#C45E12] text-white px-5 py-1.5 rounded-full text-xs font-bold uppercase transition-all shadow cursor-pointer flex items-center gap-1"
+                >
+                  <span>Concluir Roteiro ({cart.length})</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              ) : (
+                <span className="text-xs text-zinc-400 font-bold uppercase">Resumo Pronto</span>
+              )}
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       <div className="max-w-6xl mx-auto px-4 mt-8 sm:mt-12 text-center relative z-10">
 
@@ -964,8 +1025,8 @@ export default function WizardView({
                   {/* Card Inputs */}
                   <div className="bg-white border border-zinc-200 rounded-3xl p-6 sm:p-8 space-y-6 shadow-sm">
                     
-                    {/* Fast Name and City inputs as CRM details */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {/* Fast Name, Phone and City inputs as CRM details */}
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                       <div className="space-y-1.5">
                         <label className="text-xs text-[#0D1B2A] font-bold block">Seu Nome *</label>
                         <input
@@ -974,6 +1035,16 @@ export default function WizardView({
                           placeholder="Ex: Carolina Mendes"
                           value={tempName}
                           onChange={(e) => setTempName(e.target.value)}
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-xs text-[#0D1B2A] font-bold block">Seu WhatsApp / Telefone *</label>
+                        <input
+                          type="tel"
+                          className="w-full bg-zinc-50 border border-zinc-200 rounded-xl p-3 text-sm text-[#0D1B2A] focus:outline-none focus:border-[#E8711A] focus:bg-white transition-colors"
+                          placeholder="Ex: (21) 99999-9999"
+                          value={tempPhone}
+                          onChange={(e) => setTempPhone(e.target.value)}
                         />
                       </div>
                       <div className="space-y-1.5">
@@ -1852,6 +1923,96 @@ export default function WizardView({
                 </button>
               </div>
 
+            </motion.div>
+          )}
+
+          {/* STEP 7: INTERMEDIATE WHATSAPP REDIRECT & CONFIRMATION */}
+          {step === 7 && (
+            <motion.div
+              key="step7"
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.98 }}
+              className="space-y-8 max-w-xl mx-auto text-center py-8"
+            >
+              <div className="bg-white border border-zinc-200 rounded-3xl p-8 sm:p-12 shadow-md space-y-8 relative overflow-hidden">
+                {/* Visual Glow */}
+                <div className="absolute top-0 inset-x-0 h-1.5 bg-[#E8711A]" />
+
+                {/* Animated Pulsing Icon */}
+                <div className="flex justify-center">
+                  <div className="relative">
+                    <div className="absolute inset-0 bg-[#E8711A]/10 rounded-full animate-ping scale-125" />
+                    <div className="bg-[#E8711A]/8 border border-[#E8711A]/20 p-5 rounded-full relative z-10 text-[#E8711A]">
+                      <CheckCircle2 className="w-12 h-12" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Confirmations Messages */}
+                <div className="space-y-3">
+                  <h2 className="font-serif text-3.5xl font-extrabold text-[#0D1B2A] leading-tight">
+                    Perfeito! Seu roteiro foi recebido com sucesso.
+                  </h2>
+                  <p className="text-sm text-zinc-500 font-sans leading-relaxed">
+                    Estamos abrindo nosso WhatsApp para que nossa equipe de especialistas continue seu atendimento de forma totalmente personalizada.
+                  </p>
+                </div>
+
+                {/* Loading Indicator */}
+                <div className="space-y-4 py-2">
+                  <div className="flex justify-between items-center text-xs text-zinc-400 font-bold uppercase tracking-wider">
+                    <span>Progresso do Envio</span>
+                    <span>{countdown > 0 ? `Redirecionando em ${countdown}s...` : "Pronto!"}</span>
+                  </div>
+                  
+                  {/* Progress bar loader */}
+                  <div className="w-full bg-zinc-100 h-2 rounded-full overflow-hidden">
+                    <motion.div
+                      initial={{ width: "0%" }}
+                      animate={{ width: "100%" }}
+                      transition={{ duration: 5, ease: "linear" }}
+                      className="h-full bg-[#E8711A]"
+                    />
+                  </div>
+                </div>
+
+                {/* Call to Action Button */}
+                <div className="space-y-3">
+                  <a
+                    href={generatedWhatsAppLink}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="w-full py-4 bg-[#E8711A] hover:bg-[#C45E12] text-[#0D1B2A] hover:text-white font-accent text-sm font-black tracking-wider uppercase rounded-2xl transition-all shadow-md flex items-center justify-center gap-2 hover:scale-102 cursor-pointer"
+                  >
+                    Abrir WhatsApp 💬
+                  </a>
+                  <p className="text-[11px] text-zinc-400 font-sans">
+                    Caso o WhatsApp não abra automaticamente, por favor clique no botão acima para iniciar a conversa.
+                  </p>
+                </div>
+
+                {/* Expert Info Box */}
+                <div className="p-4 bg-[#FAF8F5] rounded-2xl border border-zinc-150 text-xs text-left space-y-1.5 leading-relaxed text-[#0D1B2A]">
+                  <p className="font-bold">✨ O que acontece agora?</p>
+                  <p className="text-zinc-500">
+                    Nossos especialistas em turismo na <strong>Guida Trips</strong> já receberam o cronograma completo de {cart.length} passeio(s) no valor total de {formatBRL(calculateEstimatedTotal())} para o cliente <strong>{tempName || clientName}</strong>. 
+                  </p>
+                  <p className="text-zinc-500">
+                    No WhatsApp, finalizaremos os horários, confirmaremos a disponibilidade e aplicaremos todos os seus mimos e benefícios exclusivos!
+                  </p>
+                </div>
+              </div>
+
+              {/* Back to Home Button */}
+              <div className="text-center">
+                <button
+                  onClick={() => onNavigate("home")}
+                  className="text-zinc-500 hover:text-[#0D1B2A] text-xs font-bold underline cursor-pointer"
+                >
+                  Voltar para a Página Inicial
+                </button>
+              </div>
             </motion.div>
           )}
 
