@@ -217,7 +217,7 @@ export function GuidaOS({
             {activeModule === 'partners' && <PartnersModule partners={partners} />}
             {activeModule === 'reservations' && <ReservationsModule reservations={reservations} experiences={experiences} />}
             {activeModule === 'financial' && <FinancialModule transactions={financial} />}
-            {activeModule === 'affiliates' && <AffiliatesModule affiliates={affiliates} />}
+            {activeModule === 'affiliates' && <AffiliatesModule affiliates={affiliates} currentUser={currentUser} settings={settings} onUpdateSettings={onUpdateSettings} reservations={reservations} experiences={experiences} />}
             {activeModule === 'settings' && <SettingsModule settings={settings} onUpdateSettings={onUpdateSettings} />}
 
             {activeModule === 'dashboard' && (

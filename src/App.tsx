@@ -23,6 +23,7 @@ import ConfirmacaoRoteiroView from "./components/ConfirmacaoRoteiroView";
 import { GuidaOS } from "./os/GuidaOS";
 import { LeadCaptureModal } from "./components/LeadCaptureModal";
 import { analytics } from "./lib/analytics";
+import { getValidAffiliateRef } from "./lib/utils";
 
 import { 
   Experience, BlogPost, Lead, GlobalSettings, BookingCartItem, ClientUser, ClientReservation, SavedItinerary,
@@ -220,14 +221,6 @@ export default function App() {
   };
   const currentView = getCurrentViewFromPath(location.pathname);
 
-  // Affiliate Tracking
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const ref = params.get('ref');
-    if (ref) {
-      localStorage.setItem('guidatrips_affiliate_ref', ref);
-    }
-  }, []);
   const [selectedPostSlug, setSelectedPostSlug] = useState<string | null>(null);
 
   // Core CRM / Experiential Data loaded initially or from LocalStorage
@@ -244,6 +237,85 @@ export default function App() {
   const [financial, setFinancial] = useState<any[]>([]);
   const [affiliates, setAffiliates] = useState<any[]>([]);
   const [budgets, setBudgets] = useState<any[]>([]);
+
+  // Affiliate Tracking
+  useEffect(() => {
+    // Also handle `/ref/:slug` paths by checking if pathname starts with `/ref/`
+    let ref = null;
+    const pathParts = location.pathname.split('/');
+    if (pathParts.length > 2 && pathParts[1] === 'ref') {
+      ref = pathParts[2];
+    } else {
+      const params = new URLSearchParams(window.location.search);
+      ref = params.get('ref');
+    }
+
+    if (ref) {
+      // Don't track if the logged-in user IS the affiliate (to avoid self-referral)
+      // We will do a generic click tracking. Since we don't have user yet in the initial render,
+      // we'll just store the ref and expiry
+      
+      const durationDays = settings.affiliateCookieDurationDays || 30;
+      const expiry = new Date();
+      expiry.setDate(expiry.getDate() + durationDays);
+      
+      const affiliateData = {
+        ref,
+        expiry: expiry.toISOString()
+      };
+      
+      const stored = localStorage.getItem('guidatrips_affiliate_data');
+      let shouldTrackClick = false;
+      
+      if (!stored) {
+        shouldTrackClick = true;
+      } else {
+        try {
+          const parsed = JSON.parse(stored);
+          if (parsed.ref !== ref) {
+             shouldTrackClick = true;
+          }
+        } catch(e) {}
+      }
+
+      localStorage.setItem('guidatrips_affiliate_data', JSON.stringify(affiliateData));
+      
+      if (shouldTrackClick) {
+        // Track the click in firestore (fetch affiliates, find by slug, increment clicks)
+        // Since we are inside App.tsx, we can do it async
+        const trackAffiliateClick = async () => {
+           try {
+              const allAff = await firestoreService.getAll<any>('affiliates');
+              const found = allAff.find(a => a.slug === ref);
+              if (found) {
+                // If it's a new visitor (no session storage tracker for this ref)
+                const sessionTracker = sessionStorage.getItem(`tracked_affiliate_click_${ref}`);
+                let clicks = (found.clicks || 0) + 1;
+                let uniqueVisitors = found.uniqueVisitors || 0;
+                
+                if (!sessionTracker) {
+                  uniqueVisitors += 1;
+                  sessionStorage.setItem(`tracked_affiliate_click_${ref}`, 'true');
+                }
+                
+                await firestoreService.update('affiliates', found.id, {
+                  clicks,
+                  uniqueVisitors
+                });
+              }
+           } catch(e) {
+              console.error("Error tracking affiliate click", e);
+           }
+        };
+        trackAffiliateClick();
+      }
+
+      // If it was a /ref/ path, redirect to home to clean URL
+      if (location.pathname.startsWith('/ref/')) {
+        navigate('/', { replace: true });
+      }
+    }
+  }, [location.pathname, location.search, settings.affiliateCookieDurationDays, navigate]);
   
   // WhatsApp Lead Capture State
   const [isLeadModalOpen, setIsLeadModalOpen] = useState(false);
@@ -747,7 +819,7 @@ export default function App() {
 
   // Submit Lead via direct inline forms
   const handleAddNewLead = (leadData: Omit<Lead, "id" | "origin" | "status" | "createdAt" | "updatedAt">) => {
-    const affiliateRef = localStorage.getItem('guidatrips_affiliate_ref');
+    const affiliateRef = getValidAffiliateRef();
     const newLead: Lead = {
       ...leadData,
       id: `lead-${Date.now()}`,
@@ -903,7 +975,7 @@ export default function App() {
 
     // 2. Automatically save all itinerary cart items as reservations in Firestore under this active user
     if (activeUser) {
-      const affiliateRef = localStorage.getItem('guidatrips_affiliate_ref');
+      const affiliateRef = getValidAffiliateRef();
 
       for (let idx = 0; idx < cart.length; idx++) {
         const item = cart[idx];

@@ -14,6 +14,7 @@ import {
 import { Experience, BookingCartItem, checkSchedulingConflict, getTourScheduleDetails, getBrazilLocalDate, addDaysToBrazilDate, Destination, Accommodation, Lead, ClientReservation, SavedItinerary } from "../types";
 import { firestoreService } from "../firebase";
 import { analytics } from "../lib/analytics";
+import { getValidAffiliateRef } from "../lib/utils";
 import ExperienceMediaGallery from "./ExperienceMediaGallery";
 
 interface WizardViewProps {
@@ -415,7 +416,7 @@ export default function WizardView({
         return;
       }
 
-      const affiliateRef = localStorage.getItem('guidatrips_affiliate_ref');
+      const affiliateRef = getValidAffiliateRef();
 
       for (const item of cart) {
         const exp = experiences.find(e => e.id === item.experienceId);

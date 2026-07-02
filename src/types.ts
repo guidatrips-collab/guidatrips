@@ -462,6 +462,42 @@ export interface GlobalSettings {
   clientReservations?: ClientReservation[];
   clientPartners?: ClientPartner[];
   clientUser?: ClientUser;
+
+  // Affiliate System
+  affiliateCookieDurationDays?: number; // Configurable cookie duration for affiliates
+}
+
+export interface Affiliate {
+  id: string;
+  userId?: string; // Linked user account (role: afiliado)
+  name: string;
+  email: string;
+  phone: string;
+  slug: string; // The unique code/ref
+  commissionRate: number; // e.g. 10 for 10%
+  status: 'active' | 'inactive';
+  createdAt: string;
+  updatedAt: string;
+  // Stats
+  clicks: number;
+  uniqueVisitors: number;
+  conversions: number; // Approved reservations
+  revenueGenerated: number;
+  commissionsAccrued: number;
+  commissionsPaid: number;
+}
+
+export interface AffiliateConversion {
+  id: string;
+  affiliateId: string;
+  reservationId?: string;
+  leadId?: string;
+  type: 'lead' | 'reservation';
+  amount: number; // Purchase amount
+  commissionAmount: number;
+  status: 'pending' | 'approved' | 'rejected' | 'paid';
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface BookingCartItem {
