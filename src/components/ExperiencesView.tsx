@@ -610,6 +610,23 @@ export default function ExperiencesView({
                     </div>
                   </div>
 
+                  {/* Policies section */}
+                  {activeExperience.policies && activeExperience.policies.length > 0 && (
+                    <div className="bg-zinc-50 border border-zinc-200 p-5 rounded-2xl space-y-3 pt-4 mt-6">
+                      <span className="font-accent text-[10px] text-zinc-800 font-bold tracking-widest uppercase flex items-center gap-1.5">
+                        📜 Políticas (Pagamento e Cancelamento)
+                      </span>
+                      <ul className="space-y-2 font-sans text-xs text-zinc-600">
+                        {activeExperience.policies.map((item, idx) => (
+                          <li key={idx} className="flex items-start gap-2">
+                            <span className="text-zinc-400 select-none mt-0.5">•</span>
+                            <span>{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
                   {/* Bring items */}
                   {activeExperience.bringItems && activeExperience.bringItems.length > 0 && (
                     <div className="bg-[#E8711A]/5 p-5 border border-[#E8711A]/20 rounded-2xl space-y-2">

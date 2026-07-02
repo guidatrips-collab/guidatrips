@@ -2378,7 +2378,21 @@ export default function WizardView({
                   </div>
                 </div>
 
-                <div className="bg-amber-50 rounded-2xl border border-amber-100 p-4.5 space-y-1">
+                {selectedExpDetail.policies && selectedExpDetail.policies.length > 0 && (
+                  <div className="bg-zinc-50 rounded-2xl border border-zinc-200 p-4.5 space-y-2 mt-4">
+                    <span className="text-[10px] text-zinc-800 font-extrabold tracking-wider uppercase block font-accent">📜 Políticas (Pagamento e Cancelamento)</span>
+                    <ul className="space-y-1 list-none text-xs text-zinc-650">
+                      {selectedExpDetail.policies.map((pol, i) => (
+                        <li key={i} className="flex gap-2 items-start">
+                          <span className="w-4 h-4 bg-zinc-200 text-zinc-600 shrink-0 rounded-full flex items-center justify-center text-[9px] font-bold">•</span>
+                          <span>{pol}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                <div className="bg-amber-50 rounded-2xl border border-amber-100 p-4.5 space-y-1 mt-4">
                   <span className="text-[9px] text-[#E8711A] font-bold uppercase tracking-wider block font-accent">📍 PONTO DE ENCONTRO</span>
                   <p className="text-xs text-amber-950 font-medium">{selectedExpDetail.meetingPoint}</p>
                 </div>

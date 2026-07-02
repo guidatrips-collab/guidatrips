@@ -58,7 +58,9 @@ export default function ClientPanelView({
     phone: "+55 11 99999-9999",
     photoUrl: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80",
     preferences: ["Navegação", "Gastronomia", "Pôr do sol"],
-    favorites: []
+    favorites: [],
+    roles: ["cliente"],
+    permissions: []
   };
 
   const clientReservations: ClientReservation[] = userReservations && userReservations.length > 0

@@ -232,6 +232,7 @@ export interface Experience {
   recommendations?: string[]; // Suggested related experience ids
   itinerary?: string[]; // Optional itinerary property
   faqs?: { question: string; answer: string }[]; // List of custom FAQs
+  policies?: string[]; // List of policies (e.g. payment, cancellation)
   checkInMinutesBefore?: number; // Custom check-in lead time (minutes)
   durationMinutes?: number; // Custom tour duration (minutes)
   safetyBufferMinutes?: number; // Custom safety buffer before another tour (minutes)

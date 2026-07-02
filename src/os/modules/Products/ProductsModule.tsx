@@ -74,6 +74,8 @@ export function ProductsModule({ experiences, destinations }: ProductsModuleProp
   const [meetingPoint, setMeetingPoint] = useState('');
   const [videoEmbed, setVideoEmbed] = useState('');
   const [photos, setPhotos] = useState<string[]>([]);
+  const [draggedPhotoIdx, setDraggedPhotoIdx] = useState<number | null>(null);
+  const [dragOverPhotoIdx, setDragOverPhotoIdx] = useState<number | null>(null);
   
   // Lists
   const [highlightsStr, setHighlightsStr] = useState('');
@@ -81,6 +83,7 @@ export function ProductsModule({ experiences, destinations }: ProductsModuleProp
   const [includedStr, setIncludedStr] = useState('');
   const [notIncludedStr, setNotIncludedStr] = useState('');
   const [itineraryStr, setItineraryStr] = useState('');
+  const [policiesStr, setPoliciesStr] = useState('');
 
   const [status, setStatus] = useState<'active' | 'paused' | 'draft'>('active');
   const [location, setLocation] = useState('Arraial do Cabo');
@@ -122,6 +125,7 @@ export function ProductsModule({ experiences, destinations }: ProductsModuleProp
     setIncludedStr('');
     setNotIncludedStr('');
     setItineraryStr('');
+    setPoliciesStr('');
     setStatus('active');
     setLocation('Arraial do Cabo');
     setFeatured(false);
@@ -168,6 +172,7 @@ export function ProductsModule({ experiences, destinations }: ProductsModuleProp
     setIncludedStr(exp.included?.join('\n') || '');
     setNotIncludedStr(exp.notIncluded?.join('\n') || '');
     setItineraryStr(exp.itinerary?.join('\n') || '');
+    setPoliciesStr(exp.policies?.join('\n') || '');
 
     setStatus(exp.status || 'active');
     setLocation(exp.location || 'Arraial do Cabo');
@@ -190,6 +195,7 @@ export function ProductsModule({ experiences, destinations }: ProductsModuleProp
     const included = includedStr.split('\n').map(s => s.trim()).filter(Boolean);
     const notIncluded = notIncludedStr.split('\n').map(s => s.trim()).filter(Boolean);
     const itinerary = itineraryStr.split('\n').map(s => s.trim()).filter(Boolean);
+    const policies = policiesStr.split('\n').map(s => s.trim()).filter(Boolean);
 
     const generatedSlug = slug || name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
 
@@ -234,6 +240,7 @@ export function ProductsModule({ experiences, destinations }: ProductsModuleProp
       included,
       notIncluded,
       itinerary,
+      policies,
       status,
       location,
       featured,
@@ -515,6 +522,11 @@ export function ProductsModule({ experiences, destinations }: ProductsModuleProp
                   <label className="block text-xs font-medium text-zinc-400 mb-1">Roteiro Completo (Título: Descrição - Um por linha)</label>
                   <textarea rows={4} value={itineraryStr} onChange={e => setItineraryStr(e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 text-zinc-100 px-4 py-2 rounded-lg focus:border-blue-500 focus:outline-none text-xs font-sans" placeholder="Ex: Parada na Praia do Forno: 40 min para mergulho livre.&#10;Parada nas Prainhas: Desembarque direto na areia." />
                 </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-zinc-400 mb-1">Políticas (Pagamento, Cancelamento, Reembolso - Um por linha)</label>
+                  <textarea rows={4} value={policiesStr} onChange={e => setPoliciesStr(e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 text-zinc-100 px-4 py-2 rounded-lg focus:border-blue-500 focus:outline-none text-xs font-sans" placeholder="Ex: Cancelamento gratuito até 48h antes.&#10;Pagamento de 50% para reserva." />
+                </div>
               </div>
 
               {/* SECTION: MEDIA GALLERY */}
@@ -523,7 +535,46 @@ export function ProductsModule({ experiences, destinations }: ProductsModuleProp
                 
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                   {photos.map((photo, idx) => (
-                    <div key={`photo-${idx}`} className="relative group">
+                    <div 
+                      key={`photo-${idx}`} 
+                      className={`relative group transition-all duration-200 cursor-move ${draggedPhotoIdx === idx ? 'opacity-40 scale-95' : ''} ${dragOverPhotoIdx === idx ? 'ring-2 ring-[#E8711A] scale-105 rounded-xl z-10 shadow-xl' : ''}`}
+                      draggable
+                      onDragStart={(e) => {
+                        e.dataTransfer.effectAllowed = 'move';
+                        setDraggedPhotoIdx(idx);
+                      }}
+                      onDragOver={(e) => {
+                        e.preventDefault();
+                        e.dataTransfer.dropEffect = 'move';
+                        if (draggedPhotoIdx !== null && draggedPhotoIdx !== idx) {
+                          setDragOverPhotoIdx(idx);
+                        }
+                      }}
+                      onDragLeave={() => {
+                        if (dragOverPhotoIdx === idx) {
+                          setDragOverPhotoIdx(null);
+                        }
+                      }}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        if (draggedPhotoIdx !== null && draggedPhotoIdx !== idx) {
+                          const newPhotos = [...photos];
+                          const draggedItem = newPhotos[draggedPhotoIdx];
+                          newPhotos.splice(draggedPhotoIdx, 1);
+                          newPhotos.splice(idx, 0, draggedItem);
+                          setPhotos(newPhotos);
+                        }
+                        setDraggedPhotoIdx(null);
+                        setDragOverPhotoIdx(null);
+                      }}
+                      onDragEnd={() => {
+                        setDraggedPhotoIdx(null);
+                        setDragOverPhotoIdx(null);
+                      }}
+                    >
+                      <div className="absolute top-2 left-2 z-20 bg-black/60 text-white rounded-md px-1.5 py-0.5 text-[10px] font-bold backdrop-blur-sm shadow-sm pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity">
+                        Arraste para ordenar
+                      </div>
                       <ImageUpload
                         currentImageUrl={photo}
                         onUploadComplete={(url) => {
