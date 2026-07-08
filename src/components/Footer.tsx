@@ -82,14 +82,6 @@ export default function Footer({ onNavigate, whatsappNumber, onWhatsAppContact }
               </li>
               <li>
                 <button
-                  onClick={() => onNavigate("destino")}
-                  className="text-[#8A96A3] hover:text-[#E8711A] transition-colors"
-                >
-                  O Destino (Guia Arraial)
-                </button>
-              </li>
-              <li>
-                <button
                   onClick={() => onNavigate("sobre")}
                   className="text-[#8A96A3] hover:text-[#E8711A] transition-colors"
                 >

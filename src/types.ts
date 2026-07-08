@@ -733,6 +733,38 @@ export function checkSchedulingConflict(
   return { hasConflict: false };
 }
 
+export interface ThematicItineraryItem {
+  id: string;
+  type: "experience" | "accommodation" | "partner" | "custom" | "blogpost";
+  refId?: string; // id of the reference (e.g., experience id, accommodation id)
+  customName?: string; // if it's just text
+  timeOfDay?: string; // e.g., 'Manhã', 'Tarde', 'Noite', 'Dia Inteiro'
+}
+
+export interface ThematicItineraryDay {
+  dayNumber: number;
+  title: string; // e.g. "Chegada e Relaxamento"
+  items: ThematicItineraryItem[];
+}
+
+export interface ThematicItinerary {
+  id: string;
+  destinationId: string; // The destination this itinerary belongs to
+  slug: string;
+  name: string;
+  description: string;
+  days: number;
+  audience: string[]; // Público recomendado
+  priceRange: string; // Faixa de preço estimada
+  bestSeason: string; // Melhor época
+  difficulty: string; // Dificuldade
+  coverImage: string;
+  status: "active" | "inactive";
+  schedule: ThematicItineraryDay[];
+  createdAt: string;
+  updatedAt: string;
+}
+
 export function getBrazilLocalDate(date: Date = new Date()): string {
   const formatter = new Intl.DateTimeFormat("en-CA", {
     timeZone: "America/Sao_Paulo",

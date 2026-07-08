@@ -20,6 +20,7 @@ import WizardView from "./components/WizardView";
 import ClientPanelView from "./components/ClientPanelView";
 import ClientAuthModal from "./components/ClientAuthModal";
 import ConfirmacaoRoteiroView from "./components/ConfirmacaoRoteiroView";
+import ThematicItineraryView from "./components/ThematicItineraryView";
 import { GuidaOS } from "./os/GuidaOS";
 import { LeadCaptureModal } from "./components/LeadCaptureModal";
 import { analytics } from "./lib/analytics";
@@ -206,6 +207,7 @@ export default function App() {
 
   const getCurrentViewFromPath = (pathname: string) => {
     if (pathname.startsWith('/guideos')) return 'os';
+    if (pathname.startsWith('/lugares/') && pathname.split('/').length >= 4) return 'thematic-view';
     if (pathname === '/lugares' || pathname === '/restaurantes' || pathname === '/eventos') return 'destino';
     if (pathname === '/passeios') return 'experiencias';
     if (pathname === '/roteiro-inteligente') return 'wizard';
@@ -237,6 +239,7 @@ export default function App() {
   const [financial, setFinancial] = useState<any[]>([]);
   const [affiliates, setAffiliates] = useState<any[]>([]);
   const [budgets, setBudgets] = useState<any[]>([]);
+  const [thematicItineraries, setThematicItineraries] = useState<any[]>([]);
 
   // Affiliate Tracking
   useEffect(() => {
@@ -487,6 +490,7 @@ export default function App() {
     const unsubFin = firestoreService.subscribe("financial", setFinancial);
     const unsubAff = firestoreService.subscribe("affiliates", setAffiliates);
     const unsubBud = firestoreService.subscribe("budgets", setBudgets);
+    const unsubThematic = firestoreService.subscribe("thematicItineraries", setThematicItineraries);
 
     return () => {
       unsubExps();
@@ -500,6 +504,7 @@ export default function App() {
       unsubFin();
       unsubAff();
       unsubBud();
+      unsubThematic();
     };
   }, []);
 
@@ -1131,6 +1136,7 @@ export default function App() {
         financial={financial}
         affiliates={affiliates}
         budgets={budgets}
+        thematicItineraries={thematicItineraries}
         settings={settings}
         destinations={destinations}
         onUpdateSettings={updateSettings}
@@ -1232,9 +1238,12 @@ export default function App() {
         {currentView === "blog" && (
           <BlogView 
             posts={posts} 
+            thematicItineraries={thematicItineraries}
+            destinations={destinations}
             onNavigateToContact={() => handleNavigate("contato")}
             selectedSlug={selectedPostSlug}
             onSelectPost={setSelectedPostSlug}
+            onNavigateToThematic={(destSlug, thematicSlug) => navigate(`/lugares/${destSlug}/${thematicSlug}`)}
           />
         )}
         {currentView === "contato" && (
@@ -1297,6 +1306,19 @@ export default function App() {
             onNavigate={handleNavigate}
             selectedHotelId={selectedHotelId}
             onChangeHotelId={handleUpdateHotelId}
+          />
+        )}
+        {currentView === "thematic-view" && (
+          <ThematicItineraryView 
+            pathname={location.pathname}
+            thematicItineraries={thematicItineraries}
+            destinations={destinations}
+            experiences={experiences}
+            accommodations={accommodations}
+            partners={partners}
+            onNavigate={handleNavigate}
+            onAddToCart={handleAddToCart}
+            onWhatsAppContact={openWhatsAppModal}
           />
         )}
         {currentView === "confirmacao-roteiro" && (

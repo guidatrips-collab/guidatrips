@@ -5,17 +5,20 @@
 
 import React, { useState, useEffect } from "react";
 import { BookOpen, Search, Calendar, Clock, ArrowLeft, ArrowUpRight, Share2, MessageCircle } from "lucide-react";
-import { BlogPost } from "../types";
+import { BlogPost, ThematicItinerary, Destination } from "../types";
 import { motion } from "motion/react";
 
 interface BlogViewProps {
   posts: BlogPost[];
+  thematicItineraries?: ThematicItinerary[];
+  destinations?: Destination[];
   onNavigateToContact: () => void;
   selectedSlug: string | null;
   onSelectPost: (slug: string | null) => void;
+  onNavigateToThematic?: (destSlug: string, thematicSlug: string) => void;
 }
 
-export default function BlogView({ posts, onNavigateToContact, selectedSlug, onSelectPost }: BlogViewProps) {
+export default function BlogView({ posts, thematicItineraries = [], destinations = [], onNavigateToContact, selectedSlug, onSelectPost, onNavigateToThematic }: BlogViewProps) {
   const [searchQuery, setSearchQuery] = useState("");
 
   const activePost = posts.find((p) => p.slug === selectedSlug && p.status === "published");
@@ -231,6 +234,51 @@ export default function BlogView({ posts, onNavigateToContact, selectedSlug, onS
             />
           </div>
         </div>
+
+        {/* ROTEIROS RECOMENDADOS */}
+        {thematicItineraries.length > 0 && !searchQuery && (
+          <div className="mb-20">
+            <div className="flex items-center justify-between mb-8">
+              <h2 className="font-serif text-3xl font-extrabold text-[#0D1B2A] tracking-tight">Roteiros Recomendados</h2>
+              <span className="font-accent text-[#E8711A] text-xs font-bold tracking-widest uppercase">Sugestões Editoriais</span>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {thematicItineraries.map((itinerary) => {
+                const dest = destinations.find(d => d.id === itinerary.destinationId);
+                const destSlug = dest ? dest.slug : 'geral';
+                return (
+                  <div 
+                    key={itinerary.id}
+                    onClick={() => onNavigateToThematic && onNavigateToThematic(destSlug, itinerary.slug)}
+                    className="group bg-white border border-zinc-200 rounded-2xl overflow-hidden hover:border-[#E8711A] transition-all duration-300 cursor-pointer shadow-sm hover:shadow-md"
+                  >
+                    <div className="h-48 relative overflow-hidden">
+                      {itinerary.coverImage ? (
+                        <img src={itinerary.coverImage} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt={itinerary.name} />
+                      ) : (
+                        <div className="w-full h-full bg-[#0D1B2A] flex items-center justify-center text-white/20">Sem Capa</div>
+                      )}
+                      <div className="absolute top-3 left-3">
+                        <span className="bg-black/60 backdrop-blur-md text-white text-[10px] px-2 py-1 rounded-full border border-white/10 font-bold uppercase tracking-wider">
+                          {itinerary.days} {itinerary.days === 1 ? 'Dia' : 'Dias'}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="p-5">
+                      {dest && (
+                        <span className="text-[10px] font-accent font-bold uppercase tracking-widest text-[#E8711A] mb-1 block">
+                          {dest.name}
+                        </span>
+                      )}
+                      <h3 className="font-serif text-lg font-bold text-[#0D1B2A] group-hover:text-[#E8711A] transition-colors mb-2 leading-tight">{itinerary.name}</h3>
+                      <p className="font-sans text-xs text-zinc-500 line-clamp-2">{itinerary.description}</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* GRID PRINCIPAL DE MATÉRIAS */}
         {filteredPosts.length > 0 ? (

@@ -25,6 +25,7 @@ import { ReservationsModule } from './modules/Reservations/ReservationsModule';
 import { FinancialModule } from './modules/Financial/FinancialModule';
 import { AffiliatesModule } from './modules/Affiliates/AffiliatesModule';
 import { SettingsModule } from './modules/Settings/SettingsModule';
+import { ThematicModule } from './modules/Thematic/ThematicModule';
 import { Experience, Lead, Destination, User } from '../types';
 
 interface GuidaOSProps {
@@ -37,6 +38,7 @@ interface GuidaOSProps {
   financial: any[];
   affiliates: any[];
   budgets: any[];
+  thematicItineraries: any[];
   settings: any;
   destinations: Destination[];
   onUpdateSettings: (s: any) => void;
@@ -53,6 +55,7 @@ export function GuidaOS({
   financial,
   affiliates,
   budgets,
+  thematicItineraries,
   settings,
   destinations,
   onUpdateSettings,
@@ -90,6 +93,7 @@ export function GuidaOS({
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, allowed: isAdmin },
     { id: 'crm', label: 'CRM & Leads', icon: Users, allowed: isAdmin },
     { id: 'smart-itinerary', label: 'Roteiro IA', icon: BrainCircuit, allowed: isAdmin },
+    { id: 'thematic', label: 'Roteiros Temáticos', icon: Map, allowed: isAdmin },
     { id: 'products', label: 'Passeios', icon: Map, allowed: isAdmin || isTourPartner },
     { id: 'calendar', label: 'Tarifário', icon: Calendar, allowed: isAdmin || isTourPartner || isHotelPartner },
     { id: 'accommodations', label: 'Hospedagens', icon: Hotel, allowed: isAdmin || isHotelPartner },
@@ -213,6 +217,7 @@ export function GuidaOS({
             )}
             {activeModule === 'crm' && <CRMModule leads={leads} experiences={experiences} />}
             {activeModule === 'smart-itinerary' && <SmartItineraryModule experiences={experiences} budgets={budgets} />}
+            {activeModule === 'thematic' && <ThematicModule thematicItineraries={thematicItineraries} destinations={destinations} experiences={experiences} accommodations={accommodations} partners={partners} />}
             {activeModule === 'accommodations' && <AccommodationsModule accommodations={accommodations} destinations={destinations} />}
             {activeModule === 'partners' && <PartnersModule partners={partners} />}
             {activeModule === 'reservations' && <ReservationsModule reservations={reservations} experiences={experiences} />}
