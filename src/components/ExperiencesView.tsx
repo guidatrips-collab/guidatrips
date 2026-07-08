@@ -583,7 +583,7 @@ export default function ExperiencesView({
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-4">
                     <div className="bg-emerald-50/40 border border-emerald-100 p-5 rounded-2xl space-y-3">
                       <span className="font-accent text-[10px] text-emerald-700 font-black tracking-widest uppercase flex items-center gap-1.5">
-                        ✓ O Que Inclui
+                        ✓ Estrutura Inclusa
                       </span>
                       <ul className="space-y-2 font-sans text-xs text-zinc-600">
                         {activeExperience.included?.map((item, idx) => (
@@ -594,6 +594,22 @@ export default function ExperiencesView({
                         ))}
                       </ul>
                     </div>
+
+                    {activeExperience.courtesies && activeExperience.courtesies.length > 0 && (
+                      <div className="bg-[#E8711A]/5 border border-[#E8711A]/20 p-5 rounded-2xl space-y-3 md:col-span-2">
+                        <span className="font-accent text-[10px] text-[#E8711A] font-black tracking-widest uppercase flex items-center gap-1.5">
+                          🎁 Benefícios Exclusivos (Cortesias)
+                        </span>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          {activeExperience.courtesies.map((item, idx) => (
+                            <div key={idx} className="flex items-start gap-2">
+                              <span className="text-[#E8711A] select-none mt-0.5">•</span>
+                              <span className="font-sans text-xs text-zinc-700 font-medium">{item.name}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
 
                     <div className="bg-zinc-50 border border-zinc-200 p-5 rounded-2xl space-y-3">
                       <span className="font-accent text-[10px] text-zinc-500 font-bold tracking-widest uppercase flex items-center gap-1.5">

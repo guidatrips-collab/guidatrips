@@ -28,7 +28,7 @@ import { getValidAffiliateRef } from "./lib/utils";
 
 import { 
   Experience, BlogPost, Lead, GlobalSettings, BookingCartItem, ClientUser, ClientReservation, SavedItinerary,
-  getBrazilLocalDate, addDaysToBrazilDate, Destination, Accommodation, LeadHistoryItem
+  getBrazilLocalDate, addDaysToBrazilDate, Destination, Accommodation, LeadHistoryItem, Courtesy
 } from "./types";
 import { 
   INITIAL_EXPERIENCES, INITIAL_BLOG_POSTS, INITIAL_LEADS, INITIAL_SETTINGS, INITIAL_DESTINATIONS, INITIAL_ACCOMMODATIONS
@@ -928,6 +928,53 @@ export default function App() {
       }
     }
 
+    // Group courtesies from cart items and selected hotel
+    const allCourtesies = new Map<string, string[]>();
+
+    cart.forEach(item => {
+      const exp = experiences.find(e => e.id === item.experienceId);
+      if (exp && exp.courtesies && exp.courtesies.length > 0) {
+        const expName = exp.name;
+        if (!allCourtesies.has(expName)) {
+          allCourtesies.set(expName, []);
+        }
+        const currentList = allCourtesies.get(expName)!;
+        exp.courtesies.forEach(c => {
+          if (!currentList.includes(c.name)) currentList.push(c.name);
+        });
+      }
+    });
+
+    if (selectedHotelId) {
+      const hotelNames: Record<string, string> = {
+        "pousada-timoneiro": "Pousada do Timoneiro 🛌",
+        "pousada-caminho-mar": "Pousada Caminho do Mar 🛌",
+        "ohana-pousada": "Ohana Pousada Boutique 🛌"
+      };
+      const acc = accommodations.find(a => a.id === selectedHotelId);
+      if (acc && acc.courtesies && acc.courtesies.length > 0) {
+        const hName = acc.name || hotelNames[selectedHotelId] || "Hospedagem Selecionada";
+        if (!allCourtesies.has(hName)) {
+          allCourtesies.set(hName, []);
+        }
+        const currentList = allCourtesies.get(hName)!;
+        acc.courtesies.forEach((c: Courtesy) => {
+          if (!currentList.includes(c.name)) currentList.push(c.name);
+        });
+      }
+    }
+
+    if (allCourtesies.size > 0) {
+      textMessage += `🎁 *BENEFÍCIOS EXCLUSIVOS DA SUA VIAGEM:*\n`;
+      allCourtesies.forEach((courtesiesList, expName) => {
+        textMessage += `  *${expName}:*\n`;
+        courtesiesList.forEach(c => {
+          textMessage += `   • ${c}\n`;
+        });
+      });
+      textMessage += `\n`;
+    }
+
     const uniqueLocationsSet = new Set<string>();
     cart.forEach(item => {
       const exp = experiences.find(e => e.id === item.experienceId);
@@ -1289,6 +1336,7 @@ export default function App() {
           <RoteiroView 
             cart={cart}
             experiences={experiences}
+            accommodations={accommodations}
             stayDays={stayDays}
             clientName={clientName}
             clientCity={clientCity}

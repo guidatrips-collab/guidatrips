@@ -11,11 +11,12 @@ import {
   ChevronDown, ChevronUp, Star, Gift, Coffee, Sparkles, Users, Info, ArrowUpRight,
   ChevronLeft, ChevronRight
 } from "lucide-react";
-import { BookingCartItem, Experience, checkSchedulingConflict, getTourScheduleDetails, getBrazilLocalDate, addDaysToBrazilDate } from "../types";
+import { BookingCartItem, Experience, checkSchedulingConflict, getTourScheduleDetails, getBrazilLocalDate, addDaysToBrazilDate, Accommodation, Courtesy } from "../types";
 
 interface RoteiroViewProps {
   cart: BookingCartItem[];
   experiences: Experience[];
+  accommodations?: Accommodation[];
   stayDays: number;
   clientName: string;
   clientCity: string;
@@ -38,6 +39,7 @@ interface RoteiroViewProps {
 export default function RoteiroView({
   cart,
   experiences,
+  accommodations = [],
   stayDays,
   clientName,
   clientCity,
@@ -223,6 +225,41 @@ export default function RoteiroView({
     return tariff.isClosed || tariff.hasNoTariff;
   });
   const hasItems = cart.length > 0 || selectedHotelId !== null;
+
+  // Compute aggregated courtesies
+  const allCourtesies = new Map<string, string[]>();
+  cart.forEach(item => {
+    const exp = experiences.find(e => e.id === item.experienceId);
+    if (exp && exp.courtesies && exp.courtesies.length > 0) {
+      const expName = exp.name;
+      if (!allCourtesies.has(expName)) {
+        allCourtesies.set(expName, []);
+      }
+      const currentList = allCourtesies.get(expName)!;
+      exp.courtesies.forEach(c => {
+        if (!currentList.includes(c.name)) currentList.push(c.name);
+      });
+    }
+  });
+
+  if (selectedHotelId) {
+    const hotelNames: Record<string, string> = {
+      "pousada-timoneiro": "Pousada do Timoneiro",
+      "pousada-caminho-mar": "Pousada Caminho do Mar",
+      "ohana-pousada": "Ohana Pousada Boutique"
+    };
+    const acc = accommodations.find(a => a.id === selectedHotelId);
+    if (acc && acc.courtesies && acc.courtesies.length > 0) {
+      const hName = acc.name || hotelNames[selectedHotelId] || "Hospedagem Selecionada";
+      if (!allCourtesies.has(hName)) {
+        allCourtesies.set(hName, []);
+      }
+      const currentList = allCourtesies.get(hName)!;
+      acc.courtesies.forEach(c => {
+        if (!currentList.includes(c.name)) currentList.push(c.name);
+      });
+    }
+  }
 
   // Helpler to format date elegantly in Portuguese
   const formatFriendlyDate = (dateString: string) => {
@@ -1089,21 +1126,30 @@ export default function RoteiroView({
                   </div>
                 </div>
 
-                {/* Highly readable, humanized price breakdown - Rounded visual ticket */}
-                <div className="bg-[#FAF8F5] border border-zinc-200 p-5 rounded-2xl space-y-3.5 text-xs">
-                  <div className="flex justify-between items-center text-zinc-500">
-                    <span>Taxas de porto inclusas?</span>
-                    <span className="text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full font-bold text-[10px]">Sim, inclusas no barco</span>
+                {allCourtesies.size > 0 && (
+                  <div className="bg-[#E8711A]/5 border border-[#E8711A]/20 p-5 rounded-2xl space-y-3.5 text-xs text-left">
+                    <span className="font-accent text-[10px] text-[#E8711A] font-black tracking-widest uppercase flex items-center gap-1.5 mb-2">
+                      🎁 Benefícios Exclusivos da sua Viagem
+                    </span>
+                    <div className="space-y-3">
+                      {Array.from(allCourtesies.entries()).map(([expName, courtesiesList]) => (
+                        <div key={expName} className="space-y-1.5">
+                          <span className="text-zinc-800 font-bold block">{expName}</span>
+                          <ul className="space-y-1">
+                            {courtesiesList.map((c, i) => (
+                              <li key={i} className="flex items-start gap-2 text-zinc-600">
+                                <span className="text-[#E8711A]">•</span>
+                                <span>{c}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                  <div className="flex justify-between items-center text-zinc-500">
-                    <span>Frutas frescas & espumante de cortesia:</span>
-                    <span className="text-[#E8711A] bg-[#E8711A]/8 px-2.5 py-1 rounded-full font-bold text-[10px]">Sim, cortesia</span>
-                  </div>
-                  <div className="flex justify-between items-center text-zinc-500">
-                    <span>Ajuda para fotos e dicas nativas:</span>
-                    <span className="text-zinc-700 bg-zinc-150 px-2.5 py-1 rounded-full font-bold text-[10px]">Incluso com carinho</span>
-                  </div>
+                )}
 
+                <div className="bg-[#FAF8F5] border border-zinc-200 p-5 rounded-2xl space-y-3.5 text-xs">
                   <div className="border-t border-dashed border-zinc-200 pt-3.5 flex justify-between items-baseline">
                     <div className="text-left space-y-0.5">
                       <span className="text-zinc-500 block font-semibold">Valor Estimado do Roteiro</span>

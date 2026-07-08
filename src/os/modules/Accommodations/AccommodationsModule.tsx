@@ -16,7 +16,7 @@ import {
   Calendar
 } from 'lucide-react';
 import { CalendarPricingView } from '../../../components/CalendarPricingView';
-import { Accommodation, Destination } from '../../../types';
+import { Accommodation, Destination, Courtesy } from '../../../types';
 import { firestoreService } from '../../../firebase';
 import ImageUpload from '../../../components/ImageUpload';
 
@@ -48,6 +48,7 @@ export function AccommodationsModule({ accommodations, destinations }: Accommoda
   const [partnerId, setPartnerId] = useState('');
   const [description, setDescription] = useState('');
   const [amenitiesStr, setAmenitiesStr] = useState('');
+  const [courtesies, setCourtesies] = useState<Courtesy[]>([]);
   const [photos, setPhotos] = useState<string[]>([]);
   const [location, setLocation] = useState('');
   const [address, setAddress] = useState('');
@@ -78,6 +79,7 @@ export function AccommodationsModule({ accommodations, destinations }: Accommoda
     setPartnerId('');
     setDescription('');
     setAmenitiesStr('');
+    setCourtesies([]);
     setPhotos([]);
     setLocation('');
     setAddress('');
@@ -106,6 +108,7 @@ export function AccommodationsModule({ accommodations, destinations }: Accommoda
     setPartnerId(acc.partnerId || '');
     setDescription(acc.description || '');
     setAmenitiesStr(acc.amenities?.join(', ') || '');
+    setCourtesies(acc.courtesies || []);
     setPhotos(acc.photos || []);
     setLocation(acc.location || '');
     setAddress(acc.address || '');
@@ -145,6 +148,7 @@ export function AccommodationsModule({ accommodations, destinations }: Accommoda
       partnerId,
       description,
       amenities,
+      courtesies,
       photos: photos.length > 0 ? photos : ["https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800"],
       location,
       address,
@@ -415,8 +419,50 @@ export function AccommodationsModule({ accommodations, destinations }: Accommoda
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-zinc-400 mb-1">Comodidades (Amenities - Separe por vírgula)</label>
+                  <label className="block text-xs font-medium text-zinc-400 mb-1">Características Inclusas (Infraestrutura/Atributos - Separe por vírgula)</label>
                   <input type="text" value={amenitiesStr} onChange={e => setAmenitiesStr(e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 text-zinc-100 px-4 py-2 rounded-lg focus:border-blue-500 focus:outline-none" placeholder="Ex: Wi-Fi gratuito, Piscina de borda infinita, Ar-condicionado, Estacionamento" />
+                </div>
+
+                <div className="border border-zinc-800/80 rounded p-4 bg-zinc-950/50 space-y-4">
+                  <div className="flex justify-between items-center border-b border-zinc-800 pb-2">
+                    <label className="block text-sm font-medium text-[#E8711A]">🎁 Cortesias (Benefícios Extras)</label>
+                    <button
+                      type="button"
+                      onClick={() => setCourtesies([...courtesies, { id: `courtesy-${Date.now()}`, name: '', active: true, order: courtesies.length }])}
+                      className="text-xs bg-[#E8711A] text-white px-3 py-1.5 rounded hover:bg-[#E8711A]/80 flex items-center gap-1 transition-colors"
+                    >
+                      <Plus size={14} /> Adicionar Cortesia
+                    </button>
+                  </div>
+                  <div className="space-y-3">
+                    {courtesies.length === 0 && <p className="text-xs text-zinc-500 italic">Nenhuma cortesia adicionada. Estes são benefícios especiais (ex: Frutas frescas, Espumante, Upgrade).</p>}
+                    {courtesies.map((courtesy, idx) => (
+                      <div key={courtesy.id} className="flex gap-2 items-start bg-zinc-900 p-2 rounded border border-zinc-800">
+                        <input
+                          type="text"
+                          value={courtesy.name}
+                          onChange={(e) => {
+                            const newArr = [...courtesies];
+                            newArr[idx].name = e.target.value;
+                            setCourtesies(newArr);
+                          }}
+                          placeholder="Nome da Cortesia"
+                          className="flex-1 bg-zinc-950 border border-zinc-800 text-zinc-100 px-3 py-1.5 rounded focus:border-[#E8711A] focus:outline-none text-xs"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newArr = [...courtesies];
+                            newArr.splice(idx, 1);
+                            setCourtesies(newArr);
+                          }}
+                          className="p-1.5 text-zinc-500 hover:text-red-400 bg-zinc-800 rounded"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
 

@@ -33,6 +33,7 @@ export default function HospedagensView({ whatsappNumber, accommodations, onWhat
     description: acc.description,
     highlight: acc.highlight || "",
     amenities: acc.amenities,
+    courtesies: acc.courtesies || [],
     img: acc.photos?.[0] || "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80",
     whatsappMessage: acc.whatsappMessage || `Olá, Guida Trips! Gostaria de consultar tarifas com benefícios exclusivos para a ${acc.name}.`
   }));
@@ -139,7 +140,7 @@ export default function HospedagensView({ whatsappNumber, accommodations, onWhat
 
                 {/* Amenities pills */}
                 <div className="pt-2">
-                  <span className="font-accent text-[8px] text-zinc-400 tracking-wider uppercase font-bold block mb-2">Comodidades Inclusas:</span>
+                  <span className="font-accent text-[8px] text-zinc-400 tracking-wider uppercase font-bold block mb-2">Características (Estrutura):</span>
                   <div className="flex flex-wrap gap-1.5">
                     {pousada.amenities.map((item, idx) => (
                       <span key={idx} className="px-2.5 py-1 bg-zinc-100 text-[#0c1a26] font-sans text-[10px] rounded-sm flex items-center gap-1">
@@ -151,6 +152,20 @@ export default function HospedagensView({ whatsappNumber, accommodations, onWhat
                     ))}
                   </div>
                 </div>
+
+                {/* Cortesias */}
+                {pousada.courtesies && pousada.courtesies.length > 0 && (
+                  <div className="pt-3 border-t border-zinc-100">
+                    <span className="font-accent text-[8px] text-[#E8711A] tracking-wider uppercase font-bold block mb-2">🎁 Cortesias Guida Trips:</span>
+                    <div className="flex flex-wrap gap-1.5">
+                      {pousada.courtesies.map((item, idx) => (
+                        <span key={idx} className="px-2.5 py-1 bg-[#E8711A]/10 text-[#E8711A] font-sans text-[10px] font-bold rounded-sm flex items-center gap-1">
+                          {item.name}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Cost & Booking CTA */}

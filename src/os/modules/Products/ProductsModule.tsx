@@ -16,7 +16,7 @@ import {
   Calendar,
   AlertCircle
 } from 'lucide-react';
-import { Experience, Destination, ExperienceCategory } from '../../../types';
+import { Experience, Destination, ExperienceCategory, Courtesy } from '../../../types';
 import { firestoreService } from '../../../firebase';
 import ImageUpload from '../../../components/ImageUpload';
 
@@ -84,6 +84,7 @@ export function ProductsModule({ experiences, destinations }: ProductsModuleProp
   const [notIncludedStr, setNotIncludedStr] = useState('');
   const [itineraryStr, setItineraryStr] = useState('');
   const [policiesStr, setPoliciesStr] = useState('');
+  const [courtesies, setCourtesies] = useState<Courtesy[]>([]);
 
   const [status, setStatus] = useState<'active' | 'paused' | 'draft'>('active');
   const [location, setLocation] = useState('Arraial do Cabo');
@@ -126,6 +127,7 @@ export function ProductsModule({ experiences, destinations }: ProductsModuleProp
     setNotIncludedStr('');
     setItineraryStr('');
     setPoliciesStr('');
+    setCourtesies([]);
     setStatus('active');
     setLocation('Arraial do Cabo');
     setFeatured(false);
@@ -173,6 +175,7 @@ export function ProductsModule({ experiences, destinations }: ProductsModuleProp
     setNotIncludedStr(exp.notIncluded?.join('\n') || '');
     setItineraryStr(exp.itinerary?.join('\n') || '');
     setPoliciesStr(exp.policies?.join('\n') || '');
+    setCourtesies(exp.courtesies || []);
 
     setStatus(exp.status || 'active');
     setLocation(exp.location || 'Arraial do Cabo');
@@ -239,6 +242,7 @@ export function ProductsModule({ experiences, destinations }: ProductsModuleProp
       bringItems,
       included,
       notIncluded,
+      courtesies,
       itinerary,
       policies,
       status,
@@ -509,12 +513,54 @@ export function ProductsModule({ experiences, destinations }: ProductsModuleProp
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-medium text-zinc-400 mb-1">O que está Incluso (Um por linha)</label>
-                    <textarea rows={3} value={includedStr} onChange={e => setIncludedStr(e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 text-zinc-100 px-4 py-2 rounded-lg focus:border-blue-500 focus:outline-none text-xs" placeholder="Ex: Água mineral liberada&#10;Colete salva-vidas" />
+                    <label className="block text-xs font-medium text-zinc-400 mb-1">Características Inclusas (Infraestrutura/Atributos - Um por linha)</label>
+                    <textarea rows={3} value={includedStr} onChange={e => setIncludedStr(e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 text-zinc-100 px-4 py-2 rounded-lg focus:border-blue-500 focus:outline-none text-xs" placeholder="Ex: Guia credenciado&#10;Colete salva-vidas&#10;Banheiro a bordo" />
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-zinc-400 mb-1">O que NÃO está incluso (Um por linha)</label>
                     <textarea rows={3} value={notIncludedStr} onChange={e => setNotIncludedStr(e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 text-zinc-100 px-4 py-2 rounded-lg focus:border-blue-500 focus:outline-none text-xs" placeholder="Ex: Taxa de embarque da prefeitura&#10;Almoço" />
+                  </div>
+                </div>
+
+                <div className="border border-zinc-800/80 rounded p-4 bg-zinc-950/50 space-y-4">
+                  <div className="flex justify-between items-center border-b border-zinc-800 pb-2">
+                    <label className="block text-sm font-medium text-[#E8711A]">🎁 Cortesias (Benefícios Extras)</label>
+                    <button
+                      type="button"
+                      onClick={() => setCourtesies([...courtesies, { id: `courtesy-${Date.now()}`, name: '', active: true, order: courtesies.length }])}
+                      className="text-xs bg-[#E8711A] text-white px-3 py-1.5 rounded hover:bg-[#E8711A]/80 flex items-center gap-1 transition-colors"
+                    >
+                      <Plus size={14} /> Adicionar Cortesia
+                    </button>
+                  </div>
+                  <div className="space-y-3">
+                    {courtesies.length === 0 && <p className="text-xs text-zinc-500 italic">Nenhuma cortesia adicionada. Estes são benefícios especiais (ex: Água mineral, Fotos gratuitas, Espumante).</p>}
+                    {courtesies.map((courtesy, idx) => (
+                      <div key={courtesy.id} className="flex gap-2 items-start bg-zinc-900 p-2 rounded border border-zinc-800">
+                        <input
+                          type="text"
+                          value={courtesy.name}
+                          onChange={(e) => {
+                            const newArr = [...courtesies];
+                            newArr[idx].name = e.target.value;
+                            setCourtesies(newArr);
+                          }}
+                          placeholder="Nome da Cortesia"
+                          className="flex-1 bg-zinc-950 border border-zinc-800 text-zinc-100 px-3 py-1.5 rounded focus:border-[#E8711A] focus:outline-none text-xs"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newArr = [...courtesies];
+                            newArr.splice(idx, 1);
+                            setCourtesies(newArr);
+                          }}
+                          className="p-1.5 text-zinc-500 hover:text-red-400 bg-zinc-800 rounded"
+                        >
+                          <Trash size={14} />
+                        </button>
+                      </div>
+                    ))}
                   </div>
                 </div>
 
