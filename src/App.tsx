@@ -1268,6 +1268,8 @@ export default function App() {
             whatsappNumber={settings.whatsappNumber} 
             accommodations={accommodations}
             onWhatsAppContact={openWhatsAppModal}
+            onNavigate={handleNavigate}
+            onChangeHotelId={handleUpdateHotelId}
           />
         )}
         {currentView === "sobre" && (

@@ -17,6 +17,7 @@ import { firestoreService } from "../firebase";
 import { analytics } from "../lib/analytics";
 import { getValidAffiliateRef } from "../lib/utils";
 import ExperienceMediaGallery from "./ExperienceMediaGallery";
+import AccommodationDetailModal from "./AccommodationDetailModal";
 
 interface WizardViewProps {
   experiences: Experience[];
@@ -119,6 +120,7 @@ export default function WizardView({
 
   // Detailed Modal states (For catalog item)
   const [selectedExpDetail, setSelectedExpDetail] = useState<Experience | null>(null);
+  const [selectedHotelForDetail, setSelectedHotelForDetail] = useState<Accommodation | null>(null);
 
   // Experience photo indexes cache (to paginate carousel images inside cards)
   const [expPhotoCache, setExpPhotoCache] = useState<Record<string, number>>({});
@@ -1572,7 +1574,13 @@ export default function WizardView({
                                   isSelected ? "border-[#E8711A] ring-1 ring-[#E8711A]/20" : "border-zinc-200"
                                 }`}
                               >
-                                <div className="h-32 overflow-hidden relative select-none">
+                                <div 
+                                  onClick={() => {
+                                    const originalAcc = accommodations.find(a => a.id === pousada.id);
+                                    if (originalAcc) setSelectedHotelForDetail(originalAcc);
+                                  }}
+                                  className="h-32 overflow-hidden relative select-none cursor-pointer"
+                                >
                                   <img
                                     src={pousada.img}
                                     alt={pousada.name}
@@ -1591,7 +1599,13 @@ export default function WizardView({
                                 <div className="p-4 space-y-4 flex-grow flex flex-col justify-between">
                                   <div className="space-y-1 text-left">
                                     <span className="text-[9px] uppercase tracking-wider font-extrabold text-zinc-400">{pousada.location}</span>
-                                    <h6 className="font-serif text-sm font-extrabold text-[#0D1B2A] leading-tight group-hover:text-[#E8711A] transition-colors line-clamp-1">
+                                    <h6 
+                                      onClick={() => {
+                                        const originalAcc = accommodations.find(a => a.id === pousada.id);
+                                        if (originalAcc) setSelectedHotelForDetail(originalAcc);
+                                      }}
+                                      className="font-serif text-sm font-extrabold text-[#0D1B2A] leading-tight group-hover:text-[#E8711A] transition-colors line-clamp-1 cursor-pointer"
+                                    >
                                       {pousada.name}
                                     </h6>
                                     <p className="font-sans text-[11px] text-zinc-500 leading-relaxed line-clamp-2 mb-2">
@@ -1602,7 +1616,17 @@ export default function WizardView({
                                     </span>
                                   </div>
 
-                                  <div className="space-y-1.5 pt-2 border-t border-zinc-100">
+                                  <div className="flex items-center gap-1.5 pt-2 border-t border-zinc-100">
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        const originalAcc = accommodations.find(a => a.id === pousada.id);
+                                        if (originalAcc) setSelectedHotelForDetail(originalAcc);
+                                      }}
+                                      className="flex-1 py-2 bg-white border border-[#0D1B2A] hover:bg-zinc-50 text-[#0D1B2A] rounded-xl font-accent text-[9px] font-bold tracking-wider uppercase transition-all cursor-pointer text-center"
+                                    >
+                                      DETALHES
+                                    </button>
                                     <button
                                       type="button"
                                       onClick={() => {
@@ -1610,13 +1634,13 @@ export default function WizardView({
                                           onChangeHotelId(isSelected ? null : pousada.id);
                                         }
                                       }}
-                                      className={`w-full py-2 rounded-xl font-accent text-[9px] font-extrabold tracking-wider uppercase transition-all flex items-center justify-center gap-1 cursor-pointer ${
+                                      className={`flex-1 py-2 rounded-xl font-accent text-[9px] font-extrabold tracking-wider uppercase transition-all flex items-center justify-center gap-1 cursor-pointer ${
                                         isSelected
                                           ? "bg-[#E8711A] text-[#0D1B2A] font-black"
                                           : "bg-[#0D1B2A] hover:bg-[#E8711A] hover:text-[#0D1B2A] text-white"
                                       }`}
                                     >
-                                      {isSelected ? "✨ SELECIONADO" : "VINCULAR POUSADA"}
+                                      {isSelected ? "VINCULADO" : "VINCULAR"}
                                     </button>
                                   </div>
                                 </div>
@@ -2424,6 +2448,25 @@ export default function WizardView({
           </div>
         )}
       </AnimatePresence>
+
+      {/* Accommodation Detail Modal Overlay */}
+      {selectedHotelForDetail && (
+        <AccommodationDetailModal
+          accommodation={selectedHotelForDetail}
+          isOpen={!!selectedHotelForDetail}
+          onClose={() => setSelectedHotelForDetail(null)}
+          isSelectionContext={true}
+          isSelected={selectedHotelId === selectedHotelForDetail.id}
+          onSelectToggle={() => {
+            if (onChangeHotelId) {
+              onChangeHotelId(selectedHotelId === selectedHotelForDetail.id ? null : selectedHotelForDetail.id);
+            }
+          }}
+          onWhatsAppContact={(msg) => {
+            window.open(`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(msg)}`, "_blank");
+          }}
+        />
+      )}
 
     </div>
   );
