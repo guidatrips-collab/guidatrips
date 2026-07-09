@@ -26,6 +26,8 @@ interface ExperiencesViewProps {
   selectedDestinationId: string | null;
   onUpdateSelectedDestinationId: (id: string) => void;
   onWhatsAppContact?: (message?: string) => void;
+  selectedExperienceSlug?: string | null;
+  onSelectExperience?: (slug: string | null) => void;
 }
 
 export default function ExperiencesView({
@@ -44,7 +46,9 @@ export default function ExperiencesView({
   destinations,
   selectedDestinationId,
   onUpdateSelectedDestinationId,
-  onWhatsAppContact
+  onWhatsAppContact,
+  selectedExperienceSlug,
+  onSelectExperience
 }: ExperiencesViewProps) {
   const [selectedCategory, setSelectedCategory] = useState<string>("todos");
   const [selectedLocation, setSelectedLocation] = useState<string>("todos");
@@ -188,6 +192,34 @@ export default function ExperiencesView({
     setCardCvv("");
     setOpenFaqIndex(null);
     setCalendarMonth(new Date());
+  };
+
+  // Sync with URL experience slug
+  useEffect(() => {
+    if (selectedExperienceSlug) {
+      const exp = experiences.find(e => e.slug === selectedExperienceSlug);
+      if (exp && (!activeExperience || activeExperience.id !== exp.id)) {
+        handleOpenDetails(exp);
+      }
+    } else {
+      setActiveExperience(null);
+    }
+  }, [selectedExperienceSlug, experiences]);
+
+  const handleOpenExperienceDetail = (exp: Experience) => {
+    if (onSelectExperience) {
+      onSelectExperience(exp.slug);
+    } else {
+      handleOpenDetails(exp);
+    }
+  };
+
+  const handleCloseExperienceDetail = () => {
+    if (onSelectExperience) {
+      onSelectExperience(null);
+    } else {
+      setActiveExperience(null);
+    }
   };
 
   // Dynamic Prices for the selected booking date
@@ -429,7 +461,7 @@ export default function ExperiencesView({
 
                       {/* Detail CTA */}
                       <button
-                        onClick={() => handleOpenDetails(exp)}
+                        onClick={() => handleOpenExperienceDetail(exp)}
                         className="w-full text-center bg-zinc-100 hover:bg-[#E8711A] text-[#0D1B2A] hover:text-white border border-zinc-200 hover:border-[#E8711A] p-3 text-xs font-accent font-bold uppercase tracking-widest transition-all rounded-xl cursor-pointer"
                       >
                         Ver Detalhes & Disponibilidade &rarr;
@@ -467,7 +499,7 @@ export default function ExperiencesView({
             >
               {/* Close Button */}
               <button 
-                onClick={() => setActiveExperience(null)}
+                onClick={() => handleCloseExperienceDetail()}
                 className="absolute top-4 right-4 z-50 p-2.5 rounded-full bg-zinc-100 hover:bg-red-500/10 text-zinc-600 hover:text-red-500 transition-all font-bold text-sm cursor-pointer border border-zinc-200"
               >
                 ✕
@@ -724,7 +756,7 @@ export default function ExperiencesView({
                           return (
                             <div 
                               key={recId}
-                              onClick={() => handleOpenDetails(recExp)}
+                              onClick={() => handleOpenExperienceDetail(recExp)}
                               className="p-3 bg-zinc-50 border border-zinc-200 rounded-2xl flex gap-3 hover:border-[#E8711A] hover:bg-zinc-100 transition-all cursor-pointer items-center justify-between"
                             >
                               <div className="flex items-center gap-3 min-w-0">
@@ -795,7 +827,7 @@ export default function ExperiencesView({
                           {onNavigate && (
                             <button
                               onClick={() => {
-                                setActiveExperience(null);
+                                handleCloseExperienceDetail();
                                 onNavigate("cliente");
                               }}
                               className="w-full py-4 bg-[#0D1B2A] hover:bg-[#152a41] text-white font-accent font-black tracking-widest uppercase rounded-xl transition-all shadow-md flex items-center justify-center gap-1.5 cursor-pointer"
@@ -804,7 +836,7 @@ export default function ExperiencesView({
                             </button>
                           )}
                           <button
-                            onClick={() => setActiveExperience(null)}
+                            onClick={() => handleCloseExperienceDetail()}
                             className="w-full py-3 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 font-accent font-bold text-xs tracking-widest uppercase rounded-xl transition-all cursor-pointer"
                           >
                             Voltar para Passeios
@@ -1419,7 +1451,7 @@ export default function ExperiencesView({
                             onAddToCart(tempItem);
                             setShowDaySelectionModal(false);
                             setPendingCartItem(null);
-                            setActiveExperience(null);
+                            handleCloseExperienceDetail();
                             onOpenCart();
                           }
                         }}

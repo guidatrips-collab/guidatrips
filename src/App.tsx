@@ -25,6 +25,7 @@ import { GuidaOS } from "./os/GuidaOS";
 import { LeadCaptureModal } from "./components/LeadCaptureModal";
 import { analytics } from "./lib/analytics";
 import { getValidAffiliateRef } from "./lib/utils";
+import { updatePageSEO } from "./lib/seo";
 
 import { 
   Experience, BlogPost, Lead, GlobalSettings, BookingCartItem, ClientUser, ClientReservation, SavedItinerary,
@@ -197,6 +198,38 @@ export default function App() {
     setSelectedPostSlug(null);
   };
 
+  const handleSelectPost = (slug: string | null) => {
+    if (slug) {
+      navigate(`/blog/${slug}`);
+    } else {
+      navigate('/blog');
+    }
+  };
+
+  const handleSelectExperience = (slug: string | null) => {
+    if (slug) {
+      navigate(`/passeios/${slug}`);
+    } else {
+      navigate('/passeios');
+    }
+  };
+
+  const handleSelectAccommodation = (slug: string | null) => {
+    if (slug) {
+      navigate(`/hospedagens/${slug}`);
+    } else {
+      navigate('/hospedagens');
+    }
+  };
+
+  const handleSelectDestination = (slug: string | null) => {
+    if (slug) {
+      navigate(`/lugares/${slug}`);
+    } else {
+      navigate('/lugares');
+    }
+  };
+
   const handleTriggerAuthModalForCheckout = (action: { type: string; action: () => void }) => {
     setPendingAuthAction({ type: "online_booking", callback: action.action });
     setIsAuthModalOpen(true);
@@ -204,26 +237,6 @@ export default function App() {
 
   const navigate = useNavigate();
   const location = useLocation();
-
-  const getCurrentViewFromPath = (pathname: string) => {
-    if (pathname.startsWith('/guideos')) return 'os';
-    if (pathname.startsWith('/lugares/') && pathname.split('/').length >= 4) return 'thematic-view';
-    if (pathname === '/lugares' || pathname === '/restaurantes' || pathname === '/eventos') return 'destino';
-    if (pathname === '/passeios') return 'experiencias';
-    if (pathname === '/roteiro-inteligente') return 'wizard';
-    if (pathname === '/meu-roteiro') return 'roteiro';
-    if (pathname === '/dashboard' || pathname === '/perfil') return 'cliente';
-    if (pathname === '/hospedagens') return 'hospedagens';
-    if (pathname === '/sobre') return 'sobre';
-    if (pathname === '/blog') return 'blog';
-    if (pathname === '/contato') return 'contato';
-    if (pathname === '/admin') return 'admin';
-    if (pathname === '/confirmacao-roteiro') return 'confirmacao-roteiro';
-    return 'home';
-  };
-  const currentView = getCurrentViewFromPath(location.pathname);
-
-  const [selectedPostSlug, setSelectedPostSlug] = useState<string | null>(null);
 
   // Core CRM / Experiential Data loaded initially or from LocalStorage
   const [experiences, setExperiences] = useState<Experience[]>([]);
@@ -240,6 +253,73 @@ export default function App() {
   const [affiliates, setAffiliates] = useState<any[]>([]);
   const [budgets, setBudgets] = useState<any[]>([]);
   const [thematicItineraries, setThematicItineraries] = useState<any[]>([]);
+
+  const getCurrentViewFromPath = (pathname: string) => {
+    if (pathname.startsWith('/guideos')) return 'os';
+    if (pathname.startsWith('/lugares/') && pathname.split('/').filter(Boolean).length >= 3) return 'thematic-view';
+    if (pathname.startsWith('/lugares')) return 'destino';
+    if (pathname.startsWith('/passeios') || pathname.startsWith('/experiencias')) return 'experiencias';
+    if (pathname === '/roteiro-inteligente') return 'wizard';
+    if (pathname === '/meu-roteiro') return 'roteiro';
+    if (pathname === '/dashboard' || pathname === '/perfil') return 'cliente';
+    if (pathname.startsWith('/hospedagens')) return 'hospedagens';
+    if (pathname === '/sobre') return 'sobre';
+    if (pathname.startsWith('/blog')) return 'blog';
+    if (pathname === '/contato') return 'contato';
+    if (pathname === '/admin') return 'admin';
+    if (pathname === '/confirmacao-roteiro') return 'confirmacao-roteiro';
+    return 'home';
+  };
+  const currentView = getCurrentViewFromPath(location.pathname);
+
+  const [selectedPostSlug, setSelectedPostSlug] = useState<string | null>(null);
+  const [selectedExperienceSlug, setSelectedExperienceSlug] = useState<string | null>(null);
+  const [selectedAccommodationSlug, setSelectedAccommodationSlug] = useState<string | null>(null);
+  const [selectedDestinationSlug, setSelectedDestinationSlug] = useState<string | null>(null);
+  const [selectedThematicSlug, setSelectedThematicSlug] = useState<string | null>(null);
+
+  // Sync URL subpaths with state and update SEO dynamically in real-time
+  useEffect(() => {
+    const pathParts = location.pathname.split('/').filter(Boolean);
+
+    if (pathParts[0] === 'blog') {
+      setSelectedPostSlug(pathParts[1] || null);
+    } else {
+      setSelectedPostSlug(null);
+    }
+
+    if (pathParts[0] === 'passeios' || pathParts[0] === 'experiencias') {
+      setSelectedExperienceSlug(pathParts[1] || null);
+    } else {
+      setSelectedExperienceSlug(null);
+    }
+
+    if (pathParts[0] === 'hospedagens') {
+      setSelectedAccommodationSlug(pathParts[1] || null);
+    } else {
+      setSelectedAccommodationSlug(null);
+    }
+
+    if (pathParts[0] === 'lugares') {
+      setSelectedDestinationSlug(pathParts[1] || null);
+      setSelectedThematicSlug(pathParts[2] || null);
+    } else {
+      setSelectedDestinationSlug(null);
+      setSelectedThematicSlug(null);
+    }
+
+    // Call dynamic SEO & Schema.org Structured Data Updater
+    try {
+      updatePageSEO(location.pathname, {
+        destinations,
+        experiences,
+        accommodations,
+        posts
+      });
+    } catch (e) {
+      console.error("SEO update failed:", e);
+    }
+  }, [location.pathname, destinations, experiences, accommodations, posts]);
 
   // Affiliate Tracking
   useEffect(() => {
@@ -1231,10 +1311,25 @@ export default function App() {
             selectedDestinationId={selectedDestinationId}
             onUpdateSelectedDestinationId={updateSelectedDestinationId}
             onWhatsAppContact={openWhatsAppModal}
+            selectedExperienceSlug={selectedExperienceSlug}
+            onSelectExperience={handleSelectExperience}
           />
         )}
         {currentView === "destino" && (
-          <DestinoView onNavigate={handleNavigate} />
+          <DestinoView 
+            destinationSlug={selectedDestinationSlug}
+            destinations={destinations}
+            experiences={experiences}
+            accommodations={accommodations}
+            posts={posts}
+            onNavigate={handleNavigate}
+            onSelectExperience={handleSelectExperience}
+            onSelectAccommodation={handleSelectAccommodation}
+            onSelectDestination={handleSelectDestination}
+            onSelectPost={handleSelectPost}
+            onChangeHotelId={handleUpdateHotelId}
+            onUpdateSelectedDestinationId={updateSelectedDestinationId}
+          />
         )}
         {currentView === "wizard" && (
           <WizardView 
@@ -1270,6 +1365,8 @@ export default function App() {
             onWhatsAppContact={openWhatsAppModal}
             onNavigate={handleNavigate}
             onChangeHotelId={handleUpdateHotelId}
+            selectedAccommodationSlug={selectedAccommodationSlug}
+            onSelectAccommodation={handleSelectAccommodation}
           />
         )}
         {currentView === "sobre" && (
@@ -1282,7 +1379,7 @@ export default function App() {
             destinations={destinations}
             onNavigateToContact={() => handleNavigate("contato")}
             selectedSlug={selectedPostSlug}
-            onSelectPost={setSelectedPostSlug}
+            onSelectPost={handleSelectPost}
             onNavigateToThematic={(destSlug, thematicSlug) => navigate(`/lugares/${destSlug}/${thematicSlug}`)}
           />
         )}

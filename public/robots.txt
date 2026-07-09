@@ -1,0 +1,23 @@
+# robots.txt for guidatrips.com
+User-agent: *
+Allow: /
+Allow: /lugares
+Allow: /lugares/*
+Allow: /passeios
+Allow: /passeios/*
+Allow: /hospedagens
+Allow: /hospedagens/*
+Allow: /blog
+Allow: /blog/*
+Allow: /roteiro-inteligente
+Allow: /sobre
+Allow: /contato
+
+Disallow: /admin
+Disallow: /admin/*
+Disallow: /dashboard
+Disallow: /dashboard/*
+Disallow: /perfil
+Disallow: /guideos/*
+
+Sitemap: https://guidatrips.com/sitemap.xml

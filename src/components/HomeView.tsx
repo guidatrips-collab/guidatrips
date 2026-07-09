@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { 
-  MapPin, Compass, Calendar, MessageCircle, Heart, Star, Check, ArrowRight, Sparkles, Plus, X
+  MapPin, Compass, Calendar, MessageCircle, Heart, Star, Check, ArrowRight, Sparkles, Plus, X,
+  Wind, Waves, Activity, Info, AlertTriangle, Sun, CloudRain
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { Experience, BookingCartItem, GlobalSettings, getBrazilLocalDate, addDaysToBrazilDate, Destination } from "../types";
@@ -37,6 +38,70 @@ export default function HomeView({
   const [configSchedule, setConfigSchedule] = useState<string>("");
   const [configAdults, setConfigAdults] = useState<number>(2);
   const [successNotifId, setSuccessNotifId] = useState<string | null>(null);
+
+  // Nautical Weather & Wind Forecast Panel States
+  const [selectedForecastDay, setSelectedForecastDay] = useState<number>(1);
+  const [showUpwellingModal, setShowUpwellingModal] = useState<boolean>(false);
+
+  // Marine Forecast Data representing highly realistic conditions for Arraial do Cabo
+  const forecastDays = [
+    {
+      day: 1,
+      label: "Hoje",
+      windSpeed: "8 kt",
+      windDir: "Nordeste (NE)",
+      waves: "0.7 m",
+      temp: "21°C",
+      condition: "Perfeito",
+      icon: Sun,
+      color: "text-emerald-500",
+      bgBadge: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
+      description: "O vento Nordeste sopra suave. Condições ideais para o Passeio de Barco Premium e mergulho. O mar de dentro está calmo como uma lagoa cristalina.",
+      recommendation: "Dia ideal para reservar atividades marinhas ao ar livre!"
+    },
+    {
+      day: 2,
+      label: "Amanhã",
+      windSpeed: "16 kt",
+      windDir: "Nordeste (NE)",
+      waves: "0.9 m",
+      temp: "20°C",
+      condition: "Firme",
+      icon: Wind,
+      color: "text-amber-500",
+      bgBadge: "bg-amber-500/10 text-amber-500 border-amber-500/20",
+      description: "Vento Nordeste moderado a forte. A navegação no mar de dentro (Prainhas e Farol) continua segura, mas o mar de fora pode balançar um pouco mais.",
+      recommendation: "Recomendamos o Passeio de Barco Premium em embarcações maiores ou focar em curtir a Pousada."
+    },
+    {
+      day: 3,
+      label: "Depois de Amanhã",
+      windSpeed: "22 kt",
+      windDir: "Sudoeste (SW)",
+      waves: "1.8 m",
+      temp: "19°C",
+      condition: "Agitado",
+      icon: CloudRain,
+      color: "text-red-500",
+      bgBadge: "bg-red-500/10 text-red-500 border-red-500/20",
+      description: "Frente fria trazendo vento Sudoeste forte e swell elevado. A Marinha poderá restringir ou fechar a saída do porto de Praia dos Anjos.",
+      recommendation: "Excelente dia para uma aventura terrestre! Agende a Expedição de Buggy Off-Road e conheça as dunas e praias secretas por terra."
+    },
+    {
+      day: 4,
+      label: "Em 3 Dias",
+      windSpeed: "6 kt",
+      windDir: "Leste (E)",
+      waves: "0.6 m",
+      temp: "22°C",
+      condition: "Espetacular",
+      icon: Sun,
+      color: "text-emerald-500",
+      bgBadge: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
+      description: "Mar de Almirante. Vento quase nulo e visibilidade excepcional sob a água. Condição perfeita para o Batismo de Mergulho ou lanchas privativas.",
+      recommendation: "Não perca a chance de mergulhar ou fazer um tour privativo exclusivo."
+    }
+  ];
 
   const activeExps = experiences && experiences.length > 0
     ? experiences.filter((e) => e.status === "active").slice(0, 3)
@@ -138,6 +203,246 @@ export default function HomeView({
             ))}
           </div>
         </div>
+      </section>
+
+      {/* BOLETIM DE NAVEGAÇÃO & CONDIÇÕES DE VENTO */}
+      <section className="py-24 bg-[#FAF8F5] border-b border-zinc-200 relative overflow-hidden">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full bg-[#E8711A]/5 blur-[100px] pointer-events-none"></div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="text-center max-w-2xl mx-auto mb-16 space-y-4">
+            <span className="font-accent text-[#E8711A] text-xs font-bold tracking-widest uppercase block">
+              PREVISIBILIDADE NÁUTICA
+            </span>
+            <h2 className="font-serif text-3xl sm:text-5xl font-extrabold text-[#0D1B2A] tracking-tight leading-tight">
+              Boletim do Mar & Vento
+            </h2>
+            <div className="h-0.5 w-16 bg-[#E8711A] mx-auto"></div>
+            <p className="font-sans text-xs sm:text-sm text-zinc-600 max-w-lg mx-auto">
+              Em Arraial do Cabo, os ventos determinam a rota de navegação. Nosso sistema analisa as correntes locais para que você escolha o dia perfeito.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
+            {/* Left Box: Current Stats */}
+            <div className="lg:col-span-5 bg-white border border-[#0D1B2A]/10 rounded-2xl p-8 flex flex-col justify-between shadow-sm">
+              <div className="space-y-6">
+                <div className="flex justify-between items-center pb-4 border-b border-zinc-100">
+                  <span className="font-accent text-[#0D1B2A] text-xs font-black tracking-widest uppercase">
+                    Status em Tempo Real
+                  </span>
+                  <div className="flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 text-emerald-700 text-[10px] font-bold rounded-full border border-emerald-100 uppercase font-accent">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                    Porto Aberto
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="p-4 bg-zinc-50 border border-zinc-150 rounded-xl space-y-2 text-left">
+                    <div className="flex items-center gap-2 text-zinc-400">
+                      <Wind className="w-4 h-4 text-[#E8711A]" />
+                      <span className="font-sans text-[10px] uppercase font-semibold">Vento Hoje</span>
+                    </div>
+                    <div>
+                      <div className="font-serif text-xl font-bold text-[#0D1B2A]">8 nós (kt)</div>
+                      <div className="font-sans text-[10px] text-zinc-500">Direção Nordeste (NE)</div>
+                    </div>
+                  </div>
+
+                  <div className="p-4 bg-zinc-50 border border-zinc-150 rounded-xl space-y-2 text-left">
+                    <div className="flex items-center gap-2 text-zinc-400">
+                      <Waves className="w-4 h-4 text-[#E8711A]" />
+                      <span className="font-sans text-[10px] uppercase font-semibold">Ondulação (Swell)</span>
+                    </div>
+                    <div>
+                      <div className="font-serif text-xl font-bold text-[#0D1B2A]">0.7 metros</div>
+                      <div className="font-sans text-[10px] text-zinc-500">Período de 9 segundos</div>
+                    </div>
+                  </div>
+
+                  <div className="p-4 bg-zinc-50 border border-zinc-150 rounded-xl space-y-2 text-left">
+                    <div className="flex items-center gap-2 text-zinc-400">
+                      <Activity className="w-4 h-4 text-[#E8711A]" />
+                      <span className="font-sans text-[10px] uppercase font-semibold">Temp. da Água</span>
+                    </div>
+                    <div>
+                      <div className="font-serif text-xl font-bold text-[#0D1B2A]">21°C</div>
+                      <button 
+                        onClick={() => setShowUpwellingModal(true)}
+                        className="font-sans text-[10px] text-[#E8711A] hover:underline flex items-center gap-0.5 cursor-pointer text-left font-medium"
+                      >
+                        Fenômeno Ressurgência <Info className="w-3 h-3" />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="p-4 bg-zinc-50 border border-zinc-150 rounded-xl space-y-2 text-left">
+                    <div className="flex items-center gap-2 text-zinc-400">
+                      <Compass className="w-4 h-4 text-[#E8711A]" />
+                      <span className="font-sans text-[10px] uppercase font-semibold">Navegabilidade</span>
+                    </div>
+                    <div>
+                      <div className="font-serif text-xl font-bold text-emerald-600">Excelente</div>
+                      <div className="font-sans text-[10px] text-zinc-500">Visibilidade sub: alta</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-8 pt-6 border-t border-zinc-100">
+                <p className="font-sans text-[11px] text-[#5C6874] leading-relaxed text-left">
+                  <span className="font-bold text-[#0D1B2A]">Por que isso importa?</span> Ventos acima de 15 nós alteram as paradas fora da baía. Nosso papel é ajustar sua programação para garantir o máximo de praias com águas calmas e límpidas.
+                </p>
+              </div>
+            </div>
+
+            {/* Right Box: 4-Day Forecast with Interactive Tab */}
+            <div className="lg:col-span-7 bg-white border border-[#0D1B2A]/10 rounded-2xl p-8 flex flex-col justify-between shadow-sm">
+              <div>
+                <span className="font-accent text-[#0D1B2A] text-xs font-black tracking-widest uppercase block mb-6 text-left">
+                  Previsibilidade para Planejamento
+                </span>
+
+                {/* Day selector tabs */}
+                <div className="flex border-b border-zinc-150 mb-6 overflow-x-auto pb-1 gap-1">
+                  {forecastDays.map((f) => {
+                    const ForecastIcon = f.icon;
+                    const isSelected = selectedForecastDay === f.day;
+                    return (
+                      <button
+                        key={f.day}
+                        onClick={() => setSelectedForecastDay(f.day)}
+                        className={`flex-1 min-w-[90px] pb-3 text-center transition-all border-b-2 font-accent text-[11px] font-bold uppercase tracking-wider flex flex-col items-center gap-1.5 cursor-pointer ${
+                          isSelected
+                            ? "border-[#E8711A] text-[#E8711A] font-black"
+                            : "border-transparent text-zinc-400 hover:text-zinc-600"
+                        }`}
+                      >
+                        <ForecastIcon className={`w-4 h-4 ${isSelected ? "text-[#E8711A]" : "text-zinc-300"}`} />
+                        <span>{f.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Tab content panel */}
+                <AnimatePresence mode="wait">
+                  {forecastDays.map((f) => {
+                    if (f.day !== selectedForecastDay) return null;
+                    return (
+                      <motion.div
+                        key={f.day}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        transition={{ duration: 0.2 }}
+                        className="space-y-6 text-left"
+                      >
+                        <div className="flex flex-wrap items-center gap-3">
+                          <span className={`px-2.5 py-1 text-[9px] font-accent font-black uppercase rounded border ${f.bgBadge}`}>
+                            {f.condition}
+                          </span>
+                          <span className="font-sans text-xs text-zinc-400">
+                            Vento: <strong className="text-[#0D1B2A]">{f.windSpeed} ({f.windDir})</strong>
+                          </span>
+                          <span className="font-sans text-xs text-zinc-400">
+                            Ondas: <strong className="text-[#0D1B2A]">{f.waves}</strong>
+                          </span>
+                        </div>
+
+                        <div className="space-y-2">
+                          <p className="font-sans text-sm text-[#0D1B2A] leading-relaxed">
+                            {f.description}
+                          </p>
+                        </div>
+
+                        {/* Recommendation Alert Block */}
+                        <div className="p-4 bg-[#E8711A]/5 border-l-4 border-[#E8711A] rounded-r-xl space-y-1">
+                          <div className="flex items-center gap-1.5 font-accent text-[9px] text-[#E8711A] font-black tracking-wider uppercase">
+                            <Sparkles className="w-3.5 h-3.5" /> RECOMENDAÇÃO DO CONCIERGE
+                          </div>
+                          <p className="font-sans text-xs text-zinc-700">
+                            {f.recommendation}
+                          </p>
+                        </div>
+                      </motion.div>
+                    );
+                  })}
+                </AnimatePresence>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-4 mt-8 pt-6 border-t border-zinc-100 items-center justify-between">
+                <span className="font-sans text-[11px] text-zinc-500 text-left">
+                  Deseja adequar suas datas em tempo real? Fale com nosso comissariado.
+                </span>
+                <button 
+                  onClick={() => onWhatsAppContact?.(`Olá, gostaria de falar com um concierge para entender as melhores condições de vento para os meus passeios!`)}
+                  className="w-full sm:w-auto px-5 py-3 bg-[#0D1B2A] hover:bg-[#E8711A] hover:text-white text-white font-accent text-[10px] font-bold tracking-widest uppercase transition-all rounded shadow-md hover:scale-[1.02] cursor-pointer"
+                >
+                  Consultar Concierge via WhatsApp
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Dynamic educational upwelling phenomenon explanation modal */}
+        <AnimatePresence>
+          {showUpwellingModal && (
+            <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setShowUpwellingModal(false)}
+                className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+              />
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="relative w-full max-w-md bg-white border border-zinc-200 rounded-2xl p-6 shadow-2xl text-left"
+              >
+                <button 
+                  onClick={() => setShowUpwellingModal(false)}
+                  className="absolute top-4 right-4 p-2 rounded-full bg-zinc-100 hover:bg-zinc-200 text-zinc-600 transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+                <div className="space-y-4">
+                  <div className="w-12 h-12 bg-sky-50 text-[#E8711A] rounded-full flex items-center justify-center border border-sky-100">
+                    <Waves className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h3 className="font-serif text-lg font-bold text-[#0D1B2A]">O Fenômeno da Ressurgência</h3>
+                    <span className="font-accent text-[9px] text-[#E8711A] font-extrabold tracking-widest uppercase">Segredo de Arraial do Cabo</span>
+                  </div>
+                  <div className="font-sans text-xs text-zinc-600 space-y-3 leading-relaxed">
+                    <p>
+                      Arraial do Cabo abriga um dos fenômenos oceanográficos mais raros e fascinantes do mundo: a <strong className="text-[#0D1B2A]">Ressurgência Marinha</strong>.
+                    </p>
+                    <p>
+                      Ventos constantes do quadrante Nordeste empurram as águas quentes da superfície para longe da costa. Para preencher esse espaço, águas profundas vindas da Corrente Antártica (a mais de 300 metros de profundidade) sobem à superfície.
+                    </p>
+                    <p>
+                      Essa água profunda é extremamente rica em nutrientes, o que gera uma abundante vida marinha (tartarugas, golfinhos, orcas, arraias) e confere ao mar de Arraial aquela <strong className="text-[#0D1B2A]">transparência e cor turquesa idênticas às do Caribe</strong>.
+                    </p>
+                    <p>
+                      A temperatura média da água varia entre 15°C e 21°C. É esse friozinho refrescante que preserva a pureza absoluta da nossa costa!
+                    </p>
+                  </div>
+                  <div className="pt-2">
+                    <button 
+                      onClick={() => setShowUpwellingModal(false)}
+                      className="w-full py-3 bg-[#0D1B2A] text-white text-xs font-accent font-bold uppercase tracking-widest rounded-lg hover:bg-[#E8711A]"
+                    >
+                      Entendi, Sensacional!
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
       </section>
 
       {/* 3. DESTINOS */}

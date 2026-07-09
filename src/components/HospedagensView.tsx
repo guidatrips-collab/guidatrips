@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { 
   Check, Star, MapPin, Coffee, Wifi, Shield, ArrowRight, Sparkles, Phone, Compass, Waves
 } from "lucide-react";
@@ -18,6 +18,8 @@ interface HospedagensViewProps {
   onWhatsAppContact?: (message?: string) => void;
   onNavigate?: (view: string) => void;
   onChangeHotelId?: (id: string | null) => void;
+  selectedAccommodationSlug?: string | null;
+  onSelectAccommodation?: (slug: string | null) => void;
 }
 
 export default function HospedagensView({ 
@@ -25,10 +27,39 @@ export default function HospedagensView({
   accommodations, 
   onWhatsAppContact,
   onNavigate,
-  onChangeHotelId
+  onChangeHotelId,
+  selectedAccommodationSlug,
+  onSelectAccommodation
 }: HospedagensViewProps) {
   const [activeFilter, setActiveFilter] = useState<"todas" | "boutique" | "vista" | "pe-na-areia">("todas");
   const [selectedPousadaForDetail, setSelectedPousadaForDetail] = useState<Accommodation | null>(null);
+
+  useEffect(() => {
+    if (selectedAccommodationSlug) {
+      const originalAcc = accommodations.find(a => a.slug === selectedAccommodationSlug);
+      if (originalAcc) {
+        setSelectedPousadaForDetail(originalAcc);
+      }
+    } else {
+      setSelectedPousadaForDetail(null);
+    }
+  }, [selectedAccommodationSlug, accommodations]);
+
+  const handleOpenDetail = (acc: Accommodation) => {
+    if (onSelectAccommodation) {
+      onSelectAccommodation(acc.slug);
+    } else {
+      setSelectedPousadaForDetail(acc);
+    }
+  };
+
+  const handleCloseDetail = () => {
+    if (onSelectAccommodation) {
+      onSelectAccommodation(null);
+    } else {
+      setSelectedPousadaForDetail(null);
+    }
+  };
 
   // Map database accommodations to the local format if needed, or just use them directly
   const pousadas = accommodations.map(acc => ({
@@ -154,7 +185,7 @@ export default function HospedagensView({
                   <h3 
                     onClick={() => {
                       const originalAcc = accommodations.find(a => a.id === pousada.id);
-                      if (originalAcc) setSelectedPousadaForDetail(originalAcc);
+                      if (originalAcc) handleOpenDetail(originalAcc);
                     }}
                     className="font-serif text-xl font-bold text-[#0D1B2A] hover:text-[#E8711A] transition-colors leading-snug cursor-pointer"
                   >
@@ -216,7 +247,7 @@ export default function HospedagensView({
                   <button
                     onClick={() => {
                       const originalAcc = accommodations.find(a => a.id === pousada.id);
-                      if (originalAcc) setSelectedPousadaForDetail(originalAcc);
+                      if (originalAcc) handleOpenDetail(originalAcc);
                     }}
                     className="flex-1 sm:flex-initial px-4 py-2.5 border border-[#0D1B2A] hover:bg-zinc-100 text-[#0D1B2A] font-accent text-[10px] font-bold tracking-wider uppercase transition-colors rounded cursor-pointer text-center"
                   >
@@ -277,7 +308,7 @@ export default function HospedagensView({
         <AccommodationDetailModal
           accommodation={selectedPousadaForDetail}
           isOpen={!!selectedPousadaForDetail}
-          onClose={() => setSelectedPousadaForDetail(null)}
+          onClose={handleCloseDetail}
           isSelectionContext={false}
           onWhatsAppContact={handleBookNow}
           onNavigateToWizard={handleNavigateToWizardWithHotel}

@@ -13,7 +13,14 @@ import {
   Tag, 
   Coffee, 
   Info,
-  Calendar
+  Calendar,
+  BrainCircuit,
+  Sparkles,
+  FileText,
+  CheckCircle,
+  Eye,
+  AlertCircle,
+  RefreshCw
 } from 'lucide-react';
 import { CalendarPricingView } from '../../../components/CalendarPricingView';
 import { Accommodation, Destination, Courtesy } from '../../../types';
@@ -27,9 +34,18 @@ interface AccommodationsModuleProps {
 
 export function AccommodationsModule({ accommodations, destinations }: AccommodationsModuleProps) {
   const [searchTerm, setSearchTerm] = useState('');
-  const [activeTab, setActiveTab] = useState<'list' | 'create' | 'calendar'>('list');
+  const [activeTab, setActiveTab] = useState<'list' | 'create' | 'calendar' | 'ai-import'>('list');
   const [loading, setLoading] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+
+  // AI Import State (Fase 0 - Proof of Concept)
+  const [rawInput, setRawInput] = useState('');
+  const [aiImportLoading, setAiImportLoading] = useState(false);
+  const [aiLogs, setAiLogs] = useState<string[]>([]);
+  const [parsedResult, setParsedResult] = useState<any>(null);
+  const [aiImportError, setAiImportError] = useState<string | null>(null);
+  const [activePocTab, setActivePocTab] = useState<'preview' | 'rooms' | 'seasons' | 'json'>('preview');
+  const [showImportSuccess, setShowImportSuccess] = useState(false);
 
   useEffect(() => {
     // Scroll parent container to top when tab or editing state changes
@@ -199,6 +215,134 @@ export function AccommodationsModule({ accommodations, destinations }: Accommoda
     }
   };
 
+  // AI Import Helper Functions (Fase 0 - Proof of Concept)
+  const runProgressLogs = () => {
+    setAiLogs([]);
+    const logs = [
+      "🔍 Analisando textos e buscando termos relevantes...",
+      "🏷️ Identificando categoria principal e etiqueta conceitual...",
+      "🏊 Extraindo e padronizando comodidades gerais...",
+      "📍 Mapeando localização, bairro e dados de endereço...",
+      "🛏️ Descobrindo categorias de quartos e limites de ocupação...",
+      "📅 Estruturando calendário anual de sazonalidade e tarifas...",
+      "⚖️ Analisando e organizando regras, políticas e multas...",
+      "✨ Aplicando IA para gerar tags inteligentes de recomendação...",
+      "⚡ Finalizando estruturação de dados no padrão GuideOS..."
+    ];
+    
+    logs.forEach((log, index) => {
+      setTimeout(() => {
+        setAiLogs(prev => {
+          if (!aiImportLoading && index > 1) return prev; // Stop appending logs if already finished
+          if (prev.includes(log)) return prev;
+          return [...prev, log];
+        });
+      }, index * 1000);
+    });
+  };
+
+  const handleAiImportSubmit = async () => {
+    if (!rawInput.trim()) {
+      alert("Por favor, forneça algum texto ou escolha um dos presets de demonstração.");
+      return;
+    }
+    
+    setAiImportLoading(true);
+    setAiImportError(null);
+    setParsedResult(null);
+    runProgressLogs();
+    
+    try {
+      const response = await fetch("/api/accommodations/ai-import", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ rawInput })
+      });
+      
+      const result = await response.json();
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || "Erro na chamada da API de importação.");
+      }
+      
+      setParsedResult(result.data);
+      setAiLogs(prev => [...prev, "✅ Importação e estruturação concluídas com sucesso!"]);
+    } catch (err: any) {
+      console.error("Erro na importação de IA:", err);
+      setAiImportError(err.message || "Erro de conexão com o servidor. Verifique se a API do Gemini está configurada.");
+    } finally {
+      setAiImportLoading(false);
+    }
+  };
+
+  const handleSaveImportedToDb = async () => {
+    if (!parsedResult) return;
+    setLoading(true);
+    
+    try {
+      const id = `acc-ai-${Date.now()}`;
+      const slug = parsedResult.name.toLowerCase()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, "") // remove acentos
+        .replace(/[^a-z0-9]+/g, '-');
+        
+      const finalAccData = {
+        id,
+        name: parsedResult.name,
+        slug,
+        category: parsedResult.category || "pousada",
+        typeTag: parsedResult.typeTag || "boutique",
+        destinationId: destinationId || (destinations.length > 0 ? destinations[0].id : "arraial-do-cabo"),
+        partnerId: partnerId || `partner-${Date.now().toString().slice(-5)}`,
+        description: parsedResult.description || "",
+        amenities: parsedResult.amenities || [],
+        photos: [
+          parsedResult.category === "casa" 
+            ? "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=1200"
+            : "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=1200",
+          "https://images.unsplash.com/photo-1582719508461-905c673771fd?w=800",
+          "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=800"
+        ],
+        location: parsedResult.location || "Arraial do Cabo",
+        address: parsedResult.address || "Arraial do Cabo, RJ",
+        netRate: parsedResult.netRate || 300,
+        sellRate: parsedResult.sellRate || 400,
+        markup: parsedResult.sellRate > 0 && parsedResult.netRate > 0 
+          ? Number((((parsedResult.sellRate - parsedResult.netRate) / parsedResult.netRate) * 100).toFixed(1))
+          : 25,
+        commission: parsedResult.sellRate > 0 ? parsedResult.sellRate * 0.1 : 40,
+        status: "active",
+        tag: parsedResult.typeTag?.toUpperCase() || "CURADORIA",
+        rating: parsedResult.rating || 5.0,
+        reviews: parsedResult.reviews || 80,
+        highlight: parsedResult.highlight || "",
+        whatsappMessage: parsedResult.whatsappMessage || `Olá! Gostaria de consultar tarifas com benefícios exclusivos para a hospedagem ${parsedResult.name}.`,
+        priceDisplay: `A partir de R$ ${parsedResult.sellRate} / noite`,
+        policies: parsedResult.policies || [],
+        restrictions: parsedResult.restrictions || [],
+        occupancyRules: parsedResult.occupancyRules || "",
+        smartTags: parsedResult.smartTags || [],
+        roomCategories: parsedResult.roomCategories || [],
+        seasonalPeriods: parsedResult.seasonalPeriods || [],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+      
+      await firestoreService.set("accommodations", id, finalAccData);
+      
+      setShowImportSuccess(true);
+      setTimeout(() => {
+        setShowImportSuccess(false);
+        setParsedResult(null);
+        setRawInput('');
+        setActiveTab('list');
+      }, 3000);
+    } catch (err) {
+      console.error("Erro ao salvar hospedagem:", err);
+      alert("Erro ao salvar hospedagem no catálogo.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleDelete = async (id: string) => {
     if (!confirm("Tem certeza que deseja excluir esta hospedagem do catálogo?")) return;
     try {
@@ -226,6 +370,13 @@ export function AccommodationsModule({ accommodations, destinations }: Accommoda
         <div className="flex gap-2">
           {activeTab === 'list' && (
             <>
+              <button 
+                onClick={() => setActiveTab('ai-import')}
+                className="bg-purple-600 hover:bg-purple-500 text-white px-4 py-2.5 rounded-lg font-medium flex items-center gap-2 transition-all cursor-pointer"
+              >
+                <BrainCircuit size={18} />
+                Importar com IA (POC)
+              </button>
               <button 
                 onClick={() => setActiveTab('calendar')}
                 className="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2.5 rounded-lg font-medium flex items-center gap-2 transition-all cursor-pointer"
@@ -629,6 +780,470 @@ export function AccommodationsModule({ accommodations, destinations }: Accommoda
             title="Tarifário e Disponibilidade (Hospedagens)"
             itemTypeLabel="hospedagem"
           />
+        </div>
+      )}
+
+      {activeTab === 'ai-import' && (
+        <div className="flex-1 flex flex-col h-full overflow-hidden">
+          {showImportSuccess ? (
+            <div className="flex-1 flex flex-col items-center justify-center text-center p-8 bg-zinc-900/40 rounded-xl border border-zinc-800">
+              <div className="w-16 h-16 bg-emerald-500/10 text-emerald-400 rounded-full flex items-center justify-center mb-4">
+                <CheckCircle size={40} />
+              </div>
+              <h3 className="text-xl font-bold text-zinc-100 mb-2">Hospedagem Importada com Sucesso!</h3>
+              <p className="text-zinc-400 text-sm max-w-md">
+                A hospedagem <strong className="text-emerald-400">{parsedResult?.name}</strong> foi cadastrada automaticamente com todas as categorias de quartos, tarifas sazonais e tags de recomendação inteligente.
+              </p>
+              <div className="mt-6 flex items-center gap-2 text-xs text-zinc-500">
+                <RefreshCw className="animate-spin text-zinc-400" size={14} />
+                <span>Atualizando catálogo do GuideOS...</span>
+              </div>
+            </div>
+          ) : (
+            <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6 overflow-hidden">
+              {/* LEFT SIDE: RAW DATA INPUT & PRESETS */}
+              <div className="lg:col-span-5 flex flex-col h-full bg-[#121214] border border-zinc-800 rounded-xl p-5 overflow-y-auto">
+                <div className="flex items-center gap-2 mb-4">
+                  <BrainCircuit className="text-purple-400" size={20} />
+                  <h3 className="font-bold text-zinc-100 text-base">Importador Inteligente (Fase 0 — POC)</h3>
+                </div>
+                
+                <p className="text-xs text-zinc-400 mb-4 leading-relaxed">
+                  Insira uma descrição bruta, tarifário anual ou políticas de qualquer hospedagem de Arraial do Cabo. Nosso agente de IA baseado no <strong className="text-purple-400">Gemini 3.5</strong> estruturará as informações automaticamente no modelo GuideOS.
+                </p>
+
+                {/* Presets */}
+                <div className="mb-4">
+                  <span className="block text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-2">Selecione uma Hospedagem Real (Presets):</span>
+                  <div className="grid grid-cols-1 gap-2.5">
+                    <button 
+                      type="button"
+                      onClick={() => setRawInput(`Nome: Pousada Caminho do Sol
+Categoria: Pousada
+Localização: Praia Grande, Arraial do Cabo
+Estilo: Boutique e romântico, ideal para casais.
+
+Descrição:
+A Pousada Caminho do Sol é famosa pela sua atmosfera intimista e acolhedora, situada a apenas 100 metros da belíssima Praia Grande, conhecida pelo pôr do sol mais espetacular de Arraial do Cabo. Com uma arquitetura rústica elegante, oferecemos uma piscina rodeada de jardins, sauna a vapor, restaurante próprio que serve pratos contemporâneos e café da manhã artesanal de alta gastronomia com pães caseiros e frutas frescas.
+
+Comodidades Gerais: Piscina externa, Wi-Fi ultra-rápido gratuito, Café da manhã artesanal completo, Restaurante Sol & Mar, Bar de piscina, Sauna úmida, Recepção 24h, Estacionamento gratuito, Toalhas de praia disponíveis.
+
+Acomodações / Categorias de Quartos:
+1. Suíte Standard Casal: Quarto aconchegante com cama queen size, ar condicionado split, Smart TV, frigobar, banheiro privativo e decoração praiana minimalista. Ideal para 2 adultos. Tarifa base sugerida: R$ 420 por diária.
+2. Suíte Master Vista Piscina: Suíte mais ampla com varanda privativa com rede de frente para a piscina, cama king size, frigobar retro, máquina de café expresso e enxoval premium de algodão egípcio. Comporta até 2 adultos e 1 criança de até 5 anos. Tarifa base sugerida: R$ 580 por diária.
+
+Regras e Políticas:
+- Cancelamento gratuito com até 7 dias de antecedência.
+- Check-in a partir das 14h00 e Check-out até as 12h00.
+- Não é permitida a entrada de animais de estimação (Pet-free).
+- Proibido fumar nas suítes e áreas fechadas.
+- Crianças de até 5 anos são cortesia na mesma cama dos pais na Suíte Master.
+
+Períodos Tarifários:
+- Alta temporada (Verão e Feriados): Multiplicador de 1.4x sobre a tarifa base, mínimo de 3 noites de hospedagem.
+- Baixa temporada: Tarifa padrão, sem mínimo de noites.`)}
+                      className="bg-zinc-900 border border-zinc-800 hover:border-purple-500 text-left p-3 rounded-lg transition-all group flex flex-col cursor-pointer"
+                    >
+                      <div className="flex justify-between items-center w-full">
+                        <span className="font-bold text-xs text-purple-300">Pousada Caminho do Sol</span>
+                        <span className="text-[9px] bg-purple-500/10 text-purple-400 font-mono px-1.5 py-0.5 rounded">Romântico & Praia Grande</span>
+                      </div>
+                      <span className="text-[11px] text-zinc-500 mt-1 line-clamp-1">Suítes casal, piscina, sauna, próximo à Praia Grande.</span>
+                    </button>
+
+                    <button 
+                      type="button"
+                      onClick={() => setRawInput(`Nome: Pousada Capitão N'Areia
+Categoria: Pousada
+Localização: Praia dos Anjos, Arraial do Cabo
+Estilo: Prático, familiar e com excelente localização para passeios de barco.
+
+Descrição:
+Localizada estrategicamente em frente à Praia dos Anjos, ao lado do porto (Cais da Praia dos Anjos) de onde saem todos os passeios de escuna e lanchas de Arraial do Cabo, a Pousada Capitão N'Areia é a escolha perfeita para famílias e aventureiros que buscam conveniência absoluta. Dispõe de uma bela piscina com vista para o mar, salão de jogos, playground infantil para as crianças e um restaurante com buffet completo.
+
+Comodidades Gerais: Piscina com vista mar, Café da manhã buffet regional, Wi-Fi gratuito em toda propriedade, Recepção 24 horas, Salão de jogos, Playground infantil, Churrasqueira, Acesso direto à praia.
+
+Acomodações / Categorias de Quartos:
+1. Quarto Família Triplo: Equipado com 1 cama de casal e 1 cama de solteiro, frigobar, ar condicionado silencioso, TV a cabo e banheiro privativo. Ideal para até 3 hóspedes. Tarifa base: R$ 490 por diária.
+2. Quarto Família Quádruplo: Equipado com 1 cama de casal e 2 de solteiro (ou beliche), ideal para famílias com crianças. Ar condicionado, frigobar e TV. Acomoda até 4 hóspedes. Tarifa base: R$ 590 por diária.
+
+Regras e Políticas:
+- Cancelamento sem custo se solicitado com até 15 dias de antecedência.
+- Check-in a partir das 13h00 e Check-out até as 11h00.
+- Aceitamos pets de pequeno porte (até 8kg) mediante taxa diária de R$ 50.
+- Proibido fumar em áreas comuns e internas dos quartos.
+
+Sazonalidades:
+- Réveillon e Carnaval: Pacote fechado de no mínimo 4 noites com acréscimo de 1.8x na diária.
+- Alta Temporada (Janeiro e Fevereiro): Diárias acrescidas em 1.3x, mínimo de 2 noites.`)}
+                      className="bg-zinc-900 border border-zinc-800 hover:border-purple-500 text-left p-3 rounded-lg transition-all group flex flex-col cursor-pointer"
+                    >
+                      <div className="flex justify-between items-center w-full">
+                        <span className="font-bold text-xs text-purple-300">Pousada Capitão N'Areia</span>
+                        <span className="text-[9px] bg-purple-500/10 text-purple-400 font-mono px-1.5 py-0.5 rounded">Familiar & Próximo ao Porto</span>
+                      </div>
+                      <span className="text-[11px] text-zinc-500 mt-1 line-clamp-1">Suítes triplas/quádruplas, piscina de frente pro mar, área infantil.</span>
+                    </button>
+
+                    <button 
+                      type="button"
+                      onClick={() => setRawInput(`Nome: Casa da Praia Vista Linda
+Categoria: Casa de Temporada
+Localização: Pontal do Atalaia, Arraial do Cabo
+Estilo: Luxo, imersivo e espetacular.
+
+Descrição:
+Esta deslumbrante casa de temporada de alto padrão está localizada nas encostas exclusivas do Pontal do Atalaia, proporcionando uma vista panorâmica de 180 graus de tirar o fôlego para o oceano Atlântico. Com uma piscina de borda infinita que parece se fundir com o mar azul-turquesa de Arraial, a propriedade oferece total privacidade e conforto absoluto para grupos seletos ou famílias grandes. Conta com 4 suítes climatizadas, cozinha gourmet integrada, churrasqueira, deck panorâmico e acesso exclusivo por trilha particular a uma enseada de mar calmo.
+
+Comodidades Gerais: Piscina de borda infinita, Deck panorâmico com espreguiçadeiras, Espaço Gourmet com churrasqueira e forno de pizza, Cozinha americana totalmente equipada, Wi-Fi de alta velocidade, Garagem para 3 carros, Ar condicionado em todas as suítes, Enxoval completo de cama e banho de alto padrão, Serviço de limpeza opcional.
+
+Capacidade e Estrutura:
+A casa inteira possui 4 suítes e acomoda confortavelmente até 10 pessoas (máximo de 8 adultos e 2 crianças).
+Tarifa de venda sugerida: R$ 2.200 por diária (Casa Inteira). Custo net contratual com proprietário: R$ 1.600 por diária.
+
+Políticas e Restrições:
+- Reserva garantida mediante pagamento de 50% de sinal. Cancelamento gratuito em até 30 dias antes do check-in.
+- Check-in: 15h00, Check-out: 10h00.
+- Não é permitida a realização de eventos ou festas de grande porte sem autorização prévia.
+- Animais de estimação são muito bem-vindos (Pet-friendly).
+- Proibido fumar no interior da residência.
+
+Sazonalidades de Aluguel:
+- Alta temporada (Dezembro a Março): R$ 3.000 / diária, mínimo de 5 noites.
+- Baixa temporada: R$ 1.800 / diária, mínimo de 3 noites.`)}
+                      className="bg-zinc-900 border border-zinc-800 hover:border-purple-500 text-left p-3 rounded-lg transition-all group flex flex-col cursor-pointer"
+                    >
+                      <div className="flex justify-between items-center w-full">
+                        <span className="font-bold text-xs text-purple-300">Casa da Praia Vista Linda</span>
+                        <span className="text-[9px] bg-purple-500/10 text-purple-400 font-mono px-1.5 py-0.5 rounded">Luxo & Pontal do Atalaia</span>
+                      </div>
+                      <span className="text-[11px] text-zinc-500 mt-1 line-clamp-1">Casa inteira, piscina de borda infinita, vista espetacular 180° mar.</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Raw Input Text Area */}
+                <div className="flex-1 flex flex-col min-h-[220px] mb-4">
+                  <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-1.5">Dados Brutos da Hospedagem:</label>
+                  <textarea
+                    value={rawInput}
+                    onChange={(e) => setRawInput(e.target.value)}
+                    placeholder="Cole aqui textos, comodidades, descrições de quartos, calendários brutos ou políticas da hospedagem..."
+                    className="flex-1 w-full bg-zinc-950 border border-zinc-800 text-zinc-100 rounded-lg p-3 text-xs font-mono focus:outline-none focus:border-purple-500 resize-none leading-relaxed"
+                  />
+                </div>
+
+                {/* Trigger Button & Loading */}
+                {aiImportLoading ? (
+                  <div className="bg-purple-950/20 border border-purple-900/40 rounded-lg p-4 space-y-3">
+                    <div className="flex items-center gap-3">
+                      <RefreshCw className="animate-spin text-purple-400" size={18} />
+                      <span className="font-medium text-xs text-purple-200">Interpretando e estruturando dados...</span>
+                    </div>
+                    <div className="space-y-1.5 border-t border-purple-900/30 pt-2.5 max-h-[140px] overflow-y-auto">
+                      {aiLogs.map((log, idx) => (
+                        <div key={`log-${idx}`} className="text-[10px] text-purple-300 flex items-center gap-1.5 font-mono">
+                          <span className="text-purple-500">›</span>
+                          <span>{log}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleAiImportSubmit}
+                    disabled={!rawInput.trim()}
+                    className="w-full bg-purple-600 hover:bg-purple-500 disabled:bg-zinc-800 disabled:text-zinc-500 text-white font-medium py-3 rounded-lg text-sm flex items-center justify-center gap-2 transition-all cursor-pointer shadow-lg shadow-purple-950/20"
+                  >
+                    <Sparkles size={16} />
+                    Interpretar & Estruturar com IA
+                  </button>
+                )}
+
+                {aiImportError && (
+                  <div className="mt-4 bg-red-950/20 border border-red-900/40 rounded-lg p-3.5 flex gap-2 text-xs text-red-300">
+                    <AlertCircle size={16} className="text-red-400 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-semibold text-red-200">Erro no Processamento</p>
+                      <p className="mt-0.5 leading-relaxed">{aiImportError}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* RIGHT SIDE: STRUCTURING PREVIEW & DB MAP */}
+              <div className="lg:col-span-7 flex flex-col h-full bg-[#121214] border border-zinc-800 rounded-xl overflow-hidden">
+                {!parsedResult ? (
+                  <div className="flex-1 flex flex-col items-center justify-center text-center p-8 text-zinc-500">
+                    <div className="w-16 h-16 bg-zinc-900/50 rounded-full flex items-center justify-center mb-3 text-zinc-600">
+                      <FileText size={32} />
+                    </div>
+                    <h4 className="font-bold text-zinc-300 mb-1">Aguardando Interpretação</h4>
+                    <p className="text-xs text-zinc-500 max-w-sm">
+                      Escolha um dos presets ou cole dados brutos de uma hospedagem na coluna ao lado e clique em "Interpretar & Estruturar com IA" para rodar a Prova de Conceito.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="flex-1 flex flex-col overflow-hidden">
+                    {/* Header Controls */}
+                    <div className="border-b border-zinc-800 p-4 bg-zinc-900/40 flex flex-col sm:flex-row justify-between sm:items-center gap-3">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] bg-purple-500/20 text-purple-300 font-mono font-bold px-2 py-0.5 rounded uppercase">
+                            {parsedResult.category}
+                          </span>
+                          <span className="text-xs text-zinc-400 font-medium">Arraial do Cabo, RJ</span>
+                        </div>
+                        <h4 className="font-bold text-zinc-100 text-base mt-1">{parsedResult.name}</h4>
+                      </div>
+                      
+                      <button
+                        type="button"
+                        onClick={handleSaveImportedToDb}
+                        className="bg-emerald-600 hover:bg-emerald-500 text-white font-medium px-4 py-2 rounded-lg text-xs flex items-center justify-center gap-1.5 transition-all shadow-md shadow-emerald-950/20 cursor-pointer"
+                      >
+                        <CheckCircle size={14} />
+                        Confirmar e Cadastrar no Catálogo
+                      </button>
+                    </div>
+
+                    {/* Navigation Tabs for Preview */}
+                    <div className="flex border-b border-zinc-800 px-4 bg-zinc-900/20">
+                      {[
+                        { id: 'preview', label: 'Preview no Painel', icon: Eye },
+                        { id: 'rooms', label: 'Quartos extraídos', icon: Coffee },
+                        { id: 'seasons', label: 'Sazonalidades IA', icon: Calendar },
+                        { id: 'json', label: 'JSON Estruturado', icon: FileText }
+                      ].map(tab => (
+                        <button
+                          key={tab.id}
+                          onClick={() => setActivePocTab(tab.id as any)}
+                          className={`flex items-center gap-1.5 px-4 py-3 text-xs font-medium border-b-2 transition-all cursor-pointer ${
+                            activePocTab === tab.id 
+                              ? 'border-purple-500 text-purple-300 bg-purple-500/5' 
+                              : 'border-transparent text-zinc-400 hover:text-zinc-200'
+                          }`}
+                        >
+                          <tab.icon size={13} />
+                          {tab.label}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Tab Content Panels */}
+                    <div className="flex-1 overflow-y-auto p-5 space-y-5">
+                      {activePocTab === 'preview' && (
+                        <div className="space-y-4">
+                          {/* Bento Grid layout */}
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {/* Live Card Render Mock */}
+                            <div className="bg-zinc-950/40 border border-zinc-800 rounded-xl overflow-hidden flex flex-col justify-between">
+                              <div className="h-36 bg-zinc-900 relative">
+                                <img 
+                                  src={
+                                    parsedResult.category === 'casa' 
+                                      ? "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=600" 
+                                      : "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=600"
+                                  } 
+                                  alt={parsedResult.name} 
+                                  className="w-full h-full object-cover" 
+                                />
+                                <div className="absolute top-2 right-2 bg-purple-600 text-[9px] font-bold px-1.5 py-0.5 rounded uppercase text-white font-mono">
+                                  {parsedResult.typeTag || "Curadoria"}
+                                </div>
+                                <div className="absolute bottom-2 left-2 bg-black/60 backdrop-blur-sm text-white text-[10px] px-2 py-0.5 rounded flex items-center gap-1">
+                                  <Star size={10} className="fill-amber-400 text-amber-400" />
+                                  <span className="font-bold">{parsedResult.rating || '5.0'}</span>
+                                  <span className="text-zinc-400">({parsedResult.reviews || '120'} reviews)</span>
+                                </div>
+                              </div>
+                              <div className="p-4 space-y-2">
+                                <h5 className="font-bold text-sm text-zinc-100">{parsedResult.name}</h5>
+                                <div className="flex items-center gap-1 text-[11px] text-zinc-400">
+                                  <MapPin size={11} className="text-purple-400" />
+                                  <span>{parsedResult.location}</span>
+                                </div>
+                                <p className="text-[11px] text-zinc-400 line-clamp-2 leading-relaxed">
+                                  {parsedResult.description}
+                                </p>
+                                <div className="border-t border-zinc-800/60 pt-2 flex justify-between items-center text-xs">
+                                  <span className="text-zinc-500">Média Diária:</span>
+                                  <span className="text-purple-400 font-bold font-mono">
+                                    R$ {parsedResult.sellRate}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Intelligent Recommendations Profiler */}
+                            <div className="bg-zinc-950/20 border border-purple-950/40 rounded-xl p-4 flex flex-col justify-between">
+                              <div>
+                                <h5 className="text-xs font-semibold text-purple-300 flex items-center gap-1.5 mb-2.5">
+                                  <Sparkles size={12} />
+                                  Mecanismo de Recomendação IA
+                                </h5>
+                                
+                                <p className="text-[11px] text-zinc-400 leading-relaxed mb-3">
+                                  Tags inteligentes identificadas para os algoritmos de Match Personalizado de roteiros:
+                                </p>
+
+                                <div className="flex flex-wrap gap-1.5">
+                                  {parsedResult.smartTags?.map((tag: string, idx: number) => (
+                                    <span key={`smarttag-${idx}`} className="text-[10px] bg-purple-500/10 text-purple-300 font-medium px-2 py-0.5 rounded border border-purple-500/10">
+                                      ✨ {tag}
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
+
+                              <div className="border-t border-zinc-800/60 pt-3 mt-3 text-[11px] text-zinc-400 space-y-1.5">
+                                <div className="flex justify-between">
+                                  <span>Destaque Curadoria:</span>
+                                  <span className="font-medium text-zinc-200 text-right line-clamp-1 max-w-[150px]">{parsedResult.highlight}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span>Bairro Match:</span>
+                                  <span className="font-medium text-purple-300">{parsedResult.location}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span>Estilo:</span>
+                                  <span className="font-medium text-emerald-400 capitalize">{parsedResult.typeTag}</span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Amenities */}
+                          <div className="bg-zinc-950/20 border border-zinc-800/60 rounded-xl p-4">
+                            <h5 className="text-xs font-semibold text-zinc-300 mb-2.5">Comodidades Extraídas & Normalizadas ({parsedResult.amenities?.length || 0}):</h5>
+                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                              {parsedResult.amenities?.map((am: string, idx: number) => (
+                                <div key={`preview-am-${idx}`} className="text-[11px] text-zinc-300 flex items-center gap-1.5">
+                                  <div className="w-1.5 h-1.5 rounded-full bg-purple-500" />
+                                  <span>{am}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Policies */}
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="bg-zinc-950/20 border border-zinc-800/60 rounded-xl p-4">
+                              <h5 className="text-xs font-semibold text-zinc-300 mb-2">Políticas Gerais:</h5>
+                              <ul className="space-y-1.5">
+                                {parsedResult.policies?.map((pol: string, idx: number) => (
+                                  <li key={`preview-pol-${idx}`} className="text-[11px] text-zinc-400 flex items-start gap-1.5">
+                                    <span className="text-purple-400 mt-0.5">•</span>
+                                    <span>{pol}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+
+                            <div className="bg-zinc-950/20 border border-zinc-800/60 rounded-xl p-4">
+                              <h5 className="text-xs font-semibold text-zinc-300 mb-2">Restrições & Regras:</h5>
+                              <ul className="space-y-1.5">
+                                {parsedResult.restrictions?.map((rest: string, idx: number) => (
+                                  <li key={`preview-rest-${idx}`} className="text-[11px] text-zinc-400 flex items-start gap-1.5">
+                                    <span className="text-red-400 mt-0.5">•</span>
+                                    <span>{rest}</span>
+                                  </li>
+                                ))}
+                                {parsedResult.occupancyRules && (
+                                  <li className="text-[11px] text-zinc-400 flex items-start gap-1.5 border-t border-zinc-800/40 pt-1.5 mt-1.5">
+                                    <span className="text-amber-400 mt-0.5">ℹ️</span>
+                                    <span className="font-semibold text-zinc-300">{parsedResult.occupancyRules}</span>
+                                  </li>
+                                )}
+                              </ul>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {activePocTab === 'rooms' && (
+                        <div className="space-y-4">
+                          <p className="text-xs text-zinc-400 mb-2">
+                            A inteligência extraiu as seguintes categorias de quartos para reservas independentes:
+                          </p>
+                          <div className="space-y-4">
+                            {parsedResult.roomCategories?.map((room: any, idx: number) => (
+                              <div key={`room-${idx}`} className="bg-zinc-950/30 border border-zinc-800 rounded-xl p-4 flex flex-col md:flex-row justify-between gap-4">
+                                <div className="space-y-1.5 flex-1">
+                                  <div className="flex items-center gap-2">
+                                    <h5 className="font-bold text-sm text-zinc-100">{room.name}</h5>
+                                    <span className="text-[9px] bg-emerald-500/10 text-emerald-300 px-2 py-0.5 rounded font-mono font-bold">
+                                      Max {room.capacityMax} pessoas
+                                    </span>
+                                  </div>
+                                  <p className="text-[11px] text-zinc-400 leading-relaxed">{room.description}</p>
+                                  <div className="flex flex-wrap gap-1.5 pt-1">
+                                    {room.amenities?.map((am: string, amIdx: number) => (
+                                      <span key={`room-am-${amIdx}`} className="text-[9px] bg-zinc-900 border border-zinc-800 text-zinc-400 px-1.5 py-0.5 rounded">
+                                        {am}
+                                      </span>
+                                    ))}
+                                  </div>
+                                </div>
+                                <div className="border-t md:border-t-0 md:border-l border-zinc-800 md:pl-5 pt-3 md:pt-0 flex flex-col justify-center items-end min-w-[120px]">
+                                  <span className="text-[10px] text-zinc-500 font-mono">Custo (NET): R$ {room.netPrice}</span>
+                                  <span className="text-base font-extrabold text-emerald-400 font-mono mt-0.5 font-bold">R$ {room.basePrice}</span>
+                                  <span className="text-[10px] text-zinc-500 mt-1">por diária base</span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {activePocTab === 'seasons' && (
+                        <div className="space-y-4">
+                          <p className="text-xs text-zinc-400 mb-2">
+                            Regras de sazonalidade mapeadas automaticamente no calendário tarifário anual do GuideOS:
+                          </p>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {parsedResult.seasonalPeriods?.map((season: any, idx: number) => (
+                              <div key={`season-${idx}`} className="bg-zinc-950/20 border border-zinc-800 rounded-xl p-4 flex justify-between items-center">
+                                <div className="space-y-1">
+                                  <h5 className="font-bold text-xs text-zinc-100">{season.name}</h5>
+                                  <div className="text-[10px] text-zinc-500 font-mono flex gap-1">
+                                    <span>{season.startDate}</span>
+                                    <span>até</span>
+                                    <span>{season.endDate}</span>
+                                  </div>
+                                  <span className={`text-[9px] font-semibold px-2 py-0.5 rounded inline-block mt-1 ${
+                                    season.type === 'high' ? 'bg-amber-500/10 text-amber-300' : 'bg-blue-500/10 text-blue-300'
+                                  }`}>
+                                    Sazonalidade: {season.type === 'high' ? 'Alta Temporada' : 'Baixa Temporada'}
+                                  </span>
+                                </div>
+                                <div className="text-right flex flex-col">
+                                  <span className="text-[9px] text-zinc-500 font-mono uppercase tracking-wider">Multiplicador</span>
+                                  <span className="text-lg font-bold text-purple-300 font-mono mt-0.5 font-bold">{season.priceMultiplier}x</span>
+                                  {season.minNights && (
+                                    <span className="text-[10px] text-zinc-500">mín. {season.minNights} noites</span>
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {activePocTab === 'json' && (
+                        <div className="relative">
+                          <pre className="bg-zinc-950 border border-zinc-800 text-purple-300 text-[10px] font-mono p-4 rounded-xl overflow-x-auto leading-relaxed max-h-[400px]">
+                            {JSON.stringify(parsedResult, null, 2)}
+                          </pre>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
