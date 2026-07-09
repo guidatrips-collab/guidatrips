@@ -206,7 +206,7 @@ export default function RoteiroView({
 
   // Pricing details summary
   const computeTotalCost = () => {
-    return cart.reduce((total, item) => {
+    let experiencesCost = cart.reduce((total, item) => {
       const exp = experiences.find(e => e.id === item.experienceId);
       if (!exp) return total;
       const tariff = getCartItemTariff(exp, item.date);
@@ -215,6 +215,24 @@ export default function RoteiroView({
       const babiesCost = tariff.babyPrice * (item.infants || 0);
       return total + adultsCost + kidsCost + babiesCost;
     }, 0);
+
+    let lodgingCost = 0;
+    if (selectedHotelId) {
+      const acc = accommodations.find(a => a.id === selectedHotelId);
+      if (acc) {
+        const startDateStr = cart[0]?.date || getBrazilLocalDate();
+        for (let i = 0; i < stayDays; i++) {
+          const currentDateStr = addDaysToBrazilDate(startDateStr, i);
+          const dayPrice = acc.calendar?.[currentDateStr]?.adultPrice 
+            || acc.pricing?.adultPrice 
+            || acc.sellRate 
+            || 0;
+          lodgingCost += dayPrice;
+        }
+      }
+    }
+
+    return experiencesCost + lodgingCost;
   };
 
   const totalEstimate = computeTotalCost();
@@ -373,34 +391,17 @@ export default function RoteiroView({
               {/* Day-by-Day Timeline Itinerary */}
               <div className="space-y-6">
                 {selectedHotelId && (() => {
-                  const hotelData = [
-                    {
-                      id: "pousada-timoneiro",
-                      name: "Pousada do Timoneiro",
-                      location: "Praia Grande",
-                      rating: 4.9,
-                      desc: "Acolhimento tátil excepcional, a poucos metros do pico para ver o pôr do sol nos Anjos.",
-                      img: "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=600&q=80"
-                    },
-                    {
-                      id: "pousada-caminho-mar",
-                      name: "Pousada Caminho do Mar",
-                      location: "Praia dos Anjos",
-                      rating: 4.8,
-                      desc: "Conectividade estratégica de embarque. Perfeito para noites sossegadas ao som de mar.",
-                      img: "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?auto=format&fit=crop&w=600&q=80"
-                    },
-                    {
-                      id: "ohana-pousada",
-                      name: "Ohana Pousada Boutique",
-                      location: "Pontal do Atalaia",
-                      rating: 5.0,
-                      desc: "Erguida nos despenhadeiros míticos com jacuzzi e bar flutuante olhando a imensidão costeira.",
-                      img: "https://images.unsplash.com/photo-1584132967334-10e028bd69f7?auto=format&fit=crop&w=600&q=80"
-                    }
-                  ].find(h => h.id === selectedHotelId);
+                  const acc = accommodations.find(a => a.id === selectedHotelId);
+                  if (!acc) return null;
 
-                  if (!hotelData) return null;
+                  const hotelData = {
+                    id: acc.id,
+                    name: acc.name,
+                    location: acc.location || "Arraial do Cabo",
+                    rating: acc.rating || 5.0,
+                    desc: acc.description || "Acomodação credenciada com benefícios exclusivos e mimos especiais no Guida Trips Club.",
+                    img: acc.photos?.[0] || "https://images.unsplash.com/photo-1584132967334-10e028bd69f7?auto=format&fit=crop&w=600&q=80"
+                  };
 
                   return (
                     <div className="bg-white border-2 border-[#E8711A] rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow text-left flex flex-col md:flex-row">

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Experience, BlogPost, ClientUser, ClientReservation, ClientPartner, GlobalSettings, Destination, SavedItinerary } from "../types";
+import { Experience, BlogPost, ClientUser, ClientReservation, ClientPartner, GlobalSettings, Destination, SavedItinerary, Accommodation } from "../types";
 import { 
   Compass, Map, Ticket, Star, User, Heart, ChevronRight, 
   MapPin, Clock, Calendar, CheckCircle, Info, Video, Gift, Search,
@@ -17,6 +17,7 @@ interface ClientPanelViewProps {
   destinations?: Destination[];
   selectedDestinationId?: string | null;
   savedItinerary?: SavedItinerary | null;
+  accommodations?: Accommodation[];
 }
 
 export default function ClientPanelView({ 
@@ -29,7 +30,8 @@ export default function ClientPanelView({
   userReservations,
   destinations = [],
   selectedDestinationId,
-  savedItinerary
+  savedItinerary,
+  accommodations = []
 }: ClientPanelViewProps) {
   const [activeTab, setActiveTab] = useState<"dashboard" | "roteiro" | "viagem" | "dicas" | "beneficios" | "perfil">(() => {
     const stored = localStorage.getItem("guidatrips_saved_itinerary");
@@ -440,7 +442,7 @@ export default function ClientPanelView({
                     <span className="text-zinc-400 text-[9px] uppercase tracking-widest font-bold font-sans block">Hospedagem Selecionada</span>
                     <span className="font-serif text-sm font-bold text-[#0D1B2A] block line-clamp-1">
                       {resolvedItinerary.selectedHotelId ? (
-                        experiences.find(e => e.id === resolvedItinerary.selectedHotelId)?.name || "Vila da Praia"
+                        accommodations.find(a => a.id === resolvedItinerary.selectedHotelId)?.name || "Pousada Parceira"
                       ) : (
                         "Hospedagem Própria"
                       )}

@@ -263,14 +263,18 @@ export default function WizardView({
 
   // Lodging Catalog recommended for Cabo Frio / Arraial (Dynamic from database)
   const hotels = accommodations
-    .filter(acc => acc.status === "active" && (!selectedDestinationId || acc.destinationId === selectedDestinationId))
+    .filter(acc => {
+      const hasValidTariff = acc.sellRate > 0 || (acc.pricing && acc.pricing.adultPrice > 0) || (acc.calendar && Object.keys(acc.calendar).length > 0);
+      return acc.status === "active" && (!selectedDestinationId || acc.destinationId === selectedDestinationId) && hasValidTariff;
+    })
     .slice(0, 6)
     .map(acc => ({
     id: acc.id,
     name: acc.name,
     location: acc.location,
-    rating: 5.0,
+    rating: acc.rating || 5.0,
     tag: acc.typeTag,
+    priceDisplay: acc.priceDisplay || `A partir de R$ ${acc.sellRate} / noite`,
     desc: acc.description?.slice(0, 80) + "...",
     img: acc.photos?.[0] || "https://images.unsplash.com/photo-1584132967334-10e028bd69f7",
     whatsappMessage: `Olá, Guida Trips! Gostaria de consultar tarifas com benefícios na ${acc.name}.`
@@ -383,6 +387,21 @@ export default function WizardView({
         total += (item.adults ?? 2) * adPrice + (item.children ?? 0) * chPrice;
       }
     });
+
+    if (selectedHotelId) {
+      const acc = accommodations.find(a => a.id === selectedHotelId);
+      if (acc) {
+        const startDateStr = arrivalDate || getBrazilLocalDate();
+        for (let i = 0; i < stayDays; i++) {
+          const currentDateStr = addDaysToBrazilDate(startDateStr, i);
+          const dayPrice = acc.calendar?.[currentDateStr]?.adultPrice 
+            || acc.pricing?.adultPrice 
+            || acc.sellRate 
+            || 0;
+          total += dayPrice;
+        }
+      }
+    }
     return total;
   };
 
@@ -1585,9 +1604,12 @@ export default function WizardView({
                                     <h6 className="font-serif text-sm font-extrabold text-[#0D1B2A] leading-tight group-hover:text-[#E8711A] transition-colors line-clamp-1">
                                       {pousada.name}
                                     </h6>
-                                    <p className="font-sans text-[11px] text-zinc-500 leading-relaxed line-clamp-2">
+                                    <p className="font-sans text-[11px] text-zinc-500 leading-relaxed line-clamp-2 mb-2">
                                       {pousada.desc}
                                     </p>
+                                    <span className="font-sans text-xs font-bold text-[#E8711A] block">
+                                      {pousada.priceDisplay}
+                                    </span>
                                   </div>
 
                                   <div className="space-y-1.5 pt-2 border-t border-zinc-100">

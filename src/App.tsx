@@ -883,12 +883,8 @@ export default function App() {
 
     // Add lodging summary if selected
     if (selectedHotelId) {
-      const hotelNames: Record<string, string> = {
-        "pousada-timoneiro": "Pousada do Timoneiro 🛌",
-        "pousada-caminho-mar": "Pousada Caminho do Mar 🛌",
-        "ohana-pousada": "Ohana Pousada Boutique 🛌"
-      };
-      const hName = hotelNames[selectedHotelId] || "Hospedagem Selecionada";
+      const acc = accommodations.find(a => a.id === selectedHotelId);
+      const hName = acc ? `${acc.name} 🛌` : "Hospedagem Selecionada 🛌";
       textMessage += `🏨 *Hospedagem Coordenada:* ${hName}\n\n`;
     }
 
@@ -946,14 +942,9 @@ export default function App() {
     });
 
     if (selectedHotelId) {
-      const hotelNames: Record<string, string> = {
-        "pousada-timoneiro": "Pousada do Timoneiro 🛌",
-        "pousada-caminho-mar": "Pousada Caminho do Mar 🛌",
-        "ohana-pousada": "Ohana Pousada Boutique 🛌"
-      };
       const acc = accommodations.find(a => a.id === selectedHotelId);
       if (acc && acc.courtesies && acc.courtesies.length > 0) {
-        const hName = acc.name || hotelNames[selectedHotelId] || "Hospedagem Selecionada";
+        const hName = acc.name || "Hospedagem Selecionada";
         if (!allCourtesies.has(hName)) {
           allCourtesies.set(hName, []);
         }
@@ -1330,6 +1321,7 @@ export default function App() {
             destinations={destinations}
             selectedDestinationId={selectedDestinationId}
             savedItinerary={savedItinerary}
+            accommodations={accommodations}
           />
         )}
         {currentView === "roteiro" && (
