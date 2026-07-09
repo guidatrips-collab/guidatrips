@@ -12,6 +12,7 @@ import {
   ChevronLeft, ChevronRight
 } from "lucide-react";
 import { BookingCartItem, Experience, checkSchedulingConflict, getTourScheduleDetails, getBrazilLocalDate, addDaysToBrazilDate, Accommodation, Courtesy } from "../types";
+import { PricingEngine } from "../lib/pricingEngine";
 
 interface RoteiroViewProps {
   cart: BookingCartItem[];
@@ -60,6 +61,7 @@ export default function RoteiroView({
 }: RoteiroViewProps) {
   const [expandedIntercuso, setExpandedIntercuso] = useState<Record<string, boolean>>({});
   const [expandedPhotos, setExpandedPhotos] = useState<Record<string, boolean>>({});
+  const [showDetailedBreakdown, setShowDetailedBreakdown] = useState(false);
 
   // Guided wizard step states
   const [isStepMode, setIsStepMode] = useState(() => {
@@ -182,60 +184,31 @@ export default function RoteiroView({
 
   // Helper to determine the pricing and availability of a cart item based on its selected date
   const getCartItemTariff = (exp: Experience, dateStr: string) => {
-    const baseAdult = exp.pricing?.adultPrice ?? exp.priceFrom;
-    const baseChild = exp.pricing?.childPrice ?? (exp.promotionalPrice || exp.priceFrom) * 0.5;
-    const baseBaby = exp.pricing?.babyPrice ?? 0;
-
-    if (!dateStr) {
-      return { adultPrice: baseAdult, childPrice: baseChild, babyPrice: baseBaby, isClosed: true, hasNoTariff: true };
-    }
-
-    const customData = exp.calendar?.[dateStr];
-    if (customData) {
-      return {
-        adultPrice: customData.adultPrice,
-        childPrice: customData.childPrice,
-        babyPrice: customData.babyPrice,
-        isClosed: customData.status === "closed",
-        hasNoTariff: false
-      };
-    }
-
-    return { adultPrice: baseAdult, childPrice: baseChild, babyPrice: baseBaby, isClosed: true, hasNoTariff: true };
+    return PricingEngine.getExperienceTariff(exp, dateStr);
   };
 
-  // Pricing details summary
-  const computeTotalCost = () => {
-    let experiencesCost = cart.reduce((total, item) => {
-      const exp = experiences.find(e => e.id === item.experienceId);
-      if (!exp) return total;
-      const tariff = getCartItemTariff(exp, item.date);
-      const adultsCost = tariff.adultPrice * (item.adults || 2);
-      const kidsCost = tariff.childPrice * (item.children || 0);
-      const babiesCost = tariff.babyPrice * (item.infants || 0);
-      return total + adultsCost + kidsCost + babiesCost;
-    }, 0);
-
-    let lodgingCost = 0;
-    if (selectedHotelId) {
-      const acc = accommodations.find(a => a.id === selectedHotelId);
-      if (acc) {
-        const startDateStr = cart[0]?.date || getBrazilLocalDate();
-        for (let i = 0; i < stayDays; i++) {
-          const currentDateStr = addDaysToBrazilDate(startDateStr, i);
-          const dayPrice = acc.calendar?.[currentDateStr]?.adultPrice 
-            || acc.pricing?.adultPrice 
-            || acc.sellRate 
-            || 0;
-          lodgingCost += dayPrice;
-        }
-      }
-    }
-
-    return experiencesCost + lodgingCost;
+  // Derive passenger counts for lodging pricing from first cart item or defaults
+  const firstCartItem = cart[0];
+  const guests = {
+    adults: firstCartItem?.adults ?? 2,
+    children: firstCartItem?.children ?? 0,
+    infants: firstCartItem?.infants ?? 0
   };
 
-  const totalEstimate = computeTotalCost();
+  const selectedAccommodation = selectedHotelId 
+    ? accommodations.find(a => a.id === selectedHotelId) 
+    : null;
+
+  const pricingResult = PricingEngine.calculate({
+    cart,
+    experiences,
+    selectedAccommodation,
+    arrivalDate: cart[0]?.date || getBrazilLocalDate(),
+    stayDays,
+    guests
+  });
+
+  const totalEstimate = pricingResult.total;
   const hasUnavailableItems = cart.some(item => {
     const exp = experiences.find(e => e.id === item.experienceId);
     if (!exp) return false;
@@ -1150,14 +1123,118 @@ export default function RoteiroView({
                   </div>
                 )}
 
-                <div className="bg-[#FAF8F5] border border-zinc-200 p-5 rounded-2xl space-y-3.5 text-xs">
-                  <div className="border-t border-dashed border-zinc-200 pt-3.5 flex justify-between items-baseline">
+                <div className="bg-[#FAF8F5] border border-zinc-200 p-5 rounded-2xl space-y-4 text-xs">
+                  {/* Primary Total Cost Display */}
+                  <div className="flex justify-between items-baseline">
                     <div className="text-left space-y-0.5">
-                      <span className="text-zinc-500 block font-semibold">Valor Estimado do Roteiro</span>
-                      <span className="text-[10px] text-zinc-400 italic">Preço base dos passeios adicionados</span>
+                      <span className="text-zinc-650 block font-bold text-sm">Investimento Estimado</span>
+                      <span className="text-[10px] text-zinc-400 italic">Atualizado em tempo real</span>
                     </div>
-                    <span className="text-2xl sm:text-3xl font-bold text-[#E8711A]">R$ {totalEstimate.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
+                    <span className="text-2xl sm:text-3xl font-serif font-black text-[#E8711A]">
+                      R$ {totalEstimate.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                    </span>
                   </div>
+
+                  {/* Toggle Collapsible Details Button */}
+                  <button
+                    type="button"
+                    onClick={() => setShowDetailedBreakdown(!showDetailedBreakdown)}
+                    className="w-full flex items-center justify-between py-2 px-3 bg-zinc-100 hover:bg-zinc-200/60 rounded-xl font-bold text-[#0D1B2A] transition-colors cursor-pointer text-xs"
+                  >
+                    <span className="flex items-center gap-1.5">
+                      📊 {showDetailedBreakdown ? "Ocultar" : "Ver"} Demonstrativo Detalhado
+                    </span>
+                    {showDetailedBreakdown ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                  </button>
+
+                  {/* Breakdown details */}
+                  <AnimatePresence>
+                    {showDetailedBreakdown && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="overflow-hidden space-y-3.5 pt-2 text-left text-zinc-600 border-t border-zinc-200"
+                      >
+                        {/* Experiences Section */}
+                        {pricingResult.experiencesDetail.length > 0 && (
+                          <div className="space-y-2">
+                            <span className="font-bold text-[10px] uppercase tracking-wider text-zinc-400">🚣 Passeios</span>
+                            <div className="space-y-1.5 pl-1">
+                              {pricingResult.experiencesDetail.map((detail, idx) => (
+                                <div key={idx} className="flex justify-between text-[11px] leading-tight">
+                                  <div className="max-w-[70%]">
+                                    <span className="font-semibold text-zinc-800 block truncate">{detail.name}</span>
+                                    <span className="text-[10px] text-zinc-400 block">
+                                      {detail.adults} Ad • {detail.children} Crian • {detail.infants} Bebê
+                                    </span>
+                                  </div>
+                                  <span className="font-mono text-zinc-700 shrink-0">
+                                    R$ {detail.total.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                                  </span>
+                                </div>
+                              ))}
+                              <div className="flex justify-between border-t border-zinc-200/60 pt-1.5 text-[11px] font-bold text-zinc-700">
+                                <span>Subtotal Passeios</span>
+                                <span className="font-mono">R$ {pricingResult.experiencesCost.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Lodging Section */}
+                        {pricingResult.lodgingDetail && (
+                          <div className="space-y-2 pt-2 border-t border-zinc-150">
+                            <span className="font-bold text-[10px] uppercase tracking-wider text-zinc-400">🏨 Hospedagem</span>
+                            <div className="space-y-1.5 pl-1">
+                              <div className="text-[11px] leading-tight text-zinc-700">
+                                <span className="font-semibold text-zinc-800 block">{selectedAccommodation?.name}</span>
+                                <div className="space-y-1 mt-1 text-[10px] text-zinc-500">
+                                  <p>• {pricingResult.lodgingDetail.daysCount} diárias solicitadas</p>
+                                  <p>• Modalidade: {pricingResult.lodgingDetail.chargeType === "per_room" ? "Por Quarto/Suíte" : "Por Cama/Pessoa"}</p>
+                                  {pricingResult.lodgingDetail.chargeType === "per_room" && (
+                                    <>
+                                      <p>• {pricingResult.lodgingDetail.roomsNeeded} quarto(s) necessário(s) (Capac. Máx: {pricingResult.lodgingDetail.maxCapacityPerRoom} pessoas/quarto)</p>
+                                      {pricingResult.lodgingDetail.extraGuestsCount > 0 && (
+                                        <p className="text-amber-600 font-medium">• {pricingResult.lodgingDetail.extraGuestsCount} hóspede(s) adicional(is): +R$ {pricingResult.lodgingDetail.extraGuestPriceApplied}/diária cada</p>
+                                      )}
+                                    </>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="flex justify-between border-t border-zinc-200/60 pt-1.5 text-[11px] font-bold text-zinc-700">
+                                <span>Subtotal Hospedagem</span>
+                                <span className="font-mono">R$ {pricingResult.lodgingCost.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Future Additional Services Section */}
+                        <div className="space-y-1.5 pt-2 border-t border-zinc-150">
+                          <span className="font-bold text-[10px] uppercase tracking-wider text-zinc-400">🚗 Serviços Adicionais (Disponíveis)</span>
+                          <p className="text-[10px] text-zinc-500 leading-normal pl-1">
+                            Transfers aeroporto, reservas em restaurantes exclusivos, seguros viagem e aluguel de buggy estão disponíveis sob demanda com descontos especiais de parceiros Guida Trips.
+                          </p>
+                        </div>
+
+                        {/* Courtesies & Benefits Included */}
+                        {pricingResult.courtesies.length > 0 && (
+                          <div className="bg-[#E8711A]/5 border border-[#E8711A]/10 p-2.5 rounded-xl space-y-1.5 pt-2">
+                            <span className="font-bold text-[10px] uppercase tracking-wider text-[#E8711A] block">🎁 Benefícios do Pacote (R$ 0,00)</span>
+                            <ul className="space-y-1 pl-1 text-[10px] text-zinc-650">
+                              {pricingResult.courtesies.map((c, i) => (
+                                <li key={i} className="flex items-start gap-1">
+                                  <span className="text-[#E8711A]">•</span>
+                                  <span><strong className="text-zinc-700">{c.name}</strong> ({c.origin})</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
 
                 {/* Highlight text notice */}

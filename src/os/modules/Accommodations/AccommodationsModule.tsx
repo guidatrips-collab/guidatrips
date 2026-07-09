@@ -69,13 +69,21 @@ export function AccommodationsModule({ accommodations, destinations }: Accommoda
   const [restrictionsStr, setRestrictionsStr] = useState('');
   const [occupancyRules, setOccupancyRules] = useState('');
 
+  useEffect(() => {
+    if (!destinationId && destinations.length > 0) {
+      const hasArraial = destinations.some(d => d.id === 'arraial-do-cabo');
+      setDestinationId(hasArraial ? 'arraial-do-cabo' : destinations[0].id);
+    }
+  }, [destinations, destinationId]);
+
   const resetForm = () => {
     setEditingId(null);
     setName('');
     setSlug('');
     setCategory('pousada');
     setTypeTag('boutique');
-    setDestinationId(destinations[0]?.id || '');
+    const hasArraial = destinations.some(d => d.id === 'arraial-do-cabo');
+    setDestinationId(hasArraial ? 'arraial-do-cabo' : (destinations[0]?.id || ''));
     setPartnerId('');
     setDescription('');
     setAmenitiesStr('');
@@ -139,12 +147,13 @@ export function AccommodationsModule({ accommodations, destinations }: Accommoda
     const generatedSlug = slug || name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
     const priceDisplay = `A partir de R$ ${sellRate} / noite`;
 
+    const fallbackDestId = destinations.some(d => d.id === 'arraial-do-cabo') ? 'arraial-do-cabo' : (destinations[0]?.id || '');
     const accData: Partial<Accommodation> = {
       name,
       slug: generatedSlug,
       category,
       typeTag,
-      destinationId: destinationId || destinations[0]?.id || '',
+      destinationId: destinationId || fallbackDestId,
       partnerId,
       description,
       amenities,

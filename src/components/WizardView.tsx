@@ -12,6 +12,7 @@ import {
   CheckCircle2, Bed, Baby, User, ShieldCheck, Map
 } from "lucide-react";
 import { Experience, BookingCartItem, checkSchedulingConflict, getTourScheduleDetails, getBrazilLocalDate, addDaysToBrazilDate, Destination, Accommodation, Lead, ClientReservation, SavedItinerary } from "../types";
+import { PricingEngine } from "../lib/pricingEngine";
 import { firestoreService } from "../firebase";
 import { analytics } from "../lib/analytics";
 import { getValidAffiliateRef } from "../lib/utils";
@@ -378,31 +379,20 @@ export default function WizardView({
 
   // Calculate Itinerary Estimated Cost
   const calculateEstimatedTotal = () => {
-    let total = 0;
-    cart.forEach(item => {
-      const exp = experiences.find(e => e.id === item.experienceId);
-      if (exp) {
-        const adPrice = exp.pricing?.adultPrice || exp.priceFrom || 150;
-        const chPrice = exp.pricing?.childPrice ?? (adPrice * 0.7);
-        total += (item.adults ?? 2) * adPrice + (item.children ?? 0) * chPrice;
-      }
+    const selectedAccommodation = selectedHotelId 
+      ? accommodations.find(a => a.id === selectedHotelId) 
+      : null;
+
+    const result = PricingEngine.calculate({
+      cart,
+      experiences,
+      selectedAccommodation,
+      arrivalDate,
+      stayDays,
+      guests: { adults, children, infants }
     });
 
-    if (selectedHotelId) {
-      const acc = accommodations.find(a => a.id === selectedHotelId);
-      if (acc) {
-        const startDateStr = arrivalDate || getBrazilLocalDate();
-        for (let i = 0; i < stayDays; i++) {
-          const currentDateStr = addDaysToBrazilDate(startDateStr, i);
-          const dayPrice = acc.calendar?.[currentDateStr]?.adultPrice 
-            || acc.pricing?.adultPrice 
-            || acc.sellRate 
-            || 0;
-          total += dayPrice;
-        }
-      }
-    }
-    return total;
+    return result.total;
   };
 
   // Finalize Online Reservation (Platform Auth Flow)
