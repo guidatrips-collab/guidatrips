@@ -42,95 +42,171 @@ async function startServer() {
         return res.status(400).json({ error: "O campo rawInput é obrigatório e deve ser um texto preenchido." });
       }
 
-      // 1. Detect if rawInput is a URL or contains a URL
+      // 1. Robust Link & Token Context Extraction Helper
+      let isUrl = false;
+      let urlStr = "";
+      let urlParsedName = "";
+      let urlContextInfo = "";
+      let decodedSegments: string[] = [];
+
+      // Try to find any HTTP/HTTPS URL first
       const urlRegex = /(https?:\/\/[^\s]+)/gi;
       const match = rawInput.trim().match(urlRegex);
-      const isUrl = !!match;
       
+      if (match) {
+        isUrl = true;
+        urlStr = match[0];
+      } else {
+        // Check if the input looks like a link or has query parameters (e.g. from copy-pasting partial URL)
+        const looksLikeUrl = rawInput.includes("booking.com") || 
+                             rawInput.includes("airbnb.com") || 
+                             rawInput.includes("checkin=") || 
+                             rawInput.includes("checkout=") || 
+                             rawInput.includes("dest_id=") || 
+                             rawInput.includes("all_sr_blocks=");
+        if (looksLikeUrl) {
+          isUrl = true;
+          // Clean up string to find the link if possible, or use raw input
+          urlStr = rawInput.trim();
+        }
+      }
+
+      // Extract search query parameters from raw input or URL (checkin/out, guests)
+      const checkinMatch = rawInput.match(/(?:checkin|check_in)=([0-9-]{10})/i);
+      const checkoutMatch = rawInput.match(/(?:checkout|check_out)=([0-9-]{10})/i);
+      const adultsMatch = rawInput.match(/(?:adults|group_adults)=([0-9]+)/i);
+      const childrenMatch = rawInput.match(/(?:children|group_children)=([0-9]+)/i);
+
+      const checkin = checkinMatch ? checkinMatch[1] : '';
+      const checkout = checkoutMatch ? checkoutMatch[1] : '';
+      const adults = adultsMatch ? adultsMatch[1] : '';
+      const children = childrenMatch ? childrenMatch[1] : '';
+
+      if (checkin || checkout || adults || children) {
+        urlContextInfo = `\nInformações adicionais identificadas na URL ou parâmetros de pesquisa:\n` +
+          (checkin ? `- Data de Check-in: ${checkin}\n` : '') +
+          (checkout ? `- Data de Check-out: ${checkout}\n` : '') +
+          (adults ? `- Adultos: ${adults}\n` : '') +
+          (children ? `- Crianças: ${children}\n` : '');
+      }
+
+      // Try to parse friendly hotel/pousada name from path segments
+      try {
+        let pathToParse = "";
+        if (urlStr.startsWith("http")) {
+          const urlObj = new URL(urlStr);
+          pathToParse = urlObj.pathname;
+        } else {
+          pathToParse = urlStr;
+        }
+
+        const segments = pathToParse.split(/[\/\s?&]+/).filter(Boolean);
+        const formatSegment = (str: string) => {
+          return str
+            .replace(/\.[^/.]+$/, "") // remove .html or extensions
+            .replace(/-+/g, ' ')      // hyphens to spaces
+            .replace(/_+/g, ' ')      // underscores to spaces
+            .split(' ')
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(' ');
+        };
+
+        const hotelIdx = segments.indexOf("hotel");
+        if (hotelIdx !== -1 && segments[hotelIdx + 2]) {
+          urlParsedName = formatSegment(segments[hotelIdx + 2]);
+        } else if (hotelIdx !== -1 && segments[hotelIdx + 1]) {
+          urlParsedName = formatSegment(segments[hotelIdx + 1]);
+        } else {
+          // Find any segments that look like names and are not standard parameters
+          const likelyNames = segments.filter(seg => 
+            seg.length > 5 && 
+            !seg.includes("=") && 
+            !/^[0-9]+$/.test(seg) &&
+            !/checkin|checkout|dest_id|sr_blocks|group_adults/.test(seg)
+          );
+          if (likelyNames.length > 0) {
+            urlParsedName = formatSegment(likelyNames[0]);
+          }
+        }
+        urlParsedName = urlParsedName.replace(/\b(Pt Br|Html|Php|Aspx)\b/gi, '').trim();
+      } catch (e) {
+        // Ignore URL parsing exceptions
+      }
+
+      // Attempt to decode any base64-encoded segments in the rawInput (Booking.com feature!)
+      try {
+        const base64Regex = /[A-Za-z0-9+/_-]{16,120}/g;
+        const matches = rawInput.match(base64Regex) || [];
+        for (const match of matches) {
+          let normalized = match.replace(/-/g, '+').replace(/_/g, '/');
+          while (normalized.length % 4 !== 0) {
+            normalized += '=';
+          }
+          const decoded = Buffer.from(normalized, 'base64').toString('utf-8');
+          // If the decoded string looks like readable text with a hotel slug pattern
+          if (/^[a-zA-Z0-9\s\-_.,/()]{8,100}$/.test(decoded)) {
+            if (decoded.includes('-') || decoded.includes(' ') || decoded.toLowerCase().includes('pousada') || decoded.toLowerCase().includes('hotel')) {
+              const formattedName = decoded.replace(/-/g, ' ').replace(/_/g, ' ')
+                .split(' ')
+                .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                .join(' ');
+              decodedSegments.push(formattedName);
+            }
+          }
+        }
+      } catch (e) {
+        // Ignore decoding errors
+      }
+
+      // Use decoded base64 segment if we didn't parse a name yet
+      if (decodedSegments.length > 0 && !urlParsedName) {
+        urlParsedName = decodedSegments[0];
+      }
+
       let finalPrompt = `Analise a seguinte hospedagem e estruture-a completamente em JSON:\n\n${rawInput}`;
       let htmlContent = "";
-      let urlParsedName = "";
 
       if (isUrl) {
-        const urlStr = match[0];
+        const targetUrl = urlStr.startsWith("http") ? urlStr : `https://${urlStr}`;
         try {
-          const urlObj = new URL(urlStr);
-          // Extract a friendly name from URL path segments
-          const segments = urlObj.pathname.split('/').filter(Boolean);
-          const lastSegment = segments[segments.length - 1] || "";
-          
-          // Helper to clean and format names
-          const formatSegment = (str: string) => {
-            return str
-              .replace(/\.[^/.]+$/, "") // remove .html or extensions
-              .replace(/-+/g, ' ')      // hyphens to spaces
-              .replace(/_+/g, ' ')      // underscores to spaces
-              .split(' ')
-              .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-              .join(' ');
-          };
+          console.log(`[AI-Import] Link/Token detected. Parsed Name: "${urlParsedName}". Decoded Segments: ${JSON.stringify(decodedSegments)}. Context: ${urlContextInfo.trim()}`);
 
-          urlParsedName = formatSegment(lastSegment);
-          
-          // Specific rule for Booking.com or other sites where name might be in intermediate segment
-          const hotelIdx = segments.indexOf("hotel");
-          if (hotelIdx !== -1 && segments[hotelIdx + 2]) {
-            urlParsedName = formatSegment(segments[hotelIdx + 2]);
-          } else if (hotelIdx !== -1 && segments[hotelIdx + 1]) {
-            urlParsedName = formatSegment(segments[hotelIdx + 1]);
+          // Only attempt to fetch if it's a valid complete http/https URL
+          if (targetUrl.startsWith("http")) {
+            const fetchResponse = await fetch(targetUrl, {
+              headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+                'Accept-Language': 'pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7',
+                'Cache-Control': 'no-cache',
+                'Pragma': 'no-cache'
+              },
+              signal: AbortSignal.timeout(5000) // 5s timeout to respond fast
+            });
+
+            if (fetchResponse.ok) {
+              const rawHtml = await fetchResponse.text();
+              htmlContent = rawHtml
+                .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+                .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '')
+                .replace(/<noscript\b[^<]*(?:(?!<\/noscript>)<[^<]*)*<\/noscript>/gi, '')
+                .replace(/<[^>]+>/g, ' ') // strip html tags
+                .replace(/\s+/g, ' ')      // normalize whitespace
+                .trim()
+                .slice(0, 16000);         // limit size safely
+            } else {
+              console.warn(`[AI-Import] Fetch returned status: ${fetchResponse.status}`);
+            }
           }
+        } catch (fetchErr: any) {
+          console.warn("[AI-Import] Safe fetch failed or bypassed:", fetchErr.message);
+        }
 
-          // Strip common words or code suffixes
-          urlParsedName = urlParsedName.replace(/\b(Pt Br|Html|Php|Aspx)\b/gi, '').trim();
+        const hotelName = urlParsedName || (decodedSegments.length > 0 ? decodedSegments[0] : "Hospedagem em Arraial do Cabo");
 
-          // Extra details from URL search params if present
-          const searchParams = urlObj.searchParams;
-          const checkin = searchParams.get('checkin') || searchParams.get('checkIn') || '';
-          const checkout = searchParams.get('checkout') || searchParams.get('checkOut') || '';
-          const adults = searchParams.get('group_adults') || searchParams.get('adults') || '';
-          const children = searchParams.get('group_children') || searchParams.get('children') || '';
-
-          let urlContextInfo = "";
-          if (checkin || checkout || adults || children) {
-            urlContextInfo = `\nInformações adicionais identificadas na URL de pesquisa:\n` +
-              (checkin ? `- Data de Check-in: ${checkin}\n` : '') +
-              (checkout ? `- Data de Check-out: ${checkout}\n` : '') +
-              (adults ? `- Adultos: ${adults}\n` : '') +
-              (children ? `- Crianças: ${children}\n` : '');
-          }
-
-          console.log(`[AI-Import] URL detected: ${urlStr}. Friendly name parsed: "${urlParsedName}". Context: ${urlContextInfo.trim()}`);
-
-          // Attempt to fetch page content safely
-          const fetchResponse = await fetch(urlStr, {
-            headers: {
-              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
-              'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
-              'Accept-Language': 'pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7',
-              'Cache-Control': 'no-cache',
-              'Pragma': 'no-cache'
-            },
-            signal: AbortSignal.timeout(6500) // 6.5s timeout to respond fast
-          });
-
-          if (fetchResponse.ok) {
-            const rawHtml = await fetchResponse.text();
-            // Clean html to extract simple text context and fit inside token limit
-            htmlContent = rawHtml
-              .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-              .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '')
-              .replace(/<noscript\b[^<]*(?:(?!<\/noscript>)<[^<]*)*<\/noscript>/gi, '')
-              .replace(/<[^>]+>/g, ' ') // strip html tags
-              .replace(/\s+/g, ' ')      // normalize whitespace
-              .trim()
-              .slice(0, 16000);         // limit size safely
-          } else {
-            console.warn(`[AI-Import] Fetch returned status: ${fetchResponse.status}`);
-          }
-
-          // 2. Build the optimal prompt based on whether content scraping succeeded
-          if (htmlContent && htmlContent.length > 300) {
-            finalPrompt = `O usuário forneceu o link para importação: ${urlStr}
+        // 2. Build the optimal prompt based on whether content scraping succeeded
+        if (htmlContent && htmlContent.length > 300) {
+          finalPrompt = `O usuário forneceu o link para importação: ${targetUrl}
 ${urlContextInfo}
 Aqui está o conteúdo textual extraído diretamente da página da web:
 --- INÍCIO DO CONTEÚDO EXTRAÍDO ---
@@ -138,28 +214,22 @@ ${htmlContent}
 --- FIM DO CONTEÚDO EXTRAÍDO ---
 
 Analise essas informações extraídas e monte a ficha completa da hospedagem estruturada em JSON seguindo rigorosamente as diretrizes.`;
-          } else {
-            // Robust Fallback: Ask Gemini to generate realistic data for Arraial do Cabo using its base knowledge of this hotel/pousada
-            const hotelName = urlParsedName || "Hospedagem Selecionada";
-            finalPrompt = `O usuário forneceu o seguinte link de hospedagem em Arraial do Cabo: ${urlStr}
+        } else {
+          // Robust Fallback: Ask Gemini to generate realistic data for Arraial do Cabo using its base knowledge of this hotel/pousada
+          finalPrompt = `O usuário forneceu o seguinte link, token de pesquisa ou dados brutos de hospedagem em Arraial do Cabo:
+--- INÍCIO DA ENTRADA ---
+${rawInput}
+--- FIM DA ENTRADA ---
+
 ${urlContextInfo}
-Não foi possível ler as tags internas do link devido a proteções de acesso ou restrições de segurança do site.
-No entanto, identificamos o nome provável da hospedagem: "${hotelName}".
+Identificamos o nome provável da hospedagem: "${hotelName}".
+${decodedSegments.length > 0 ? `Outras decodificações identificadas no token: ${decodedSegments.join(", ")}\n` : ""}
 
-Instrução de Fallback Inteligente:
-Como você possui um amplo conhecimento atualizado sobre turismo e hotelaria em Arraial do Cabo/RJ, utilize todo o seu banco de dados e treinamento histórico para preencher a ficha técnica da forma mais realística possível para a hospedagem real "${hotelName}". 
-- Se a hospedagem for muito conhecida (ex: Pousada Caminho do Sol, Capitão N'Areia, etc.), use as características reais dela (piscina, proximidade com a praia, etc.).
-- Caso seja um link genérico ou menos conhecido, crie uma estrutura luxuosa/boutique realista baseada na região aproximada informada no link ou use Praia Grande/Praia dos Anjos como local padrão de Arraial do Cabo.
+Instrução de Fallback Inteligente de Curação:
+Como você possui um amplo conhecimento atualizado sobre turismo e hotelaria em Arraial do Cabo/RJ, utilize todo o seu banco de dados e treinamento histórico para preencher a ficha técnica da forma mais realística possível para a hospedagem real "${hotelName}".
+- Se a hospedagem for conhecida (ex: Pousada Caminho do Sol, Capitão N'Areia, Sea Angels, etc.), use as características reais dela (piscina, proximidade com a praia, etc.).
+- Caso seja um link genérico, de apartamento ou menos conhecido, crie uma estrutura luxuosa/boutique realista baseada na região aproximada informada ou use Praia Grande/Praia dos Anjos como local padrão de Arraial do Cabo.
 - Estime tarifas, categorias de suítes, regras de cancelamento e comodidades de altíssimo nível condizentes com Arraial do Cabo.`;
-          }
-        } catch (fetchErr: any) {
-          console.warn("[AI-Import] Safe fetch failed (likely blocked or timed out):", fetchErr.message);
-          
-          // Re-fallback in case URL constructor or other logic errors out
-          const hotelName = urlParsedName || "Hospedagem Selecionada";
-          finalPrompt = `O usuário forneceu o seguinte link de hospedagem em Arraial do Cabo: ${urlStr}
-
-Utilize todo o seu banco de dados e treinamento histórico para preencher a ficha técnica da forma mais realística possível para a hospedagem real "${hotelName}" em Arraial do Cabo/RJ.`;
         }
       }
 
