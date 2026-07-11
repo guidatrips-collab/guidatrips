@@ -1334,6 +1334,20 @@ export default function AdminView({
                         <option value="paused">⏸️ Pausado/Rascunho</option>
                       </select>
                     </div>
+
+                    <div className="space-y-1.5 flex items-center gap-3 pt-6">
+                      <input
+                        type="checkbox"
+                        id="nauticalToggle"
+                        checked={editingExperience.showNauticalBulletin || false}
+                        onChange={(e) => setEditingExperience({ ...editingExperience, showNauticalBulletin: e.target.checked })}
+                        className="w-4 h-4 rounded border-white/20 bg-[#0D1B2A] text-[#E8711A] focus:ring-[#E8711A] focus:ring-offset-[#0D1B2A]"
+                      />
+                      <label htmlFor="nauticalToggle" className="font-accent text-[10px] text-[#ffefe6]/90 tracking-widest uppercase cursor-pointer">
+                        Mostrar Boletim Náutico
+                      </label>
+                    </div>
+
                     <div className="space-y-1.5">
                       <label className="font-accent text-[9px] text-[#ffefe6]/90 tracking-widest uppercase">Cidade / Região (Localidade)</label>
                       <select

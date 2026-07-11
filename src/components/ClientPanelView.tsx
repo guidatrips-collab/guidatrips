@@ -3,7 +3,7 @@ import { Experience, BlogPost, ClientUser, ClientReservation, ClientPartner, Glo
 import { 
   Compass, Map, Ticket, Star, User, Heart, ChevronRight, 
   MapPin, Clock, Calendar, CheckCircle, Info, Video, Gift, Search,
-  AlertTriangle, ExternalLink, PlayCircle, ClipboardList, Flame, Briefcase
+  AlertTriangle, ExternalLink, PlayCircle, ClipboardList, Flame, Briefcase, X
 } from "lucide-react";
 
 interface ClientPanelViewProps {
@@ -38,6 +38,7 @@ export default function ClientPanelView({
     return stored ? "roteiro" : "dashboard";
   });
   const [selectedReservationId, setSelectedReservationId] = useState<string | null>(null);
+  const [showRescheduleModal, setShowRescheduleModal] = useState(false);
 
   const resolvedItinerary = savedItinerary || (() => {
     try {
@@ -147,6 +148,34 @@ export default function ClientPanelView({
 
   const destName = destinations?.find(d => d.id === selectedDestinationId)?.name || "Arraial do Cabo";
 
+  let firstExpDate: Date | null = null;
+  if (clientReservations && clientReservations.length > 0) {
+    const dates = clientReservations.map(r => new Date(r.date + "T00:00:00")).sort((a, b) => a.getTime() - b.getTime());
+    if (dates.length > 0) firstExpDate = dates[0];
+  } else if (resolvedItinerary && resolvedItinerary.items && resolvedItinerary.items.length > 0) {
+    const dates = resolvedItinerary.items.map(c => new Date(c.date + "T00:00:00")).sort((a, b) => a.getTime() - b.getTime());
+    if (dates.length > 0) firstExpDate = dates[0];
+  }
+
+  let countdownMessage: React.ReactNode = null;
+  if (firstExpDate) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const firstExpDateMidnight = new Date(firstExpDate);
+    firstExpDateMidnight.setHours(0, 0, 0, 0);
+    
+    const diffTime = firstExpDateMidnight.getTime() - today.getTime();
+    const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays > 1) {
+      countdownMessage = <p className="font-sans text-sm text-[#5C6874]">Faltam <strong className="text-[#E8711A]">{diffDays} dias</strong> para a sua experiência incrível em {destName} começar.</p>;
+    } else if (diffDays === 1) {
+      countdownMessage = <p className="font-sans text-sm text-[#5C6874]">Falta <strong className="text-[#E8711A]">1 dia</strong> para a sua experiência incrível em {destName} começar.</p>;
+    } else if (diffDays === 0) {
+      countdownMessage = <p className="font-sans text-sm text-[#5C6874]"><strong className="text-emerald-500">Seu passeio é hoje!</strong> Aproveite sua experiência incrível em {destName}.</p>;
+    }
+  }
+
   return (
     <div className="flex flex-col md:flex-row min-h-screen bg-[#FBF9F6] pt-24 md:pt-[80px]">
       {/* SIDEBAR NAVIGATION (Desktop) / BOTTOM BAR (Mobile) */}
@@ -230,7 +259,7 @@ export default function ClientPanelView({
           <div className="space-y-10 animate-fade-in max-w-5xl mx-auto">
             <header className="space-y-2">
               <h1 className="font-serif text-3xl md:text-4xl font-bold text-[#0D1B2A]">Olá, {clientUser.name.split(" ")[0]}! 🌊</h1>
-              <p className="font-sans text-sm text-[#5C6874]">Faltam <strong className="text-[#E8711A]">12 dias</strong> para a sua experiência incrível em {destName} começar.</p>
+              {countdownMessage}
             </header>
 
             {/* SAVED ITINERARY PROMINENT ACTION CARD */}
@@ -334,27 +363,86 @@ export default function ClientPanelView({
                 </div>
               </div>
 
-              {/* Clima & Dicas Rápidas */}
-              <div className="space-y-6">
-                <div className="bg-[#0D1B2A] rounded-xl p-6 text-white shadow-lg relative overflow-hidden">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-bl-full pointer-events-none"></div>
-                  <h4 className="font-accent text-[10px] uppercase tracking-widest text-zinc-400 mb-4">Previsão em {destName}</h4>
-                  <div className="flex items-end gap-4">
-                    <span className="text-5xl font-serif font-bold">28°</span>
-                    <div className="pb-1">
-                      <p className="font-sans text-sm font-medium">Sol com algumas nuvens</p>
-                      <p className="font-sans text-xs text-zinc-400">Tempo ideal para explorar</p>
+              {/* Clima & Boletim Náutico */}
+              {(resolvedItinerary || clientReservations.length > 0) && (
+                <div className="space-y-6">
+                  {/* Inteligência de Previsão */}
+                  <div className="bg-[#0D1B2A] rounded-xl p-6 text-white shadow-lg relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-bl-full pointer-events-none"></div>
+                    <h4 className="font-accent text-[10px] uppercase tracking-widest text-zinc-400 mb-4 flex items-center gap-1.5"><Compass className="w-3.5 h-3.5" /> Clima na sua viagem</h4>
+                    
+                    <div className="space-y-4">
+                      {Array.from(new Set([
+                        ...clientReservations.map(r => r.date),
+                        ...(resolvedItinerary?.items.map(c => c.date) || [])
+                      ])).sort().slice(0, 3).map((dateStr, idx) => {
+                        const dateObj = new Date(dateStr + "T00:00:00");
+                        
+                        // Pseudo-random weather based on date string
+                        const seed = dateStr.charCodeAt(dateStr.length - 1);
+                        const temps = [24, 26, 28, 29, 25, 23, 27];
+                        const conditions = ["Ensolarado", "Sol com algumas nuvens", "Céu limpo", "Parcialmente nublado", "Possibilidade de chuva isolada"];
+                        
+                        const temp = temps[seed % temps.length];
+                        const condition = conditions[seed % conditions.length];
+
+                        return (
+                          <div key={idx} className="flex items-center justify-between border-b border-white/10 pb-3 last:border-0 last:pb-0">
+                            <div className="flex items-center gap-4">
+                              <span className="text-3xl font-serif font-bold text-[#E8711A]">{temp}°</span>
+                              <div>
+                                <p className="font-sans text-sm font-medium">{condition}</p>
+                                <p className="font-sans text-xs text-zinc-400">{destName} • {dateObj.toLocaleDateString("pt-BR")}</p>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
-                </div>
+                  
+                  {/* Boletim Náutico (Se Aplicável) */}
+                  {(clientReservations.some(r => {
+                      const exp = experiences.find(e => e.id === r.experienceId);
+                      return exp?.showNauticalBulletin;
+                  }) || resolvedItinerary?.items.some(c => {
+                      const exp = experiences.find(e => e.id === c.experienceId);
+                      return exp?.showNauticalBulletin;
+                  })) && (
+                    <div className="bg-white border border-[#0D1B2A]/10 rounded-xl p-6 shadow-sm">
+                      <div className="flex justify-between items-center mb-6">
+                        <h4 className="font-accent text-[10px] uppercase tracking-widest text-[#E8711A] font-bold">Boletim Náutico</h4>
+                        <div className="flex items-center gap-1.5 px-2 py-1 bg-emerald-50 text-emerald-700 text-[9px] font-bold rounded-full border border-emerald-100 uppercase font-accent">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                          Porto Aberto
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1">
+                          <span className="font-sans text-[9px] uppercase font-semibold text-zinc-400">Vento (Previsto)</span>
+                          <div className="font-serif text-lg font-bold text-[#0D1B2A]">8 nós (NE)</div>
+                        </div>
+                        <div className="space-y-1">
+                          <span className="font-sans text-[9px] uppercase font-semibold text-zinc-400">Ondulação</span>
+                          <div className="font-serif text-lg font-bold text-[#0D1B2A]">0.7m</div>
+                        </div>
+                      </div>
+                      <div className="mt-4 pt-4 border-t border-zinc-100">
+                        <p className="font-sans text-[11px] text-zinc-500 leading-relaxed">
+                          As condições marítimas estão <strong className="text-emerald-600">Excelentes</strong> para o seu passeio agendado. Águas límpidas e navegação segura.
+                        </p>
+                      </div>
+                    </div>
+                  )}
 
-                <div className="bg-[#FBF9F7] border border-zinc-200 rounded-xl p-6">
-                  <h4 className="font-accent text-[10px] uppercase tracking-widest text-[#E8711A] mb-4">Dica da Guida</h4>
-                  <p className="font-serif text-sm text-[#0D1B2A] leading-relaxed">
-                    "O sol é forte na região! Lembre-se de beber muita água e aplicar o protetor ecológico antes de embarcar."
-                  </p>
+                  <div className="bg-[#FBF9F7] border border-zinc-200 rounded-xl p-6">
+                    <h4 className="font-accent text-[10px] uppercase tracking-widest text-[#E8711A] mb-4 font-bold flex items-center gap-1.5"><AlertTriangle className="w-3.5 h-3.5" /> Dica da Guida</h4>
+                    <p className="font-serif text-sm text-[#0D1B2A] leading-relaxed">
+                      "O sol é forte na região! Lembre-se de beber muita água e aplicar o protetor ecológico antes de embarcar."
+                    </p>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
 
             {/* Descubra Novas Experiências */}
@@ -704,6 +792,16 @@ export default function ClientPanelView({
                     </ul>
                   </div>
 
+                  {/* Cancellation / Reschedule Action */}
+                  <div className="pt-2">
+                    <button
+                      onClick={() => setShowRescheduleModal(true)}
+                      className="w-full bg-white hover:bg-zinc-50 border border-zinc-200 text-[#0D1B2A] font-accent text-[10px] uppercase font-bold tracking-widest px-6 py-4 rounded-xl transition-all shadow-sm flex items-center justify-center gap-2"
+                    >
+                      <Calendar className="w-4 h-4 text-[#E8711A]" /> Precisa remarcar ou cancelar sua reserva?
+                    </button>
+                  </div>
+
                 </div>
 
               </div>
@@ -869,6 +967,47 @@ export default function ClientPanelView({
           </div>
         )}
 
+        {/* Reschedule Modal */}
+        {showRescheduleModal && currentReservation && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+            <div className="bg-white rounded-3xl w-full max-w-md overflow-hidden shadow-2xl relative">
+              <button 
+                onClick={() => setShowRescheduleModal(false)}
+                className="absolute top-4 right-4 p-2 bg-zinc-100 hover:bg-zinc-200 rounded-full transition-colors z-10"
+              >
+                <X className="w-5 h-5 text-zinc-600" />
+              </button>
+
+              <div className="p-8">
+                <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center mb-6">
+                  <Calendar className="w-6 h-6 text-amber-600" />
+                </div>
+                
+                <h2 className="font-serif text-2xl font-bold text-[#0D1B2A] mb-3">Remarcar ou Cancelar</h2>
+                <p className="font-sans text-sm text-zinc-500 mb-6 leading-relaxed">
+                  Para remarcar ou cancelar a sua reserva <strong>{currentReservation.voucherCode}</strong>, por favor entre em contato direto com a nossa equipe pelo WhatsApp.
+                </p>
+
+                <div className="space-y-4">
+                  <a 
+                    href={`https://wa.me/5522998642217?text=Ol%C3%A1%2C%20gostaria%20de%20falar%20sobre%20a%20minha%20reserva%20${currentReservation.voucherCode}%20-%20Gostaria%20de%20solicitar%20uma%20remarca%C3%A7%C3%A3o%2Fcancelamento.`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="w-full flex items-center justify-center gap-2 bg-[#E8711A] text-white px-6 py-4 rounded-xl font-accent font-bold uppercase tracking-widest text-[10px] hover:bg-[#FF8A3F] transition-colors"
+                  >
+                    Falar com Atendimento
+                  </a>
+                  <button 
+                    onClick={() => setShowRescheduleModal(false)}
+                    className="w-full text-center text-xs font-bold font-sans text-zinc-500 hover:text-[#0D1B2A] py-3 cursor-pointer"
+                  >
+                    Voltar para o Painel
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );

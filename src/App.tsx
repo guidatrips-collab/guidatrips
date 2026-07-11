@@ -436,22 +436,39 @@ export default function App() {
     }
   });
 
-  const handleUpdateHotelId = (id: string | null) => {
+  const [selectedRoomId, setSelectedRoomId] = useState<string | null>(() => {
+    try {
+      return localStorage.getItem("guidatrips_selected_room_id") || null;
+    } catch {
+      return null;
+    }
+  });
+
+  const handleUpdateHotelId = (id: string | null, roomId?: string | null) => {
     setSelectedHotelId(id);
     if (id) {
       localStorage.setItem("guidatrips_selected_hotel_id", id);
     } else {
       localStorage.removeItem("guidatrips_selected_hotel_id");
     }
+    
+    if (roomId !== undefined) {
+      setSelectedRoomId(roomId);
+      if (roomId) {
+        localStorage.setItem("guidatrips_selected_room_id", roomId);
+      } else {
+        localStorage.removeItem("guidatrips_selected_room_id");
+      }
+    }
   };
 
-  // Stay duration persistence (default to 3 days)
+  // Stay duration persistence (default to 1 day)
   const [stayDays, setStayDays] = useState<number>(() => {
     try {
       const stored = localStorage.getItem("guidatrips_stay_days");
-      return stored ? parseInt(stored, 10) : 3;
+      return stored ? parseInt(stored, 10) : 1;
     } catch {
-      return 3;
+      return 1;
     }
   });
 
@@ -1270,7 +1287,7 @@ export default function App() {
           currentView={currentView}
           onNavigate={handleNavigate}
           cartCount={cart.length}
-          onOpenCart={() => { handleNavigate("roteiro"); }}
+          onOpenCart={() => setIsCartOpen(true)}
           currentUser={currentUser}
           onWhatsAppContact={openWhatsAppModal}
         />
@@ -1296,10 +1313,12 @@ export default function App() {
         {currentView === "experiencias" && (
           <ExperiencesView 
             experiences={experiences} 
+            accommodations={accommodations}
             cart={cart}
+            arrivalDate={arrivalDate}
             onAddToCart={handleAddToCart}
             onRemoveFromCart={handleRemoveFromCart}
-            onOpenCart={() => { handleNavigate("roteiro"); }}
+            onOpenCart={() => setIsCartOpen(true)}
             whatsappNumber={settings.whatsappNumber}
             settings={settings}
             onUpdateSettings={updateSettings}
@@ -1313,6 +1332,8 @@ export default function App() {
             onWhatsAppContact={openWhatsAppModal}
             selectedExperienceSlug={selectedExperienceSlug}
             onSelectExperience={handleSelectExperience}
+            onChangeHotelId={handleUpdateHotelId}
+            selectedHotelId={selectedHotelId}
           />
         )}
         {currentView === "destino" && (
@@ -1338,6 +1359,7 @@ export default function App() {
             stayDays={stayDays}
             clientName={clientName}
             clientCity={clientCity}
+            settings={settings}
             onUpdateStayDays={updateStayDays}
             onAddToCart={handleAddToCart}
             onRemoveFromCart={handleRemoveFromCart}
@@ -1391,22 +1413,44 @@ export default function App() {
           />
         )}
         {currentView === "admin" && (
-          <AdminView 
-            experiences={experiences}
-            leads={leads}
-            posts={posts}
-            settings={settings}
-            destinations={destinations}
-            accommodations={accommodations}
-            reservations={osReservations}
-            onUpdateExperiences={updateExperiences}
-            onUpdatePosts={updatePosts}
-            onUpdateLeads={updateLeads}
-            onUpdateSettings={updateSettings}
-            onUpdateDestinations={updateDestinations}
-            onUpdateAccommodations={updateAccommodations}
-            onUpdateReservations={updateReservations}
-          />
+          currentUser?.roles?.includes("admin") ? (
+            <AdminView 
+              experiences={experiences}
+              leads={leads}
+              posts={posts}
+              settings={settings}
+              destinations={destinations}
+              accommodations={accommodations}
+              reservations={osReservations}
+              onUpdateExperiences={updateExperiences}
+              onUpdatePosts={updatePosts}
+              onUpdateLeads={updateLeads}
+              onUpdateSettings={updateSettings}
+              onUpdateDestinations={updateDestinations}
+              onUpdateAccommodations={updateAccommodations}
+              onUpdateReservations={updateReservations}
+            />
+          ) : (
+            <div className="pt-32 pb-20 text-center min-h-[60vh] flex flex-col items-center justify-center bg-[#FCFBF9]">
+              <h2 className="text-2xl font-bold font-serif mb-4 text-[#0D1B2A]">Acesso Restrito (GuideOS)</h2>
+              <p className="text-zinc-500 mb-6 max-w-md mx-auto">Você não tem permissão para acessar o painel administrativo. Esta área é restrita.</p>
+              {!currentUser ? (
+                <button 
+                  onClick={() => setIsAuthModalOpen(true)} 
+                  className="px-6 py-3 bg-[#0D1B2A] text-white text-[10px] font-bold tracking-widest uppercase rounded-full cursor-pointer hover:bg-[#E8711A] transition-colors"
+                >
+                  Fazer Login como Administrador
+                </button>
+              ) : (
+                <button 
+                  onClick={() => handleNavigate("home")} 
+                  className="px-6 py-3 bg-[#0D1B2A] text-white text-[10px] font-bold tracking-widest uppercase rounded-full cursor-pointer hover:bg-[#E8711A] transition-colors"
+                >
+                  Voltar para a Home
+                </button>
+              )}
+            </div>
+          )
         )}
         {currentView === "cliente" && (
           <ClientPanelView 
@@ -1482,19 +1526,6 @@ export default function App() {
         onClose={() => { setIsAuthModalOpen(false); setPendingAuthAction(null); }} 
         onSuccess={handleAuthSuccess} 
       />
-
-      {/* COMPONENTE FLOATING ROTERIO (TRIGGER DRAWERS) */}
-      {(cart.length > 0 || selectedHotelId) && currentView !== "roteiro" && (
-        <button
-          onClick={() => { handleNavigate("roteiro"); }}
-          className="fixed bottom-6 right-6 z-40 bg-gradient-to-r from-[#E8711A] to-[#FF8A3F] text-white px-6 py-4 rounded-full font-sans text-sm font-bold tracking-normal flex items-center gap-2.5 shadow-[0_10px_30px_rgba(232,113,26,0.35)] hover:shadow-[0_12px_35px_rgba(232,113,26,0.5)] hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer select-none border border-white/20"
-        >
-          <span>🗺️ MEU ROTEIRO</span>
-          <span className="bg-[#0D1B2A] text-white h-5.5 w-5.5 rounded-full flex items-center justify-center font-sans font-extrabold text-[10px] shadow-sm">
-            {cart.length + (selectedHotelId ? 1 : 0)}
-          </span>
-        </button>
-      )}
 
       {/* THE MEU ROTEIRO DRAWER SIDEBAR */}
       {isCartOpen && (

@@ -641,24 +641,27 @@ export default function DestinoView({
 
         {/* LOCAL TRIP GUIDE / INTELLIGENT ROUTE PLANNER CTA */}
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-24">
-          <div className="bg-[#0D1B2A] text-white rounded-lg p-8 sm:p-14 text-center max-w-4xl mx-auto space-y-6 shadow-2xl relative overflow-hidden">
-            <div className="absolute inset-0 bg-[radial-gradient(#ffffff_1px,transparent_1px)] opacity-[0.02] [background-size:20px_20px]"></div>
-            <div className="relative z-10 space-y-4 max-w-2xl mx-auto">
-              <span className="font-accent text-[#E8711A] text-xs font-bold tracking-widest uppercase block">
-                PLANEJADOR DE ROTEIROS INTELIGENTES
+          <div className="bg-[#0D1B2A] text-white rounded-2xl p-8 sm:p-16 text-center max-w-5xl mx-auto space-y-8 shadow-[0_20px_50px_rgba(13,27,42,0.5)] relative overflow-hidden">
+            {/* Ambient Lighting */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#E8711A]/20 via-[#0D1B2A]/0 to-[#0D1B2A]/0 pointer-events-none"></div>
+            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-[0.03]"></div>
+            
+            <div className="relative z-10 space-y-5 max-w-3xl mx-auto">
+              <span className="font-accent text-[#E8711A] text-[10px] font-extrabold tracking-widest uppercase block flex items-center justify-center gap-2">
+                <Sparkles className="w-4 h-4" /> INTELIGÊNCIA ARTIFICIAL + CURADORIA LOCAL
               </span>
-              <h3 className="font-serif text-2xl sm:text-4xl font-extrabold text-white leading-tight">
-                Quer desenhar sua viagem perfeita para {activeDest.name}?
+              <h3 className="font-serif text-3xl sm:text-5xl font-extrabold text-white leading-tight tracking-tight">
+                Deixe a mágica acontecer em {activeDest.name}
               </h3>
-              <p className="font-sans text-sm text-zinc-300 leading-relaxed">
-                Nossa IA generativa acoplada à curadoria humana organiza seus dias com horários otimizados de vento e sol, calcula o orçamento real de custos e vincula pousadas parceiras homologadas com mimos em segundos.
+              <p className="font-sans text-sm sm:text-base text-zinc-300 leading-relaxed max-w-2xl mx-auto">
+                Não gaste horas planejando. Nosso sistema analisa a logística da cidade, as condições climáticas e a duração de cada atração para montar a sua <strong className="text-white">linha do tempo perfeita</strong>. Hotéis, passeios e dicas, tudo sincronizado em segundos.
               </p>
-              <div className="pt-4 flex flex-wrap justify-center gap-4">
+              <div className="pt-6 flex flex-wrap justify-center gap-4">
                 <button
                   onClick={() => handleNavigateToWizardWithDest(activeDest.id)}
-                  className="px-6 py-3 bg-[#E8711A] hover:bg-white text-[#0D1B2A] font-accent text-xs font-extrabold tracking-widest uppercase rounded-sm duration-200 cursor-pointer hover:scale-105 transition-transform"
+                  className="px-8 py-4 bg-[#E8711A] hover:bg-white text-[#0D1B2A] font-accent text-xs font-extrabold tracking-widest uppercase rounded shadow-[0_0_20px_rgba(232,113,26,0.3)] duration-300 cursor-pointer hover:scale-105 transition-all flex items-center gap-2"
                 >
-                  MONTE SEU ROTEIRO AGORA
+                  GERAR ROTEIRO INTELIGENTE <ArrowRight className="w-4 h-4" />
                 </button>
               </div>
             </div>

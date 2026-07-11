@@ -4,13 +4,14 @@ import {
   Search, Info, Plus, ChevronLeft, ChevronRight, CreditCard, Shield, 
   Send, Sparkles, CheckCircle, Smartphone, Trash2 
 } from "lucide-react";
-import { Experience, ExperienceCategory, BookingCartItem, GlobalSettings, ClientReservation, ClientUser, checkSchedulingConflict, getBrazilLocalDate, addDaysToBrazilDate, Destination } from "../types";
+import { Experience, ExperienceCategory, BookingCartItem, GlobalSettings, ClientReservation, ClientUser, checkSchedulingConflict, getBrazilLocalDate, addDaysToBrazilDate, Destination, Accommodation } from "../types";
 import { motion, AnimatePresence } from "motion/react";
 import { firestoreService } from "../firebase";
 import ExperienceMediaGallery from "./ExperienceMediaGallery";
 
 interface ExperiencesViewProps {
   experiences: Experience[];
+  accommodations?: Accommodation[];
   cart: BookingCartItem[];
   onAddToCart: (item: BookingCartItem) => void;
   onRemoveFromCart: (idx: number) => void;
@@ -28,11 +29,16 @@ interface ExperiencesViewProps {
   onWhatsAppContact?: (message?: string) => void;
   selectedExperienceSlug?: string | null;
   onSelectExperience?: (slug: string | null) => void;
+  onChangeHotelId?: (id: string | null) => void;
+  selectedHotelId?: string | null;
+  arrivalDate?: string;
 }
 
 export default function ExperiencesView({
   experiences,
+  accommodations = [],
   cart,
+  arrivalDate,
   onAddToCart,
   onRemoveFromCart,
   onOpenCart,
@@ -48,7 +54,9 @@ export default function ExperiencesView({
   onUpdateSelectedDestinationId,
   onWhatsAppContact,
   selectedExperienceSlug,
-  onSelectExperience
+  onSelectExperience,
+  onChangeHotelId,
+  selectedHotelId
 }: ExperiencesViewProps) {
   const [selectedCategory, setSelectedCategory] = useState<string>("todos");
   const [selectedLocation, setSelectedLocation] = useState<string>("todos");
@@ -101,7 +109,14 @@ export default function ExperiencesView({
   }, [currentUser]);
 
   // Interactive calendar active month
-  const [calendarMonth, setCalendarMonth] = useState(new Date());
+  const [calendarMonth, setCalendarMonth] = useState(() => {
+    if (arrivalDate) {
+      // arrivalDate is YYYY-MM-DD
+      const [y, m, d] = arrivalDate.split('-').map(Number);
+      return new Date(y, m - 1, d);
+    }
+    return new Date();
+  });
 
   // FAQ open/close state inside modal
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
@@ -424,47 +439,55 @@ export default function ExperiencesView({
                   </div>
 
                   {/* Card Body */}
-                  <div className="p-6 space-y-4 flex-1 flex flex-col justify-between">
-                    <div className="space-y-2">
-                      <span className="text-[#E8711A] font-accent text-[9px] font-bold tracking-widest uppercase">
-                        {exp.category}
-                      </span>
-                      <h3 className="font-serif text-lg font-bold text-[#0D1B2A] group-hover:text-[#E8711A] transition-colors leading-snug line-clamp-1">
-                        {exp.name}
-                      </h3>
-                      <p className="font-sans text-xs text-zinc-500 leading-relaxed line-clamp-3">
+                  <div className="p-6 space-y-5 flex-1 flex flex-col justify-between bg-white">
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[#E8711A] font-accent text-[9px] font-bold tracking-widest uppercase bg-[#E8711A]/10 px-2 py-1 rounded">
+                          {exp.category}
+                        </span>
+                        <div className="flex items-center gap-1 text-zinc-400">
+                          <span className="text-xs">⏱</span>
+                          <span className="font-accent text-[9px] uppercase font-bold tracking-wider">{exp.duration}</span>
+                        </div>
+                      </div>
+                      <div>
+                        <h3 className="font-serif text-xl font-bold text-[#0D1B2A] group-hover:text-[#E8711A] transition-colors leading-snug line-clamp-2">
+                          {exp.name}
+                        </h3>
+                      </div>
+                      <p className="font-sans text-sm text-zinc-500 leading-relaxed line-clamp-2">
                         {exp.shortDescription}
                       </p>
                     </div>
 
-                    <div className="space-y-4 pt-4 border-t border-zinc-150">
-                      {/* Pricing and duration */}
-                      <div className="flex items-center justify-between text-xs font-sans">
-                        <div className="flex items-center gap-1 text-zinc-500">
-                          <span>⏱</span>
-                          <span className="font-accent text-[10px] uppercase font-bold tracking-wider">{exp.duration}</span>
-                        </div>
-                        <div className="text-right">
-                          <span className="block text-[9px] text-zinc-400 uppercase tracking-wider font-accent font-semibold">Tarifa base</span>
+                    <div className="space-y-5 pt-5 border-t border-zinc-100">
+                      {/* Pricing */}
+                      <div className="flex items-end justify-between">
+                        <div className="text-left">
+                          <span className="block text-[10px] text-zinc-400 uppercase tracking-widest font-accent font-semibold mb-1">A partir de</span>
                           <div className="flex items-center gap-2">
                             {exp.promotionalPrice ? (
                               <>
-                                <span className="line-through text-zinc-400 text-xs">R${exp.priceFrom}</span>
-                                <span className="text-emerald-600 font-black font-serif text-base">R${exp.promotionalPrice}</span>
+                                <span className="line-through text-zinc-300 text-xs">R${exp.priceFrom}</span>
+                                <span className="text-[#E8711A] font-black font-serif text-2xl leading-none">R${exp.promotionalPrice}</span>
                               </>
                             ) : (
-                              <span className="text-[#0D1B2A] font-black font-serif text-base">R$ {exp.priceFrom}</span>
+                              <span className="text-[#0D1B2A] font-black font-serif text-2xl leading-none">R$ {exp.priceFrom}</span>
                             )}
                           </div>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-[10px] text-zinc-400 uppercase tracking-widest font-accent font-semibold block">Por</span>
+                          <span className="text-xs text-zinc-600 font-semibold block">pessoa</span>
                         </div>
                       </div>
 
                       {/* Detail CTA */}
                       <button
                         onClick={() => handleOpenExperienceDetail(exp)}
-                        className="w-full text-center bg-zinc-100 hover:bg-[#E8711A] text-[#0D1B2A] hover:text-white border border-zinc-200 hover:border-[#E8711A] p-3 text-xs font-accent font-bold uppercase tracking-widest transition-all rounded-xl cursor-pointer"
+                        className="w-full text-center bg-zinc-50 hover:bg-[#E8711A] text-[#0D1B2A] hover:text-white border border-zinc-200 hover:border-[#E8711A] p-3.5 text-[11px] font-accent font-black uppercase tracking-widest transition-all rounded-xl cursor-pointer flex justify-center items-center gap-2"
                       >
-                        Ver Detalhes & Disponibilidade &rarr;
+                        Ver Detalhes <ArrowRight className="w-3.5 h-3.5" />
                       </button>
                     </div>
                   </div>
@@ -558,8 +581,8 @@ export default function ExperiencesView({
                     </div>
                   )}
 
-                  {/* Tour Metadata Specs (Departure City, Age limits, Duration) */}
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 bg-zinc-50 border border-zinc-200 p-4 rounded-2xl pt-4">
+                  {/* Tour Metadata Specs (Departure City, Age limits, Duration, Effort, Ideal For) */}
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 bg-zinc-50 border border-zinc-200 p-5 rounded-2xl">
                     {activeExperience.departureCity && (
                       <div className="text-left">
                         <span className="font-accent text-[8px] sm:text-[9px] text-zinc-500 tracking-widest uppercase block font-bold">Partida</span>
@@ -579,30 +602,54 @@ export default function ExperiencesView({
                       <span className="font-accent text-[8px] sm:text-[9px] text-zinc-500 tracking-widest uppercase block font-bold">Duração</span>
                       <span className="font-sans text-xs sm:text-sm text-[#0D1B2A] font-semibold">{activeExperience.duration}</span>
                     </div>
+                    
+                    {/* New Metadata Fields based on Roadmap */}
+                    <div className="text-left">
+                      <span className="font-accent text-[8px] sm:text-[9px] text-zinc-500 tracking-widest uppercase block font-bold">Nível de Esforço</span>
+                      <span className="font-sans text-xs sm:text-sm text-[#0D1B2A] font-semibold">{activeExperience.effortLevel || "Moderado"}</span>
+                    </div>
+                    <div className="text-left">
+                      <span className="font-accent text-[8px] sm:text-[9px] text-zinc-500 tracking-widest uppercase block font-bold">Melhor Horário</span>
+                      <span className="font-sans text-xs sm:text-sm text-[#0D1B2A] font-semibold">{activeExperience.bestTime || "Manhã"}</span>
+                    </div>
+                    <div className="text-left">
+                      <span className="font-accent text-[8px] sm:text-[9px] text-zinc-500 tracking-widest uppercase block font-bold">Ideal Para</span>
+                      <span className="font-sans text-xs sm:text-sm text-[#0D1B2A] font-semibold">{activeExperience.idealFor || "Todos"}</span>
+                    </div>
+                    <div className="text-left">
+                      <span className="font-accent text-[8px] sm:text-[9px] text-zinc-500 tracking-widest uppercase block font-bold">Melhor Época</span>
+                      <span className="font-sans text-xs sm:text-sm text-[#0D1B2A] font-semibold">{activeExperience.bestSeason || "O ano inteiro"}</span>
+                    </div>
                   </div>
 
                   {/* Full Description text */}
-                  <div className="space-y-4 pt-2">
-                    <h3 className="font-serif text-xl font-bold text-[#0D1B2A] border-b border-zinc-200 pb-2">Sobre este passeio</h3>
-                    <p className="font-sans text-xs sm:text-sm text-zinc-600 leading-relaxed whitespace-pre-line">
+                  <div className="space-y-5 pt-8">
+                    <h3 className="font-serif text-2xl font-bold text-[#0D1B2A] flex items-center gap-2">
+                      <span className="w-8 h-1 bg-[#E8711A] rounded-full inline-block"></span>
+                      Sobre a Experiência
+                    </h3>
+                    <p className="font-sans text-sm sm:text-base text-zinc-600 leading-loose whitespace-pre-line bg-zinc-50/50 p-6 rounded-2xl border border-zinc-100">
                       {activeExperience.fullDescription}
                     </p>
                   </div>
 
                   {/* Itinerary (Roteiro) section */}
                   {activeExperience.itinerary && activeExperience.itinerary.length > 0 && (
-                    <div className="space-y-4 pt-4 border-t border-zinc-200">
-                      <h3 className="font-serif text-lg font-bold text-[#0D1B2A] pb-1">📍 Roteiro Completo</h3>
-                      <div className="relative pl-6 space-y-6 before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-[2px] before:bg-[#E8711A]/20">
+                    <div className="space-y-6 pt-10">
+                      <h3 className="font-serif text-2xl font-bold text-[#0D1B2A] flex items-center gap-2">
+                        <span className="w-8 h-1 bg-[#E8711A] rounded-full inline-block"></span>
+                        Roteiro Passo a Passo
+                      </h3>
+                      <div className="relative pl-8 space-y-8 before:absolute before:left-[15px] before:top-2 before:bottom-2 before:w-[2px] before:bg-gradient-to-b before:from-[#E8711A]/40 before:to-[#E8711A]/5">
                         {activeExperience.itinerary.map((step, idx) => {
                           const [title, ...descParts] = step.split(":");
                           const desc = descParts.join(":");
                           return (
                             <div key={idx} className="relative">
-                              <div className="absolute -left-[20px] top-1 w-3 h-3 rounded-full bg-[#E8711A] border-4 border-white z-10" />
-                              <div className="text-left">
-                                <h4 className="font-sans text-xs sm:text-sm font-bold text-[#0D1B2A]">{title || step}</h4>
-                                {desc && <p className="font-sans text-xs text-zinc-500 mt-1">{desc.trim()}</p>}
+                              <div className="absolute -left-[27px] top-1.5 w-4 h-4 rounded-full bg-white border-[4px] border-[#E8711A] shadow-sm z-10" />
+                              <div className="text-left bg-white border border-zinc-200 rounded-2xl p-5 shadow-sm hover:border-[#E8711A]/30 transition-colors">
+                                <h4 className="font-serif text-lg font-bold text-[#0D1B2A]">{title || step}</h4>
+                                {desc && <p className="font-sans text-sm text-zinc-500 mt-2 leading-relaxed">{desc.trim()}</p>}
                               </div>
                             </div>
                           );
@@ -612,12 +659,12 @@ export default function ExperiencesView({
                   )}
 
                   {/* Inclusions / Exclusions Tiles */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-4">
-                    <div className="bg-emerald-50/40 border border-emerald-100 p-5 rounded-2xl space-y-3">
-                      <span className="font-accent text-[10px] text-emerald-700 font-black tracking-widest uppercase flex items-center gap-1.5">
-                        ✓ Estrutura Inclusa
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-10">
+                    <div className="bg-emerald-50 border border-emerald-100 p-6 rounded-3xl space-y-4 shadow-sm">
+                      <span className="font-accent text-[11px] text-emerald-800 font-black tracking-widest uppercase flex items-center gap-2">
+                        <CheckCircle className="w-4 h-4 text-emerald-600" /> O que está incluso
                       </span>
-                      <ul className="space-y-2 font-sans text-xs text-zinc-600">
+                      <ul className="space-y-3 font-sans text-sm text-zinc-700">
                         {activeExperience.included?.map((item, idx) => (
                           <li key={idx} className="flex items-start gap-2">
                             <span className="text-emerald-600 select-none mt-0.5">•</span>
@@ -628,26 +675,26 @@ export default function ExperiencesView({
                     </div>
 
                     {activeExperience.courtesies && activeExperience.courtesies.length > 0 && (
-                      <div className="bg-[#E8711A]/5 border border-[#E8711A]/20 p-5 rounded-2xl space-y-3 md:col-span-2">
-                        <span className="font-accent text-[10px] text-[#E8711A] font-black tracking-widest uppercase flex items-center gap-1.5">
+                      <div className="bg-[#E8711A]/5 border border-[#E8711A]/20 p-6 rounded-3xl space-y-4 md:col-span-2 shadow-sm">
+                        <span className="font-accent text-[11px] text-[#E8711A] font-black tracking-widest uppercase flex items-center gap-2">
                           🎁 Benefícios Exclusivos (Cortesias)
                         </span>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           {activeExperience.courtesies.map((item, idx) => (
                             <div key={idx} className="flex items-start gap-2">
                               <span className="text-[#E8711A] select-none mt-0.5">•</span>
-                              <span className="font-sans text-xs text-zinc-700 font-medium">{item.name}</span>
+                              <span className="font-sans text-sm text-zinc-700 font-medium">{item.name}</span>
                             </div>
                           ))}
                         </div>
                       </div>
                     )}
 
-                    <div className="bg-zinc-50 border border-zinc-200 p-5 rounded-2xl space-y-3">
-                      <span className="font-accent text-[10px] text-zinc-500 font-bold tracking-widest uppercase flex items-center gap-1.5">
+                    <div className="bg-zinc-50 border border-zinc-200 p-6 rounded-3xl space-y-4 shadow-sm">
+                      <span className="font-accent text-[11px] text-zinc-500 font-bold tracking-widest uppercase flex items-center gap-2">
                         ✕ Não Inclui
                       </span>
-                      <ul className="space-y-2 font-sans text-xs text-zinc-500">
+                      <ul className="space-y-3 font-sans text-sm text-zinc-500">
                         {activeExperience.notIncluded?.map((item, idx) => (
                           <li key={idx} className="flex items-start gap-2">
                             <span className="text-zinc-400 select-none mt-0.5">•</span>
@@ -660,11 +707,11 @@ export default function ExperiencesView({
 
                   {/* Policies section */}
                   {activeExperience.policies && activeExperience.policies.length > 0 && (
-                    <div className="bg-zinc-50 border border-zinc-200 p-5 rounded-2xl space-y-3 pt-4 mt-6">
-                      <span className="font-accent text-[10px] text-zinc-800 font-bold tracking-widest uppercase flex items-center gap-1.5">
+                    <div className="bg-zinc-50 border border-zinc-200 p-6 rounded-3xl space-y-4 pt-6 mt-8 shadow-sm">
+                      <span className="font-accent text-[11px] text-zinc-800 font-bold tracking-widest uppercase flex items-center gap-2">
                         📜 Políticas (Pagamento e Cancelamento)
                       </span>
-                      <ul className="space-y-2 font-sans text-xs text-zinc-600">
+                      <ul className="space-y-3 font-sans text-sm text-zinc-600">
                         {activeExperience.policies.map((item, idx) => (
                           <li key={idx} className="flex items-start gap-2">
                             <span className="text-zinc-400 select-none mt-0.5">•</span>
@@ -677,13 +724,13 @@ export default function ExperiencesView({
 
                   {/* Bring items */}
                   {activeExperience.bringItems && activeExperience.bringItems.length > 0 && (
-                    <div className="bg-[#E8711A]/5 p-5 border border-[#E8711A]/20 rounded-2xl space-y-2">
-                      <span className="font-accent text-[9px] text-[#E8711A] font-extrabold tracking-widest uppercase block">
+                    <div className="bg-[#E8711A]/5 p-6 border border-[#E8711A]/20 rounded-3xl space-y-4 shadow-sm mt-6">
+                      <span className="font-accent text-[11px] text-[#E8711A] font-black tracking-widest uppercase block">
                         🎒 O Que Levar / Recomendações
                       </span>
                       <div className="flex flex-wrap gap-2 pt-1">
                         {activeExperience.bringItems.map((item, idx) => (
-                          <span key={idx} className="bg-zinc-100 border border-zinc-200 text-zinc-600 px-3 py-1 rounded-lg text-xs font-sans">
+                          <span key={idx} className="bg-white border border-[#E8711A]/20 text-[#0D1B2A] font-medium px-4 py-2 rounded-xl text-sm font-sans shadow-sm">
                             {item}
                           </span>
                         ))}
@@ -692,12 +739,15 @@ export default function ExperiencesView({
                   )}
 
                   {/* Meeting Point and Interactive Google Maps */}
-                  <div className="bg-zinc-50 border border-zinc-200 p-5 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                    <div className="flex gap-3 text-xs font-sans text-zinc-600">
-                      <MapPin className="w-5 h-5 text-[#E8711A] shrink-0 mt-0.5" />
-                      <div>
-                        <span className="font-bold text-[#0D1B2A] block text-sm mb-1">Ponto de Encontro</span>
-                        {activeExperience.meetingPoint}
+                  <div className="bg-zinc-50 border border-zinc-200 p-6 rounded-3xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 relative overflow-hidden mt-8 shadow-sm">
+                    <div className="absolute inset-0 right-1/2 opacity-20 pointer-events-none bg-[url('https://maps.googleapis.com/maps/api/staticmap?center=-22.966,-42.028&zoom=14&size=400x200&maptype=roadmap&markers=color:red%7C-22.966,-42.028&key=PLACEHOLDER')] bg-cover bg-center [mask-image:linear-gradient(to_right,white,transparent)]"></div>
+                    <div className="flex gap-4 text-sm font-sans text-zinc-600 relative z-10">
+                      <div className="w-12 h-12 bg-white border border-zinc-200 rounded-full flex items-center justify-center shadow-md shrink-0">
+                        <MapPin className="w-6 h-6 text-[#E8711A]" />
+                      </div>
+                      <div className="pt-0.5">
+                        <span className="font-bold text-[#0D1B2A] block text-base mb-1">Ponto de Encontro</span>
+                        <p className="max-w-[250px] leading-relaxed">{activeExperience.meetingPoint}</p>
                       </div>
                     </div>
                     {activeExperience.googleMapsUrl && (
@@ -705,16 +755,16 @@ export default function ExperiencesView({
                         href={activeExperience.googleMapsUrl} 
                         target="_blank" 
                         rel="noreferrer"
-                        className="bg-[#E8711A] hover:bg-[#D45F12] text-white font-accent text-[10px] uppercase tracking-widest font-bold px-4 py-2.5 rounded-xl transition-all shadow-md shrink-0 text-center"
+                        className="bg-[#0D1B2A] hover:bg-[#E8711A] text-white font-accent text-[11px] uppercase tracking-widest font-black px-6 py-4 rounded-2xl transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 shrink-0 text-center relative z-10 flex items-center gap-2"
                       >
-                        Como Chegar &rarr;
+                        <MapPin className="w-4 h-4" /> Abrir no Mapa
                       </a>
                     )}
                   </div>
 
                   {/* FAQ Accordion */}
                   {activeExperience.faqs && activeExperience.faqs.length > 0 && (
-                    <div className="space-y-4 pt-2">
+                    <div className="space-y-4 pt-4 border-t border-zinc-200">
                       <h3 className="font-serif text-lg font-bold text-[#0D1B2A] flex items-center gap-1.5">
                         ❓ Dúvidas Comuns
                       </h3>
@@ -744,41 +794,90 @@ export default function ExperiencesView({
                   )}
 
                   {/* Curated Recommendations */}
-                  {activeExperience.recommendations && activeExperience.recommendations.length > 0 && (
-                    <div className="space-y-4 border-t border-zinc-200 pt-6">
-                      <h3 className="font-serif text-base font-bold text-[#0D1B2A]">
-                        💡 Complete sua Viagem:
-                      </h3>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        {activeExperience.recommendations.map((recId) => {
-                          const recExp = experiences.find(e => e.id === recId);
-                          if (!recExp) return null;
-                          return (
-                            <div 
-                              key={recId}
-                              onClick={() => handleOpenExperienceDetail(recExp)}
-                              className="p-3 bg-zinc-50 border border-zinc-200 rounded-2xl flex gap-3 hover:border-[#E8711A] hover:bg-zinc-100 transition-all cursor-pointer items-center justify-between"
-                            >
-                              <div className="flex items-center gap-3 min-w-0">
-                                <div className="h-12 w-12 shrink-0 bg-white rounded-xl overflow-hidden border border-zinc-200">
-                                  <img 
-                                    src={recExp.photos && recExp.photos.length > 0 ? recExp.photos[0] : "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=100&q=80"} 
-                                    alt={recExp.name} 
-                                    className="h-full w-full object-cover" 
-                                  />
-                                </div>
-                                <div className="text-left min-w-0">
-                                  <h4 className="font-serif text-xs font-bold text-[#0D1B2A] line-clamp-1">{recExp.name}</h4>
-                                  <span className="font-accent text-[9px] text-[#E8711A] font-black">A partir de R$ {recExp.priceFrom}</span>
-                                </div>
-                              </div>
-                              <span className="text-xs text-[#E8711A] font-bold pr-2">&rarr;</span>
-                            </div>
-                          );
-                        })}
+                  {(activeExperience.recommendations && activeExperience.recommendations.length > 0) || (activeExperience.recommendedAccommodations && activeExperience.recommendedAccommodations.length > 0) ? (
+                    <div className="space-y-6 border-t border-zinc-200 pt-6 mt-6">
+                      <div className="flex items-center gap-2">
+                        <Sparkles className="w-4 h-4 text-[#E8711A]" />
+                        <h3 className="font-serif text-lg font-bold text-[#0D1B2A]">
+                          Inteligência Guida Trips recomenda:
+                        </h3>
                       </div>
+                      
+                      {activeExperience.recommendations && activeExperience.recommendations.length > 0 && (
+                        <div className="space-y-3">
+                          <span className="font-accent text-[9px] text-zinc-400 font-bold uppercase tracking-widest block">Passeios Relacionados</span>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            {activeExperience.recommendations.map((recId) => {
+                              const recExp = experiences.find(e => e.id === recId);
+                              if (!recExp) return null;
+                              return (
+                                <div 
+                                  key={recId}
+                                  onClick={() => handleOpenExperienceDetail(recExp)}
+                                  className="group p-4 bg-white border border-zinc-200 rounded-2xl flex gap-4 hover:border-[#E8711A] hover:shadow-md transition-all cursor-pointer items-center justify-between"
+                                >
+                                  <div className="flex items-center gap-3 min-w-0">
+                                    <div className="h-14 w-14 shrink-0 bg-white rounded-xl overflow-hidden border border-zinc-200 shadow-inner group-hover:scale-105 transition-transform">
+                                      <img 
+                                        src={recExp.photos && recExp.photos.length > 0 ? recExp.photos[0] : "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=100&q=80"} 
+                                        alt={recExp.name} 
+                                        className="h-full w-full object-cover" 
+                                      />
+                                    </div>
+                                    <div className="text-left min-w-0">
+                                      <h4 className="font-serif text-sm font-bold text-[#0D1B2A] line-clamp-1 group-hover:text-[#E8711A] transition-colors">{recExp.name}</h4>
+                                      <span className="font-accent text-[9px] text-zinc-500 font-bold uppercase tracking-widest block mt-0.5">A partir de R$ {recExp.priceFrom}</span>
+                                    </div>
+                                  </div>
+                                  <span className="text-sm text-zinc-300 font-bold pr-1 group-hover:text-[#E8711A] transition-colors">&rarr;</span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+
+                      {activeExperience.recommendedAccommodations && activeExperience.recommendedAccommodations.length > 0 && (
+                        <div className="space-y-3">
+                          <span className="font-accent text-[9px] text-zinc-400 font-bold uppercase tracking-widest block">Hospedagens na Região</span>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            {activeExperience.recommendedAccommodations.map((accId) => {
+                              const acc = accommodations.find(a => a.id === accId);
+                              if (!acc) return null;
+                              return (
+                                <div 
+                                  key={accId}
+                                  onClick={() => {
+                                      if (onChangeHotelId) {
+                                          onChangeHotelId(acc.id);
+                                          onNavigate?.("roteiro");
+                                          handleCloseExperienceDetail();
+                                      }
+                                  }}
+                                  className="group p-4 bg-white border border-zinc-200 rounded-2xl flex gap-4 hover:border-[#E8711A] hover:shadow-md transition-all cursor-pointer items-center justify-between"
+                                >
+                                  <div className="flex items-center gap-3 min-w-0">
+                                    <div className="h-14 w-14 shrink-0 bg-white rounded-xl overflow-hidden border border-zinc-200 shadow-inner group-hover:scale-105 transition-transform">
+                                      <img 
+                                        src={acc.photos && acc.photos.length > 0 ? acc.photos[0] : "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=100&q=80"} 
+                                        alt={acc.name} 
+                                        className="h-full w-full object-cover" 
+                                      />
+                                    </div>
+                                    <div className="text-left min-w-0">
+                                      <h4 className="font-serif text-sm font-bold text-[#0D1B2A] line-clamp-1 group-hover:text-[#E8711A] transition-colors">{acc.name}</h4>
+                                      <span className="font-accent text-[9px] text-zinc-500 font-bold uppercase tracking-widest block mt-0.5">{acc.location}</span>
+                                    </div>
+                                  </div>
+                                  <span className="text-sm text-zinc-300 font-bold pr-1 group-hover:text-[#E8711A] transition-colors">&rarr;</span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
                     </div>
-                  )}
+                  ) : null}
 
                 </div>
 

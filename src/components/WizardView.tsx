@@ -25,6 +25,7 @@ interface WizardViewProps {
   stayDays: number;
   clientName: string;
   clientCity: string;
+  settings?: any;
   onUpdateStayDays: (days: number) => void;
   onAddToCart: (item: BookingCartItem) => void;
   onRemoveFromCart: (index: number) => void;
@@ -98,7 +99,7 @@ export default function WizardView({
     return savedItineraryData?.arrivalDate || addDaysToBrazilDate(getBrazilLocalDate(), 1);
   });
   const [departureDate, setDepartureDate] = useState<string>(() => {
-    return savedItineraryData?.departureDate || addDaysToBrazilDate(getBrazilLocalDate(), 5);
+    return savedItineraryData?.departureDate || addDaysToBrazilDate(getBrazilLocalDate(), 2);
   });
 
   // Passenger state counts (Step 3) - Derive from cart items or defaults
@@ -141,6 +142,26 @@ export default function WizardView({
   const [tempPhone, setTempPhone] = useState("");
   const [generatedWhatsAppLink, setGeneratedWhatsAppLink] = useState("");
   const [countdown, setCountdown] = useState<number>(5);
+
+  // Rotating Messages for Step 3
+  const [passengerMessageIndex, setPassengerMessageIndex] = useState(0);
+  const passengerMessagesList = props.settings?.passengerMessages && props.settings.passengerMessages.length > 0 
+    ? props.settings.passengerMessages 
+    : [
+      "A segurança do seu grupo é nossa prioridade número um.",
+      "Nossa equipe local garante suporte humanizado 24h.",
+      "Flexibilidade total: cancele ou remarque seus passeios se o vento mudar.",
+      "Ao informar os passageiros, garantimos o dimensionamento perfeito da embarcação.",
+      "Mimos exclusivos garantidos para todos do seu grupo."
+    ];
+
+  useEffect(() => {
+    if (step !== 3) return;
+    const interval = setInterval(() => {
+      setPassengerMessageIndex(prev => (prev + 1) % passengerMessagesList.length);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, [step, passengerMessagesList.length]);
 
   useEffect(() => {
     if (currentUser) {
@@ -1228,41 +1249,7 @@ export default function WizardView({
                   {/* Card Inputs */}
                   <div className="bg-white border border-zinc-200 rounded-3xl p-6 sm:p-8 space-y-6 shadow-sm">
                     
-                    {/* Fast Name, Phone and City inputs as CRM details */}
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                      <div className="space-y-1.5">
-                        <label className="text-xs text-[#0D1B2A] font-bold block">Seu Nome *</label>
-                        <input
-                          type="text"
-                          className="w-full bg-zinc-50 border border-zinc-200 rounded-xl p-3 text-sm text-[#0D1B2A] focus:outline-none focus:border-[#E8711A] focus:bg-white transition-colors"
-                          placeholder="Ex: Carolina Mendes"
-                          value={tempName}
-                          onChange={(e) => setTempName(e.target.value)}
-                        />
-                      </div>
-                      <div className="space-y-1.5">
-                        <label className="text-xs text-[#0D1B2A] font-bold block">Seu WhatsApp / Telefone *</label>
-                        <input
-                          type="tel"
-                          className="w-full bg-zinc-50 border border-zinc-200 rounded-xl p-3 text-sm text-[#0D1B2A] focus:outline-none focus:border-[#E8711A] focus:bg-white transition-colors"
-                          placeholder="Ex: (21) 99999-9999"
-                          value={tempPhone}
-                          onChange={(e) => setTempPhone(e.target.value)}
-                        />
-                      </div>
-                      <div className="space-y-1.5">
-                        <label className="text-xs text-[#0D1B2A] font-bold block">Sua Cidade de Origem</label>
-                        <input
-                          type="text"
-                          className="w-full bg-zinc-50 border border-zinc-200 rounded-xl p-3 text-sm text-[#0D1B2A] focus:outline-none focus:border-[#E8711A] focus:bg-white transition-colors"
-                          placeholder="Ex: Belo Horizonte - MG"
-                          value={tempCity}
-                          onChange={(e) => setTempCity(e.target.value)}
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-zinc-100">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="space-y-1.5">
                         <label className="text-xs text-[#0D1B2A] font-bold block">Data de Chegada (Check-in)</label>
                         <div className="relative">
@@ -1451,11 +1438,20 @@ export default function WizardView({
                   </div>
 
                   {/* Security / Safety Tip Box */}
-                  <div className="p-4 bg-emerald-50 text-emerald-800 rounded-2xl border border-emerald-100 text-xs flex gap-3 items-start leading-relaxed">
+                  <div className="p-4 bg-emerald-50 text-emerald-800 rounded-2xl border border-emerald-100 text-xs flex gap-3 items-center min-h-[64px] overflow-hidden">
                     <ShieldCheck className="w-5 h-5 text-emerald-600 shrink-0" />
-                    <div>
-                      <strong>Segurança em Primeiro Lugar:</strong> Possuímos coletes salva-vidas homologados pela Marinha adaptados para bebês e crianças de todas as idades em nossas lanchas e barcos parceiros.
-                    </div>
+                    <AnimatePresence mode="wait">
+                      <motion.div
+                        key={passengerMessageIndex}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        transition={{ duration: 0.3 }}
+                        className="font-medium"
+                      >
+                        {passengerMessagesList[passengerMessageIndex]}
+                      </motion.div>
+                    </AnimatePresence>
                   </div>
 
                   {/* Actions */}
@@ -2127,73 +2123,160 @@ export default function WizardView({
                   Etapa Final: Resgatar Planejamento
                 </span>
                 <h2 className="font-serif text-3xl sm:text-4.5xl font-extrabold text-[#0D1B2A] leading-tight">
-                  Seu roteiro personalizado está concluído!
+                  Seu Cartão de Embarque está pronto!
                 </h2>
-                <p className="text-xs sm:text-sm text-zinc-500 leading-relaxed">
-                  Tudo pronto para que você viva as melhores memórias. Escolha como gostaria de finalizar sua reserva e garantir seus mimos e benefícios exclusivos!
+                <p className="text-xs sm:text-sm text-zinc-500 leading-relaxed max-w-lg mx-auto">
+                  A mágica está feita. Abaixo está o resumo oficial da sua experiência com a Guida Trips. Escolha como gostaria de finalizar sua reserva.
                 </p>
               </div>
 
-              {/* Master Recap Box */}
-              <div className="bg-white border border-zinc-200 rounded-3xl p-6 sm:p-8 shadow-sm space-y-6">
-                <div className="border-b border-zinc-100 pb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              {/* CARTÃO FINAL DA VIAGEM */}
+              <div className="bg-[#0D1B2A] text-white rounded-3xl p-6 sm:p-10 shadow-2xl space-y-8 relative overflow-hidden max-w-3xl mx-auto">
+                <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-10"></div>
+                <div className="absolute top-0 right-0 w-64 h-64 bg-[#E8711A] opacity-20 blur-[100px] rounded-full pointer-events-none translate-x-1/2 -translate-y-1/2"></div>
+                
+                {/* Header Ticket */}
+                <div className="relative z-10 border-b border-white/10 pb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                   <div>
-                    <h3 className="font-serif text-lg font-extrabold text-[#0D1B2A]">Resumo Consolidado</h3>
-                    <p className="text-xs text-zinc-500">Roteiro para <strong className="text-zinc-800 font-extrabold">{tempName || "Explorador"}</strong> • {stayDays} dias sintonizados</p>
+                    <span className="font-accent text-[9px] text-[#E8711A] tracking-widest font-extrabold uppercase flex items-center gap-1.5 mb-1">
+                      <Sparkles className="w-3.5 h-3.5" /> ROTEIRO INTELIGENTE
+                    </span>
+                    <h3 className="font-serif text-2xl font-bold text-white">
+                      Guida Trips Pass
+                    </h3>
                   </div>
-                  <div className="bg-[#E8711A]/10 border border-[#E8711A]/25 px-4.5 py-2 rounded-2xl text-right">
-                    <p className="text-[8px] text-[#E8711A] font-black uppercase tracking-wider">Investimento Estimado</p>
-                    <p className="font-serif text-lg font-black text-[#E8711A]">{formatBRL(calculateEstimatedTotal())}</p>
+                  <div className="text-left sm:text-right">
+                     <span className="font-accent text-[9px] text-zinc-400 uppercase tracking-widest block mb-1">Estimativa Total</span>
+                     <span className="font-serif text-3xl font-extrabold text-emerald-400 leading-none">
+                       {formatBRL(calculateEstimatedTotal())}
+                     </span>
                   </div>
                 </div>
 
-                {/* Timeline Recap */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-4">
-                    <h4 className="font-accent text-[10px] text-zinc-400 font-extrabold tracking-wider uppercase">— ATIVIDADES DIÁRIAS —</h4>
-                    <div className="space-y-4">
-                      {Array.from({ length: stayDays }).map((_, idx) => {
-                        const d = idx + 1;
-                        const dayItems = cart.filter(item => item.dayIndex === d);
-                        return (
-                          <div key={d} className="flex gap-4 text-xs items-start">
-                            <span className="w-8 h-8 rounded-full bg-zinc-100 font-mono font-extrabold text-[#0D1B2A] flex items-center justify-center shrink-0">D{d}</span>
-                            <div className="space-y-1 pt-1.5 text-left">
+                {/* Details Grid */}
+                <div className="relative z-10 grid grid-cols-2 md:grid-cols-4 gap-6">
+                   <div className="space-y-1.5">
+                     <span className="font-accent text-[9px] text-zinc-400 uppercase tracking-widest font-bold flex items-center gap-1"><MapPin className="w-3 h-3 text-[#E8711A]" /> Destino</span>
+                     <span className="font-serif text-base font-bold text-white">{selectedDestObj?.name || "Arraial do Cabo"}</span>
+                   </div>
+                   <div className="space-y-1.5">
+                     <span className="font-accent text-[9px] text-zinc-400 uppercase tracking-widest font-bold flex items-center gap-1"><Calendar className="w-3 h-3 text-[#E8711A]" /> Dias</span>
+                     <span className="font-serif text-base font-bold text-white">{stayDays} Dias Inesquecíveis</span>
+                   </div>
+                   <div className="space-y-1.5">
+                     <span className="font-accent text-[9px] text-zinc-400 uppercase tracking-widest font-bold flex items-center gap-1"><Info className="w-3 h-3 text-[#E8711A]" /> Pessoas</span>
+                     <span className="font-serif text-base font-bold text-white">{adults} Ad. {children > 0 && `, ${children} Cr.`}</span>
+                   </div>
+                   <div className="space-y-1.5">
+                     <span className="font-accent text-[9px] text-zinc-400 uppercase tracking-widest font-bold flex items-center gap-1"><Bed className="w-3 h-3 text-[#E8711A]" /> Hospedagem</span>
+                     <span className="font-serif text-base font-bold text-white leading-snug">
+                       {selectedHotelId ? hotels.find(h => h.id === selectedHotelId)?.name : "Conta Própria"}
+                     </span>
+                   </div>
+                </div>
+
+                {/* Passeios & Cortesias */}
+                <div className="relative z-10 grid grid-cols-1 sm:grid-cols-2 gap-6 pt-6 border-t border-white/10">
+                   {/* Passeios */}
+                   <div>
+                     <span className="font-accent text-[9px] text-[#E8711A] uppercase tracking-widest font-bold mb-3 block">🚤 Sua Timeline</span>
+                     <div className="space-y-3 relative before:absolute before:inset-y-0 before:left-1.5 before:w-px before:bg-white/20 pl-6">
+                        {Array.from({ length: stayDays }).map((_, idx) => {
+                          const d = idx + 1;
+                          const dayItems = cart.filter(item => item.dayIndex === d);
+                          return (
+                            <div key={d} className="relative">
+                              <div className="absolute -left-[22px] top-1.5 w-2 h-2 rounded-full bg-[#E8711A] shadow-[0_0_8px_rgba(232,113,26,0.6)]"></div>
+                              <span className="text-[10px] font-accent text-white/50 tracking-wider block mb-0.5">DIA {d}</span>
                               {dayItems.length === 0 ? (
-                                <p className="text-zinc-400 italic">Dia livre para relaxar ou curtir praias vizinhas.</p>
+                                <span className="text-xs text-white/70 italic">Dia Livre</span>
                               ) : (
                                 dayItems.map((item, i) => {
                                   const exp = experiences.find(e => e.id === item.experienceId);
                                   return (
-                                    <div key={i} className="flex flex-col">
-                                      <strong className="text-zinc-800 font-bold">{exp?.name}</strong>
-                                      <span className="text-zinc-400 font-mono text-[10px]">Saída às {item.schedule} • {item.adults} adultos, {item.children} crianças</span>
+                                    <div key={i} className="text-sm font-bold text-white">
+                                      {exp?.name} <span className="text-white/40 font-normal text-xs ml-1">({item.schedule})</span>
                                     </div>
-                                  );
+                                  )
                                 })
                               )}
                             </div>
+                          )
+                        })}
+                     </div>
+                   </div>
+
+                   {/* Cortesias */}
+                   <div>
+                     <span className="font-accent text-[9px] text-[#E8711A] uppercase tracking-widest font-bold mb-3 block">🎁 Suas Cortesias Exclusivas</span>
+                     <div className="bg-white/5 border border-white/10 rounded-xl p-4 space-y-3">
+                        <div className="flex items-start gap-2">
+                           <div className="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 mt-0.5">
+                             <Check className="w-3 h-3" />
+                           </div>
+                           <p className="text-xs text-white leading-relaxed">
+                             <strong className="block text-emerald-400">Consultoria WhatsApp</strong>
+                             Equipe local de Arraial do Cabo acompanhando você em tempo real.
+                           </p>
+                        </div>
+                        <div className="flex items-start gap-2">
+                           <div className="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 mt-0.5">
+                             <Check className="w-3 h-3" />
+                           </div>
+                           <p className="text-xs text-white leading-relaxed">
+                             <strong className="block text-emerald-400">Flexibilidade Garantida</strong>
+                             Reajuste de roteiro grátis caso o vento mude a rota.
+                           </p>
+                        </div>
+                        {selectedHotelId && (
+                           <div className="flex items-start gap-2">
+                             <div className="w-5 h-5 rounded-full bg-[#E8711A]/20 text-[#E8711A] flex items-center justify-center shrink-0 mt-0.5">
+                               <Sparkles className="w-3 h-3" />
+                             </div>
+                             <p className="text-xs text-white leading-relaxed">
+                               <strong className="block text-[#E8711A]">Mimo na Pousada</strong>
+                               Early check-in ou Welcome Drink (conforme disponibilidade).
+                             </p>
                           </div>
-                        );
-                      })}
-                    </div>
+                        )}
+                     </div>
+                   </div>
+                </div>
+              </div>
+
+              {/* Client Info Inputs before Checkout */}
+              <div className="bg-white border border-zinc-200 rounded-3xl p-6 sm:p-8 space-y-6 shadow-sm max-w-3xl mx-auto mt-6 text-left">
+                <h4 className="font-serif text-lg font-bold text-[#0D1B2A] mb-2">Quem vai viajar?</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-xs text-[#0D1B2A] font-bold block">Seu Nome *</label>
+                    <input
+                      type="text"
+                      className="w-full bg-zinc-50 border border-zinc-200 rounded-xl p-3 text-sm text-[#0D1B2A] focus:outline-none focus:border-[#E8711A] focus:bg-white transition-colors"
+                      placeholder="Ex: Carolina Mendes"
+                      value={tempName}
+                      onChange={(e) => setTempName(e.target.value)}
+                    />
                   </div>
-
-                  <div className="space-y-5">
-                    <h4 className="font-accent text-[10px] text-zinc-400 font-extrabold tracking-wider uppercase">— DETALHES DE EMBARQUE —</h4>
-                    <div className="p-4 bg-[#FBF9F7] rounded-2xl border border-zinc-150 space-y-3 text-xs leading-relaxed">
-                      <p>👥 <strong>Grupo:</strong> {adults} Adultos, {children} Crianças, {infants} Bebês</p>
-                      <p>🏖 <strong>Perfil:</strong> {profile.charAt(0).toUpperCase() + profile.slice(1)}</p>
-                      <p>🏨 <strong>Hospedagem:</strong> {selectedHotelId ? hotels.find(h => h.id === selectedHotelId)?.name : "Já possui própria"}</p>
-                      <p>📅 <strong>Período:</strong> {arrivalDate ? new Date(arrivalDate + "T00:00:00").toLocaleDateString("pt-BR") : ""} até {departureDate ? new Date(departureDate + "T00:00:00").toLocaleDateString("pt-BR") : ""}</p>
-                    </div>
-
-                    <div className="p-4 bg-emerald-50 text-emerald-800 rounded-2xl border border-emerald-150 text-xs flex gap-2.5 items-start">
-                      <ShieldCheck className="w-5 h-5 text-emerald-600 shrink-0" />
-                      <div>
-                        <strong>Garantia Guida Trips:</strong> Cuidado humanizado, marinheiros credenciados, assistência 24h e suporte total ao cliente.
-                      </div>
-                    </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs text-[#0D1B2A] font-bold block">Seu WhatsApp / Telefone *</label>
+                    <input
+                      type="tel"
+                      className="w-full bg-zinc-50 border border-zinc-200 rounded-xl p-3 text-sm text-[#0D1B2A] focus:outline-none focus:border-[#E8711A] focus:bg-white transition-colors"
+                      placeholder="Ex: (21) 99999-9999"
+                      value={tempPhone}
+                      onChange={(e) => setTempPhone(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs text-[#0D1B2A] font-bold block">Sua Cidade de Origem</label>
+                    <input
+                      type="text"
+                      className="w-full bg-zinc-50 border border-zinc-200 rounded-xl p-3 text-sm text-[#0D1B2A] focus:outline-none focus:border-[#E8711A] focus:bg-white transition-colors"
+                      placeholder="Ex: Belo Horizonte - MG"
+                      value={tempCity}
+                      onChange={(e) => setTempCity(e.target.value)}
+                    />
                   </div>
                 </div>
               </div>

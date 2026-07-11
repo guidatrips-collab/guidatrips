@@ -306,11 +306,36 @@ export default function AccommodationDetailModal({
                 )}
 
                 {/* Full Description */}
-                <div className="space-y-3 text-left pt-2">
+                <div className="space-y-4 text-left pt-2">
                   <h3 className="font-serif text-lg font-extrabold text-[#0D1B2A]">Sobre a Pousada</h3>
                   <p className="font-sans text-xs sm:text-sm text-zinc-650 leading-relaxed whitespace-pre-wrap">
                     {accommodation.description}
                   </p>
+                  
+                  {/* Ideal Profile */}
+                  <div className="bg-zinc-50 border border-zinc-150 p-4 rounded-xl text-xs font-sans text-zinc-700">
+                    <strong className="text-[#0D1B2A] block mb-1">🎯 Perfil Ideal:</strong>
+                    {accommodation.idealProfile || "Perfeito para casais e famílias em busca de conforto e praticidade no centro de Arraial do Cabo."}
+                  </div>
+
+                  {/* Special Features */}
+                  <div className="bg-zinc-50 border border-zinc-150 p-4 rounded-xl text-xs font-sans text-zinc-700">
+                    <strong className="text-[#0D1B2A] block mb-1">✨ O que torna este lugar especial:</strong>
+                    <ul className="list-disc pl-4 space-y-1 mt-1 text-zinc-600">
+                      {accommodation.specialFeatures ? (
+                        accommodation.specialFeatures.map((feature, idx) => (
+                          <li key={idx}>{feature}</li>
+                        ))
+                      ) : (
+                        <>
+                          <li>Localização estratégica, perto do cais e praias centrais.</li>
+                          <li>Atendimento acolhedor e humanizado.</li>
+                          <li>Estrutura moderna recém-reformada.</li>
+                        </>
+                      )}
+                    </ul>
+                  </div>
+
                   {accommodation.highlight && (
                     <div className="bg-[#FAF8F5] border-l-4 border-[#E8711A] p-4 rounded-r-2xl text-xs font-sans text-zinc-700 italic">
                       💡 <strong>Destaque da Curadoria:</strong> {accommodation.highlight}

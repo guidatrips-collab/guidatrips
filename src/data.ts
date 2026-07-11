@@ -75,6 +75,16 @@ export const INITIAL_ACCOMMODATIONS: Accommodation[] = [
     rating: 4.9,
     reviews: 184,
     highlight: "Próxima ao maior calçadão do pôr do sol na beira da Praia Grande.",
+    idealProfile: "Ideal para famílias e casais buscando serviço impecável, café da manhã premium e fácil acesso às praias sem depender de carro o tempo todo.",
+    specialFeatures: [
+      "Café da manhã assinado por chef local",
+      "Piscina em formato de deck tropical",
+      "Quartos recém-renovados com design caiçara moderno"
+    ],
+    distances: [
+      { label: "Praia Grande (Pôr do Sol)", distance: "100m • 2 min de caminhada" },
+      { label: "Cais da Praia dos Anjos (Barcos)", distance: "800m • 10 min de caminhada" }
+    ],
     whatsappMessage: "Olá, Guida Trips! Gostaria de consultar tarifas com benefícios exclusivos para a Pousada do Timoneiro.",
     priceDisplay: "A partir de R$ 380 / noite",
     createdAt: new Date().toISOString(),
@@ -102,6 +112,16 @@ export const INITIAL_ACCOMMODATIONS: Accommodation[] = [
     rating: 4.8,
     reviews: 142,
     highlight: "O melhor ponto de partida matinal com suítes recém-renovadas.",
+    idealProfile: "Recomendada para grupos de amigos e mergulhadores, graças à sua logística imbatível colada ao cais de embarque.",
+    specialFeatures: [
+      "Frente mar com acesso direto à areia",
+      "Varanda panorâmica para a enseada",
+      "Check-in expresso para horários de barco"
+    ],
+    distances: [
+      { label: "Cais de Embarque (Passeios)", distance: "50m • 1 min de caminhada" },
+      { label: "Centro Histórico e Restaurantes", distance: "300m • 5 min de caminhada" }
+    ],
     whatsappMessage: "Olá, Guida Trips! Gostaria de consultar tarifas com benefícios para a Pousada Caminho do Mar.",
     priceDisplay: "A partir de R$ 320 / noite",
     createdAt: new Date().toISOString(),
@@ -129,6 +149,16 @@ export const INITIAL_ACCOMMODATIONS: Accommodation[] = [
     rating: 5.0,
     reviews: 96,
     highlight: "Deck panorâmico com jacuzzi flutuante debruçada no mar aberto.",
+    idealProfile: "Oásis romântico criado sob medida para casais em lua de mel e celebrantes que valorizam privacidade extrema e vistas cinematográficas.",
+    specialFeatures: [
+      "Vista infinita do topo do Pontal do Atalaia",
+      "Experiência de café da manhã flutuante",
+      "Acesso privilegiado às Prainhas do Pontal"
+    ],
+    distances: [
+      { label: "Prainhas do Pontal do Atalaia", distance: "1.5km • 15 min de trilha panorâmica" },
+      { label: "Praia Grande (Centro)", distance: "3km • 10 min de carro" }
+    ],
     whatsappMessage: "Olá, Guida Trips! Gostaria de consultar tarifas com benefícios na Ohana Pousada Boutique.",
     priceDisplay: "A partir de R$ 510 / noite",
     createdAt: new Date().toISOString(),
@@ -190,9 +220,13 @@ Em caso de condições adversas de mar que impeçam a navegação, garantimos o 
     featured: true,
     badge: "mais-vendido",
     location: "Arraial do Cabo",
-    departureCity: "Arraial do Cabo RJ",
-    minAge: "2 anos",
+    departureCity: "Rio de Janeiro RJ (Zona Sul/Centro)",
+    minAge: "Livre",
     maxAge: "65 anos",
+    effortLevel: "Leve (Viagem de ônibus + Barco)",
+    bestTime: "Dia Inteiro (Saída 06:00)",
+    idealFor: "Famílias e Visitantes de Primeira Viagem",
+    bestSeason: "O ano inteiro (Especialmente fora de feriados)",
     schedules: ["06:00"],
     itinerary: [
       "Ilha do Farol: Uma das praias mais famosas e preservadas da região, acessível apenas de barco.",
@@ -288,6 +322,10 @@ Visitamos os pontos mais icônicos da região, com tempo para relaxar e fotograf
     departureCity: "Arraial do Cabo RJ",
     minAge: "2 anos",
     maxAge: "90 anos",
+    effortLevel: "Moderado (Subida/descida do barco)",
+    bestTime: "Início da tarde (12h00)",
+    idealFor: "Casais, Grupos de Amigos e Apreciadores de Churrasco",
+    bestSeason: "O ano inteiro (Especialmente no Verão)",
     schedules: ["12:00"],
     itinerary: [
       "Praia da Ilha do Farol (desembarque) 🏝️",
@@ -905,5 +943,13 @@ export const INITIAL_SETTINGS: GlobalSettings = {
   homeGuideTag: "📖 DOWNLOAD GRATUITO",
   homeGuideTitle: "Guia Digital Secreto de Arraial do Cabo",
   homeGuideDesc: "Preparamos um guia interativo com praias secretas, melhores marés de recifes, contatos de nativos para peixes frescos e o melhor roteiro desimpedido para as suas férias.",
-  homeGuideBtnText: "Receber Guia no E-mail"
+  homeGuideBtnText: "Receber Guia no E-mail",
+
+  passengerMessages: [
+    "A segurança do seu grupo é nossa prioridade número um.",
+    "Nossa equipe local garante suporte humanizado 24h.",
+    "Flexibilidade total: cancele ou remarque seus passeios se o vento mudar.",
+    "Ao informar os passageiros, garantimos o dimensionamento perfeito da embarcação.",
+    "Mimos exclusivos garantidos para todos do seu grupo."
+  ]
 };

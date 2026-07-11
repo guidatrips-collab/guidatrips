@@ -81,6 +81,14 @@ export interface Courtesy {
   active?: boolean;
 }
 
+export interface RoomCategory {
+  id: string;
+  name: string; // e.g., Duplo, Triplo, Master
+  capacity: number;
+  sellRate: number; // Tarifa venda desta categoria (por diária)
+  calendar?: Record<string, { status: "open" | "closed" }>; // Disponibilidade
+}
+
 export interface Accommodation {
   id: string;
   name: string;
@@ -98,6 +106,7 @@ export interface Accommodation {
   coordinates?: { lat: number; lng: number };
   netRate: number; // Tarifa custo base
   sellRate: number; // Tarifa venda base (Valor por diária)
+  roomCategories?: RoomCategory[];
   markup: number;
   commission: number;
   status: "active" | "paused" | "draft";
@@ -126,6 +135,9 @@ export interface Accommodation {
   rating?: number;
   reviews?: number;
   highlight?: string;
+  specialFeatures?: string[];
+  idealProfile?: string;
+  distances?: { label: string; distance: string }[];
   whatsappMessage?: string;
   priceDisplay?: string; // e.g. "A partir de R$ 380 / noite"
 
@@ -210,6 +222,7 @@ export interface Experience {
   
   partnerId?: string; // OS Partner integration
   partnerName?: string;
+  showNauticalBulletin?: boolean;
   
   googleMapsUrl?: string;
   availability?: {
@@ -239,8 +252,13 @@ export interface Experience {
   departureCity?: string; // e.g. "Arraial do Cabo RJ", "Cabo Frio RJ"
   minAge?: string; // e.g. "2 anos"
   maxAge?: string; // e.g. "65 anos"
+  effortLevel?: string; // e.g. "Leve", "Moderado", "Intenso"
+  bestTime?: string; // e.g. "Manhã", "Tarde", "Pôr do Sol"
+  idealFor?: string; // e.g. "Casais e Famílias", "Aventureiros"
+  bestSeason?: string; // e.g. "O ano inteiro", "Verão"
   schedules?: string[]; // Dynamic schedules list managed by admin
   recommendations?: string[]; // Suggested related experience ids
+  recommendedAccommodations?: string[]; // Suggested related accommodations
   itinerary?: string[]; // Optional itinerary property
   faqs?: { question: string; answer: string }[]; // List of custom FAQs
   policies?: string[]; // List of policies (e.g. payment, cancellation)
@@ -355,6 +373,7 @@ export interface GlobalSettings {
   businessHours: string;
   googleAnalyticsId: string;
   metaPixelId: string;
+  passengerMessages?: string[];
   socialLinks: {
     instagram: string;
     youtube: string;
@@ -473,6 +492,9 @@ export interface GlobalSettings {
   clientReservations?: ClientReservation[];
   clientPartners?: ClientPartner[];
   clientUser?: ClientUser;
+
+  // Configuration for Wizard Messages
+  passengerMessages?: string[];
 
   // Affiliate System
   affiliateCookieDurationDays?: number; // Configurable cookie duration for affiliates

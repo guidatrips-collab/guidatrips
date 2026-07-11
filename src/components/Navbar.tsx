@@ -112,19 +112,22 @@ export default function Navbar({ currentView, onNavigate, cartCount, onOpenCart,
 
           {/* Desktop Action Buttons */}
           <div className="hidden md:flex items-center space-x-3">
-            {/* Backoffice Button */}
+            {/* Botão Meu Roteiro (Centralizado conceitualmente nos Actions) */}
             <button
-              onClick={() => handleLinkClick("admin")}
-              className={`p-2.5 rounded-full transition-all duration-250 hover:scale-105 ${
-                currentView.startsWith("admin")
-                  ? "text-[#E8711A]"
-                  : isThemeDarkHero
-                  ? "text-[#8A96A3] hover:bg-white/5 hover:text-[#F4EFE6]"
-                  : "text-zinc-400 hover:bg-zinc-100 hover:text-[#0D1B2A]"
+              onClick={onOpenCart}
+              className={`flex items-center gap-2 border px-4 py-2.5 rounded-full text-xs font-bold uppercase transition-all duration-300 hover:scale-105 cursor-pointer shadow-sm ${
+                isThemeDarkHero
+                  ? "border-[#E8711A] bg-[#E8711A]/10 text-white hover:bg-[#E8711A]/20"
+                  : "border-[#E8711A] bg-[#E8711A]/10 text-[#E8711A] hover:bg-[#E8711A]/20"
               }`}
-              title="Acesso Privado Backoffice"
             >
-              <ShieldCheck className="w-5 h-5" />
+              <ShoppingBag className="w-4 h-4" />
+              Meu Roteiro
+              {cartCount > 0 && (
+                <span className="bg-[#E8711A] text-white w-5 h-5 rounded-full flex items-center justify-center text-[10px] ml-1">
+                  {cartCount}
+                </span>
+              )}
             </button>
 
             {/* Painel do Cliente */}
@@ -132,8 +135,8 @@ export default function Navbar({ currentView, onNavigate, cartCount, onOpenCart,
               onClick={() => handleLinkClick("cliente")}
               className={`flex items-center gap-1.5 border px-4 py-2.5 rounded-full text-xs font-bold uppercase transition-all duration-300 hover:scale-105 ${
                 isThemeDarkHero
-                  ? "border-[#E8711A] text-white hover:bg-white/10"
-                  : "border-[#E8711A] text-[#0D1B2A] hover:bg-[#E8711A]/5"
+                  ? "border-transparent bg-white/5 text-white hover:bg-white/10"
+                  : "border-transparent bg-[#0D1B2A]/5 text-[#0D1B2A] hover:bg-[#0D1B2A]/10"
               }`}
             >
               {currentUser ? `Olá, ${currentUser.name.split(" ")[0]} 🌊` : "Área do Cliente"}
@@ -154,6 +157,20 @@ export default function Navbar({ currentView, onNavigate, cartCount, onOpenCart,
 
           {/* Hamburger Menu & Cart (Mobile) */}
           <div className="flex md:hidden items-center space-x-2">
+            {/* Mobile Meu Roteiro */}
+            <button
+              onClick={onOpenCart}
+              className={`p-2.5 rounded-full flex items-center justify-center transition-all relative ${
+                isThemeDarkHero ? "text-[#E8711A] bg-[#E8711A]/10" : "text-[#E8711A] bg-[#E8711A]/10"
+              }`}
+            >
+              <ShoppingBag className="w-5 h-5" />
+              {cartCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-[#0D1B2A] text-white w-4 h-4 rounded-full flex items-center justify-center text-[8px] font-bold">
+                  {cartCount}
+                </span>
+              )}
+            </button>
             {/* Menu Trigger */}
             <button
               onClick={() => setIsOpen(!isOpen)}
@@ -189,14 +206,6 @@ export default function Navbar({ currentView, onNavigate, cartCount, onOpenCart,
               );
             })}
 
-            <button
-              onClick={() => handleLinkClick("admin")}
-              className={`flex items-center space-x-4 py-3 border-b border-zinc-100 text-left font-sans text-sm tracking-widest uppercase transition-all ${
-                currentView.startsWith("admin") ? "text-[#E8711A] font-bold" : "text-zinc-600 hover:text-[#0D1B2A]"
-              }`}
-            >
-              <span>Backoffice</span>
-            </button>
             <button
               onClick={() => handleLinkClick("cliente")}
               className={`flex items-center space-x-4 py-3 border-b border-zinc-100 text-left font-sans text-sm tracking-widest uppercase transition-all ${

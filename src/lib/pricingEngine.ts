@@ -124,7 +124,8 @@ export const PricingEngine = {
     acc: Accommodation,
     arrivalDate: string,
     stayDays: number,
-    guests: GuestCount
+    guests: GuestCount,
+    selectedRoomId?: string | null
   ): NonNullable<PricingEngineResult["lodgingDetail"]> & { totalCost: number } {
     const totalGuestsCount = guests.adults + guests.children;
     const startDateStr = arrivalDate || getBrazilLocalDate();
@@ -133,22 +134,52 @@ export const PricingEngine = {
     const chargeType: "per_person" | "per_room" = 
       acc.category === "hostel" ? "per_person" : "per_room";
 
-    // Heuristics for capacity and base occupancy
-    const maxCapacityPerRoom = (acc as any).maxCapacity 
-      || acc.pricing?.adultPrice ? 4 : 4; // fallback to 4, hostel is per-person so 1-to-1
-    const baseGuestsPerRoom = (acc as any).baseGuests || 2; // default standard room is double occupancy
-    
-    // In per_room mode, how many rooms do we need?
     let roomsNeeded = 1;
-    if (chargeType === "per_room") {
-      roomsNeeded = Math.ceil(totalGuestsCount / maxCapacityPerRoom) || 1;
-    }
-
+    let baseGuestsPerRoom = 2;
+    let maxCapacityPerRoom = 4;
     let extraGuestsCount = 0;
-    if (chargeType === "per_room") {
-      const baseGuestsAllowedTotal = roomsNeeded * baseGuestsPerRoom;
-      if (totalGuestsCount > baseGuestsAllowedTotal) {
-        extraGuestsCount = totalGuestsCount - baseGuestsAllowedTotal;
+    
+    // Check if we have defined room categories
+    let useCategoriesLogic = false;
+    let bestCategoryRate = 0;
+
+    if (acc.roomCategories && acc.roomCategories.length > 0) {
+      useCategoriesLogic = true;
+      let targetRoom = undefined;
+      
+      if (selectedRoomId) {
+        targetRoom = acc.roomCategories.find(rc => rc.id === selectedRoomId);
+      }
+      
+      if (targetRoom) {
+        roomsNeeded = Math.ceil(totalGuestsCount / targetRoom.capacity) || 1;
+        bestCategoryRate = targetRoom.sellRate * roomsNeeded;
+      } else {
+        const fittingRooms = acc.roomCategories.filter(rc => rc.capacity >= totalGuestsCount);
+        if (fittingRooms.length > 0) {
+          const bestRoom = fittingRooms.sort((a, b) => a.sellRate - b.sellRate)[0];
+          roomsNeeded = 1;
+          bestCategoryRate = bestRoom.sellRate;
+        } else {
+          const bestRoom = [...acc.roomCategories].sort((a, b) => b.capacity - a.capacity)[0];
+          roomsNeeded = Math.ceil(totalGuestsCount / bestRoom.capacity) || 1;
+          bestCategoryRate = bestRoom.sellRate * roomsNeeded;
+        }
+      }
+    } else {
+      // Legacy heuristic
+      maxCapacityPerRoom = (acc as any).maxCapacity || acc.pricing?.adultPrice ? 4 : 4; 
+      baseGuestsPerRoom = (acc as any).baseGuests || 2; 
+      
+      if (chargeType === "per_room") {
+        roomsNeeded = Math.ceil(totalGuestsCount / maxCapacityPerRoom) || 1;
+      }
+
+      if (chargeType === "per_room") {
+        const baseGuestsAllowedTotal = roomsNeeded * baseGuestsPerRoom;
+        if (totalGuestsCount > baseGuestsAllowedTotal) {
+          extraGuestsCount = totalGuestsCount - baseGuestsAllowedTotal;
+        }
       }
     }
 
@@ -175,7 +206,9 @@ export const PricingEngine = {
       let extraGuestTotal = 0;
       let totalDayPrice = 0;
 
-      if (chargeType === "per_room") {
+      if (useCategoriesLogic) {
+        totalDayPrice = bestCategoryRate; // Category rate overrides base price
+      } else if (chargeType === "per_room") {
         // Rooms cost + additional guests cost
         const roomsCost = basePrice * roomsNeeded;
         
@@ -203,7 +236,7 @@ export const PricingEngine = {
 
       dailyBreakdown.push({
         date: currentDateStr,
-        basePrice,
+        basePrice: useCategoriesLogic ? bestCategoryRate : basePrice,
         extraGuestTotal,
         totalDayPrice
       });
@@ -234,6 +267,7 @@ export const PricingEngine = {
     arrivalDate,
     stayDays,
     guests,
+    selectedRoomId,
     additionalServices = []
   }: {
     cart: BookingCartItem[];
@@ -242,6 +276,7 @@ export const PricingEngine = {
     arrivalDate: string;
     stayDays: number;
     guests: GuestCount;
+    selectedRoomId?: string | null;
     additionalServices?: AdditionalService[];
   }): PricingEngineResult {
     // 1. Calculate Experiences Cost
@@ -288,7 +323,8 @@ export const PricingEngine = {
         selectedAccommodation,
         arrivalDate,
         stayDays,
-        guests
+        guests,
+        selectedRoomId
       );
       lodgingCost = lodgingCalc.totalCost;
       lodgingDetail = {
