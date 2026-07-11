@@ -69,7 +69,8 @@ export default function WizardView({
   destinations,
   selectedDestinationId,
   onUpdateSelectedDestinationId,
-  accommodations
+  accommodations,
+  settings
 }: WizardViewProps) {
   // Master steps of the custom flow:
   // 0 = Escolha do Destino (Destination)
