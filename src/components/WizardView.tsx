@@ -145,8 +145,8 @@ export default function WizardView({
 
   // Rotating Messages for Step 3
   const [passengerMessageIndex, setPassengerMessageIndex] = useState(0);
-  const passengerMessagesList = props.settings?.passengerMessages && props.settings.passengerMessages.length > 0 
-    ? props.settings.passengerMessages 
+  const passengerMessagesList = settings?.passengerMessages && settings.passengerMessages.length > 0 
+    ? settings.passengerMessages 
     : [
       "A segurança do seu grupo é nossa prioridade número um.",
       "Nossa equipe local garante suporte humanizado 24h.",
