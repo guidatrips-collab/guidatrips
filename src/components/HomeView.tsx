@@ -331,8 +331,17 @@ export default function HomeView({
                                   {Array.from({ length: stayDays }).map((_, i) => {
                                     const dNum = i + 1;
                                     return (
-                                      <button key={dNum} type="button" onClick={() => setConfigDay(dNum)} className={`w-6 h-6 rounded font-sans text-xs font-bold transition-all flex items-center justify-center cursor-pointer ${configDay === dNum ? "bg-[#0D1B2A] text-white" : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200"}`}>
-                                        D{dNum}
+                                      <button 
+                                        key={dNum} 
+                                        type="button" 
+                                        onClick={() => setConfigDay(dNum)} 
+                                        className={`px-3 py-1.5 rounded-full font-accent text-[9px] font-bold uppercase tracking-wider transition-all cursor-pointer ${
+                                          configDay === dNum 
+                                            ? "bg-[#0D1B2A] text-white shadow-sm" 
+                                            : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200"
+                                        }`}
+                                      >
+                                        Dia {dNum}
                                       </button>
                                     );
                                   })}
