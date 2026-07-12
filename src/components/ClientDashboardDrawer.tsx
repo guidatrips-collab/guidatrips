@@ -52,7 +52,16 @@ export default function ClientDashboardDrawer({
   const departureDate = arrivalDate ? addDaysToBrazilDate(arrivalDate, stayDays) : "";
 
   // Calculate pricing
-  const { experiencesCost, lodgingCost, lodgingDetail, totalCost } = PricingEngine.calculateTotal(cart, experiences, stayDays, accommodations, selectedHotelId, adults, children, 0);
+  const pricingResult = PricingEngine.calculate({
+    cart,
+    experiences,
+    selectedAccommodation: accommodations.find(a => a.id === selectedHotelId) || null,
+    arrivalDate,
+    stayDays,
+    guests: { adults, children, infants: 0 },
+    selectedRoomId: null
+  });
+  const { experiencesCost, lodgingCost, lodgingDetail, total: totalCost } = pricingResult;
 
   const selectedHotel = selectedHotelId ? accommodations.find(a => a.id === selectedHotelId) : null;
 
