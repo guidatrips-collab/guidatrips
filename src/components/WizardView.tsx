@@ -16,7 +16,7 @@ import { PricingEngine } from "../lib/pricingEngine";
 import { firestoreService } from "../firebase";
 import { analytics } from "../lib/analytics";
 import { getValidAffiliateRef } from "../lib/utils";
-import ExperienceMediaGallery from "./ExperienceMediaGallery";
+import ExperienceMediaGallery, { getExperiencePhotos } from "./ExperienceMediaGallery";
 import AccommodationDetailModal from "./AccommodationDetailModal";
 
 interface WizardViewProps {
@@ -123,6 +123,8 @@ export default function WizardView({
   // Detailed Modal states (For catalog item)
   const [selectedExpDetail, setSelectedExpDetail] = useState<Experience | null>(null);
   const [selectedHotelForDetail, setSelectedHotelForDetail] = useState<Accommodation | null>(null);
+  const [expandedExpId, setExpandedExpId] = useState<string | null>(null);
+  const [expandedHotelId, setExpandedHotelId] = useState<string | null>(null);
 
   // Experience photo indexes cache (to paginate carousel images inside cards)
   const [expPhotoCache, setExpPhotoCache] = useState<Record<string, number>>({});
@@ -136,6 +138,16 @@ export default function WizardView({
   }>>({});
 
   const [cardSchedules, setCardSchedules] = useState<Record<string, string>>({});
+  
+  const [toastMessage, setToastMessage] = useState<{ title: string; subtitle?: string; icon: string; id: number } | null>(null);
+
+  const showToast = (title: string, subtitle: string, icon: string = "✨") => {
+    const id = Date.now();
+    setToastMessage({ title, subtitle, icon, id });
+    setTimeout(() => {
+      setToastMessage(prev => prev?.id === id ? null : prev);
+    }, 4000);
+  };
 
   // Save Name / City to parent components for CRM leads sync
   const [tempName, setTempName] = useState(clientName || "");
@@ -300,7 +312,7 @@ export default function WizardView({
     rating: acc.rating || 5.0,
     tag: acc.typeTag,
     priceDisplay: acc.priceDisplay || `A partir de R$ ${acc.sellRate} / noite`,
-    desc: acc.description?.slice(0, 80) + "...",
+    description: acc.description?.slice(0, 80) + "...",
     img: acc.photos?.[0] || "https://images.unsplash.com/photo-1584132967334-10e028bd69f7",
     whatsappMessage: `Olá, Guida Trips! Gostaria de consultar tarifas com benefícios na ${acc.name}.`
   }));
@@ -767,11 +779,11 @@ export default function WizardView({
               <span>Sua Viagem</span>
             </h3>
             <p className="text-[10px] text-zinc-400 mt-0.5">Construída em tempo real</p>
-          </div>
+            </div>
           <span className="text-[8px] tracking-widest text-[#E8711A] font-mono border border-[#E8711A]/30 px-2 py-0.5 rounded">
             VIP PASSPORT
           </span>
-        </div>
+          </div>
 
         {/* Dynamic Checklist Checklist Status */}
         <div className="space-y-3 pt-1">
@@ -785,11 +797,11 @@ export default function WizardView({
                   ✓
                 </span>
                 <span className="text-zinc-400 font-medium">Destino Principal</span>
-              </div>
+                </div>
               <span className="font-bold text-[#E8711A]">
                 {selectedDestObj ? selectedDestObj.name : "Arraial do Cabo"}
               </span>
-            </div>
+              </div>
 
             {/* 1. Perfil */}
             <div className="flex items-center justify-between text-xs py-1 border-b border-white/5">
@@ -800,11 +812,11 @@ export default function WizardView({
                   {profile ? "✓" : "1"}
                 </span>
                 <span className="text-zinc-400">Perfil de Viagem</span>
-              </div>
+                </div>
               <span className={`font-bold ${profile ? "text-white" : "text-zinc-500 italic"}`}>
                 {chosenProfile ? chosenProfile.label : "Não definido"}
               </span>
-            </div>
+              </div>
 
             {/* 2. Datas */}
             <div className="flex items-center justify-between text-xs py-1 border-b border-white/5">
@@ -815,11 +827,11 @@ export default function WizardView({
                   {arrivalDate ? "✓" : "2"}
                 </span>
                 <span className="text-zinc-400">Datas & Período</span>
-              </div>
+                </div>
               <span className={`font-bold font-mono text-[11px] ${arrivalDate ? "text-white" : "text-zinc-500 italic"}`}>
                 {arrivalDate ? `${stayDays} ${stayDays === 1 ? 'dia' : 'dias'}` : "Não definido"}
               </span>
-            </div>
+              </div>
 
             {/* 3. Grupo */}
             <div className="flex items-center justify-between text-xs py-1 border-b border-white/5">
@@ -830,11 +842,11 @@ export default function WizardView({
                   {adults > 0 ? "✓" : "3"}
                 </span>
                 <span className="text-zinc-400">Passageiros</span>
-              </div>
+                </div>
               <span className="text-white font-bold">
                 {adults + children + infants} {adults + children + infants === 1 ? "pessoa" : "pessoas"}
               </span>
-            </div>
+              </div>
 
             {/* 4. Hospedagem */}
             <div className="flex items-center justify-between text-xs py-1 border-b border-white/5">
@@ -845,11 +857,11 @@ export default function WizardView({
                   {hasHotelAnswer ? "✓" : "4"}
                 </span>
                 <span className="text-zinc-400">Hospedagem</span>
-              </div>
+                </div>
               <span className={`font-bold text-[11px] truncate max-w-[150px] ${hasHotelAnswer === "yes" && selectedHotelId ? "text-emerald-400" : hasHotelAnswer === "no" ? "text-zinc-450" : "text-zinc-500 italic"}`}>
                 {hasHotelAnswer === "yes" && linkedHotel ? linkedHotel.name : hasHotelAnswer === "no" ? "Possuo própria" : "Não definido"}
               </span>
-            </div>
+              </div>
 
             {/* 5. Passeios */}
             <div className="flex items-center justify-between text-xs py-1">
@@ -860,13 +872,13 @@ export default function WizardView({
                   {totalSelectedExperiences > 0 ? "✓" : "5"}
                 </span>
                 <span className="text-zinc-400">Passeios</span>
-              </div>
+                </div>
               <span className="text-[#E8711A] font-extrabold">
                 {totalSelectedExperiences} {totalSelectedExperiences === 1 ? "selecionado" : "selecionados"}
               </span>
+              </div>
             </div>
           </div>
-        </div>
 
         {/* Traveler details summary box */}
         <div className="text-xs space-y-2 bg-white/5 p-3.5 rounded-2xl border border-white/5">
@@ -877,8 +889,8 @@ export default function WizardView({
             <p className="text-zinc-350 text-[10px] pt-1">
               {adults} Adultos {children > 0 && `, ${children} Crianças`} {infants > 0 && `, ${infants} Bebês`}
             </p>
+            </div>
           </div>
-        </div>
 
         {/* Show timeline if requested (especially on step 5) */}
         {showActivitiesTimeline && (
@@ -907,13 +919,13 @@ export default function WizardView({
                     <div className="flex items-center justify-between">
                       <p className={`font-bold ${isCurrent ? "text-[#E8711A]" : "text-zinc-300"}`}>Dia {d}</p>
                       {isCurrent && <span className="text-[9px] bg-[#E8711A]/20 text-[#E8711A] font-extrabold px-1.5 py-0.2 rounded uppercase">Planejando</span>}
-                    </div>
+                      </div>
 
                     {dayItems.length === 0 ? (
                       <div className="flex items-center gap-1.5 text-zinc-500 font-medium text-[11px] py-0.5">
                         <span className="w-1.5 h-1.5 rounded-full bg-zinc-600 animate-pulse" />
                         <span>Aguardando escolha</span>
-                      </div>
+                        </div>
                     ) : (
                       <div className="space-y-1">
                         {dayItems.map((item, i) => {
@@ -925,16 +937,16 @@ export default function WizardView({
                                 <span className="line-clamp-1">{exp?.name}</span>
                               </span>
                               <span className="text-zinc-500 font-mono text-[9px] shrink-0 bg-white/5 px-1.5 py-0.5 rounded">{item.schedule}</span>
-                            </div>
+                              </div>
                           );
                         })}
-                      </div>
+                        </div>
                     )}
-                  </div>
+                    </div>
                 );
               })}
+              </div>
             </div>
-          </div>
         )}
 
         {/* Pricing Recap */}
@@ -944,13 +956,13 @@ export default function WizardView({
             <span className="font-serif text-lg font-black text-[#E8711A]">
               {formatBRL(calculateEstimatedTotal())}
             </span>
-          </div>
+            </div>
           {step < 5 && (
             <div className="text-[10px] text-zinc-400/80 leading-normal text-center italic bg-white/5 py-1 rounded-md border border-white/5">
               Atualizado em tempo real
-            </div>
+              </div>
           )}
-        </div>
+          </div>
       </motion.div>
     );
   };
@@ -968,7 +980,7 @@ export default function WizardView({
         </svg>
         <div className="absolute top-[40%] right-[5%] w-72 h-72 rounded-full bg-[#E8711A]/20 blur-3xl" />
         <div className="absolute bottom-[20%] left-[5%] w-96 h-96 rounded-full bg-[#0D1B2A]/10 blur-3xl" />
-      </div>
+        </div>
       
       {/* Dynamic Sub-header Navigation Stepper */}
       {step > 0 && step < 7 && (
@@ -997,7 +1009,7 @@ export default function WizardView({
                 <span className="font-accent text-[9px] font-black uppercase tracking-wider text-[#0D1B2A]">
                   Destino: <strong className="text-[#E8711A]">{selectedDestObj.name}</strong>
                 </span>
-              </div>
+                </div>
             )}
 
             {/* Stepper text and markers */}
@@ -1005,9 +1017,9 @@ export default function WizardView({
               {[
                 { num: 1, label: "Perfil" },
                 { num: 2, label: "Datas" },
-                { num: 3, label: "Grupo" },
+                { num: 3, label: "Viajantes" },
                 { num: 4, label: "Hospedagem" },
-                { num: 5, label: "Montar Roteiro" },
+                { num: 5, label: "Passeios" },
                 { num: 6, label: "Finalização" }
               ].map((s) => (
                 <div key={s.num} className="flex items-center gap-1.5">
@@ -1024,9 +1036,9 @@ export default function WizardView({
                     step === s.num ? "text-[#0D1B2A]" : "text-zinc-400"
                   }`}>{s.label}</span>
                   {s.num < 6 && <span className="w-4 h-px bg-zinc-200" />}
-                </div>
+                  </div>
               ))}
-            </div>
+              </div>
 
             <div className="flex items-center gap-2">
               <span className="text-xs text-zinc-400 md:hidden font-bold">Etapa {step} de 6</span>
@@ -1050,9 +1062,9 @@ export default function WizardView({
               ) : (
                 <span className="text-xs text-zinc-400 font-bold uppercase">Resumo Pronto</span>
               )}
+              </div>
             </div>
           </div>
-        </div>
       )}
 
       <div className="max-w-6xl mx-auto px-4 mt-8 sm:mt-12 text-center relative z-10">
@@ -1078,7 +1090,7 @@ export default function WizardView({
                 <p className="text-xs sm:text-sm text-zinc-500 leading-relaxed text-center">
                   Escolha o destino principal da sua viagem para personalizarmos o seu roteiro.
                 </p>
-              </div>
+                </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 max-w-5xl mx-auto">
                 {destinations.filter(d => d.status === "active" || d.id === selectedDestinationId || d.id === "arraial-do-cabo" || d.id === "buzios" || d.id === "cabo-frio").map(dest => (
@@ -1099,19 +1111,19 @@ export default function WizardView({
                       <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
                       <div className="absolute bottom-3 left-4">
                         <h3 className="text-white font-bold text-lg">{dest.name}</h3>
-                      </div>
+                        </div>
                       {selectedDestinationId === dest.id && (
                         <div className="absolute top-3 right-3 bg-[#E8711A] rounded-full p-1 shadow-md">
                           <Check className="w-3.5 h-3.5 text-white" />
-                        </div>
+                          </div>
                       )}
-                    </div>
+                      </div>
                     <div className="p-4 bg-white">
                       <p className="text-xs text-zinc-600 line-clamp-2">{dest.shortDescription}</p>
-                    </div>
+                      </div>
                   </button>
                 ))}
-              </div>
+                </div>
             </motion.div>
           )}
 
@@ -1134,14 +1146,14 @@ export default function WizardView({
                 <p className="text-xs sm:text-sm text-zinc-500 leading-relaxed text-center">
                   Para adaptarmos perfeitamente as experiências sugeridas, o ritmo do passeio, cortesias a bordo e a curadoria de hotéis, selecione o seu perfil.
                 </p>
-              </div>
+                </div>
 
               {/* Motivational message banner */}
               <div className="flex justify-center">
                 <span className="inline-flex items-center gap-1.5 px-4.5 py-2 bg-[#E8711A]/6 border border-[#E8711A]/12 text-[#E8711A] font-accent text-[10px] font-black uppercase tracking-wider rounded-full shadow-xs">
                   ✨ {getMotivationalMessage(1)}
                 </span>
-              </div>
+                </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start max-w-6xl mx-auto">
                 {/* Left Area (8 Columns) */}
@@ -1156,7 +1168,19 @@ export default function WizardView({
                           whileTap={{ scale: 0.995 }}
                           key={pOpt.id}
                           type="button"
-                          onClick={() => setProfile(pOpt.id as any)}
+                          onClick={() => {
+                            const newProfile = pOpt.id as any;
+                            setProfile(newProfile);
+                            if (newProfile === 'solo') {
+                              setAdults(1); setChildren(0); setInfants(0);
+                            } else if (newProfile === 'casal') {
+                              setAdults(2); setChildren(0); setInfants(0);
+                            } else if (newProfile === 'familia') {
+                              setAdults(2); setChildren(1); setInfants(0);
+                            } else if (newProfile === 'grupo') {
+                              setAdults(4); setChildren(0); setInfants(0);
+                            }
+                          }}
                           className={`p-6 rounded-3xl border text-left cursor-pointer transition-all duration-300 relative overflow-hidden flex flex-col justify-between h-48 group ${
                             isSelected
                               ? "bg-[#0D1B2A] text-white border-[#0D1B2A] shadow-md ring-2 ring-[#E8711A]/20"
@@ -1173,18 +1197,18 @@ export default function WizardView({
                                   <Check className="w-3.5 h-3.5 stroke-[3]" />
                                 </span>
                               )}
-                            </div>
+                              </div>
                             <p className={`text-xs ${isSelected ? "text-zinc-300" : "text-zinc-500"} leading-relaxed font-semibold`}>
                               {pOpt.desc}
                             </p>
                             <p className={`text-[11px] leading-relaxed pt-1 border-t ${isSelected ? "border-white/10 text-zinc-400" : "border-zinc-100 text-zinc-400"} font-normal`}>
                               {pOpt.info}
                             </p>
-                          </div>
+                            </div>
                         </motion.button>
                       );
                     })}
-                  </div>
+                    </div>
 
                   {/* Next Step CTA */}
                   <div className="pt-4 flex justify-end">
@@ -1195,14 +1219,14 @@ export default function WizardView({
                       <span>Continuar para as Datas</span>
                       <ArrowRight className="w-4 h-4" />
                     </button>
+                    </div>
                   </div>
-                </div>
 
                 {/* Right Area Live Journey summary (4 Columns) */}
                 <div className="lg:col-span-4 lg:sticky lg:top-28">
                   {renderLiveJourneySummary(false)}
+                  </div>
                 </div>
-              </div>
             </motion.div>
           )}
 
@@ -1225,14 +1249,14 @@ export default function WizardView({
                 <p className="text-xs sm:text-sm text-zinc-500 text-center">
                   Defina a data de chegada e saída do paraíso. O sistema calculará o número de diárias e programará suas atividades em dias confortáveis.
                 </p>
-              </div>
+                </div>
 
               {/* Motivational message banner */}
               <div className="flex justify-center">
                 <span className="inline-flex items-center gap-1.5 px-4.5 py-2 bg-[#E8711A]/6 border border-[#E8711A]/12 text-[#E8711A] font-accent text-[10px] font-black uppercase tracking-wider rounded-full shadow-xs">
                   ✨ {getMotivationalMessage(2)}
                 </span>
-              </div>
+                </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start max-w-6xl mx-auto">
                 {/* Left Area (8 Columns) */}
@@ -1257,8 +1281,8 @@ export default function WizardView({
                               }
                             }}
                           />
+                          </div>
                         </div>
-                      </div>
 
                       <div className="space-y-1.5">
                         <label className="text-xs text-[#0D1B2A] font-bold block">Data de Saída (Check-out)</label>
@@ -1269,20 +1293,20 @@ export default function WizardView({
                           value={departureDate}
                           onChange={(e) => setDepartureDate(e.target.value)}
                         />
+                        </div>
                       </div>
-                    </div>
 
                     {/* Stay Days Counter Badge */}
                     <div className="p-4 bg-amber-50/60 rounded-2xl border border-amber-200/50 flex items-center justify-between">
                       <div className="flex items-center gap-2 text-amber-900">
                         <Calendar className="w-5 h-5 text-[#E8711A]" />
                         <span className="text-xs font-semibold">Duração calculada da sua estadia:</span>
-                      </div>
+                        </div>
                       <span className="bg-[#E8711A] text-white px-3.5 py-1 rounded-full text-xs font-extrabold font-mono">
                         {stayDays} {stayDays === 1 ? "DIA" : "DIAS"}
                       </span>
+                      </div>
                     </div>
-                  </div>
 
                   {/* Action Buttons */}
                   <div className="flex gap-3 justify-end pt-2">
@@ -1299,14 +1323,14 @@ export default function WizardView({
                       <span>Definir Pessoas</span>
                       <ArrowRight className="w-4 h-4" />
                     </button>
+                    </div>
                   </div>
-                </div>
 
                 {/* Right Area Live Journey summary (4 Columns) */}
                 <div className="lg:col-span-4 lg:sticky lg:top-28">
                   {renderLiveJourneySummary(false)}
+                  </div>
                 </div>
-              </div>
             </motion.div>
           )}
 
@@ -1329,14 +1353,14 @@ export default function WizardView({
                 <p className="text-xs text-zinc-500 max-w-md mx-auto text-center">
                   Ajustamos as capacidades das escunas, mimos e os tamanhos dos barcos para comportar com absoluto conforto todo o seu grupo.
                 </p>
-              </div>
+                </div>
 
               {/* Motivational message banner */}
               <div className="flex justify-center">
                 <span className="inline-flex items-center gap-1.5 px-4.5 py-2 bg-[#E8711A]/6 border border-[#E8711A]/12 text-[#E8711A] font-accent text-[10px] font-black uppercase tracking-wider rounded-full shadow-xs">
                   ✨ {getMotivationalMessage(3)}
                 </span>
-              </div>
+                </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start max-w-6xl mx-auto">
                 {/* Left Area (8 Columns) */}
@@ -1348,12 +1372,12 @@ export default function WizardView({
                       <div className="flex items-center gap-3">
                         <div className="p-2.5 bg-zinc-50 rounded-xl">
                           <User className="w-5 h-5 text-[#0D1B2A]" />
-                        </div>
+                          </div>
                         <div>
                           <h4 className="text-xs sm:text-sm font-bold text-[#0D1B2A]">Adultos</h4>
                           <p className="text-[10px] text-zinc-400">Idade acima de 12 anos</p>
+                          </div>
                         </div>
-                      </div>
                       <div className="flex items-center gap-3">
                         <button
                           type="button"
@@ -1366,20 +1390,20 @@ export default function WizardView({
                           onClick={() => setAdults(adults + 1)}
                           className="w-8 h-8 bg-zinc-100 hover:bg-zinc-200 rounded-xl text-center font-bold text-sm cursor-pointer flex items-center justify-center text-[#0D1B2A]"
                         >+</button>
+                        </div>
                       </div>
-                    </div>
 
                     {/* Children Counter */}
                     <div className="flex items-center justify-between pb-4 border-b border-zinc-100">
                       <div className="flex items-center gap-3">
                         <div className="p-2.5 bg-zinc-50 rounded-xl">
                           <Smile className="w-5 h-5 text-sky-500" />
-                        </div>
+                          </div>
                         <div>
                           <h4 className="text-xs sm:text-sm font-bold text-[#0D1B2A]">Crianças</h4>
                           <p className="text-[10px] text-zinc-400">Idade entre 2 e 12 anos</p>
+                          </div>
                         </div>
-                      </div>
                       <div className="flex items-center gap-3">
                         <button
                           type="button"
@@ -1392,20 +1416,20 @@ export default function WizardView({
                           onClick={() => setChildren(children + 1)}
                           className="w-8 h-8 bg-zinc-100 hover:bg-zinc-200 rounded-xl text-center font-bold text-sm cursor-pointer flex items-center justify-center text-[#0D1B2A]"
                         >+</button>
+                        </div>
                       </div>
-                    </div>
 
                     {/* Infants Counter */}
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <div className="p-2.5 bg-zinc-50 rounded-xl">
                           <Baby className="w-5 h-5 text-amber-500" />
-                        </div>
+                          </div>
                         <div>
                           <h4 className="text-xs sm:text-sm font-bold text-[#0D1B2A]">Bebês de Colo</h4>
                           <p className="text-[10px] text-zinc-400">Menores de 2 anos (Cortesia)</p>
+                          </div>
                         </div>
-                      </div>
                       <div className="flex items-center gap-3">
                         <button
                           type="button"
@@ -1418,9 +1442,9 @@ export default function WizardView({
                           onClick={() => setInfants(infants + 1)}
                           className="w-8 h-8 bg-zinc-100 hover:bg-zinc-200 rounded-xl text-center font-bold text-sm cursor-pointer flex items-center justify-center text-[#0D1B2A]"
                         >+</button>
+                        </div>
                       </div>
                     </div>
-                  </div>
 
                   {/* Security / Safety Tip Box */}
                   <div className="p-4 bg-emerald-50 text-emerald-800 rounded-2xl border border-emerald-100 text-xs flex gap-3 items-center min-h-[64px] overflow-hidden">
@@ -1437,7 +1461,7 @@ export default function WizardView({
                         {passengerMessagesList[passengerMessageIndex]}
                       </motion.div>
                     </AnimatePresence>
-                  </div>
+                    </div>
 
                   {/* Actions */}
                   <div className="flex gap-3 justify-end pt-2">
@@ -1454,14 +1478,14 @@ export default function WizardView({
                       <span>Avançar</span>
                       <ArrowRight className="w-4 h-4" />
                     </button>
+                    </div>
                   </div>
-                </div>
 
                 {/* Right Area Live Journey summary (4 Columns) */}
                 <div className="lg:col-span-4 lg:sticky lg:top-28">
                   {renderLiveJourneySummary(false)}
+                  </div>
                 </div>
-              </div>
             </motion.div>
           )}
 
@@ -1484,14 +1508,14 @@ export default function WizardView({
                 <p className="text-xs sm:text-sm text-zinc-500 text-center">
                   Parcerias exclusivas da Guida Trips garantem mimos de boas-vindas, late check-out e as melhores tarifas garantidas nas pousadas parceiras de {selectedDestObj?.name || "nossos destinos"}.
                 </p>
-              </div>
+                </div>
 
               {/* Motivational message banner */}
               <div className="flex justify-center">
                 <span className="inline-flex items-center gap-1.5 px-4.5 py-2 bg-[#E8711A]/6 border border-[#E8711A]/12 text-[#E8711A] font-accent text-[10px] font-black uppercase tracking-wider rounded-full shadow-xs">
                   ✨ {getMotivationalMessage(4)}
                 </span>
-              </div>
+                </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start max-w-6xl mx-auto">
                 {/* Left Area (8 Columns) */}
@@ -1523,7 +1547,7 @@ export default function WizardView({
                     >
                       Não, já tenho pousada ❌
                     </button>
-                  </div>
+                    </div>
 
                   {/* Show recommended hotel listings if selected YES */}
                   {hasHotelAnswer === "yes" && (
@@ -1533,7 +1557,7 @@ export default function WizardView({
                         <h5 className="font-accent text-[10px] font-black tracking-widest text-[#E8711A] uppercase">
                           Indicações com Benefícios Exclusivos (Guida Trips Club)
                         </h5>
-                      </div>
+                        </div>
 
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
                         {hotels.length === 0 ? (
@@ -1543,7 +1567,7 @@ export default function WizardView({
                             <p className="text-xs text-zinc-500 max-w-md mx-auto">
                               Nossa equipe de curadoria está credenciando hotéis com vantagens exclusivas para você nesta cidade. Fale conosco pelo WhatsApp caso queira recomendações diretas de hospedagem!
                             </p>
-                          </div>
+                            </div>
                         ) : (
                           hotels.map((pousada) => {
                             const isSelected = selectedHotelId === pousada.id;
@@ -1574,8 +1598,8 @@ export default function WizardView({
                                   <div className="absolute top-2 right-2 bg-white/95 text-[#0D1B2A] text-[9px] font-bold px-2 py-0.5 rounded shadow-xs flex items-center gap-0.5">
                                     <span className="text-yellow-500">★</span>
                                     <span>{pousada.rating}</span>
+                                    </div>
                                   </div>
-                                </div>
 
                                 <div className="p-4 space-y-4 flex-grow flex flex-col justify-between">
                                   <div className="space-y-1 text-left">
@@ -1590,29 +1614,31 @@ export default function WizardView({
                                       {pousada.name}
                                     </h6>
                                     <p className="font-sans text-[11px] text-zinc-500 leading-relaxed line-clamp-2 mb-2">
-                                      {pousada.desc}
+                                      {pousada.description}
                                     </p>
                                     <span className="font-sans text-xs font-bold text-[#E8711A] block">
                                       {pousada.priceDisplay}
                                     </span>
-                                  </div>
+                                    </div>
 
                                   <div className="flex items-center gap-1.5 pt-2 border-t border-zinc-100">
                                     <button
                                       type="button"
-                                      onClick={() => {
-                                        const originalAcc = accommodations.find(a => a.id === pousada.id);
-                                        if (originalAcc) setSelectedHotelForDetail(originalAcc);
-                                      }}
+                                      onClick={() => setExpandedHotelId(expandedHotelId === pousada.id ? null : pousada.id)}
                                       className="flex-1 py-2 bg-white border border-[#0D1B2A] hover:bg-zinc-50 text-[#0D1B2A] rounded-xl font-accent text-[9px] font-bold tracking-wider uppercase transition-all cursor-pointer text-center"
                                     >
-                                      DETALHES
+                                      {expandedHotelId === pousada.id ? "MENOS" : "DETALHES"}
                                     </button>
                                     <button
                                       type="button"
                                       onClick={() => {
                                         if (onChangeHotelId) {
                                           onChangeHotelId(isSelected ? null : pousada.id);
+                                          if (!isSelected) {
+                                            showToast("Hospedagem vinculada", pousada.name, "🏨");
+                                          } else {
+                                            showToast("Hospedagem removida", pousada.name, "🗑️");
+                                          }
                                         }
                                       }}
                                       className={`flex-1 py-2 rounded-xl font-accent text-[9px] font-extrabold tracking-wider uppercase transition-all flex items-center justify-center gap-1 cursor-pointer ${
@@ -1623,14 +1649,43 @@ export default function WizardView({
                                     >
                                       {isSelected ? "VINCULADO" : "VINCULAR"}
                                     </button>
+                                    </div>
+                                  
+                                  {/* Inline Expanded Hotel Details */}
+                                  <AnimatePresence>
+                                    {expandedHotelId === pousada.id && (
+                                      <motion.div
+                                        initial={{ height: 0, opacity: 0 }}
+                                        animate={{ height: "auto", opacity: 1 }}
+                                        exit={{ height: 0, opacity: 0 }}
+                                        className="overflow-hidden col-span-full border-t border-zinc-100 mt-3 pt-3"
+                                      >
+                                        <div className="space-y-3">
+                                          <p className="text-[11px] text-zinc-500 leading-relaxed font-sans">{accommodations.find(a => a.id === pousada.id)?.description?.replace(/[#*]/g, "")}</p>
+                                          
+                                          {accommodations.find(a => a.id === pousada.id)?.amenities && accommodations.find(a => a.id === pousada.id)!.amenities.length > 0 && (
+                                            <div>
+                                              <span className="text-[9px] text-[#E8711A] font-extrabold tracking-wider uppercase block mb-1">Comodidades</span>
+                                              <ul className="text-[10px] text-zinc-500 space-y-0.5">
+                                                {accommodations.find(a => a.id === pousada.id)!.amenities.slice(0, 5).map((am, i) => (
+                                                  <li key={i} className="flex gap-1.5 items-center">
+                                                    <span className="text-emerald-500">✓</span> {am}
+                                                  </li>
+                                                ))}
+                                              </ul>
+                                              </div>
+                                          )}
+                                          </div>
+                                      </motion.div>
+                                    )}
+                                  </AnimatePresence>
                                   </div>
                                 </div>
-                              </div>
                             );
                           })
                         )}
+                        </div>
                       </div>
-                    </div>
                   )}
 
                   {/* Supportive, comforting panel when selecting "No, already have hotel" */}
@@ -1643,12 +1698,12 @@ export default function WizardView({
                       <div className="flex items-center gap-2.5 text-emerald-800">
                         <div className="bg-emerald-100 p-2 rounded-xl text-emerald-700">
                           <Check className="w-5 h-5 stroke-[2.5]" />
-                        </div>
+                          </div>
                         <div>
                           <h4 className="font-serif text-base font-extrabold">Entendido perfeitamente!</h4>
                           <p className="text-xs text-emerald-600/90 font-medium">Você já possui hospedagem garantida em {selectedDestObj?.name || "Arraial do Cabo"}.</p>
+                          </div>
                         </div>
-                      </div>
                       <p className="text-xs sm:text-sm text-zinc-650 leading-relaxed pl-1">
                         Não se preocupe! Nossas recomendações de passeios e cronograma diário serão perfeitamente customizados com base na localização das pousadas centrais para garantir embarques práticos, traslados pontuais e zero preocupações com logística de trânsito.
                       </p>
@@ -1670,14 +1725,14 @@ export default function WizardView({
                       <span>Montar Cronograma</span>
                       <ArrowRight className="w-4 h-4" />
                     </button>
+                    </div>
                   </div>
-                </div>
 
                 {/* Right Area Live Journey summary (4 Columns) */}
                 <div className="lg:col-span-4 lg:sticky lg:top-28">
                   {renderLiveJourneySummary(false)}
+                  </div>
                 </div>
-              </div>
             </motion.div>
           )}
 
@@ -1695,7 +1750,7 @@ export default function WizardView({
               {/* Premium Focused Header */}
               <div className="text-center space-y-3 max-w-2xl mx-auto">
                 <span className="font-accent text-[9px] text-[#E8711A] font-extrabold tracking-widest uppercase bg-[#E8711A]/8 px-4 py-1.5 rounded-full">
-                  Etapa 5 de 6 • Roteiro Inteligente
+                  Etapa 5 de 6: Passeios e Experiências
                 </span>
                 <h2 className="font-serif text-3xl sm:text-4.5xl font-extrabold text-[#0D1B2A] leading-tight">
                   Planeje seu Dia {currentPlanningDay}
@@ -1726,8 +1781,8 @@ export default function WizardView({
                       <span>Hotel Vinculado</span>
                     </span>
                   )}
+                  </div>
                 </div>
-              </div>
 
               {/* Elegant Day Navigation Controller with Progress Bar */}
               <div className="bg-white border border-zinc-200 rounded-3xl p-5 max-w-2xl mx-auto shadow-xs flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -1754,7 +1809,7 @@ export default function WizardView({
                       <div className="flex items-center justify-between text-xs font-bold">
                         <span className="text-zinc-400 font-accent uppercase tracking-wider text-[9px]">Evolução do Roteiro</span>
                         <span className="text-[#0D1B2A] font-serif font-black text-sm">Dia {currentPlanningDay} de {stayDays}</span>
-                      </div>
+                        </div>
                       
                       {/* Smooth Progress Bar */}
                       <div className="w-full h-2 bg-zinc-100 rounded-full overflow-hidden border border-zinc-200/40 relative">
@@ -1762,13 +1817,13 @@ export default function WizardView({
                           className="h-full bg-gradient-to-r from-[#E8711A] to-[#F18F43] rounded-full transition-all duration-500 ease-out"
                           style={{ width: `${percentComplete}%` }}
                         />
-                      </div>
+                        </div>
 
                       <div className="flex items-center justify-between text-[11px] font-bold text-zinc-400">
                         <span className="text-[#E8711A]">{percentComplete}% concluído</span>
                         <span>{stayDays - currentPlanningDay} {stayDays - currentPlanningDay === 1 ? 'dia restante' : 'dias restantes'}</span>
+                        </div>
                       </div>
-                    </div>
                   );
                 })()}
 
@@ -1792,7 +1847,7 @@ export default function WizardView({
                     <Check className="w-5 h-5 stroke-[2.5]" />
                   </button>
                 )}
-              </div>
+                </div>
 
               {/* Grid split: Left is experiences catalogue, right is the smart summary */}
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start max-w-6xl mx-auto">
@@ -1808,7 +1863,7 @@ export default function WizardView({
                     <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest bg-zinc-150 px-2.5 py-0.5 rounded">
                       {filteredExps.length} opções
                     </span>
-                  </div>
+                    </div>
 
                   <div className="space-y-6">
                     {filteredExps.length === 0 && (
@@ -1818,7 +1873,7 @@ export default function WizardView({
                         <p className="text-xs text-zinc-500 max-w-md mx-auto leading-relaxed">
                           Nossos especialistas em turismo estão mapeando as melhores experiências locais para esta região. Em breve teremos passeios incríveis aqui!
                         </p>
-                      </div>
+                        </div>
                     )}
                     {filteredExps.map((exp) => {
                       const activePhotoIndex = expPhotoCache[exp.id] || 0;
@@ -1884,7 +1939,7 @@ export default function WizardView({
                                 {exp.badge === "mais-vendido" ? "🏆 Campeão de Vendas" : exp.badge}
                               </span>
                             )}
-                          </div>
+                            </div>
 
                           {/* Right Column: Premium Details & Plan CTA */}
                           <div className="md:col-span-7 flex flex-col justify-between space-y-4">
@@ -1896,7 +1951,7 @@ export default function WizardView({
                                     {t}
                                   </span>
                                 ))}
-                              </div>
+                                </div>
 
                               <div className="flex items-center justify-between gap-1 flex-wrap pt-1">
                                 {/* Rating Star */}
@@ -1904,11 +1959,11 @@ export default function WizardView({
                                   <span className="text-amber-500">★</span>
                                   <span className="text-[#0D1B2A]">{stableRating}</span>
                                   <span className="text-zinc-300 font-normal">({reviewsCount} avaliações)</span>
-                                </div>
+                                  </div>
                                 <span className="text-[#0D1B2A] font-extrabold text-[11px] bg-amber-50 text-amber-900 border border-amber-200/20 py-0.5 px-2.5 rounded-full font-mono">
                                   A partir de {formatBRL(exp.priceFrom)}
                                 </span>
-                              </div>
+                                </div>
 
                               <h4 className="font-serif text-lg sm:text-xl font-extrabold text-[#0D1B2A] leading-tight">
                                 {exp.name}
@@ -1918,16 +1973,65 @@ export default function WizardView({
                                 {exp.shortDescription}
                               </p>
 
-                              {/* Beautiful trigger for Details Popup */}
+                              {/* Beautiful trigger for Details Accordion */}
                               <button
                                 type="button"
-                                onClick={() => setSelectedExpDetail(exp)}
+                                onClick={() => setExpandedExpId(expandedExpId === exp.id ? null : exp.id)}
                                 className="inline-flex items-center gap-1 text-[#E8711A] hover:text-[#C45E12] font-black text-[10px] uppercase tracking-wider block pt-1 cursor-pointer hover:underline"
                               >
-                                <span>Ver experiência completa</span>
-                                <ArrowRight className="w-3.5 h-3.5" />
+                                <span>{expandedExpId === exp.id ? "Menos detalhes" : "Ver detalhes da experiência"}</span>
+                                <motion.div animate={{ rotate: expandedExpId === exp.id ? 90 : 0 }} transition={{ duration: 0.2 }}>
+                                  <ArrowRight className="w-3.5 h-3.5" />
+                                </motion.div>
                               </button>
-                            </div>
+                              </div>
+
+                            {/* Expanded Details Section */}
+                            <AnimatePresence>
+                              {expandedExpId === exp.id && (
+                                <motion.div
+                                  initial={{ height: 0, opacity: 0 }}
+                                  animate={{ height: "auto", opacity: 1 }}
+                                  exit={{ height: 0, opacity: 0 }}
+                                  className="overflow-hidden"
+                                >
+                                  <div className="pt-2 pb-4 space-y-4 border-t border-zinc-100 mt-2">
+                                    <div className="space-y-1">
+                                      <h4 className="font-serif text-[11px] font-bold text-[#0D1B2A] uppercase tracking-wider">Sobre</h4>
+                                      <p className="text-zinc-500 text-xs leading-relaxed">{exp.fullDescription.replace(/[#*]/g, "")}</p>
+                                      </div>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                      {exp.included && exp.included.length > 0 && (
+                                        <div className="space-y-1.5">
+                                          <span className="text-[9px] text-[#E8711A] font-extrabold tracking-wider uppercase block">Incluso</span>
+                                          <ul className="space-y-1 text-xs text-zinc-500">
+                                            {exp.included.map((inc, i) => (
+                                              <li key={i} className="flex gap-1.5 items-start">
+                                                <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                                                <span className="leading-tight">{inc}</span>
+                                              </li>
+                                            ))}
+                                          </ul>
+                                          </div>
+                                      )}
+                                      {exp.notIncluded && exp.notIncluded.length > 0 && (
+                                        <div className="space-y-1.5">
+                                          <span className="text-[9px] text-zinc-400 font-extrabold tracking-wider uppercase block">Não Incluso</span>
+                                          <ul className="space-y-1 text-xs text-zinc-400">
+                                            {exp.notIncluded.map((nInc, i) => (
+                                              <li key={i} className="flex gap-1.5 items-start">
+                                                <X className="w-3.5 h-3.5 text-zinc-300 shrink-0" />
+                                                <span className="leading-tight">{nInc}</span>
+                                              </li>
+                                            ))}
+                                          </ul>
+                                          </div>
+                                      )}
+                                      </div>
+                                    </div>
+                                </motion.div>
+                              )}
+                            </AnimatePresence>
 
                             {/* Booking Action / Selection Box inside Card */}
                             <div className="bg-zinc-50/80 rounded-2xl p-3 border border-zinc-200/60 space-y-3 text-[11px]">
@@ -1953,7 +2057,7 @@ export default function WizardView({
                                     <option key={time} value={time}>{time}</option>
                                   ))}
                                 </select>
-                              </div>
+                                </div>
 
                               {/* Quantity of People Selector */}
                               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-t border-zinc-150/40 pt-2.5">
@@ -1981,7 +2085,7 @@ export default function WizardView({
                                         <option key={n} value={n}>{n}</option>
                                       ))}
                                     </select>
-                                  </div>
+                                    </div>
                                   
                                   {/* Children */}
                                   <div className="flex items-center gap-1 bg-white border border-zinc-200 rounded-lg px-2 py-0.5">
@@ -2002,9 +2106,9 @@ export default function WizardView({
                                         <option key={n} value={n}>{n}</option>
                                       ))}
                                     </select>
+                                    </div>
                                   </div>
                                 </div>
-                              </div>
 
                               {/* Dynamic Price Preview */}
                               <div className="flex items-center justify-between border-t border-zinc-150/40 pt-2 text-[10px]">
@@ -2012,7 +2116,7 @@ export default function WizardView({
                                 <span className="font-mono font-black text-[#0D1B2A] text-xs">
                                   {formatBRL(currentAdults * (exp.pricing?.adultPrice || exp.priceFrom || 150) + currentChildren * (exp.pricing?.childPrice ?? ((exp.pricing?.adultPrice || exp.priceFrom || 150) * 0.7)))}
                                 </span>
-                              </div>
+                                </div>
 
                               {/* Alert / Validator Box */}
                               <div className={`p-2.5 rounded-xl flex items-start gap-2 border text-[10px] leading-relaxed ${
@@ -2022,7 +2126,7 @@ export default function WizardView({
                               }`}>
                                 <Info className={`w-3.5 h-3.5 shrink-0 mt-0.5 ${feedback.allowed ? "text-zinc-400" : "text-[#E8711A]"}`} />
                                 <div>{feedback.message}</div>
-                              </div>
+                                </div>
 
                               {/* Primary Add/Remove Button with animations */}
                               <button
@@ -2033,6 +2137,7 @@ export default function WizardView({
                                     const indexInCart = cart.findIndex(item => item.experienceId === exp.id && item.dayIndex === currentPlanningDay);
                                     if (indexInCart !== -1) {
                                       onRemoveFromCart(indexInCart);
+                                      showToast("Passeio removido", `Removido do Dia ${currentPlanningDay}`, "🗑️");
                                     }
                                   } else {
                                     onAddToCart({
@@ -2046,6 +2151,7 @@ export default function WizardView({
                                       observations: "Agendado via Roteiro Inteligente!",
                                       dayIndex: currentPlanningDay
                                     });
+                                    showToast("Passeio adicionado", `${exp.name} no Dia ${currentPlanningDay}`, "🚤");
                                   }
                                 }}
                                 className={`w-full text-center py-2.5 rounded-xl text-[10px] font-accent font-black uppercase tracking-wider transition-all duration-200 ${
@@ -2066,13 +2172,13 @@ export default function WizardView({
                                 )}
                               </button>
 
+                              </div>
                             </div>
-                          </div>
                         </motion.div>
                       );
                     })}
+                    </div>
                   </div>
-                </div>
 
                 {/* Premium Smart Summary Sidebar (4 Columns) */}
                 <div className="lg:col-span-4 lg:sticky lg:top-28 space-y-4">
@@ -2087,9 +2193,9 @@ export default function WizardView({
                     <span>Concluir Roteiro</span>
                     <Check className="w-4 h-4 stroke-[3]" />
                   </button>
-                </div>
+                  </div>
 
-              </div>
+                </div>
 
             </motion.div>
           )}
@@ -2113,7 +2219,7 @@ export default function WizardView({
                 <p className="text-xs sm:text-sm text-zinc-500 leading-relaxed max-w-lg mx-auto">
                   A mágica está feita. Abaixo está o resumo oficial da sua experiência com a Guida Trips. Escolha como gostaria de finalizar sua reserva.
                 </p>
-              </div>
+                </div>
 
               {/* CARTÃO FINAL DA VIAGEM */}
               <div className="bg-[#0D1B2A] text-white rounded-3xl p-6 sm:p-10 shadow-2xl space-y-8 relative overflow-hidden max-w-3xl mx-auto">
@@ -2129,36 +2235,36 @@ export default function WizardView({
                     <h3 className="font-serif text-2xl font-bold text-white">
                       Guida Trips Pass
                     </h3>
-                  </div>
+                    </div>
                   <div className="text-left sm:text-right">
                      <span className="font-accent text-[9px] text-zinc-400 uppercase tracking-widest block mb-1">Estimativa Total</span>
                      <span className="font-serif text-3xl font-extrabold text-emerald-400 leading-none">
                        {formatBRL(calculateEstimatedTotal())}
                      </span>
+                    </div>
                   </div>
-                </div>
 
                 {/* Details Grid */}
                 <div className="relative z-10 grid grid-cols-2 md:grid-cols-4 gap-6">
                    <div className="space-y-1.5">
                      <span className="font-accent text-[9px] text-zinc-400 uppercase tracking-widest font-bold flex items-center gap-1"><MapPin className="w-3 h-3 text-[#E8711A]" /> Destino</span>
                      <span className="font-serif text-base font-bold text-white">{selectedDestObj?.name || "Arraial do Cabo"}</span>
-                   </div>
+                     </div>
                    <div className="space-y-1.5">
                      <span className="font-accent text-[9px] text-zinc-400 uppercase tracking-widest font-bold flex items-center gap-1"><Calendar className="w-3 h-3 text-[#E8711A]" /> Dias</span>
                      <span className="font-serif text-base font-bold text-white">{stayDays} Dias Inesquecíveis</span>
-                   </div>
+                     </div>
                    <div className="space-y-1.5">
                      <span className="font-accent text-[9px] text-zinc-400 uppercase tracking-widest font-bold flex items-center gap-1"><Info className="w-3 h-3 text-[#E8711A]" /> Pessoas</span>
                      <span className="font-serif text-base font-bold text-white">{adults} Ad. {children > 0 && `, ${children} Cr.`}</span>
-                   </div>
+                     </div>
                    <div className="space-y-1.5">
                      <span className="font-accent text-[9px] text-zinc-400 uppercase tracking-widest font-bold flex items-center gap-1"><Bed className="w-3 h-3 text-[#E8711A]" /> Hospedagem</span>
                      <span className="font-serif text-base font-bold text-white leading-snug">
                        {selectedHotelId ? hotels.find(h => h.id === selectedHotelId)?.name : "Conta Própria"}
                      </span>
-                   </div>
-                </div>
+                     </div>
+                  </div>
 
                 {/* Passeios & Cortesias */}
                 <div className="relative z-10 grid grid-cols-1 sm:grid-cols-2 gap-6 pt-6 border-t border-white/10">
@@ -2181,15 +2287,15 @@ export default function WizardView({
                                   return (
                                     <div key={i} className="text-sm font-bold text-white">
                                       {exp?.name} <span className="text-white/40 font-normal text-xs ml-1">({item.schedule})</span>
-                                    </div>
+                                      </div>
                                   )
                                 })
                               )}
-                            </div>
+                              </div>
                           )
                         })}
+                       </div>
                      </div>
-                   </div>
 
                    {/* Cortesias */}
                    <div>
@@ -2198,36 +2304,36 @@ export default function WizardView({
                         <div className="flex items-start gap-2">
                            <div className="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 mt-0.5">
                              <Check className="w-3 h-3" />
-                           </div>
+                             </div>
                            <p className="text-xs text-white leading-relaxed">
                              <strong className="block text-emerald-400">Consultoria WhatsApp</strong>
                              Equipe local de Arraial do Cabo acompanhando você em tempo real.
                            </p>
-                        </div>
+                          </div>
                         <div className="flex items-start gap-2">
                            <div className="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 mt-0.5">
                              <Check className="w-3 h-3" />
-                           </div>
+                             </div>
                            <p className="text-xs text-white leading-relaxed">
                              <strong className="block text-emerald-400">Flexibilidade Garantida</strong>
                              Reajuste de roteiro grátis caso o vento mude a rota.
                            </p>
-                        </div>
+                          </div>
                         {selectedHotelId && (
                            <div className="flex items-start gap-2">
                              <div className="w-5 h-5 rounded-full bg-[#E8711A]/20 text-[#E8711A] flex items-center justify-center shrink-0 mt-0.5">
                                <Sparkles className="w-3 h-3" />
-                             </div>
+                               </div>
                              <p className="text-xs text-white leading-relaxed">
                                <strong className="block text-[#E8711A]">Mimo na Pousada</strong>
                                Early check-in ou Welcome Drink (conforme disponibilidade).
                              </p>
-                          </div>
+                            </div>
                         )}
+                       </div>
                      </div>
-                   </div>
+                  </div>
                 </div>
-              </div>
 
               {/* Client Info Inputs before Checkout */}
               <div className="bg-white border border-zinc-200 rounded-3xl p-6 sm:p-8 space-y-6 shadow-sm max-w-3xl mx-auto mt-6 text-left">
@@ -2242,7 +2348,7 @@ export default function WizardView({
                       value={tempName}
                       onChange={(e) => setTempName(e.target.value)}
                     />
-                  </div>
+                    </div>
                   <div className="space-y-1.5">
                     <label className="text-xs text-[#0D1B2A] font-bold block">Seu WhatsApp / Telefone *</label>
                     <input
@@ -2252,7 +2358,7 @@ export default function WizardView({
                       value={tempPhone}
                       onChange={(e) => setTempPhone(e.target.value)}
                     />
-                  </div>
+                    </div>
                   <div className="space-y-1.5">
                     <label className="text-xs text-[#0D1B2A] font-bold block">Sua Cidade de Origem</label>
                     <input
@@ -2262,9 +2368,9 @@ export default function WizardView({
                       value={tempCity}
                       onChange={(e) => setTempCity(e.target.value)}
                     />
+                    </div>
                   </div>
                 </div>
-              </div>
 
               {/* Two Choice Checkout buttons */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 pt-2 max-w-3xl mx-auto">
@@ -2277,14 +2383,14 @@ export default function WizardView({
                     <p className="text-[11px] text-zinc-500 leading-relaxed font-sans">
                       Seu roteiro será salvo em sua conta. Você terá acesso aos bilhetes eletrônicos, cronograma detalhado, canais de suporte e faturamento online pelo painel.
                     </p>
-                  </div>
+                    </div>
                   <button
                     onClick={handleFinalizePlatform}
                     className="w-full py-3 bg-[#0D1B2A] hover:bg-[#E8711A] hover:text-[#0D1B2A] text-white text-xs font-accent font-extrabold tracking-wider uppercase rounded-xl transition-all cursor-pointer shadow-xs"
                   >
                     {currentUser ? "Salvar meu Roteiro" : "Entrar / Cadastrar e Salvar 🚀"}
                   </button>
-                </div>
+                  </div>
 
                 {/* 2. Finalize on WhatsApp */}
                 <div className="bg-[#FAF8F5] border border-zinc-200 hover:border-[#E8711A] rounded-3xl p-6 shadow-xs hover:shadow-sm transition-all text-center flex flex-col justify-between space-y-4">
@@ -2294,16 +2400,16 @@ export default function WizardView({
                     <p className="text-[11px] text-zinc-500 leading-relaxed font-sans">
                       Não exige criação de conta! Geramos uma mensagem formatada com o resumo e total estimado. Nosso consultor fechará as reservas e as vagas diretamente com você.
                     </p>
-                  </div>
+                    </div>
                   <button
                     onClick={handleFinalizeWhatsApp}
                     className="w-full py-3 bg-[#E8711A] hover:bg-[#C45E12] text-[#0D1B2A] hover:text-white font-accent text-xs font-black tracking-wider uppercase rounded-xl transition-all cursor-pointer shadow-xs"
                   >
                     Reservar via WhatsApp 💬
                   </button>
-                </div>
+                  </div>
 
-              </div>
+                </div>
 
               {/* Adjust button */}
               <div className="text-center pt-2">
@@ -2313,7 +2419,7 @@ export default function WizardView({
                 >
                   &larr; Voltar e ajustar passeios
                 </button>
-              </div>
+                </div>
 
             </motion.div>
           )}
@@ -2337,9 +2443,9 @@ export default function WizardView({
                     <div className="absolute inset-0 bg-[#E8711A]/10 rounded-full animate-ping scale-125" />
                     <div className="bg-[#E8711A]/8 border border-[#E8711A]/20 p-5 rounded-full relative z-10 text-[#E8711A]">
                       <CheckCircle2 className="w-12 h-12" />
+                      </div>
                     </div>
                   </div>
-                </div>
 
                 {/* Confirmations Messages */}
                 <div className="space-y-3">
@@ -2349,14 +2455,14 @@ export default function WizardView({
                   <p className="text-sm text-zinc-500 font-sans leading-relaxed">
                     Estamos preparando seu atendimento e liberando seu acesso ao painel.
                   </p>
-                </div>
+                  </div>
 
                 {/* Loading Indicator */}
                 <div className="space-y-4 py-2">
                   <div className="flex justify-between items-center text-xs text-zinc-400 font-bold uppercase tracking-wider">
                     <span>Progresso do Envio</span>
                     <span>{countdown > 0 ? `Acessando painel em ${countdown}s...` : "Pronto!"}</span>
-                  </div>
+                    </div>
                   
                   {/* Progress bar loader */}
                   <div className="w-full bg-zinc-100 h-2 rounded-full overflow-hidden">
@@ -2366,8 +2472,8 @@ export default function WizardView({
                       transition={{ duration: 3, ease: "linear" }}
                       className="h-full bg-[#E8711A]"
                     />
+                    </div>
                   </div>
-                </div>
 
                 {/* Call to Action Button */}
                 <div className="space-y-4">
@@ -2390,7 +2496,7 @@ export default function WizardView({
                   <p className="text-xs text-zinc-500 font-sans leading-relaxed">
                     No painel, você poderá ver seu roteiro, acompanhar suas informações e acessar tudo o que foi preparado para sua viagem.
                   </p>
-                </div>
+                  </div>
 
                 {/* Expert Info Box */}
                 <div className="p-4 bg-[#FAF8F5] rounded-2xl border border-zinc-150 text-xs text-left space-y-1.5 leading-relaxed text-[#0D1B2A]">
@@ -2401,8 +2507,8 @@ export default function WizardView({
                   <p className="text-zinc-500">
                     No WhatsApp, finalizaremos os horários, confirmaremos a disponibilidade e aplicaremos todos os seus mimos e benefícios exclusivos!
                   </p>
+                  </div>
                 </div>
-              </div>
 
               {/* Back to Home Button */}
               <div className="text-center">
@@ -2412,13 +2518,13 @@ export default function WizardView({
                 >
                   Voltar para a Página Inicial
                 </button>
-              </div>
+                </div>
             </motion.div>
           )}
 
         </AnimatePresence>
 
-      </div>
+        </div>
 
       {/* DETAILED EXPERIENCE DESCRIPTIVE POPUP (Ver mais detalhes sobre o passeio popup) */}
       <AnimatePresence>
@@ -2431,11 +2537,7 @@ export default function WizardView({
               className="bg-white border border-zinc-200 rounded-3xl w-full max-w-2xl overflow-hidden shadow-2xl text-left text-[#0D1B2A]"
             >
               <div className="relative h-48 bg-zinc-100">
-                {selectedExpDetail.photos && selectedExpDetail.photos.length > 0 ? (
-                  <img src={selectedExpDetail.photos[0]} alt={selectedExpDetail.name} className="w-full h-full object-cover filter brightness-[0.7]" />
-                ) : (
-                  <div className="w-full h-full bg-[#0D1B2A] text-white flex items-center justify-center">Fundo</div>
-                )}
+                <img src={getExperiencePhotos(selectedExpDetail)[0]} alt={selectedExpDetail.name} className="w-full h-full object-cover filter brightness-[0.7]" />
                 <button
                   type="button"
                   onClick={() => setSelectedExpDetail(null)}
@@ -2447,15 +2549,15 @@ export default function WizardView({
                 <div className="absolute bottom-4 left-4 right-4 text-white">
                   <span className="text-[10px] bg-[#E8711A] text-[#0D1B2A] font-extrabold uppercase tracking-widest px-2.5 py-1 rounded-lg">CUPOM PREPARADO</span>
                   <h3 className="font-serif text-lg sm:text-2xl font-extrabold text-white mt-1 leading-tight">{selectedExpDetail.name}</h3>
+                  </div>
                 </div>
-              </div>
 
               <div className="p-6 space-y-6 max-h-[60vh] overflow-y-auto text-xs sm:text-sm leading-relaxed text-left">
                 
                 <div className="space-y-2">
                   <h4 className="font-serif text-sm font-bold text-[#0D1B2A]">Peculiaridades do Roteiro Curado</h4>
                   <p className="text-zinc-650 leading-relaxed">{selectedExpDetail.fullDescription.replace(/[#*]/g, "")}</p>
-                </div>
+                  </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 pt-2 border-t border-zinc-100">
                   <div className="space-y-2.5">
@@ -2468,7 +2570,7 @@ export default function WizardView({
                         </li>
                       ))}
                     </ul>
-                  </div>
+                    </div>
 
                   <div className="space-y-2.5">
                     <span className="text-[10px] text-zinc-400 font-extrabold tracking-wider uppercase block">Não incluso:</span>
@@ -2480,8 +2582,8 @@ export default function WizardView({
                         </li>
                       ))}
                     </ul>
+                    </div>
                   </div>
-                </div>
 
                 {selectedExpDetail.policies && selectedExpDetail.policies.length > 0 && (
                   <div className="bg-zinc-50 rounded-2xl border border-zinc-200 p-4.5 space-y-2 mt-4">
@@ -2494,13 +2596,13 @@ export default function WizardView({
                         </li>
                       ))}
                     </ul>
-                  </div>
+                    </div>
                 )}
 
                 <div className="bg-amber-50 rounded-2xl border border-amber-100 p-4.5 space-y-1 mt-4">
                   <span className="text-[9px] text-[#E8711A] font-bold uppercase tracking-wider block font-accent">📍 PONTO DE ENCONTRO</span>
                   <p className="text-xs text-amber-950 font-medium">{selectedExpDetail.meetingPoint}</p>
-                </div>
+                  </div>
 
                 <div className="flex gap-2 justify-end pt-2 text-xs">
                   <button
@@ -2510,10 +2612,10 @@ export default function WizardView({
                   >
                     Fechar Detalhes
                   </button>
+                  </div>
                 </div>
-              </div>
             </motion.div>
-          </div>
+            </div>
         )}
       </AnimatePresence>
 
@@ -2536,6 +2638,6 @@ export default function WizardView({
         />
       )}
 
-    </div>
+      </div>
   );
 }

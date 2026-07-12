@@ -7,7 +7,7 @@ import {
 import { Experience, ExperienceCategory, BookingCartItem, GlobalSettings, ClientReservation, ClientUser, checkSchedulingConflict, getBrazilLocalDate, addDaysToBrazilDate, Destination, Accommodation } from "../types";
 import { motion, AnimatePresence } from "motion/react";
 import { firestoreService } from "../firebase";
-import ExperienceMediaGallery from "./ExperienceMediaGallery";
+import ExperienceMediaGallery, { getExperiencePhotos } from "./ExperienceMediaGallery";
 
 interface ExperiencesViewProps {
   experiences: Experience[];
@@ -536,7 +536,7 @@ export default function ExperiencesView({
                   {/* Hero image of the Tour */}
                   <div className="relative h-64 sm:h-[400px] overflow-hidden rounded-2xl border border-zinc-200 select-none">
                     <img 
-                      src={activeExperience.photos && activeExperience.photos.length > 0 ? activeExperience.photos[0] : "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80"} 
+                      src={getExperiencePhotos(activeExperience)[0]} 
                       alt={activeExperience.name} 
                       className="w-full h-full object-cover"
                     />
@@ -546,9 +546,9 @@ export default function ExperiencesView({
                   </div>
 
                   {/* Gallery Thumbs */}
-                  {activeExperience.photos && activeExperience.photos.length > 1 && (
+                  {getExperiencePhotos(activeExperience).length > 1 && (
                     <div className="grid grid-cols-4 gap-2">
-                      {activeExperience.photos.slice(1).map((pic, i) => (
+                      {getExperiencePhotos(activeExperience).slice(1).map((pic, i) => (
                         <div key={i} className="h-16 sm:h-20 overflow-hidden rounded-xl border border-zinc-200 bg-zinc-50">
                           <img src={pic} className="w-full h-full object-cover" alt="Galeria" />
                         </div>
@@ -819,7 +819,7 @@ export default function ExperiencesView({
                                   <div className="flex items-center gap-3 min-w-0">
                                     <div className="h-14 w-14 shrink-0 bg-white rounded-xl overflow-hidden border border-zinc-200 shadow-inner group-hover:scale-105 transition-transform">
                                       <img 
-                                        src={recExp.photos && recExp.photos.length > 0 ? recExp.photos[0] : "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=100&q=80"} 
+                                        src={getExperiencePhotos(recExp)[0]} 
                                         alt={recExp.name} 
                                         className="h-full w-full object-cover" 
                                       />

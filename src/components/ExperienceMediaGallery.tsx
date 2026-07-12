@@ -64,36 +64,56 @@ export function getFallbackPhotos(expId: string): string[] {
   }
 }
 
+export function getExperiencePhotos(experience: Experience): string[] {
+
+  let list: string[] = [];
+
+  if (experience.mediaGallery && experience.mediaGallery.length > 0) {
+
+    list = experience.mediaGallery
+
+      .filter(item => item.type === "image")
+
+      .map(item => item.url);
+
+  }
+
+  
+
+  if (list.length === 0 && experience.photos && experience.photos.length > 0) {
+
+    list = experience.photos.filter(p => p && p.trim() !== "");
+
+  }
+
+      
+
+  if (list.length === 0) {
+
+    list = getFallbackPhotos(experience.id);
+
+  }
+
+  
+
+  if (list.length === 0) {
+
+    list = ["https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80"];
+
+  }
+
+      
+
+  return list;
+
+}
+
 export default function ExperienceMediaGallery({ experience, className = "" }: ExperienceMediaGalleryProps) {
   const [activeIndex, setActiveIndex] = useState(0);
   const touchStartX = useRef<number | null>(null);
 
-  // Compile media list
-  const getMediaList = (): string[] => {
-    let list: string[] = [];
-    if (experience.mediaGallery && experience.mediaGallery.length > 0) {
-      list = experience.mediaGallery
-        .filter(item => item.type === "image")
-        .map(item => item.url);
-    }
-    
-    if (list.length === 0 && experience.photos && experience.photos.length > 0) {
-      list = experience.photos.filter(p => p && p.trim() !== "");
-    }
-    
-    if (list.length === 0) {
-      list = getFallbackPhotos(experience.id);
-    }
 
-    if (list.length === 0) {
-      // Ultimate absolute fallback placeholder
-      list = ["https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80"];
-    }
-    
-    return list;
-  };
-
-  const photos = getMediaList();
+  const photos = getExperiencePhotos(experience);
   const hasMultiple = photos.length > 1;
 
   const nextPhoto = () => {

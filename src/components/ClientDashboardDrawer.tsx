@@ -208,7 +208,7 @@ export default function ClientDashboardDrawer({
                                     <Bed className="w-3 h-3" /> Hospedagem
                                   </span>
                                   <h4 className="font-serif text-sm font-bold text-[#0D1B2A]">{selectedHotel.name}</h4>
-                                  <p className="text-[10px] text-zinc-500 mt-1 line-clamp-2">{selectedHotel.shortDescription}</p>
+                                  <p className="text-[10px] text-zinc-500 mt-1 line-clamp-2">{selectedHotel.description}</p>
                                 </div>
                               </div>
                             </div>

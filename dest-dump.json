@@ -1,0 +1,46 @@
+[
+  {
+    "id": "angra-dos-reis",
+    "shortDescription": "Ilhas paradisíacas.",
+    "slug": "angra-dos-reis",
+    "description": "365 ilhas para explorar.",
+    "heroImage": "https://images.unsplash.com/photo-1510414842594-a61c69b5ae57?auto=format&fit=crop&w=600&q=80",
+    "name": "Angra dos Reis",
+    "createdAt": "2026-06-25T12:00:00-03:00",
+    "status": "inactive",
+    "updatedAt": "2026-06-25T12:00:00-03:00"
+  },
+  {
+    "updatedAt": "2026-06-25T12:00:00-03:00",
+    "status": "active",
+    "createdAt": "2026-06-25T12:00:00-03:00",
+    "name": "Arraial do Cabo",
+    "heroImage": "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=600&q=80",
+    "description": "O Caribe Brasileiro.",
+    "slug": "arraial-do-cabo",
+    "shortDescription": "O Caribe Brasileiro.",
+    "id": "arraial-do-cabo"
+  },
+  {
+    "shortDescription": "A charmosa península.",
+    "slug": "buzios",
+    "id": "buzios",
+    "name": "Búzios",
+    "createdAt": "2026-06-25T12:00:00-03:00",
+    "status": "inactive",
+    "updatedAt": "2026-06-25T12:00:00-03:00",
+    "description": "A charmosa península.",
+    "heroImage": "https://images.unsplash.com/photo-1473186505569-9c61870c11f9?auto=format&fit=crop&w=600&q=80"
+  },
+  {
+    "id": "cabo-frio",
+    "shortDescription": "Praias deslumbrantes.",
+    "slug": "cabo-frio",
+    "description": "Areias brancas e águas cristalinas.",
+    "heroImage": "https://images.unsplash.com/photo-1502680390469-be75c86b636f?auto=format&fit=crop&w=600&q=80",
+    "createdAt": "2026-06-25T12:00:00-03:00",
+    "name": "Cabo Frio",
+    "updatedAt": "2026-06-25T12:00:00-03:00",
+    "status": "inactive"
+  }
+]
