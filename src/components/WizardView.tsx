@@ -146,7 +146,7 @@ export default function WizardView({
 
   // Rotating Messages for Step 3
   const [passengerMessageIndex, setPassengerMessageIndex] = useState(0);
-  const passengerMessagesList = settings?.passengerMessages && settings.passengerMessages.length > 0 
+  const passengerMessagesList = settings?.passengerMessages?.length > 0 
     ? settings.passengerMessages 
     : [
       "A segurança do seu grupo é nossa prioridade número um.",
@@ -1033,16 +1033,6 @@ export default function WizardView({
               {step < 5 ? (
                 <button 
                   onClick={() => {
-                    if (step === 2) {
-                      if (!tempName.trim()) {
-                        alert("Por favor, informe seu nome para prosseguirmos com seu roteiro personalizado!");
-                        return;
-                      }
-                      if (!tempPhone.trim()) {
-                        alert("Por favor, informe seu WhatsApp/Telefone para prosseguirmos com seu roteiro personalizado!");
-                        return;
-                      }
-                    }
                     setStep(step + 1);
                   }}
                   className="bg-[#0D1B2A] hover:bg-[#E8711A] text-white hover:text-[#0D1B2A] px-4.5 py-1.5 rounded-full text-xs font-bold uppercase transition-all cursor-pointer"
@@ -1303,13 +1293,7 @@ export default function WizardView({
                       Anterior
                     </button>
                     <button
-                      onClick={() => {
-                        if (!tempName.trim()) {
-                          alert("Por favor, informe seu nome para prosseguirmos com seu roteiro personalizado!");
-                          return;
-                        }
-                        setStep(3);
-                      }}
+                      onClick={() => setStep(3)}
                       className="px-8 py-3 bg-[#0D1B2A] text-white hover:bg-[#E8711A] hover:text-[#0D1B2A] rounded-full text-xs font-bold uppercase tracking-wider transition-all shadow-md cursor-pointer hover:scale-102 flex items-center gap-1.5"
                     >
                       <span>Definir Pessoas</span>

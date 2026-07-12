@@ -1315,7 +1315,7 @@ export default function App() {
             experiences={experiences} 
             accommodations={accommodations}
             cart={cart}
-            arrivalDate={arrivalDate}
+            arrivalDate={savedItinerary?.arrivalDate}
             onAddToCart={handleAddToCart}
             onRemoveFromCart={handleRemoveFromCart}
             onOpenCart={() => setIsCartOpen(true)}

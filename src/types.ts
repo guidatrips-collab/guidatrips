@@ -494,7 +494,6 @@ export interface GlobalSettings {
   clientUser?: ClientUser;
 
   // Configuration for Wizard Messages
-  passengerMessages?: string[];
 
   // Affiliate System
   affiliateCookieDurationDays?: number; // Configurable cookie duration for affiliates
