@@ -8,104 +8,25 @@ interface ExperienceMediaGalleryProps {
   className?: string;
 }
 
-export function getFallbackPhotos(expId: string): string[] {
-  switch (expId) {
-    case "bate-volta-arraial":
-      return [
-        "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80",
-        "https://images.unsplash.com/photo-1519046904884-53103b34b206?auto=format&fit=crop&w=800&q=80",
-        "https://images.unsplash.com/photo-1506929562872-bb421503ef21?auto=format&fit=crop&w=800&q=80",
-        "https://images.unsplash.com/photo-1544735716-392fe2489ffa?auto=format&fit=crop&w=800&q=80"
-      ];
-    case "experiencia-gastronomica-mar":
-      return [
-        "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80",
-        "https://images.unsplash.com/photo-1534422298391-e4f8c172dddb?auto=format&fit=crop&w=800&q=80",
-        "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?auto=format&fit=crop&w=800&q=80",
-        "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80"
-      ];
-    case "passeio-barco-toboagua":
-      return [
-        "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=800&q=80",
-        "https://images.unsplash.com/photo-1516690561799-46d8f74f90f6?auto=format&fit=crop&w=800&q=80",
-        "https://images.unsplash.com/photo-1505118380757-91f5f5632de0?auto=format&fit=crop&w=800&q=80",
-        "https://images.unsplash.com/photo-1501179691627-eeaa65ea017c?auto=format&fit=crop&w=800&q=80"
-      ];
-    case "passeio-lancha-cabo-frio":
-      return [
-        "https://images.unsplash.com/photo-1567899378494-47b22a2ae96a?auto=format&fit=crop&w=800&q=80",
-        "https://images.unsplash.com/photo-1559136555-9303baea8ebd?auto=format&fit=crop&w=800&q=80",
-        "https://images.unsplash.com/photo-1605281317010-fe5fed93a444?auto=format&fit=crop&w=800&q=80",
-        "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=800&q=80"
-      ];
-    case "quadriciclo-arraial":
-      return [
-        "https://images.unsplash.com/photo-1531846802906-ac976e449ee0?auto=format&fit=crop&w=800&q=80",
-        "https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&w=800&q=80",
-        "https://images.unsplash.com/photo-1551524559-8af4e6624178?auto=format&fit=crop&w=800&q=80",
-        "https://images.unsplash.com/photo-1473116763269-25541579ffbe?auto=format&fit=crop&w=800&q=80"
-      ];
-    case "buggy-arraial-novo":
-      return [
-        "https://images.unsplash.com/photo-1509114397022-ed747cca3f65?auto=format&fit=crop&w=800&q=80",
-        "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?auto=format&fit=crop&w=800&q=80",
-        "https://images.unsplash.com/photo-1472396961693-142e6e269027?auto=format&fit=crop&w=800&q=80",
-        "https://images.unsplash.com/photo-1447752875215-b2761acb3c5d?auto=format&fit=crop&w=800&q=80"
-      ];
-    case "mergulho-batismo-novo":
-      return [
-        "https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=800&q=80",
-        "https://images.unsplash.com/photo-1682687220063-4742bd7fd538?auto=format&fit=crop&w=800&q=80",
-        "https://images.unsplash.com/photo-1582967788606-a171c1080cb0?auto=format&fit=crop&w=800&q=80",
-        "https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?auto=format&fit=crop&w=800&q=80"
-      ];
-    default:
-      return [];
-  }
-}
+
 
 export function getExperiencePhotos(experience: Experience): string[] {
-
   let list: string[] = [];
-
   if (experience.mediaGallery && experience.mediaGallery.length > 0) {
-
     list = experience.mediaGallery
-
       .filter(item => item.type === "image")
-
       .map(item => item.url);
-
   }
-
   
-
   if (list.length === 0 && experience.photos && experience.photos.length > 0) {
-
     list = experience.photos.filter(p => p && p.trim() !== "");
-
   }
-
       
-
   if (list.length === 0) {
-
-    list = getFallbackPhotos(experience.id);
-
+    list = ["https://placehold.co/800x600/e2e8f0/64748b.png?text=Sem+Foto"];
   }
-
-  
-
-  if (list.length === 0) {
-
-    list = ["https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80"];
-
-  }
-
       
-
   return list;
-
 }
 
 export default function ExperienceMediaGallery({ experience, className = "" }: ExperienceMediaGalleryProps) {
