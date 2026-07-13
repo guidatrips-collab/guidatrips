@@ -1106,7 +1106,7 @@ export default function WizardView({
                         : "border-zinc-200 hover:border-zinc-300 hover:shadow-md"
                     }`}
                   >
-                    <div className="h-32 w-full relative">
+                    <div className="aspect-square w-full relative">
                       <img src={dest.heroImage} alt={dest.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
                       <div className="absolute bottom-3 left-4">
@@ -1584,7 +1584,7 @@ export default function WizardView({
                                     const originalAcc = accommodations.find(a => a.id === pousada.id);
                                     if (originalAcc) setSelectedHotelForDetail(originalAcc);
                                   }}
-                                  className="h-32 overflow-hidden relative select-none cursor-pointer"
+                                  className="aspect-square overflow-hidden relative select-none cursor-pointer"
                                 >
                                   <img
                                     src={pousada.img}

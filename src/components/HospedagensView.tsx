@@ -157,7 +157,7 @@ export default function HospedagensView({
                   const originalAcc = accommodations.find(a => a.id === pousada.id);
                   if (originalAcc) setSelectedPousadaForDetail(originalAcc);
                 }}
-                className="h-64 relative overflow-hidden group cursor-pointer"
+                className="aspect-square relative overflow-hidden group cursor-pointer"
               >
                 <img
                   src={pousada.img}

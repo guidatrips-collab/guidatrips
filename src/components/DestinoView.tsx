@@ -522,7 +522,7 @@ export default function DestinoView({
                 >
                   <div 
                     onClick={() => onSelectExperience?.(exp.slug)}
-                    className="h-48 relative overflow-hidden group cursor-pointer"
+                    className="aspect-square relative overflow-hidden group cursor-pointer"
                   >
                     <img 
                       src={exp.photos?.[0]} 
@@ -592,7 +592,7 @@ export default function DestinoView({
                 >
                   <div 
                     onClick={() => onSelectAccommodation?.(acc.slug)}
-                    className="h-48 relative overflow-hidden group cursor-pointer"
+                    className="aspect-square relative overflow-hidden group cursor-pointer"
                   >
                     <img 
                       src={acc.photos?.[0] || "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80"} 

@@ -420,7 +420,7 @@ export default function ExperiencesView({
                   className="group flex flex-col justify-between bg-white border border-zinc-200 rounded-2xl overflow-hidden hover:border-[#E8711A]/50 transition-all duration-300 shadow-sm h-full hover:shadow-md"
                 >
                   {/* Card Cover */}
-                  <div className="relative h-60 overflow-hidden select-none">
+                  <div className="relative aspect-square overflow-hidden select-none">
                     <ExperienceMediaGallery experience={exp} className="w-full h-full" />
                     
                     {/* Badge */}

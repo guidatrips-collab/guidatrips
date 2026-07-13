@@ -78,7 +78,7 @@ const promiseWithTimeout = <T,>(promise: Promise<T>, ms: number, timeoutError: E
 };
 
 interface ImageUploadProps {
-  onUploadComplete: (url: string) => void;
+  onUploadComplete: (url: string, originalUrl?: string, cropData?: any) => void;
   onRemove?: () => void;
   currentImageUrl?: string;
   folder?: string;
@@ -101,6 +101,7 @@ export default function ImageUpload({
 
   const [showCropModal, setShowCropModal] = useState(false);
   const [imageToCrop, setImageToCrop] = useState<string | null>(null);
+  const [originalFile, setOriginalFile] = useState<File | null>(null);
 
 
   
@@ -122,6 +123,7 @@ export default function ImageUpload({
       // Create local URL for the selected file and open cropper
       const objectUrl = URL.createObjectURL(file);
       setImageToCrop(objectUrl);
+      setOriginalFile(file);
       setShowCropModal(true);
     } catch (err) {
       setError("Falha ao ler a imagem.");
@@ -152,19 +154,36 @@ export default function ImageUpload({
       setImageToCrop(null);
       
       try {
+        // Upload cropped image
         const uploadPromise = storageService.uploadFile(croppedFile, folder);
         const url = await promiseWithTimeout(
           uploadPromise,
-          5000, // increased timeout due to file upload
-          new Error("Upload timeout due to potential CORS or network issue")
+          5000,
+          new Error("Upload timeout")
         );
-        onUploadComplete(url);
+        
+        // Upload original image if it exists
+        let originalUrl = undefined;
+        if (originalFile) {
+          try {
+            const originalPromise = storageService.uploadFile(originalFile, folder + '/originals');
+            originalUrl = await promiseWithTimeout(originalPromise, 10000, new Error("Original upload timeout"));
+          } catch (origErr) {
+            console.warn("Failed to upload original file, continuing without it.", origErr);
+          }
+        }
+        
+        onUploadComplete(url, originalUrl, croppedAreaPixels);
       } catch (storageErr) {
         console.warn("Firebase Storage upload failed or timed out (CORS/Permissions). Falling back to ultra-optimized Base64:", storageErr);
         
         const compressedUrl = await compressAndConvertToBase64(croppedFile);
+        let originalCompressedUrl = undefined;
+        if (originalFile) {
+          originalCompressedUrl = await compressAndConvertToBase64(originalFile);
+        }
         setIsCompatibilityMode(true);
-        onUploadComplete(compressedUrl);
+        onUploadComplete(compressedUrl, originalCompressedUrl, croppedAreaPixels);
       }
     } catch (err) {
       console.error("Crop/Upload failed:", err);
@@ -177,6 +196,7 @@ export default function ImageUpload({
   const handleEditCrop = () => {
     if (currentImageUrl) {
       setImageToCrop(currentImageUrl);
+      setOriginalFile(null);
       setShowCropModal(true);
     }
   };

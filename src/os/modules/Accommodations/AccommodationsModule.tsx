@@ -66,6 +66,7 @@ export function AccommodationsModule({ accommodations, destinations }: Accommoda
   const [amenitiesStr, setAmenitiesStr] = useState('');
   const [courtesies, setCourtesies] = useState<Courtesy[]>([]);
   const [photos, setPhotos] = useState<string[]>([]);
+  const [mediaGallery, setMediaGallery] = useState<MediaItem[]>([]);
   const [location, setLocation] = useState('');
   const [address, setAddress] = useState('');
   const [netRate, setNetRate] = useState<number>(0);
@@ -105,6 +106,7 @@ export function AccommodationsModule({ accommodations, destinations }: Accommoda
     setAmenitiesStr('');
     setCourtesies([]);
     setPhotos([]);
+    setMediaGallery([]);
     setLocation('');
     setAddress('');
     setNetRate(0);
@@ -134,6 +136,13 @@ export function AccommodationsModule({ accommodations, destinations }: Accommoda
     setAmenitiesStr(acc.amenities?.join(', ') || '');
     setCourtesies(acc.courtesies || []);
     setPhotos(acc.photos || []);
+    if (acc.mediaGallery && acc.mediaGallery.length > 0) {
+      setMediaGallery(acc.mediaGallery);
+    } else if (acc.photos && acc.photos.length > 0) {
+      setMediaGallery(acc.photos.map((p, i) => ({ id: `img-${i}`, type: 'image', url: p, originalUrl: p })));
+    } else {
+      setMediaGallery([]);
+    }
     setLocation(acc.location || '');
     setAddress(acc.address || '');
     setNetRate(acc.netRate || 0);
@@ -174,7 +183,8 @@ export function AccommodationsModule({ accommodations, destinations }: Accommoda
       description,
       amenities,
       courtesies,
-      photos: photos.length > 0 ? photos : ["https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800"],
+      mediaGallery,
+      photos: mediaGallery.length > 0 ? mediaGallery.map(m => m.url) : photos.length > 0 ? photos : ["https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800"],
       location,
       address,
       netRate,
@@ -651,25 +661,70 @@ export function AccommodationsModule({ accommodations, destinations }: Accommoda
                 <h4 className="text-zinc-200 font-semibold border-b border-zinc-800 pb-2">Galeria de Imagens da Hospedagem</h4>
                 
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                  {photos.map((photo, idx) => (
-                    <div key={`acc-photo-${idx}`} className="relative group">
+                  {mediaGallery.map((media, idx) => (
+                    <div 
+                      key={`photo-${idx}`}
+                      className={`relative group transition-all duration-200 cursor-move ${draggedPhotoIdx === idx ? 'opacity-40 scale-95' : ''} ${dragOverPhotoIdx === idx ? 'ring-2 ring-[#E8711A] scale-105 rounded-xl z-10 shadow-xl' : ''}`}
+                      draggable
+                      onDragStart={(e) => {
+                        e.dataTransfer.effectAllowed = 'move';
+                        setDraggedPhotoIdx(idx);
+                      }}
+                      onDragOver={(e) => {
+                        e.preventDefault();
+                        e.dataTransfer.dropEffect = 'move';
+                        if (draggedPhotoIdx !== null && draggedPhotoIdx !== idx) {
+                          setDragOverPhotoIdx(idx);
+                        }
+                      }}
+                      onDragLeave={() => {
+                        if (dragOverPhotoIdx === idx) {
+                          setDragOverPhotoIdx(null);
+                        }
+                      }}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        if (draggedPhotoIdx !== null && draggedPhotoIdx !== idx) {
+                          const newMedia = [...mediaGallery];
+                          const draggedItem = newMedia[draggedPhotoIdx];
+                          newMedia.splice(draggedPhotoIdx, 1);
+                          newMedia.splice(idx, 0, draggedItem);
+                          setMediaGallery(newMedia);
+                        }
+                        setDraggedPhotoIdx(null);
+                        setDragOverPhotoIdx(null);
+                      }}
+                      onDragEnd={() => {
+                        setDraggedPhotoIdx(null);
+                        setDragOverPhotoIdx(null);
+                      }}
+                    >
+                      <div className="absolute top-2 left-2 z-20 bg-black/60 text-white rounded-md px-1.5 py-0.5 text-[10px] font-bold backdrop-blur-sm shadow-sm pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity">
+                        Arraste para ordenar
+                      </div>
                       <ImageUpload
-                        currentImageUrl={photo}
-                        onUploadComplete={(url) => {
-                          const newPhotos = [...photos];
-                          newPhotos[idx] = url;
-                          setPhotos(newPhotos);
+                        currentImageUrl={media.url}
+                        onUploadComplete={(url, originalUrl, cropData) => {
+                          const newMedia = [...mediaGallery];
+                          newMedia[idx] = { ...newMedia[idx], url, originalUrl: originalUrl || url, cropData };
+                          setMediaGallery(newMedia);
                         }}
                         onRemove={() => {
-                          const newPhotos = photos.filter((_, i) => i !== idx);
-                          setPhotos(newPhotos);
+                          const newMedia = mediaGallery.filter((_, i) => i !== idx);
+                          setMediaGallery(newMedia);
                         }}
                         folder="accommodations"
                       />
                     </div>
                   ))}
                   <ImageUpload
-                    onUploadComplete={(url) => setPhotos([...photos, url])}
+                    onUploadComplete={(url, originalUrl, cropData) => setMediaGallery([...mediaGallery, {
+                      id: Date.now().toString(),
+                      type: "image",
+                      url,
+                      originalUrl: originalUrl || url,
+                      cropData
+                    }])}
                     folder="accommodations"
                     label="Nova Foto"
                   />

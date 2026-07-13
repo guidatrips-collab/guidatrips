@@ -47,6 +47,8 @@ export interface MediaItem {
   id: string;
   type: "image" | "video" | "video_vertical" | "video_institutional" | "image_360";
   url: string;
+  originalUrl?: string;
+  cropData?: any;
   title?: string;
 }
 

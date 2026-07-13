@@ -16,7 +16,7 @@ import {
   Calendar,
   AlertCircle
 } from 'lucide-react';
-import { Experience, Destination, ExperienceCategory, Courtesy } from '../../../types';
+import { Experience, Destination, ExperienceCategory, Courtesy, MediaItem } from '../../../types';
 import { firestoreService } from '../../../firebase';
 import ImageUpload from '../../../components/ImageUpload';
 
@@ -74,6 +74,7 @@ export function ProductsModule({ experiences, destinations }: ProductsModuleProp
   const [meetingPoint, setMeetingPoint] = useState('');
   const [videoEmbed, setVideoEmbed] = useState('');
   const [photos, setPhotos] = useState<string[]>([]);
+  const [mediaGallery, setMediaGallery] = useState<MediaItem[]>([]);
   const [draggedPhotoIdx, setDraggedPhotoIdx] = useState<number | null>(null);
   const [dragOverPhotoIdx, setDragOverPhotoIdx] = useState<number | null>(null);
   
@@ -121,6 +122,7 @@ export function ProductsModule({ experiences, destinations }: ProductsModuleProp
     setMeetingPoint('');
     setVideoEmbed('');
     setPhotos([]);
+    setMediaGallery([]);
     setHighlightsStr('');
     setBringItemsStr('');
     setIncludedStr('');
@@ -168,6 +170,13 @@ export function ProductsModule({ experiences, destinations }: ProductsModuleProp
     setMeetingPoint(exp.meetingPoint || '');
     setVideoEmbed(exp.videoEmbed || '');
     setPhotos(exp.photos || []);
+    if (exp.mediaGallery && exp.mediaGallery.length > 0) {
+      setMediaGallery(exp.mediaGallery);
+    } else if (exp.photos && exp.photos.length > 0) {
+      setMediaGallery(exp.photos.map((p, i) => ({ id: `img-${i}`, type: 'image', url: p, originalUrl: p })));
+    } else {
+      setMediaGallery([]);
+    }
     
     setHighlightsStr(exp.highlights?.join('\n') || '');
     setBringItemsStr(exp.bringItems?.join('\n') || '');
@@ -237,7 +246,8 @@ export function ProductsModule({ experiences, destinations }: ProductsModuleProp
       fullDescription: fullDesc,
       meetingPoint: meetingPoint || 'A combinar',
       videoEmbed,
-      photos: photos.length > 0 ? photos : ["https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=600&q=80"],
+      mediaGallery,
+      photos: mediaGallery.length > 0 ? mediaGallery.map(m => m.url) : photos.length > 0 ? photos : ["https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=600&q=80"],
       highlights,
       bringItems,
       included,
@@ -580,9 +590,9 @@ export function ProductsModule({ experiences, destinations }: ProductsModuleProp
                 <h4 className="text-zinc-200 font-semibold border-b border-zinc-800 pb-2">Galeria de Fotos do Passeio</h4>
                 
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                  {photos.map((photo, idx) => (
+                  {mediaGallery.map((media, idx) => (
                     <div 
-                      key={`photo-${idx}`} 
+                      key={`photo-${idx}`}
                       className={`relative group transition-all duration-200 cursor-move ${draggedPhotoIdx === idx ? 'opacity-40 scale-95' : ''} ${dragOverPhotoIdx === idx ? 'ring-2 ring-[#E8711A] scale-105 rounded-xl z-10 shadow-xl' : ''}`}
                       draggable
                       onDragStart={(e) => {
@@ -604,11 +614,11 @@ export function ProductsModule({ experiences, destinations }: ProductsModuleProp
                       onDrop={(e) => {
                         e.preventDefault();
                         if (draggedPhotoIdx !== null && draggedPhotoIdx !== idx) {
-                          const newPhotos = [...photos];
-                          const draggedItem = newPhotos[draggedPhotoIdx];
-                          newPhotos.splice(draggedPhotoIdx, 1);
-                          newPhotos.splice(idx, 0, draggedItem);
-                          setPhotos(newPhotos);
+                          const newMedia = [...mediaGallery];
+                          const draggedItem = newMedia[draggedPhotoIdx];
+                          newMedia.splice(draggedPhotoIdx, 1);
+                          newMedia.splice(idx, 0, draggedItem);
+                          setMediaGallery(newMedia);
                         }
                         setDraggedPhotoIdx(null);
                         setDragOverPhotoIdx(null);
@@ -622,22 +632,28 @@ export function ProductsModule({ experiences, destinations }: ProductsModuleProp
                         Arraste para ordenar
                       </div>
                       <ImageUpload
-                        currentImageUrl={photo}
-                        onUploadComplete={(url) => {
-                          const newPhotos = [...photos];
-                          newPhotos[idx] = url;
-                          setPhotos(newPhotos);
+                        currentImageUrl={media.url}
+                        onUploadComplete={(url, originalUrl, cropData) => {
+                          const newMedia = [...mediaGallery];
+                          newMedia[idx] = { ...newMedia[idx], url, originalUrl: originalUrl || url, cropData };
+                          setMediaGallery(newMedia);
                         }}
                         onRemove={() => {
-                          const newPhotos = photos.filter((_, i) => i !== idx);
-                          setPhotos(newPhotos);
+                          const newMedia = mediaGallery.filter((_, i) => i !== idx);
+                          setMediaGallery(newMedia);
                         }}
                         folder="experiences"
                       />
                     </div>
                   ))}
                   <ImageUpload
-                    onUploadComplete={(url) => setPhotos([...photos, url])}
+                    onUploadComplete={(url, originalUrl, cropData) => setMediaGallery([...mediaGallery, {
+                      id: Date.now().toString(),
+                      type: "image",
+                      url,
+                      originalUrl: originalUrl || url,
+                      cropData
+                    }])}
                     folder="experiences"
                     label="Nova Foto"
                   />

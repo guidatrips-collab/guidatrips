@@ -336,7 +336,7 @@ export default function ClientPanelView({
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Próximo Passeio Card */}
               <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-zinc-200 overflow-hidden flex flex-col md:flex-row group cursor-pointer hover:shadow-md transition-all" onClick={() => setActiveTab("viagem")}>
-                <div className="w-full md:w-48 h-48 md:h-auto relative">
+                <div className="w-full md:w-48 aspect-square relative">
                   <img 
                     src={currentExp?.photos?.[0] || "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=400&q=80"} 
                     alt="Próximo Passeio"
@@ -663,7 +663,7 @@ export default function ClientPanelView({
                 {/* Esquerda: Informações do Passeio */}
                 <div className="lg:col-span-2 space-y-8">
                   <div className="bg-white rounded-xl shadow-sm border border-zinc-200 overflow-hidden">
-                    <div className="h-48 md:h-64 relative">
+                    <div className="aspect-square relative">
                       <img src={currentExp?.photos?.[0]} alt={currentExp?.name} className="w-full h-full object-cover filter brightness-[0.85]" />
                       <div className="absolute inset-0 bg-gradient-to-t from-[#0D1B2A]/90 to-transparent flex flex-col justify-end p-6">
                         <span className="bg-[#E8711A] text-white text-[10px] font-accent uppercase tracking-widest font-bold px-2 py-1 rounded-sm w-max mb-3">Reserva Confirmada</span>
@@ -879,7 +879,7 @@ export default function ClientPanelView({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {clientPartners.map(partner => (
                 <div key={partner.id} className="bg-white rounded-xl shadow-sm border border-zinc-200 flex flex-col sm:flex-row overflow-hidden group">
-                  <div className="sm:w-2/5 h-48 sm:h-auto relative">
+                  <div className="sm:w-2/5 aspect-square relative">
                     <img src={partner.img} alt={partner.name} className="w-full h-full object-cover filter brightness-95" />
                   </div>
                   <div className="p-5 sm:w-3/5 flex flex-col justify-between">
