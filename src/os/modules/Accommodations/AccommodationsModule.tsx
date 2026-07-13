@@ -67,6 +67,8 @@ export function AccommodationsModule({ accommodations, destinations }: Accommoda
   const [courtesies, setCourtesies] = useState<Courtesy[]>([]);
   const [photos, setPhotos] = useState<string[]>([]);
   const [mediaGallery, setMediaGallery] = useState<MediaItem[]>([]);
+  const [draggedPhotoIdx, setDraggedPhotoIdx] = useState<number | null>(null);
+  const [dragOverPhotoIdx, setDragOverPhotoIdx] = useState<number | null>(null);
   const [location, setLocation] = useState('');
   const [address, setAddress] = useState('');
   const [netRate, setNetRate] = useState<number>(0);
