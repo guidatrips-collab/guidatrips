@@ -3,7 +3,7 @@ import {
   Compass, Calendar, Users, MapPin, Check, X, ArrowRight, Share2, 
   Search, Info, Plus, ChevronLeft, ChevronRight, CreditCard, Shield, 
   Send, Sparkles, CheckCircle, Smartphone, Trash2 
-} from "lucide-react";
+, Clock, Activity, Sun, Award, Heart} from "lucide-react";
 import { Experience, ExperienceCategory, BookingCartItem, GlobalSettings, ClientReservation, ClientUser, checkSchedulingConflict, getBrazilLocalDate, addDaysToBrazilDate, Destination, Accommodation } from "../types";
 import { motion, AnimatePresence } from "motion/react";
 import { firestoreService } from "../firebase";
@@ -528,112 +528,114 @@ export default function ExperiencesView({
                 ✕
               </button>
 
+              
+              {/* HERO (Full Width) */}
+              <div className="relative w-full h-[350px] sm:h-[450px] lg:h-[550px] select-none group">
+                 <MediaGallery item={activeExperience} className="w-full h-full" />
+                 <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent pointer-events-none z-10" />
+                 
+                 <div className="absolute bottom-0 left-0 right-0 p-6 sm:p-10 z-20 text-white flex flex-col justify-end">
+                    <div className="flex flex-wrap items-center gap-3 mb-4">
+                      {activeExperience.tagText && (
+                        <span className="px-3 py-1 bg-[#E8711A] text-white text-[9px] font-accent font-bold tracking-widest uppercase rounded-sm shadow-md">
+                          {activeExperience.tagText}
+                        </span>
+                      )}
+                      <span className="px-3 py-1 bg-white/20 backdrop-blur-md text-white border border-white/20 text-[9px] font-accent font-bold tracking-widest uppercase rounded-sm">
+                        ⛵ {activeExperience.category.toUpperCase()}
+                      </span>
+                    </div>
+                    <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold text-white leading-[1.1] tracking-tight drop-shadow-md max-w-4xl">
+                      {activeExperience.name}
+                    </h2>
+                    <div className="flex flex-wrap items-center gap-6 mt-6 text-sm font-sans text-white/90">
+                       <span className="flex items-center gap-2"><MapPin className="w-4 h-4 text-[#E8711A]"/> {activeExperience.location}</span>
+                       <span className="flex items-center gap-2"><Clock className="w-4 h-4 text-[#E8711A]"/> {activeExperience.duration}</span>
+                    </div>
+                 </div>
+              </div>
+
               <div className="grid grid-cols-1 lg:grid-cols-12">
                 
-                {/* LEFT COLUMN: Gallery, Video, Desc (7/12 cols) */}
-                <div className="lg:col-span-7 p-4 sm:p-8 space-y-8 border-b lg:border-b-0 lg:border-r border-zinc-200 text-left">
+                {/* LEFT COLUMN: Desc, Metadata, Itinerary (7/12 cols) */}
+                <div className="lg:col-span-7 p-6 sm:p-10 space-y-12 border-b lg:border-b-0 lg:border-r border-zinc-100 text-left bg-white">
                   
-                  {/* Hero image of the Tour */}
-                  <div className="relative aspect-square sm:aspect-[4/3] w-full overflow-hidden rounded-2xl border border-zinc-200 select-none">
-                    <MediaGallery item={activeExperience} className="w-full h-full" />
-                    <div className="absolute top-4 left-4 font-accent text-[9px] font-black tracking-widest text-[#E8711A] bg-white border border-[#E8711A]/20 shadow-md px-3 py-1 uppercase rounded-md z-10 pointer-events-none">
-                      ⛵ {activeExperience.category.toUpperCase()}
-                    </div>
-                  </div>
-
-
-                  {/* Highlights */}
-                  {activeExperience.highlights && activeExperience.highlights.length > 0 && (
-                    <div className="flex flex-wrap gap-2">
-                      {activeExperience.highlights.map((hlt, idx) => (
-                        <span key={idx} className="bg-[#E8711A]/10 text-[#E8711A] px-3.5 py-1.5 rounded-full font-accent text-[8px] sm:text-[9px] font-bold uppercase tracking-widest border border-[#E8711A]/20">
-                          ✨ {hlt}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-
-                  {activeExperience.videoEmbed && (
-                    <div className="space-y-2">
-                      <span className="font-accent text-[9px] text-zinc-500 tracking-widest uppercase block font-bold">Registro em Vídeo</span>
-                      <div className="aspect-video w-full rounded-2xl overflow-hidden shadow-sm border border-zinc-200 bg-zinc-50">
-                        <iframe 
-                          src={activeExperience.videoEmbed.replace("watch?v=", "embed/")} 
-                          title="Vídeo do passeio" 
-                          className="w-full h-full" 
-                          allowFullScreen
-                        ></iframe>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Tour Metadata Specs (Departure City, Age limits, Duration, Effort, Ideal For) */}
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 bg-zinc-50 border border-zinc-200 p-5 rounded-2xl">
+                  {/* Info Blocks (Modern Bento) */}
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                     {activeExperience.departureCity && (
-                      <div className="text-left">
-                        <span className="font-accent text-[8px] sm:text-[9px] text-zinc-500 tracking-widest uppercase block font-bold">Partida</span>
-                        <span className="font-sans text-xs sm:text-sm text-[#0D1B2A] font-semibold">{activeExperience.departureCity}</span>
+                      <div className="bg-zinc-50 border border-zinc-100 rounded-2xl p-4 flex flex-col justify-center">
+                        <MapPin className="w-4 h-4 text-zinc-400 mb-2" />
+                        <span className="font-accent text-[9px] text-zinc-500 tracking-widest uppercase font-bold mb-0.5">Partida</span>
+                        <span className="font-sans text-xs sm:text-sm text-[#0D1B2A] font-bold">{activeExperience.departureCity}</span>
                       </div>
                     )}
                     {(activeExperience.minAge || activeExperience.maxAge) && (
-                      <div className="text-left">
-                        <span className="font-accent text-[8px] sm:text-[9px] text-zinc-500 tracking-widest uppercase block font-bold">Faixa Etária</span>
-                        <span className="font-sans text-xs sm:text-sm text-[#0D1B2A] font-semibold">
+                      <div className="bg-zinc-50 border border-zinc-100 rounded-2xl p-4 flex flex-col justify-center">
+                        <Users className="w-4 h-4 text-zinc-400 mb-2" />
+                        <span className="font-accent text-[9px] text-zinc-500 tracking-widest uppercase font-bold mb-0.5">Idade Ideal</span>
+                        <span className="font-sans text-xs sm:text-sm text-[#0D1B2A] font-bold">
                           {activeExperience.minAge ? `${activeExperience.minAge}` : "Livre"}
-                          {activeExperience.maxAge ? ` até ${activeExperience.maxAge}` : ""}
+                          {activeExperience.maxAge ? ` até ${activeExperience.maxAge} anos` : "+"}
                         </span>
                       </div>
                     )}
-                    <div className="text-left">
-                      <span className="font-accent text-[8px] sm:text-[9px] text-zinc-500 tracking-widest uppercase block font-bold">Duração</span>
-                      <span className="font-sans text-xs sm:text-sm text-[#0D1B2A] font-semibold">{activeExperience.duration}</span>
+                    <div className="bg-zinc-50 border border-zinc-100 rounded-2xl p-4 flex flex-col justify-center">
+                      <Clock className="w-4 h-4 text-zinc-400 mb-2" />
+                      <span className="font-accent text-[9px] text-zinc-500 tracking-widest uppercase font-bold mb-0.5">Duração Total</span>
+                      <span className="font-sans text-xs sm:text-sm text-[#0D1B2A] font-bold">{activeExperience.duration}</span>
                     </div>
-                    
-                    {/* New Metadata Fields based on Roadmap */}
-                    <div className="text-left">
-                      <span className="font-accent text-[8px] sm:text-[9px] text-zinc-500 tracking-widest uppercase block font-bold">Nível de Esforço</span>
-                      <span className="font-sans text-xs sm:text-sm text-[#0D1B2A] font-semibold">{activeExperience.effortLevel || "Moderado"}</span>
+                    <div className="bg-zinc-50 border border-zinc-100 rounded-2xl p-4 flex flex-col justify-center">
+                      <Activity className="w-4 h-4 text-zinc-400 mb-2" />
+                      <span className="font-accent text-[9px] text-zinc-500 tracking-widest uppercase font-bold mb-0.5">Esforço Físico</span>
+                      <span className="font-sans text-xs sm:text-sm text-[#0D1B2A] font-bold">{activeExperience.effortLevel || "Moderado"}</span>
                     </div>
-                    <div className="text-left">
-                      <span className="font-accent text-[8px] sm:text-[9px] text-zinc-500 tracking-widest uppercase block font-bold">Melhor Horário</span>
-                      <span className="font-sans text-xs sm:text-sm text-[#0D1B2A] font-semibold">{activeExperience.bestTime || "Manhã"}</span>
+                    <div className="bg-zinc-50 border border-zinc-100 rounded-2xl p-4 flex flex-col justify-center">
+                      <Sun className="w-4 h-4 text-zinc-400 mb-2" />
+                      <span className="font-accent text-[9px] text-zinc-500 tracking-widest uppercase font-bold mb-0.5">Melhor Horário</span>
+                      <span className="font-sans text-xs sm:text-sm text-[#0D1B2A] font-bold">{activeExperience.bestTime || "Manhã"}</span>
                     </div>
-                    <div className="text-left">
-                      <span className="font-accent text-[8px] sm:text-[9px] text-zinc-500 tracking-widest uppercase block font-bold">Ideal Para</span>
-                      <span className="font-sans text-xs sm:text-sm text-[#0D1B2A] font-semibold">{activeExperience.idealFor || "Todos"}</span>
-                    </div>
-                    <div className="text-left">
-                      <span className="font-accent text-[8px] sm:text-[9px] text-zinc-500 tracking-widest uppercase block font-bold">Melhor Época</span>
-                      <span className="font-sans text-xs sm:text-sm text-[#0D1B2A] font-semibold">{activeExperience.bestSeason || "O ano inteiro"}</span>
+                    <div className="bg-zinc-50 border border-zinc-100 rounded-2xl p-4 flex flex-col justify-center">
+                      <Award className="w-4 h-4 text-zinc-400 mb-2" />
+                      <span className="font-accent text-[9px] text-zinc-500 tracking-widest uppercase font-bold mb-0.5">Perfil Ideal</span>
+                      <span className="font-sans text-xs sm:text-sm text-[#0D1B2A] font-bold">{activeExperience.idealFor || "Todos os públicos"}</span>
                     </div>
                   </div>
 
+                  {/* Highlights */}
+                  {activeExperience.highlights && activeExperience.highlights.length > 0 && (
+                    <div className="space-y-5">
+                      <h3 className="font-serif text-2xl font-bold text-[#0D1B2A]">Destaques</h3>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {activeExperience.highlights.map((hlt, idx) => (
+                          <div key={idx} className="flex items-start gap-3 p-3 rounded-xl bg-white border border-zinc-100 shadow-sm">
+                            <Sparkles className="w-5 h-5 text-[#E8711A] shrink-0 mt-0.5" />
+                            <span className="text-sm font-sans text-zinc-700 font-medium leading-relaxed">{hlt}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Full Description text */}
-                  <div className="space-y-5 pt-8">
-                    <h3 className="font-serif text-2xl font-bold text-[#0D1B2A] flex items-center gap-2">
-                      <span className="w-8 h-1 bg-[#E8711A] rounded-full inline-block"></span>
-                      Sobre a Experiência
-                    </h3>
-                    <p className="font-sans text-sm sm:text-base text-zinc-600 leading-loose whitespace-pre-line bg-zinc-50/50 p-6 rounded-2xl border border-zinc-100">
+                  <div className="space-y-5">
+                    <h3 className="font-serif text-2xl font-bold text-[#0D1B2A]">A Experiência</h3>
+                    <p className="font-sans text-[15px] text-zinc-600 leading-loose whitespace-pre-line">
                       {activeExperience.fullDescription}
                     </p>
                   </div>
 
                   {/* Itinerary (Roteiro) section */}
                   {activeExperience.itinerary && activeExperience.itinerary.length > 0 && (
-                    <div className="space-y-6 pt-10">
-                      <h3 className="font-serif text-2xl font-bold text-[#0D1B2A] flex items-center gap-2">
-                        <span className="w-8 h-1 bg-[#E8711A] rounded-full inline-block"></span>
-                        Roteiro Passo a Passo
-                      </h3>
-                      <div className="relative pl-8 space-y-8 before:absolute before:left-[15px] before:top-2 before:bottom-2 before:w-[2px] before:bg-gradient-to-b before:from-[#E8711A]/40 before:to-[#E8711A]/5">
+                    <div className="space-y-6 pt-4">
+                      <h3 className="font-serif text-2xl font-bold text-[#0D1B2A]">Roteiro Passo a Passo</h3>
+                      <div className="relative pl-6 space-y-8 before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-[2px] before:bg-gradient-to-b before:from-[#E8711A] before:via-[#E8711A]/40 before:to-transparent">
                         {activeExperience.itinerary.map((step, idx) => {
                           const [title, ...descParts] = step.split(":");
                           const desc = descParts.join(":");
                           return (
-                            <div key={idx} className="relative">
-                              <div className="absolute -left-[27px] top-1.5 w-4 h-4 rounded-full bg-white border-[4px] border-[#E8711A] shadow-sm z-10" />
-                              <div className="text-left bg-white border border-zinc-200 rounded-2xl p-5 shadow-sm hover:border-[#E8711A]/30 transition-colors">
+                            <div key={idx} className="relative group">
+                              <div className="absolute -left-[27px] top-1.5 w-[14px] h-[14px] rounded-full bg-white border-[3px] border-[#E8711A] shadow-sm z-10 group-hover:scale-125 transition-transform" />
+                              <div className="text-left bg-white border border-zinc-100 rounded-2xl p-5 shadow-sm hover:shadow-md hover:border-[#E8711A]/20 transition-all ml-4">
                                 <h4 className="font-serif text-lg font-bold text-[#0D1B2A]">{title || step}</h4>
                                 {desc && <p className="font-sans text-sm text-zinc-500 mt-2 leading-relaxed">{desc.trim()}</p>}
                               </div>
@@ -644,46 +646,30 @@ export default function ExperiencesView({
                     </div>
                   )}
 
-                  {/* Inclusions / Exclusions Tiles */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-10">
-                    <div className="bg-emerald-50 border border-emerald-100 p-6 rounded-3xl space-y-4 shadow-sm">
-                      <span className="font-accent text-[11px] text-emerald-800 font-black tracking-widest uppercase flex items-center gap-2">
+                  {/* Included / Excluded (Modern layout) */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="bg-zinc-50 border border-zinc-100 p-6 rounded-2xl space-y-4">
+                      <span className="font-accent text-[11px] text-[#0D1B2A] font-black tracking-widest uppercase flex items-center gap-2">
                         <CheckCircle className="w-4 h-4 text-emerald-600" /> O que está incluso
                       </span>
-                      <ul className="space-y-3 font-sans text-sm text-zinc-700">
+                      <ul className="space-y-3 font-sans text-sm text-zinc-600">
                         {activeExperience.included?.map((item, idx) => (
                           <li key={idx} className="flex items-start gap-2">
-                            <span className="text-emerald-600 select-none mt-0.5">•</span>
+                            <span className="text-emerald-500 select-none mt-0.5 font-bold">✓</span>
                             <span>{item}</span>
                           </li>
                         ))}
                       </ul>
                     </div>
 
-                    {activeExperience.courtesies && activeExperience.courtesies.length > 0 && (
-                      <div className="bg-[#E8711A]/5 border border-[#E8711A]/20 p-6 rounded-3xl space-y-4 md:col-span-2 shadow-sm">
-                        <span className="font-accent text-[11px] text-[#E8711A] font-black tracking-widest uppercase flex items-center gap-2">
-                          🎁 Benefícios Exclusivos (Cortesias)
-                        </span>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                          {activeExperience.courtesies.map((item, idx) => (
-                            <div key={idx} className="flex items-start gap-2">
-                              <span className="text-[#E8711A] select-none mt-0.5">•</span>
-                              <span className="font-sans text-sm text-zinc-700 font-medium">{item.name}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    <div className="bg-zinc-50 border border-zinc-200 p-6 rounded-3xl space-y-4 shadow-sm">
+                    <div className="bg-zinc-50 border border-zinc-100 p-6 rounded-2xl space-y-4">
                       <span className="font-accent text-[11px] text-zinc-500 font-bold tracking-widest uppercase flex items-center gap-2">
                         ✕ Não Inclui
                       </span>
                       <ul className="space-y-3 font-sans text-sm text-zinc-500">
                         {activeExperience.notIncluded?.map((item, idx) => (
                           <li key={idx} className="flex items-start gap-2">
-                            <span className="text-zinc-400 select-none mt-0.5">•</span>
+                            <span className="text-zinc-300 select-none mt-0.5 font-bold">✕</span>
                             <span>{item}</span>
                           </li>
                         ))}
@@ -691,16 +677,32 @@ export default function ExperiencesView({
                     </div>
                   </div>
 
+                  {activeExperience.courtesies && activeExperience.courtesies.length > 0 && (
+                    <div className="bg-[#E8711A]/5 border border-[#E8711A]/20 p-6 rounded-2xl space-y-4 shadow-sm">
+                      <span className="font-accent text-[11px] text-[#E8711A] font-black tracking-widest uppercase flex items-center gap-2">
+                        🎁 Benefícios Exclusivos
+                      </span>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {activeExperience.courtesies.map((item, idx) => (
+                          <div key={idx} className="flex items-start gap-2">
+                            <Heart className="w-4 h-4 text-[#E8711A] shrink-0 mt-0.5" />
+                            <span className="font-sans text-sm text-[#0D1B2A] font-medium">{item.name}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Policies section */}
                   {activeExperience.policies && activeExperience.policies.length > 0 && (
-                    <div className="bg-zinc-50 border border-zinc-200 p-6 rounded-3xl space-y-4 pt-6 mt-8 shadow-sm">
+                    <div className="bg-zinc-50 border border-zinc-100 p-6 rounded-2xl space-y-4">
                       <span className="font-accent text-[11px] text-zinc-800 font-bold tracking-widest uppercase flex items-center gap-2">
-                        📜 Políticas (Pagamento e Cancelamento)
+                        📜 Políticas e Regras
                       </span>
                       <ul className="space-y-3 font-sans text-sm text-zinc-600">
                         {activeExperience.policies.map((item, idx) => (
                           <li key={idx} className="flex items-start gap-2">
-                            <span className="text-zinc-400 select-none mt-0.5">•</span>
+                            <span className="text-zinc-300 select-none mt-0.5">•</span>
                             <span>{item}</span>
                           </li>
                         ))}
@@ -710,13 +712,13 @@ export default function ExperiencesView({
 
                   {/* Bring items */}
                   {activeExperience.bringItems && activeExperience.bringItems.length > 0 && (
-                    <div className="bg-[#E8711A]/5 p-6 border border-[#E8711A]/20 rounded-3xl space-y-4 shadow-sm mt-6">
-                      <span className="font-accent text-[11px] text-[#E8711A] font-black tracking-widest uppercase block">
-                        🎒 O Que Levar / Recomendações
+                    <div className="space-y-4">
+                      <span className="font-accent text-[11px] text-[#0D1B2A] font-black tracking-widest uppercase block">
+                        🎒 Recomendações: O que levar
                       </span>
-                      <div className="flex flex-wrap gap-2 pt-1">
+                      <div className="flex flex-wrap gap-2">
                         {activeExperience.bringItems.map((item, idx) => (
-                          <span key={idx} className="bg-white border border-[#E8711A]/20 text-[#0D1B2A] font-medium px-4 py-2 rounded-xl text-sm font-sans shadow-sm">
+                          <span key={idx} className="bg-zinc-100 border border-zinc-200 text-zinc-600 font-medium px-4 py-2 rounded-lg text-sm font-sans">
                             {item}
                           </span>
                         ))}
@@ -724,147 +726,46 @@ export default function ExperiencesView({
                     </div>
                   )}
 
-                  {/* Meeting Point and Interactive Google Maps */}
-                  <div className="bg-zinc-50 border border-zinc-200 p-6 rounded-3xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 relative overflow-hidden mt-8 shadow-sm">
-                    <div className="absolute inset-0 right-1/2 opacity-20 pointer-events-none bg-[url('https://maps.googleapis.com/maps/api/staticmap?center=-22.966,-42.028&zoom=14&size=400x200&maptype=roadmap&markers=color:red%7C-22.966,-42.028&key=PLACEHOLDER')] bg-cover bg-center [mask-image:linear-gradient(to_right,white,transparent)]"></div>
-                    <div className="flex gap-4 text-sm font-sans text-zinc-600 relative z-10">
-                      <div className="w-12 h-12 bg-white border border-zinc-200 rounded-full flex items-center justify-center shadow-md shrink-0">
-                        <MapPin className="w-6 h-6 text-[#E8711A]" />
-                      </div>
-                      <div className="pt-0.5">
-                        <span className="font-bold text-[#0D1B2A] block text-base mb-1">Ponto de Encontro</span>
-                        <p className="max-w-[250px] leading-relaxed">{activeExperience.meetingPoint}</p>
-                      </div>
-                    </div>
-                    {activeExperience.googleMapsUrl && (
-                      <a 
-                        href={activeExperience.googleMapsUrl} 
-                        target="_blank" 
-                        rel="noreferrer"
-                        className="bg-[#0D1B2A] hover:bg-[#E8711A] text-white font-accent text-[11px] uppercase tracking-widest font-black px-6 py-4 rounded-2xl transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 shrink-0 text-center relative z-10 flex items-center gap-2"
-                      >
-                        <MapPin className="w-4 h-4" /> Abrir no Mapa
-                      </a>
-                    )}
-                  </div>
-
-                  {/* FAQ Accordion */}
-                  {activeExperience.faqs && activeExperience.faqs.length > 0 && (
-                    <div className="space-y-4 pt-4 border-t border-zinc-200">
-                      <h3 className="font-serif text-lg font-bold text-[#0D1B2A] flex items-center gap-1.5">
-                        ❓ Dúvidas Comuns
-                      </h3>
-                      <div className="space-y-2">
-                        {activeExperience.faqs.map((faq, idx) => {
-                          const isOpen = openFaqIndex === idx;
+                  {/* Accommodations linking */}
+                  {activeExperience.relatedAccommodations && activeExperience.relatedAccommodations.length > 0 && accommodations.length > 0 && (
+                    <div className="pt-6 space-y-5 border-t border-zinc-100">
+                      <h3 className="font-serif text-xl font-bold text-[#0D1B2A]">Pousadas recomendadas</h3>
+                      <p className="text-sm font-sans text-zinc-500">Estas pousadas oferecem fácil acesso a este passeio, otimizando sua logística.</p>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {activeExperience.relatedAccommodations.map(accId => {
+                          const acc = accommodations.find(a => a.id === accId || a.slug === accId);
+                          if (!acc) return null;
                           return (
-                            <div key={idx} className="border border-zinc-200 bg-zinc-50/50 rounded-xl overflow-hidden">
-                              <button
-                                type="button"
-                                onClick={() => setOpenFaqIndex(isOpen ? null : idx)}
-                                className="w-full p-4 text-left font-serif text-xs sm:text-sm font-bold text-[#0D1B2A] hover:text-[#E8711A] transition-colors flex justify-between items-center bg-zinc-100/70"
-                              >
-                                <span>{faq.question}</span>
-                                <span className="text-[#E8711A]">{isOpen ? "▲" : "▼"}</span>
-                              </button>
-                              {isOpen && (
-                                <div className="p-4 text-xs sm:text-sm text-zinc-600 leading-relaxed border-t border-zinc-200 bg-white">
-                                  {faq.answer}
+                            <div 
+                              key={acc.id}
+                              onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (onNavigate) {
+                                      handleCloseExperienceDetail();
+                                  }
+                              }}
+                              className="group p-4 bg-zinc-50 border border-zinc-100 rounded-2xl flex gap-4 hover:border-[#E8711A]/50 hover:shadow-sm transition-all cursor-pointer items-center justify-between"
+                            >
+                              <div className="flex items-center gap-3 min-w-0">
+                                <div className="h-12 w-12 shrink-0 bg-white rounded-lg overflow-hidden border border-zinc-200 group-hover:scale-105 transition-transform">
+                                  <img 
+                                    src={(acc.mediaGallery && acc.mediaGallery.length > 0 ? acc.mediaGallery.filter(m => m.type === 'image')[0]?.url : acc.photos?.[0]) || "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=100&q=80"} 
+                                    alt={acc.name} 
+                                    className="h-full w-full object-cover" 
+                                  />
                                 </div>
-                              )}
+                                <div className="text-left min-w-0">
+                                  <h4 className="font-serif text-sm font-bold text-[#0D1B2A] line-clamp-1 group-hover:text-[#E8711A] transition-colors">{acc.name}</h4>
+                                  <span className="font-accent text-[9px] text-zinc-500 font-bold uppercase tracking-widest block mt-0.5">{acc.location}</span>
+                                </div>
+                              </div>
+                              <span className="text-sm text-zinc-300 font-bold pr-1 group-hover:text-[#E8711A] transition-colors">&rarr;</span>
                             </div>
                           );
                         })}
                       </div>
                     </div>
                   )}
-
-                  {/* Curated Recommendations */}
-                  {(activeExperience.recommendations && activeExperience.recommendations.length > 0) || (activeExperience.recommendedAccommodations && activeExperience.recommendedAccommodations.length > 0) ? (
-                    <div className="space-y-6 border-t border-zinc-200 pt-6 mt-6">
-                      <div className="flex items-center gap-2">
-                        <Sparkles className="w-4 h-4 text-[#E8711A]" />
-                        <h3 className="font-serif text-lg font-bold text-[#0D1B2A]">
-                          Inteligência Guida Trips recomenda:
-                        </h3>
-                      </div>
-                      
-                      {activeExperience.recommendations && activeExperience.recommendations.length > 0 && (
-                        <div className="space-y-3">
-                          <span className="font-accent text-[9px] text-zinc-400 font-bold uppercase tracking-widest block">Passeios Relacionados</span>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            {activeExperience.recommendations.map((recId) => {
-                              const recExp = experiences.find(e => e.id === recId);
-                              if (!recExp) return null;
-                              return (
-                                <div 
-                                  key={recId}
-                                  onClick={() => handleOpenExperienceDetail(recExp)}
-                                  className="group p-4 bg-white border border-zinc-200 rounded-2xl flex gap-4 hover:border-[#E8711A] hover:shadow-md transition-all cursor-pointer items-center justify-between"
-                                >
-                                  <div className="flex items-center gap-3 min-w-0">
-                                    <div className="h-14 w-14 shrink-0 bg-white rounded-xl overflow-hidden border border-zinc-200 shadow-inner group-hover:scale-105 transition-transform">
-                                      <img 
-                                        src={getMediaPhotos(recExp)[0]} 
-                                        alt={recExp.name} 
-                                        className="h-full w-full object-cover" 
-                                      />
-                                    </div>
-                                    <div className="text-left min-w-0">
-                                      <h4 className="font-serif text-sm font-bold text-[#0D1B2A] line-clamp-1 group-hover:text-[#E8711A] transition-colors">{recExp.name}</h4>
-                                      <span className="font-accent text-[9px] text-zinc-500 font-bold uppercase tracking-widest block mt-0.5">A partir de R$ {recExp.priceFrom}</span>
-                                    </div>
-                                  </div>
-                                  <span className="text-sm text-zinc-300 font-bold pr-1 group-hover:text-[#E8711A] transition-colors">&rarr;</span>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      )}
-
-                      {activeExperience.recommendedAccommodations && activeExperience.recommendedAccommodations.length > 0 && (
-                        <div className="space-y-3">
-                          <span className="font-accent text-[9px] text-zinc-400 font-bold uppercase tracking-widest block">Hospedagens na Região</span>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            {activeExperience.recommendedAccommodations.map((accId) => {
-                              const acc = accommodations.find(a => a.id === accId);
-                              if (!acc) return null;
-                              return (
-                                <div 
-                                  key={accId}
-                                  onClick={() => {
-                                      if (onChangeHotelId) {
-                                          onChangeHotelId(acc.id);
-                                          onNavigate?.("roteiro");
-                                          handleCloseExperienceDetail();
-                                      }
-                                  }}
-                                  className="group p-4 bg-white border border-zinc-200 rounded-2xl flex gap-4 hover:border-[#E8711A] hover:shadow-md transition-all cursor-pointer items-center justify-between"
-                                >
-                                  <div className="flex items-center gap-3 min-w-0">
-                                    <div className="h-14 w-14 shrink-0 bg-white rounded-xl overflow-hidden border border-zinc-200 shadow-inner group-hover:scale-105 transition-transform">
-                                      <img 
-                                        src={(acc.mediaGallery && acc.mediaGallery.length > 0 ? acc.mediaGallery.filter(m => m.type === 'image')[0]?.url : acc.photos?.[0]) || "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=100&q=80"} 
-                                        alt={acc.name} 
-                                        className="h-full w-full object-cover" 
-                                      />
-                                    </div>
-                                    <div className="text-left min-w-0">
-                                      <h4 className="font-serif text-sm font-bold text-[#0D1B2A] line-clamp-1 group-hover:text-[#E8711A] transition-colors">{acc.name}</h4>
-                                      <span className="font-accent text-[9px] text-zinc-500 font-bold uppercase tracking-widest block mt-0.5">{acc.location}</span>
-                                    </div>
-                                  </div>
-                                  <span className="text-sm text-zinc-300 font-bold pr-1 group-hover:text-[#E8711A] transition-colors">&rarr;</span>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  ) : null}
-
                 </div>
 
                 {/* RIGHT COLUMN: BOOKING CONTROLLER (5/12 cols) */}
