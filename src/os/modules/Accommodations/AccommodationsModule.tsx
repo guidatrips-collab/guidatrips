@@ -74,6 +74,7 @@ export function AccommodationsModule({ accommodations, destinations }: Accommoda
   const [netRate, setNetRate] = useState<number>(0);
   const [sellRate, setSellRate] = useState<number>(0);
   const [commission, setCommission] = useState<number>(0);
+    const [roomTypes, setRoomTypes] = useState<RoomType[]>([]);
   const [status, setStatus] = useState<'active' | 'paused' | 'draft'>('active');
   
   // Marketing / UI fields
@@ -115,6 +116,7 @@ export function AccommodationsModule({ accommodations, destinations }: Accommoda
     setSellRate(0);
     setCommission(0);
     setStatus('active');
+    setRoomTypes([]);
     setUiTag('CURADORIA EXCLUSIVA');
     setRating(5.0);
     setReviews(0);
@@ -151,6 +153,7 @@ export function AccommodationsModule({ accommodations, destinations }: Accommoda
     setSellRate(acc.sellRate || 0);
     setCommission(acc.commission || 0);
     setStatus(acc.status || 'active');
+    setRoomTypes(acc.roomTypes || []);
     
     setUiTag(acc.tag || 'CURADORIA EXCLUSIVA');
     setRating(acc.rating || 5.0);

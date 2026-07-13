@@ -412,6 +412,63 @@ export default function AccommodationDetailModal({
               </div>
             </div>
 
+            {/* Room Types */}
+            {accommodation.roomTypes && accommodation.roomTypes.length > 0 && (
+              <div className="border-t border-zinc-200 pt-8 pb-4 text-left">
+                <h4 className="font-serif text-lg font-bold text-zinc-800 mb-6 flex items-center gap-2">
+                  <span className="text-[#E8711A]">✦</span> Opções de Quartos
+                </h4>
+                <div className="grid grid-cols-1 gap-6">
+                  {accommodation.roomTypes.map(room => (
+                    <div key={room.id} className="bg-white border border-zinc-200 rounded-2xl overflow-hidden flex flex-col md:flex-row shadow-sm">
+                      {room.mediaGallery && room.mediaGallery.length > 0 && (
+                        <div className="w-full md:w-1/3 h-48 md:h-auto bg-zinc-100 relative">
+                          <img src={room.mediaGallery[0].url} alt={room.name} className="w-full h-full object-cover" />
+                        </div>
+                      )}
+                      <div className="p-6 flex-1 flex flex-col justify-between">
+                        <div>
+                          <div className="flex justify-between items-start mb-2">
+                            <h5 className="font-serif font-bold text-zinc-900 text-lg">{room.name}</h5>
+                            <span className="bg-zinc-100 text-zinc-600 text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider">
+                              Até {room.maxGuests} {room.maxGuests === 1 ? 'pessoa' : 'pessoas'}
+                            </span>
+                          </div>
+                          <p className="text-sm text-zinc-600 mb-4">{room.description}</p>
+                          <div className="flex flex-wrap gap-2 mb-4">
+                            {room.amenities.slice(0, 4).map(am => (
+                              <span key={am} className="text-[10px] bg-zinc-50 border border-zinc-200 px-2 py-1 rounded text-zinc-500">
+                                {am}
+                              </span>
+                            ))}
+                            {room.amenities.length > 4 && (
+                              <span className="text-[10px] bg-zinc-50 border border-zinc-200 px-2 py-1 rounded text-zinc-500">
+                                +{room.amenities.length - 4}
+                              </span>
+                            )}
+                          </div>
+                          
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs text-zinc-500 font-medium">
+                            {room.area && <div>• {room.area}m²</div>}
+                            {room.beds && <div className="truncate" title={room.beds}>• {room.beds}</div>}
+                            {room.hasAirConditioning && <div>• Ar Cond.</div>}
+                            {room.breakfastIncluded && <div>• Café Incluso</div>}
+                          </div>
+                        </div>
+                        <div className="mt-6 pt-4 border-t border-zinc-100 flex justify-between items-end">
+                          <div>
+                            <span className="text-[10px] text-zinc-400 uppercase tracking-wider block font-bold">A partir de</span>
+                            <span className="font-serif font-bold text-xl text-[#0D1B2A]">R$ {room.basePrice}</span>
+                            <span className="text-xs text-zinc-500">/noite</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Full-width Section: Policies and Rules */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 border-t border-zinc-200 pt-8 text-left">
               {/* Policies */}

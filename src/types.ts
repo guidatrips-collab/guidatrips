@@ -83,13 +83,50 @@ export interface Courtesy {
   active?: boolean;
 }
 
-export interface RoomCategory {
+
+export interface RoomPricingPeriod {
   id: string;
-  name: string; // e.g., Duplo, Triplo, Master
-  capacity: number;
-  sellRate: number; // Tarifa venda desta categoria (por diária)
-  calendar?: Record<string, { status: "open" | "closed" }>; // Disponibilidade
+  name: string; // e.g. "Baixa Temporada", "Carnaval", "01/01 até 15/01"
+  startDate: string; // YYYY-MM-DD
+  endDate: string; // YYYY-MM-DD
+  price: number; // nightly rate
 }
+
+export interface RoomCalendarData {
+  status: "available" | "unavailable" | "blocked" | "promo";
+  priceOverride?: number;
+  minNights?: number;
+  maxNights?: number;
+  checkInAllowed?: boolean;
+  checkOutAllowed?: boolean;
+}
+
+export interface RoomType {
+  id: string;
+  name: string;
+  description: string;
+  minGuests: number;
+  maxGuests: number;
+  photos: string[];
+  mediaGallery?: MediaItem[];
+  amenities: string[];
+  area?: number;
+  beds?: string;
+  view?: string;
+  hasBalcony?: boolean;
+  hasHydro?: boolean;
+  hasAirConditioning?: boolean;
+  hasKitchen?: boolean;
+  acceptsPet?: boolean;
+  breakfastIncluded?: boolean;
+  cancellationPolicy?: string;
+  observations?: string;
+
+  pricingPeriods: RoomPricingPeriod[];
+  calendar: Record<string, RoomCalendarData>;
+  basePrice: number;
+}
+
 
 export interface Accommodation {
   id: string;
@@ -109,7 +146,7 @@ export interface Accommodation {
   coordinates?: { lat: number; lng: number };
   netRate: number; // Tarifa custo base
   sellRate: number; // Tarifa venda base (Valor por diária)
-  roomCategories?: RoomCategory[];
+  roomTypes?: RoomType[];
   markup: number;
   commission: number;
   status: "active" | "paused" | "draft";

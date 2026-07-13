@@ -1,5 +1,4 @@
 import { Experience, Accommodation, BookingCartItem, getBrazilLocalDate, addDaysToBrazilDate } from "../types";
-
 export interface AdditionalService {
   id: string;
   type: "transfer" | "restaurante" | "seguro" | "aluguel_veiculo" | "outro";
@@ -143,27 +142,27 @@ export const PricingEngine = {
     let useCategoriesLogic = false;
     let bestCategoryRate = 0;
 
-    if (acc.roomCategories && acc.roomCategories.length > 0) {
+    if (acc.roomTypes && acc.roomTypes.length > 0) {
       useCategoriesLogic = true;
       let targetRoom = undefined;
       
       if (selectedRoomId) {
-        targetRoom = acc.roomCategories.find(rc => rc.id === selectedRoomId);
+        targetRoom = acc.roomTypes.find(rc => rc.id === selectedRoomId);
       }
       
       if (targetRoom) {
-        roomsNeeded = Math.ceil(totalGuestsCount / targetRoom.capacity) || 1;
-        bestCategoryRate = targetRoom.sellRate * roomsNeeded;
+        roomsNeeded = Math.ceil(totalGuestsCount / targetRoom.maxGuests) || 1;
+        bestCategoryRate = targetRoom.basePrice * roomsNeeded;
       } else {
-        const fittingRooms = acc.roomCategories.filter(rc => rc.capacity >= totalGuestsCount);
+        const fittingRooms = acc.roomTypes.filter(rc => rc.maxGuests >= totalGuestsCount);
         if (fittingRooms.length > 0) {
-          const bestRoom = fittingRooms.sort((a, b) => a.sellRate - b.sellRate)[0];
+          const bestRoom = fittingRooms.sort((a, b) => a.basePrice - b.basePrice)[0];
           roomsNeeded = 1;
-          bestCategoryRate = bestRoom.sellRate;
+          bestCategoryRate = bestRoom.basePrice;
         } else {
-          const bestRoom = [...acc.roomCategories].sort((a, b) => b.capacity - a.capacity)[0];
-          roomsNeeded = Math.ceil(totalGuestsCount / bestRoom.capacity) || 1;
-          bestCategoryRate = bestRoom.sellRate * roomsNeeded;
+          const bestRoom = [...acc.roomTypes].sort((a, b) => b.maxGuests - a.maxGuests)[0];
+          roomsNeeded = Math.ceil(totalGuestsCount / bestRoom.maxGuests) || 1;
+          bestCategoryRate = bestRoom.basePrice * roomsNeeded;
         }
       }
     } else {
@@ -207,7 +206,18 @@ export const PricingEngine = {
       let totalDayPrice = 0;
 
       if (useCategoriesLogic) {
-        totalDayPrice = bestCategoryRate; // Category rate overrides base price
+        // Find best period for this day if target room or best room exists
+        let currentDayRate = bestCategoryRate;
+        const activeRoom = targetRoom;
+        if (activeRoom && activeRoom.pricingPeriods && activeRoom.pricingPeriods.length > 0) {
+          const matchingPeriod = activeRoom.pricingPeriods.find(p => p.startDate <= currentDateStr && p.endDate >= currentDateStr);
+          if (matchingPeriod) {
+            currentDayRate = matchingPeriod.price * roomsNeeded;
+          } else {
+             currentDayRate = activeRoom.basePrice * roomsNeeded;
+          }
+        }
+        totalDayPrice = currentDayRate;
       } else if (chargeType === "per_room") {
         // Rooms cost + additional guests cost
         const roomsCost = basePrice * roomsNeeded;
