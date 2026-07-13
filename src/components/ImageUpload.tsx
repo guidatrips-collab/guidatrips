@@ -2,6 +2,11 @@ import React, { useState, useRef } from 'react';
 import { Upload, X, Loader2, Image as ImageIcon, Sparkles } from 'lucide-react';
 import { storageService } from '../firebase';
 
+import CropModal from './CropModal';
+import { getCroppedImg } from '../utils/cropImage';
+import { Crop } from 'lucide-react';
+
+
 // Helper to compress and convert image file to Base64
 const compressAndConvertToBase64 = (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {
@@ -94,49 +99,85 @@ export default function ImageUpload({
   const [isCompatibilityMode, setIsCompatibilityMode] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const [showCropModal, setShowCropModal] = useState(false);
+  const [imageToCrop, setImageToCrop] = useState<string | null>(null);
+
+
+  
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Basic validation
     if (!file.type.startsWith('image/')) {
       setError("Por favor, selecione um arquivo de imagem.");
       return;
     }
 
-    if (file.size > 5 * 1024 * 1024) { // 5MB limit
-      setError("A imagem deve ter menos de 5MB.");
+    if (file.size > 10 * 1024 * 1024) { 
+      setError("A imagem deve ter menos de 10MB.");
       return;
     }
 
     try {
+      // Create local URL for the selected file and open cropper
+      const objectUrl = URL.createObjectURL(file);
+      setImageToCrop(objectUrl);
+      setShowCropModal(true);
+    } catch (err) {
+      setError("Falha ao ler a imagem.");
+    } finally {
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  const handleCropComplete = async (croppedAreaPixels: any) => {
+    if (!imageToCrop) return;
+    
+    try {
       setIsUploading(true);
       setError(null);
+      setShowCropModal(false);
       setIsCompatibilityMode(false);
       
+      const croppedFile = await getCroppedImg(imageToCrop, croppedAreaPixels, 800, 800);
+      
+      if (!croppedFile) {
+        throw new Error("Failed to crop image");
+      }
+
+      // Cleanup object URL
+      if (imageToCrop.startsWith('blob:')) {
+        URL.revokeObjectURL(imageToCrop);
+      }
+      setImageToCrop(null);
+      
       try {
-        // Try uploading to Firebase Storage, but timeout after 2.5s if preflight/CORS hangs
-        const uploadPromise = storageService.uploadFile(file, folder);
+        const uploadPromise = storageService.uploadFile(croppedFile, folder);
         const url = await promiseWithTimeout(
           uploadPromise,
-          2500,
+          5000, // increased timeout due to file upload
           new Error("Upload timeout due to potential CORS or network issue")
         );
         onUploadComplete(url);
       } catch (storageErr) {
         console.warn("Firebase Storage upload failed or timed out (CORS/Permissions). Falling back to ultra-optimized Base64:", storageErr);
         
-        // Convert to highly optimized, lightweight base64 format which bypasses CORS completely
-        const compressedUrl = await compressAndConvertToBase64(file);
+        const compressedUrl = await compressAndConvertToBase64(croppedFile);
         setIsCompatibilityMode(true);
         onUploadComplete(compressedUrl);
       }
     } catch (err) {
-      console.error("Upload/Compression failed:", err);
-      setError("Falha ao processar a imagem. Tente outro arquivo.");
+      console.error("Crop/Upload failed:", err);
+      setError("Falha ao processar a imagem recortada. Tente novamente.");
     } finally {
       setIsUploading(false);
-      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  const handleEditCrop = () => {
+    if (currentImageUrl) {
+      setImageToCrop(currentImageUrl);
+      setShowCropModal(true);
     }
   };
 
@@ -184,6 +225,15 @@ export default function ImageUpload({
                 title="Trocar imagem"
               >
                 <Upload className="w-4 h-4" />
+              </button>
+              
+              <button
+                type="button"
+                onClick={handleEditCrop}
+                className="p-2 bg-blue-500/20 hover:bg-blue-500/40 rounded-full text-blue-400 transition-colors"
+                title="Editar Enquadramento"
+              >
+                <Crop className="w-4 h-4" />
               </button>
               <button
                 type="button"
@@ -238,6 +288,20 @@ export default function ImageUpload({
         <p className="text-[9px] text-emerald-400 font-medium uppercase tracking-widest mt-1 flex items-center gap-1">
           <Sparkles className="w-3 h-3 text-emerald-400 animate-pulse" /> Otimizado para web (modo de compatibilidade)
         </p>
+      )}
+
+      {showCropModal && imageToCrop && (
+        <CropModal
+          imageUrl={imageToCrop}
+          onClose={() => {
+            setShowCropModal(false);
+            if (imageToCrop.startsWith('blob:')) {
+              URL.revokeObjectURL(imageToCrop);
+            }
+            setImageToCrop(null);
+          }}
+          onCropComplete={handleCropComplete}
+        />
       )}
     </div>
   );
