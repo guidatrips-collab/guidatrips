@@ -107,9 +107,9 @@ export function RoomTypesEditor({ roomTypes, onChange }: RoomTypesEditorProps) {
 
 // Sub-component for editing a specific room
 function RoomEditorModal({ room, onSave, onClose }: { room: RoomType, onSave: (r: RoomType) => void, onClose: () => void }) {
-  const [formData, setFormData] = useState<RoomType>({ ...room });
+  const [formData, setFormData] = useState<RoomType>({ ...room, amenities: room.amenities || [] });
   const [activeTab, setActiveTab] = useState<'info' | 'pricing' | 'calendar'>('info');
-  const [amenitiesStr, setAmenitiesStr] = useState(room.amenities.join(', '));
+  const [amenitiesStr, setAmenitiesStr] = useState((room.amenities || []).join(', '));
   const [photoUrl, setPhotoUrl] = useState('');
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
