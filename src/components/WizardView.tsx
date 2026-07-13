@@ -16,7 +16,7 @@ import { PricingEngine } from "../lib/pricingEngine";
 import { firestoreService } from "../firebase";
 import { analytics } from "../lib/analytics";
 import { getValidAffiliateRef } from "../lib/utils";
-import ExperienceMediaGallery, { getExperiencePhotos } from "./ExperienceMediaGallery";
+import MediaGallery, { getMediaPhotos } from "./MediaGallery";
 import AccommodationDetailModal from "./AccommodationDetailModal";
 
 interface WizardViewProps {
@@ -313,7 +313,7 @@ export default function WizardView({
     tag: acc.typeTag,
     priceDisplay: acc.priceDisplay || `A partir de R$ ${acc.sellRate} / noite`,
     description: acc.description?.slice(0, 80) + "...",
-    img: acc.photos?.[0] || "https://images.unsplash.com/photo-1584132967334-10e028bd69f7",
+    img: (acc.mediaGallery && acc.mediaGallery.length > 0 ? acc.mediaGallery.filter(m => m.type === 'image')[0]?.url : acc.photos?.[0]) || "https://images.unsplash.com/photo-1584132967334-10e028bd69f7",
     whatsappMessage: `Olá, Guida Trips! Gostaria de consultar tarifas com benefícios na ${acc.name}.`
   }));
 
@@ -1932,7 +1932,7 @@ export default function WizardView({
                         >
                           {/* Left Column: Elegant Large Experience Image */}
                           <div className="md:col-span-5 relative aspect-[16/10] sm:aspect-[4/3] rounded-2xl overflow-hidden border border-zinc-200/50 bg-zinc-100 group select-none">
-                            <ExperienceMediaGallery experience={exp} className="w-full h-full" />
+                            <MediaGallery item={exp} className="w-full h-full" />
 
                             {exp.badge && (
                               <span className="absolute top-3 left-3 bg-[#E8711A] text-white text-[8px] font-black uppercase tracking-wider px-2.5 py-1 rounded-md shadow-sm z-10">
@@ -2536,12 +2536,12 @@ export default function WizardView({
               exit={{ opacity: 0, scale: 0.95 }}
               className="bg-white border border-zinc-200 rounded-3xl w-full max-w-2xl overflow-hidden shadow-2xl text-left text-[#0D1B2A]"
             >
-              <div className="relative h-48 bg-zinc-100">
-                <img src={getExperiencePhotos(selectedExpDetail)[0]} alt={selectedExpDetail.name} className="w-full h-full object-cover filter brightness-[0.7]" />
+              <div className="relative aspect-video w-full bg-zinc-100">
+                <MediaGallery item={selectedExpDetail} className="w-full h-full brightness-[0.7]" />
                 <button
                   type="button"
                   onClick={() => setSelectedExpDetail(null)}
-                  className="absolute top-4 right-4 p-2 bg-black/60 hover:bg-black text-white hover:text-[#E8711A] rounded-full shadow transition-all cursor-pointer"
+                  className="absolute top-4 right-4 p-2 bg-black/60 hover:bg-black text-white hover:text-[#E8711A] rounded-full shadow transition-all cursor-pointer z-20"
                 >
                   <X className="w-5 h-5" />
                 </button>

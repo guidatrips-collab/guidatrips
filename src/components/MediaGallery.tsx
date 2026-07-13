@@ -1,30 +1,36 @@
 import React, { useState, useRef, useEffect } from "react";
 import { ChevronLeft, ChevronRight, X, ZoomIn } from "lucide-react";
-import { Experience } from "../types";
+import { MediaItem } from "../types";
 import { motion, AnimatePresence } from "motion/react";
 import { createPortal } from "react-dom";
 
-interface ExperienceMediaGalleryProps {
-  experience: Experience;
+interface HasMedia {
+  name: string;
+  mediaGallery?: MediaItem[];
+  photos?: string[];
+}
+
+interface MediaGalleryProps {
+  item: HasMedia;
   className?: string;
   onClick?: () => void;
 }
 
-export function getExperiencePhotos(experience: Experience): string[] {
-  return getExperiencePhotosExtended(experience).map(p => p.url);
+export function getMediaPhotos(item: HasMedia): string[] {
+  return getMediaPhotosExtended(item).map(p => p.url);
 }
 
-export function getExperiencePhotosExtended(experience: Experience): {url: string, originalUrl?: string}[] {
+export function getMediaPhotosExtended(item: HasMedia): {url: string, originalUrl?: string}[] {
   let list: {url: string, originalUrl?: string}[] = [];
   
-  if (experience.mediaGallery && experience.mediaGallery.length > 0) {
-    list = experience.mediaGallery
-      .filter(item => item.type === "image")
-      .map(item => ({ url: item.url, originalUrl: item.originalUrl || item.url }));
+  if (item.mediaGallery && item.mediaGallery.length > 0) {
+    list = item.mediaGallery
+      .filter(m => m.type === "image")
+      .map(m => ({ url: m.url, originalUrl: m.originalUrl || m.url }));
   }
   
-  if (list.length === 0 && experience.photos && experience.photos.length > 0) {
-    list = experience.photos.filter(p => p && p.trim() !== "").map(url => ({ url, originalUrl: url }));
+  if (list.length === 0 && item.photos && item.photos.length > 0) {
+    list = item.photos.filter(p => p && p.trim() !== "").map(url => ({ url, originalUrl: url }));
   }
         
   if (list.length === 0) {
@@ -34,11 +40,11 @@ export function getExperiencePhotosExtended(experience: Experience): {url: strin
   return list;
 }
 
-export default function ExperienceMediaGallery({ experience, className = "", onClick }: ExperienceMediaGalleryProps) {
+export default function MediaGallery({ item, className = "", onClick }: MediaGalleryProps) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const touchStartX = useRef<number | null>(null);
-  const photos = getExperiencePhotosExtended(experience);
+  const photos = getMediaPhotosExtended(item);
   const hasMultiple = photos.length > 1;
 
   const nextPhoto = () => {
@@ -97,7 +103,7 @@ export default function ExperienceMediaGallery({ experience, className = "", onC
             <motion.img
               key={activeIndex}
               src={photos[activeIndex].url}
-              alt={`${experience.name} - Imagem ${activeIndex + 1}`}
+              alt={`${item.name} - Imagem ${activeIndex + 1}`}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -174,8 +180,11 @@ export default function ExperienceMediaGallery({ experience, className = "", onC
               {activeIndex + 1} / {photos.length}
             </span>
             <button 
-              onClick={() => setLightboxOpen(false)}
-              className="text-white/60 hover:text-white p-2 rounded-full hover:bg-white/10 transition-colors"
+              onClick={(e) => {
+                e.stopPropagation();
+                setLightboxOpen(false);
+              }}
+              className="text-white/60 hover:text-white p-2 rounded-full hover:bg-white/10 transition-colors cursor-pointer"
             >
               <X className="w-6 h-6" />
             </button>
@@ -185,12 +194,13 @@ export default function ExperienceMediaGallery({ experience, className = "", onC
             className="flex-1 relative flex items-center justify-center overflow-hidden"
             onTouchStart={handleTouchStart}
             onTouchEnd={handleTouchEnd}
+            onClick={() => setLightboxOpen(false)}
           >
             <AnimatePresence mode="wait">
               <motion.img
                 key={activeIndex}
                 src={photos[activeIndex].originalUrl}
-                alt={`${experience.name} - Imagem ${activeIndex + 1}`}
+                alt={`${item.name} - Imagem ${activeIndex + 1}`}
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
@@ -207,7 +217,7 @@ export default function ExperienceMediaGallery({ experience, className = "", onC
                     e.stopPropagation();
                     prevPhoto();
                   }}
-                  className="absolute left-4 top-1/2 -translate-y-1/2 p-3 bg-black/50 hover:bg-black/80 text-white rounded-full transition-colors hidden md:flex"
+                  className="absolute left-4 top-1/2 -translate-y-1/2 p-3 bg-black/50 hover:bg-black/80 text-white rounded-full transition-colors hidden md:flex cursor-pointer"
                 >
                   <ChevronLeft className="w-6 h-6" />
                 </button>
@@ -216,7 +226,7 @@ export default function ExperienceMediaGallery({ experience, className = "", onC
                     e.stopPropagation();
                     nextPhoto();
                   }}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 p-3 bg-black/50 hover:bg-black/80 text-white rounded-full transition-colors hidden md:flex"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 p-3 bg-black/50 hover:bg-black/80 text-white rounded-full transition-colors hidden md:flex cursor-pointer"
                 >
                   <ChevronRight className="w-6 h-6" />
                 </button>
@@ -225,13 +235,16 @@ export default function ExperienceMediaGallery({ experience, className = "", onC
           </div>
           
           {hasMultiple && (
-            <div className="p-4 overflow-x-auto">
+            <div className="p-4 overflow-x-auto bg-black/50 backdrop-blur-md">
               <div className="flex gap-2 justify-center min-w-max mx-auto">
                 {photos.map((photo, i) => (
                   <button
                     key={i}
-                    onClick={() => setActiveIndex(i)}
-                    className={`relative w-16 h-16 rounded-md overflow-hidden flex-shrink-0 transition-all ${
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setActiveIndex(i);
+                    }}
+                    className={`relative w-16 h-16 rounded-md overflow-hidden flex-shrink-0 transition-all cursor-pointer ${
                       i === activeIndex ? "ring-2 ring-[#E8711A] scale-110 z-10" : "opacity-50 hover:opacity-100"
                     }`}
                   >

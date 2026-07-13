@@ -57,9 +57,12 @@ export default function AccommodationDetailModal({
   if (!isOpen) return null;
 
   // Ensure photos exist
-  const photos = accommodation.photos && accommodation.photos.length > 0 
-    ? accommodation.photos 
-    : ["https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1200&q=80"];
+  const photosExtended = accommodation.mediaGallery && accommodation.mediaGallery.length > 0
+    ? accommodation.mediaGallery.filter(m => m.type === 'image').map(m => ({ url: m.url, originalUrl: m.originalUrl || m.url }))
+    : accommodation.photos && accommodation.photos.length > 0
+    ? accommodation.photos.map(p => ({ url: p, originalUrl: p }))
+    : [{ url: "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1200&q=80", originalUrl: "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1200&q=80" }];
+  const photos = photosExtended.map(p => p.url);
 
   // Mapping standard amenities to icons
   const getAmenityIcon = (name: string) => {
@@ -534,7 +537,7 @@ export default function AccommodationDetailModal({
               {/* Img Container */}
               <div className="w-full h-full max-h-[75vh] flex items-center justify-center overflow-hidden">
                 <img
-                  src={photos[activePhotoIdx]}
+                  src={photosExtended[activePhotoIdx].originalUrl}
                   alt={`${accommodation.name} - Imersiva`}
                   className="max-w-full max-h-full object-contain select-none"
                   referrerPolicy="no-referrer"

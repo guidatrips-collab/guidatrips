@@ -103,6 +103,7 @@ export interface Accommodation {
   amenities: string[];
   courtesies?: Courtesy[];
   photos: string[];
+  mediaGallery?: MediaItem[];
   location: string;
   address: string;
   coordinates?: { lat: number; lng: number };

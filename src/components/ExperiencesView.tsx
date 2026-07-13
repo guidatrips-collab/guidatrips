@@ -7,7 +7,7 @@ import {
 import { Experience, ExperienceCategory, BookingCartItem, GlobalSettings, ClientReservation, ClientUser, checkSchedulingConflict, getBrazilLocalDate, addDaysToBrazilDate, Destination, Accommodation } from "../types";
 import { motion, AnimatePresence } from "motion/react";
 import { firestoreService } from "../firebase";
-import ExperienceMediaGallery, { getExperiencePhotos } from "./ExperienceMediaGallery";
+import MediaGallery, { getMediaPhotos } from "./MediaGallery";
 
 interface ExperiencesViewProps {
   experiences: Experience[];
@@ -421,7 +421,7 @@ export default function ExperiencesView({
                 >
                   {/* Card Cover */}
                   <div className="relative aspect-square overflow-hidden select-none">
-                    <ExperienceMediaGallery experience={exp} className="w-full h-full" />
+                    <MediaGallery item={exp} className="w-full h-full" />
                     
                     {/* Badge */}
                     {exp.badge && (
@@ -534,27 +534,13 @@ export default function ExperiencesView({
                 <div className="lg:col-span-7 p-4 sm:p-8 space-y-8 border-b lg:border-b-0 lg:border-r border-zinc-200 text-left">
                   
                   {/* Hero image of the Tour */}
-                  <div className="relative h-64 sm:h-[400px] overflow-hidden rounded-2xl border border-zinc-200 select-none">
-                    <img 
-                      src={getExperiencePhotos(activeExperience)[0]} 
-                      alt={activeExperience.name} 
-                      className="w-full h-full object-cover"
-                    />
-                    <div className="absolute top-4 left-4 font-accent text-[9px] font-black tracking-widest text-[#E8711A] bg-white border border-[#E8711A]/20 shadow-md px-3 py-1 uppercase rounded-md">
+                  <div className="relative aspect-square sm:aspect-[4/3] w-full overflow-hidden rounded-2xl border border-zinc-200 select-none">
+                    <MediaGallery item={activeExperience} className="w-full h-full" />
+                    <div className="absolute top-4 left-4 font-accent text-[9px] font-black tracking-widest text-[#E8711A] bg-white border border-[#E8711A]/20 shadow-md px-3 py-1 uppercase rounded-md z-10 pointer-events-none">
                       ⛵ {activeExperience.category.toUpperCase()}
                     </div>
                   </div>
 
-                  {/* Gallery Thumbs */}
-                  {getExperiencePhotos(activeExperience).length > 1 && (
-                    <div className="grid grid-cols-4 gap-2">
-                      {getExperiencePhotos(activeExperience).slice(1).map((pic, i) => (
-                        <div key={i} className="h-16 sm:h-20 overflow-hidden rounded-xl border border-zinc-200 bg-zinc-50">
-                          <img src={pic} className="w-full h-full object-cover" alt="Galeria" />
-                        </div>
-                      ))}
-                    </div>
-                  )}
 
                   {/* Highlights */}
                   {activeExperience.highlights && activeExperience.highlights.length > 0 && (
@@ -819,7 +805,7 @@ export default function ExperiencesView({
                                   <div className="flex items-center gap-3 min-w-0">
                                     <div className="h-14 w-14 shrink-0 bg-white rounded-xl overflow-hidden border border-zinc-200 shadow-inner group-hover:scale-105 transition-transform">
                                       <img 
-                                        src={getExperiencePhotos(recExp)[0]} 
+                                        src={getMediaPhotos(recExp)[0]} 
                                         alt={recExp.name} 
                                         className="h-full w-full object-cover" 
                                       />
@@ -859,7 +845,7 @@ export default function ExperiencesView({
                                   <div className="flex items-center gap-3 min-w-0">
                                     <div className="h-14 w-14 shrink-0 bg-white rounded-xl overflow-hidden border border-zinc-200 shadow-inner group-hover:scale-105 transition-transform">
                                       <img 
-                                        src={acc.photos && acc.photos.length > 0 ? acc.photos[0] : "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=100&q=80"} 
+                                        src={(acc.mediaGallery && acc.mediaGallery.length > 0 ? acc.mediaGallery.filter(m => m.type === 'image')[0]?.url : acc.photos?.[0]) || "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=100&q=80"} 
                                         alt={acc.name} 
                                         className="h-full w-full object-cover" 
                                       />

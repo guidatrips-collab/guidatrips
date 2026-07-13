@@ -75,7 +75,7 @@ export default function HospedagensView({
     highlight: acc.highlight || "",
     amenities: acc.amenities,
     courtesies: acc.courtesies || [],
-    img: acc.photos?.[0] || "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80",
+    img: acc.mediaGallery && acc.mediaGallery.length > 0 ? acc.mediaGallery.filter(m => m.type === 'image')[0]?.url : acc.photos?.[0] || "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80",
     whatsappMessage: acc.whatsappMessage || `Olá, Guida Trips! Gostaria de consultar tarifas com benefícios exclusivos para a ${acc.name}.`
   }));
 

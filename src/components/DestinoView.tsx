@@ -595,7 +595,7 @@ export default function DestinoView({
                     className="aspect-square relative overflow-hidden group cursor-pointer"
                   >
                     <img 
-                      src={acc.photos?.[0] || "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80"} 
+                      src={(acc.mediaGallery && acc.mediaGallery.length > 0 ? acc.mediaGallery.filter(m => m.type === 'image')[0]?.url : acc.photos?.[0]) || "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80"} 
                       alt={acc.name} 
                       className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-300 filter brightness-95"
                       referrerPolicy="no-referrer"

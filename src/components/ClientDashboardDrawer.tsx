@@ -198,7 +198,7 @@ export default function ClientDashboardDrawer({
                               <div className="bg-white border border-zinc-200 rounded-2xl p-4 shadow-sm flex gap-4 overflow-hidden group hover:border-[#0D1B2A] transition-all">
                                 <div className="w-24 h-24 rounded-xl overflow-hidden shrink-0 bg-zinc-100">
                                   <img 
-                                    src={selectedHotel.photos?.[0] || "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=500&q=80"} 
+                                    src={(selectedHotel.mediaGallery && selectedHotel.mediaGallery.length > 0 ? selectedHotel.mediaGallery.filter(m => m.type === 'image')[0]?.url : selectedHotel.photos?.[0]) || "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=500&q=80"} 
                                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                                     alt="Hotel" 
                                   />
@@ -229,7 +229,7 @@ export default function ClientDashboardDrawer({
                                   <div className="bg-white border border-zinc-200 rounded-2xl p-4 shadow-sm flex gap-4 overflow-hidden group hover:border-[#E8711A] transition-all">
                                     <div className="w-24 h-24 rounded-xl overflow-hidden shrink-0 bg-zinc-100 relative">
                                       <img 
-                                        src={exp.photos?.[0] || "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=500&q=80"} 
+                                        src={(exp.mediaGallery && exp.mediaGallery.length > 0 ? exp.mediaGallery.filter(m => m.type === 'image')[0]?.url : exp.photos?.[0]) || "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=500&q=80"} 
                                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                                         alt={exp.name}
                                       />
