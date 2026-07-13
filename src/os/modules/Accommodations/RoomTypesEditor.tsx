@@ -168,8 +168,9 @@ function RoomEditorModal({ room, onSave, onClose }: { room: RoomType, onSave: (r
   };
 
   const submit = () => {
-    const amenities = amenitiesStr.split(',').map(s => s.trim()).filter(Boolean);
-    onSave({ ...formData, amenities });
+    const customAmenities = amenitiesStr.split(',').map(s => s.trim()).filter(Boolean);
+    const combinedAmenities = Array.from(new Set([...(formData.amenities || []), ...customAmenities]));
+    onSave({ ...formData, amenities: combinedAmenities });
   };
 
   return (
@@ -233,27 +234,312 @@ function RoomEditorModal({ room, onSave, onClose }: { room: RoomType, onSave: (r
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-medium text-white/60">Comodidades (separadas por vírgula)</label>
-                <input type="text" value={amenitiesStr} onChange={(e) => setAmenitiesStr(e.target.value)} className="w-full bg-black/50 border border-white/10 rounded-lg p-3 text-white focus:border-[#E8711A] outline-none" placeholder="Ar condicionado, TV 32, Frigobar..." />
+                <label className="text-xs font-medium text-white/60">Outras Comodidades (separadas por vírgula)</label>
+                <input type="text" value={amenitiesStr} onChange={(e) => setAmenitiesStr(e.target.value)} className="w-full bg-black/50 border border-white/10 rounded-lg p-3 text-white focus:border-[#E8711A] outline-none" placeholder="Itens não listados abaixo..." />
               </div>
 
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div>
+                <label className="text-xs font-medium text-white/60 mb-2 block">Comodidades Populares (Padrão Booking)</label>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" name="hasAirConditioning" checked={formData.hasAirConditioning} onChange={handleChange} className="w-4 h-4 rounded border-white/10 bg-black/50 text-[#E8711A] focus:ring-[#E8711A]" />
+                    <span className="text-sm text-white/80">Ar Condicionado</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" name="hasBalcony" checked={formData.hasBalcony} onChange={handleChange} className="w-4 h-4 rounded border-white/10 bg-black/50 text-[#E8711A] focus:ring-[#E8711A]" />
+                    <span className="text-sm text-white/80">Varanda</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" name="hasHydro" checked={formData.hasHydro} onChange={handleChange} className="w-4 h-4 rounded border-white/10 bg-black/50 text-[#E8711A] focus:ring-[#E8711A]" />
+                    <span className="text-sm text-white/80">Hidromassagem</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" name="breakfastIncluded" checked={formData.breakfastIncluded} onChange={handleChange} className="w-4 h-4 rounded border-white/10 bg-black/50 text-[#E8711A] focus:ring-[#E8711A]" />
+                    <span className="text-sm text-white/80">Café Incluso</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" name="acceptsPet" checked={formData.acceptsPet} onChange={handleChange} className="w-4 h-4 rounded border-white/10 bg-black/50 text-[#E8711A] focus:ring-[#E8711A]" />
+                    <span className="text-sm text-white/80">Aceita Pets</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" name="hasKitchen" checked={formData.hasKitchen} onChange={handleChange} className="w-4 h-4 rounded border-white/10 bg-black/50 text-[#E8711A] focus:ring-[#E8711A]" />
+                    <span className="text-sm text-white/80">Cozinha Completa</span>
+                  </label>
+                  
                 <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" name="hasAirConditioning" checked={formData.hasAirConditioning} onChange={handleChange} className="w-4 h-4 rounded border-white/10 bg-black/50 text-[#E8711A] focus:ring-[#E8711A]" />
-                  <span className="text-sm text-white/80">Ar Condicionado</span>
+                  <input type="checkbox" checked={formData.amenities.includes('TV de tela plana')} onChange={(e) => {
+                     const checked = e.target.checked;
+                     setFormData(prev => ({
+                        ...prev,
+                        amenities: checked 
+                           ? [...prev.amenities, 'TV de tela plana'] 
+                           : prev.amenities.filter(a => a !== 'TV de tela plana')
+                     }));
+                  }} className="w-4 h-4 rounded border-white/10 bg-black/50 text-[#E8711A] focus:ring-[#E8711A]" />
+                  <span className="text-sm text-white/80">TV de tela plana</span>
                 </label>
+
                 <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" name="hasBalcony" checked={formData.hasBalcony} onChange={handleChange} className="w-4 h-4 rounded border-white/10 bg-black/50 text-[#E8711A] focus:ring-[#E8711A]" />
-                  <span className="text-sm text-white/80">Varanda</span>
+                  <input type="checkbox" checked={formData.amenities.includes('Banheiro privativo')} onChange={(e) => {
+                     const checked = e.target.checked;
+                     setFormData(prev => ({
+                        ...prev,
+                        amenities: checked 
+                           ? [...prev.amenities, 'Banheiro privativo'] 
+                           : prev.amenities.filter(a => a !== 'Banheiro privativo')
+                     }));
+                  }} className="w-4 h-4 rounded border-white/10 bg-black/50 text-[#E8711A] focus:ring-[#E8711A]" />
+                  <span className="text-sm text-white/80">Banheiro privativo</span>
                 </label>
+
                 <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" name="hasHydro" checked={formData.hasHydro} onChange={handleChange} className="w-4 h-4 rounded border-white/10 bg-black/50 text-[#E8711A] focus:ring-[#E8711A]" />
-                  <span className="text-sm text-white/80">Hidromassagem</span>
+                  <input type="checkbox" checked={formData.amenities.includes('Frigobar')} onChange={(e) => {
+                     const checked = e.target.checked;
+                     setFormData(prev => ({
+                        ...prev,
+                        amenities: checked 
+                           ? [...prev.amenities, 'Frigobar'] 
+                           : prev.amenities.filter(a => a !== 'Frigobar')
+                     }));
+                  }} className="w-4 h-4 rounded border-white/10 bg-black/50 text-[#E8711A] focus:ring-[#E8711A]" />
+                  <span className="text-sm text-white/80">Frigobar</span>
                 </label>
+
                 <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" name="breakfastIncluded" checked={formData.breakfastIncluded} onChange={handleChange} className="w-4 h-4 rounded border-white/10 bg-black/50 text-[#E8711A] focus:ring-[#E8711A]" />
-                  <span className="text-sm text-white/80">Café Incluso</span>
+                  <input type="checkbox" checked={formData.amenities.includes('Mesa de trabalho')} onChange={(e) => {
+                     const checked = e.target.checked;
+                     setFormData(prev => ({
+                        ...prev,
+                        amenities: checked 
+                           ? [...prev.amenities, 'Mesa de trabalho'] 
+                           : prev.amenities.filter(a => a !== 'Mesa de trabalho')
+                     }));
+                  }} className="w-4 h-4 rounded border-white/10 bg-black/50 text-[#E8711A] focus:ring-[#E8711A]" />
+                  <span className="text-sm text-white/80">Mesa de trabalho</span>
                 </label>
+
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" checked={formData.amenities.includes('Cofre')} onChange={(e) => {
+                     const checked = e.target.checked;
+                     setFormData(prev => ({
+                        ...prev,
+                        amenities: checked 
+                           ? [...prev.amenities, 'Cofre'] 
+                           : prev.amenities.filter(a => a !== 'Cofre')
+                     }));
+                  }} className="w-4 h-4 rounded border-white/10 bg-black/50 text-[#E8711A] focus:ring-[#E8711A]" />
+                  <span className="text-sm text-white/80">Cofre</span>
+                </label>
+
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" checked={formData.amenities.includes('Secador de cabelo')} onChange={(e) => {
+                     const checked = e.target.checked;
+                     setFormData(prev => ({
+                        ...prev,
+                        amenities: checked 
+                           ? [...prev.amenities, 'Secador de cabelo'] 
+                           : prev.amenities.filter(a => a !== 'Secador de cabelo')
+                     }));
+                  }} className="w-4 h-4 rounded border-white/10 bg-black/50 text-[#E8711A] focus:ring-[#E8711A]" />
+                  <span className="text-sm text-white/80">Secador de cabelo</span>
+                </label>
+
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" checked={formData.amenities.includes('Wi-Fi Grátis')} onChange={(e) => {
+                     const checked = e.target.checked;
+                     setFormData(prev => ({
+                        ...prev,
+                        amenities: checked 
+                           ? [...prev.amenities, 'Wi-Fi Grátis'] 
+                           : prev.amenities.filter(a => a !== 'Wi-Fi Grátis')
+                     }));
+                  }} className="w-4 h-4 rounded border-white/10 bg-black/50 text-[#E8711A] focus:ring-[#E8711A]" />
+                  <span className="text-sm text-white/80">Wi-Fi Grátis</span>
+                </label>
+
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" checked={formData.amenities.includes('Toalhas')} onChange={(e) => {
+                     const checked = e.target.checked;
+                     setFormData(prev => ({
+                        ...prev,
+                        amenities: checked 
+                           ? [...prev.amenities, 'Toalhas'] 
+                           : prev.amenities.filter(a => a !== 'Toalhas')
+                     }));
+                  }} className="w-4 h-4 rounded border-white/10 bg-black/50 text-[#E8711A] focus:ring-[#E8711A]" />
+                  <span className="text-sm text-white/80">Toalhas</span>
+                </label>
+
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" checked={formData.amenities.includes('Roupa de cama')} onChange={(e) => {
+                     const checked = e.target.checked;
+                     setFormData(prev => ({
+                        ...prev,
+                        amenities: checked 
+                           ? [...prev.amenities, 'Roupa de cama'] 
+                           : prev.amenities.filter(a => a !== 'Roupa de cama')
+                     }));
+                  }} className="w-4 h-4 rounded border-white/10 bg-black/50 text-[#E8711A] focus:ring-[#E8711A]" />
+                  <span className="text-sm text-white/80">Roupa de cama</span>
+                </label>
+
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" checked={formData.amenities.includes('Isolamento acústico')} onChange={(e) => {
+                     const checked = e.target.checked;
+                     setFormData(prev => ({
+                        ...prev,
+                        amenities: checked 
+                           ? [...prev.amenities, 'Isolamento acústico'] 
+                           : prev.amenities.filter(a => a !== 'Isolamento acústico')
+                     }));
+                  }} className="w-4 h-4 rounded border-white/10 bg-black/50 text-[#E8711A] focus:ring-[#E8711A]" />
+                  <span className="text-sm text-white/80">Isolamento acústico</span>
+                </label>
+
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" checked={formData.amenities.includes('Chaleira/cafeteira')} onChange={(e) => {
+                     const checked = e.target.checked;
+                     setFormData(prev => ({
+                        ...prev,
+                        amenities: checked 
+                           ? [...prev.amenities, 'Chaleira/cafeteira'] 
+                           : prev.amenities.filter(a => a !== 'Chaleira/cafeteira')
+                     }));
+                  }} className="w-4 h-4 rounded border-white/10 bg-black/50 text-[#E8711A] focus:ring-[#E8711A]" />
+                  <span className="text-sm text-white/80">Chaleira/cafeteira</span>
+                </label>
+
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" checked={formData.amenities.includes('Aquecimento')} onChange={(e) => {
+                     const checked = e.target.checked;
+                     setFormData(prev => ({
+                        ...prev,
+                        amenities: checked 
+                           ? [...prev.amenities, 'Aquecimento'] 
+                           : prev.amenities.filter(a => a !== 'Aquecimento')
+                     }));
+                  }} className="w-4 h-4 rounded border-white/10 bg-black/50 text-[#E8711A] focus:ring-[#E8711A]" />
+                  <span className="text-sm text-white/80">Aquecimento</span>
+                </label>
+
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" checked={formData.amenities.includes('Guarda-roupa')} onChange={(e) => {
+                     const checked = e.target.checked;
+                     setFormData(prev => ({
+                        ...prev,
+                        amenities: checked 
+                           ? [...prev.amenities, 'Guarda-roupa'] 
+                           : prev.amenities.filter(a => a !== 'Guarda-roupa')
+                     }));
+                  }} className="w-4 h-4 rounded border-white/10 bg-black/50 text-[#E8711A] focus:ring-[#E8711A]" />
+                  <span className="text-sm text-white/80">Guarda-roupa</span>
+                </label>
+
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" checked={formData.amenities.includes('Cozinha compacta')} onChange={(e) => {
+                     const checked = e.target.checked;
+                     setFormData(prev => ({
+                        ...prev,
+                        amenities: checked 
+                           ? [...prev.amenities, 'Cozinha compacta'] 
+                           : prev.amenities.filter(a => a !== 'Cozinha compacta')
+                     }));
+                  }} className="w-4 h-4 rounded border-white/10 bg-black/50 text-[#E8711A] focus:ring-[#E8711A]" />
+                  <span className="text-sm text-white/80">Cozinha compacta</span>
+                </label>
+
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" checked={formData.amenities.includes('Área de Estar')} onChange={(e) => {
+                     const checked = e.target.checked;
+                     setFormData(prev => ({
+                        ...prev,
+                        amenities: checked 
+                           ? [...prev.amenities, 'Área de Estar'] 
+                           : prev.amenities.filter(a => a !== 'Área de Estar')
+                     }));
+                  }} className="w-4 h-4 rounded border-white/10 bg-black/50 text-[#E8711A] focus:ring-[#E8711A]" />
+                  <span className="text-sm text-white/80">Área de Estar</span>
+                </label>
+
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" checked={formData.amenities.includes('Acessibilidade')} onChange={(e) => {
+                     const checked = e.target.checked;
+                     setFormData(prev => ({
+                        ...prev,
+                        amenities: checked 
+                           ? [...prev.amenities, 'Acessibilidade'] 
+                           : prev.amenities.filter(a => a !== 'Acessibilidade')
+                     }));
+                  }} className="w-4 h-4 rounded border-white/10 bg-black/50 text-[#E8711A] focus:ring-[#E8711A]" />
+                  <span className="text-sm text-white/80">Acessibilidade</span>
+                </label>
+
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" checked={formData.amenities.includes('Micro-ondas')} onChange={(e) => {
+                     const checked = e.target.checked;
+                     setFormData(prev => ({
+                        ...prev,
+                        amenities: checked 
+                           ? [...prev.amenities, 'Micro-ondas'] 
+                           : prev.amenities.filter(a => a !== 'Micro-ondas')
+                     }));
+                  }} className="w-4 h-4 rounded border-white/10 bg-black/50 text-[#E8711A] focus:ring-[#E8711A]" />
+                  <span className="text-sm text-white/80">Micro-ondas</span>
+                </label>
+
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" checked={formData.amenities.includes('Utensílios de cozinha')} onChange={(e) => {
+                     const checked = e.target.checked;
+                     setFormData(prev => ({
+                        ...prev,
+                        amenities: checked 
+                           ? [...prev.amenities, 'Utensílios de cozinha'] 
+                           : prev.amenities.filter(a => a !== 'Utensílios de cozinha')
+                     }));
+                  }} className="w-4 h-4 rounded border-white/10 bg-black/50 text-[#E8711A] focus:ring-[#E8711A]" />
+                  <span className="text-sm text-white/80">Utensílios de cozinha</span>
+                </label>
+
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" checked={formData.amenities.includes('Ferro de passar')} onChange={(e) => {
+                     const checked = e.target.checked;
+                     setFormData(prev => ({
+                        ...prev,
+                        amenities: checked 
+                           ? [...prev.amenities, 'Ferro de passar'] 
+                           : prev.amenities.filter(a => a !== 'Ferro de passar')
+                     }));
+                  }} className="w-4 h-4 rounded border-white/10 bg-black/50 text-[#E8711A] focus:ring-[#E8711A]" />
+                  <span className="text-sm text-white/80">Ferro de passar</span>
+                </label>
+
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" checked={formData.amenities.includes('Arara para roupas')} onChange={(e) => {
+                     const checked = e.target.checked;
+                     setFormData(prev => ({
+                        ...prev,
+                        amenities: checked 
+                           ? [...prev.amenities, 'Arara para roupas'] 
+                           : prev.amenities.filter(a => a !== 'Arara para roupas')
+                     }));
+                  }} className="w-4 h-4 rounded border-white/10 bg-black/50 text-[#E8711A] focus:ring-[#E8711A]" />
+                  <span className="text-sm text-white/80">Arara para roupas</span>
+                </label>
+
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" checked={formData.amenities.includes('Sofá')} onChange={(e) => {
+                     const checked = e.target.checked;
+                     setFormData(prev => ({
+                        ...prev,
+                        amenities: checked 
+                           ? [...prev.amenities, 'Sofá'] 
+                           : prev.amenities.filter(a => a !== 'Sofá')
+                     }));
+                  }} className="w-4 h-4 rounded border-white/10 bg-black/50 text-[#E8711A] focus:ring-[#E8711A]" />
+                  <span className="text-sm text-white/80">Sofá</span>
+                </label>
+
+                </div>
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

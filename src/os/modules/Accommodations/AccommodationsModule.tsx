@@ -138,7 +138,8 @@ export function AccommodationsModule({ accommodations, destinations }: Accommoda
     setDestinationId(acc.destinationId || '');
     setPartnerId(acc.partnerId || '');
     setDescription(acc.description || '');
-    setAmenitiesStr(acc.amenities?.join(', ') || '');
+    setAmenitiesStr('');
+    setPropertyAmenities(acc.amenities || []);
     setCourtesies(acc.courtesies || []);
     setPhotos(acc.photos || []);
     if (acc.mediaGallery && acc.mediaGallery.length > 0) {
@@ -175,8 +176,9 @@ export function AccommodationsModule({ accommodations, destinations }: Accommoda
     if (highlight) {
       desc += `O grande destaque fica por conta de: ${highlight}. `;
     }
-    if (amenitiesStr) {
-      desc += `A estrutura conta com diversas facilidades para garantir seu conforto, como: ${amenitiesStr}. `;
+    const allAmenities = Array.from(new Set([...propertyAmenities, ...amenitiesStr.split(',').map(s => s.trim()).filter(Boolean)])).join(', ');
+    if (allAmenities) {
+      desc += `A estrutura conta com diversas facilidades para garantir seu conforto, como: ${allAmenities}. `;
     }
     if (roomTypes && roomTypes.length > 0) {
       desc += `\n\nNossas opções de acomodação incluem:\n`;
@@ -199,7 +201,8 @@ export function AccommodationsModule({ accommodations, destinations }: Accommoda
     setLoading(true);
 
     const markup = sellRate > 0 && netRate > 0 ? ((sellRate - netRate) / netRate) * 100 : 20;
-    const amenities = amenitiesStr.split(',').map(s => s.trim()).filter(Boolean);
+    const customAmenities = amenitiesStr.split(',').map(s => s.trim()).filter(Boolean);
+    const amenities = Array.from(new Set([...propertyAmenities, ...customAmenities]));
     const policies = policiesStr.split('\n').map(s => s.trim()).filter(Boolean);
     const restrictions = restrictionsStr.split('\n').map(s => s.trim()).filter(Boolean);
     const generatedSlug = slug || name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
@@ -669,8 +672,133 @@ export function AccommodationsModule({ accommodations, destinations }: Accommoda
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-zinc-400 mb-1">Características Inclusas (Infraestrutura/Atributos - Separe por vírgula)</label>
-                  <input type="text" value={amenitiesStr} onChange={e => setAmenitiesStr(e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 text-zinc-100 px-4 py-2 rounded-lg focus:border-blue-500 focus:outline-none" placeholder="Ex: Wi-Fi gratuito, Piscina de borda infinita, Ar-condicionado, Estacionamento" />
+                  <label className="block text-xs font-medium text-zinc-400 mb-2">Comodidades Populares (Padrão Booking)</label>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                    
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={propertyAmenities.includes('Piscina')} onChange={(e) => {
+                       const checked = e.target.checked;
+                       setPropertyAmenities(prev => checked ? [...prev, 'Piscina'] : prev.filter(a => a !== 'Piscina'));
+                    }} className="w-4 h-4 rounded border-zinc-800 bg-zinc-950 text-blue-600 focus:ring-blue-600" />
+                    <span className="text-sm text-zinc-300">Piscina</span>
+                  </label>
+
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={propertyAmenities.includes('Wi-Fi Grátis')} onChange={(e) => {
+                       const checked = e.target.checked;
+                       setPropertyAmenities(prev => checked ? [...prev, 'Wi-Fi Grátis'] : prev.filter(a => a !== 'Wi-Fi Grátis'));
+                    }} className="w-4 h-4 rounded border-zinc-800 bg-zinc-950 text-blue-600 focus:ring-blue-600" />
+                    <span className="text-sm text-zinc-300">Wi-Fi Grátis</span>
+                  </label>
+
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={propertyAmenities.includes('Estacionamento Gratuito')} onChange={(e) => {
+                       const checked = e.target.checked;
+                       setPropertyAmenities(prev => checked ? [...prev, 'Estacionamento Gratuito'] : prev.filter(a => a !== 'Estacionamento Gratuito'));
+                    }} className="w-4 h-4 rounded border-zinc-800 bg-zinc-950 text-blue-600 focus:ring-blue-600" />
+                    <span className="text-sm text-zinc-300">Estacionamento Gratuito</span>
+                  </label>
+
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={propertyAmenities.includes('Spa / Centro de bem-estar')} onChange={(e) => {
+                       const checked = e.target.checked;
+                       setPropertyAmenities(prev => checked ? [...prev, 'Spa / Centro de bem-estar'] : prev.filter(a => a !== 'Spa / Centro de bem-estar'));
+                    }} className="w-4 h-4 rounded border-zinc-800 bg-zinc-950 text-blue-600 focus:ring-blue-600" />
+                    <span className="text-sm text-zinc-300">Spa / Centro de bem-estar</span>
+                  </label>
+
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={propertyAmenities.includes('Academia')} onChange={(e) => {
+                       const checked = e.target.checked;
+                       setPropertyAmenities(prev => checked ? [...prev, 'Academia'] : prev.filter(a => a !== 'Academia'));
+                    }} className="w-4 h-4 rounded border-zinc-800 bg-zinc-950 text-blue-600 focus:ring-blue-600" />
+                    <span className="text-sm text-zinc-300">Academia</span>
+                  </label>
+
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={propertyAmenities.includes('Recepção 24h')} onChange={(e) => {
+                       const checked = e.target.checked;
+                       setPropertyAmenities(prev => checked ? [...prev, 'Recepção 24h'] : prev.filter(a => a !== 'Recepção 24h'));
+                    }} className="w-4 h-4 rounded border-zinc-800 bg-zinc-950 text-blue-600 focus:ring-blue-600" />
+                    <span className="text-sm text-zinc-300">Recepção 24h</span>
+                  </label>
+
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={propertyAmenities.includes('Restaurante')} onChange={(e) => {
+                       const checked = e.target.checked;
+                       setPropertyAmenities(prev => checked ? [...prev, 'Restaurante'] : prev.filter(a => a !== 'Restaurante'));
+                    }} className="w-4 h-4 rounded border-zinc-800 bg-zinc-950 text-blue-600 focus:ring-blue-600" />
+                    <span className="text-sm text-zinc-300">Restaurante</span>
+                  </label>
+
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={propertyAmenities.includes('Serviço de quarto')} onChange={(e) => {
+                       const checked = e.target.checked;
+                       setPropertyAmenities(prev => checked ? [...prev, 'Serviço de quarto'] : prev.filter(a => a !== 'Serviço de quarto'));
+                    }} className="w-4 h-4 rounded border-zinc-800 bg-zinc-950 text-blue-600 focus:ring-blue-600" />
+                    <span className="text-sm text-zinc-300">Serviço de quarto</span>
+                  </label>
+
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={propertyAmenities.includes('Bar')} onChange={(e) => {
+                       const checked = e.target.checked;
+                       setPropertyAmenities(prev => checked ? [...prev, 'Bar'] : prev.filter(a => a !== 'Bar'));
+                    }} className="w-4 h-4 rounded border-zinc-800 bg-zinc-950 text-blue-600 focus:ring-blue-600" />
+                    <span className="text-sm text-zinc-300">Bar</span>
+                  </label>
+
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={propertyAmenities.includes('Transfer (aeroporto)')} onChange={(e) => {
+                       const checked = e.target.checked;
+                       setPropertyAmenities(prev => checked ? [...prev, 'Transfer (aeroporto)'] : prev.filter(a => a !== 'Transfer (aeroporto)'));
+                    }} className="w-4 h-4 rounded border-zinc-800 bg-zinc-950 text-blue-600 focus:ring-blue-600" />
+                    <span className="text-sm text-zinc-300">Transfer (aeroporto)</span>
+                  </label>
+
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={propertyAmenities.includes('Quartos para famílias')} onChange={(e) => {
+                       const checked = e.target.checked;
+                       setPropertyAmenities(prev => checked ? [...prev, 'Quartos para famílias'] : prev.filter(a => a !== 'Quartos para famílias'));
+                    }} className="w-4 h-4 rounded border-zinc-800 bg-zinc-950 text-blue-600 focus:ring-blue-600" />
+                    <span className="text-sm text-zinc-300">Quartos para famílias</span>
+                  </label>
+
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={propertyAmenities.includes('Aceita pets')} onChange={(e) => {
+                       const checked = e.target.checked;
+                       setPropertyAmenities(prev => checked ? [...prev, 'Aceita pets'] : prev.filter(a => a !== 'Aceita pets'));
+                    }} className="w-4 h-4 rounded border-zinc-800 bg-zinc-950 text-blue-600 focus:ring-blue-600" />
+                    <span className="text-sm text-zinc-300">Aceita pets</span>
+                  </label>
+
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={propertyAmenities.includes('Beira-mar')} onChange={(e) => {
+                       const checked = e.target.checked;
+                       setPropertyAmenities(prev => checked ? [...prev, 'Beira-mar'] : prev.filter(a => a !== 'Beira-mar'));
+                    }} className="w-4 h-4 rounded border-zinc-800 bg-zinc-950 text-blue-600 focus:ring-blue-600" />
+                    <span className="text-sm text-zinc-300">Beira-mar</span>
+                  </label>
+
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={propertyAmenities.includes('Piscina coberta')} onChange={(e) => {
+                       const checked = e.target.checked;
+                       setPropertyAmenities(prev => checked ? [...prev, 'Piscina coberta'] : prev.filter(a => a !== 'Piscina coberta'));
+                    }} className="w-4 h-4 rounded border-zinc-800 bg-zinc-950 text-blue-600 focus:ring-blue-600" />
+                    <span className="text-sm text-zinc-300">Piscina coberta</span>
+                  </label>
+
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={propertyAmenities.includes('Café da manhã fantástico')} onChange={(e) => {
+                       const checked = e.target.checked;
+                       setPropertyAmenities(prev => checked ? [...prev, 'Café da manhã fantástico'] : prev.filter(a => a !== 'Café da manhã fantástico'));
+                    }} className="w-4 h-4 rounded border-zinc-800 bg-zinc-950 text-blue-600 focus:ring-blue-600" />
+                    <span className="text-sm text-zinc-300">Café da manhã fantástico</span>
+                  </label>
+
+                  </div>
+                  
+                  <label className="block text-xs font-medium text-zinc-400 mb-1">Outras Características Inclusas (Separe por vírgula)</label>
+                  <input type="text" value={amenitiesStr} onChange={e => setAmenitiesStr(e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 text-zinc-100 px-4 py-2 rounded-lg focus:border-blue-500 focus:outline-none" placeholder="Itens não listados acima..." />
                 </div>
 
                 <div className="border border-zinc-800/80 rounded p-4 bg-zinc-950/50 space-y-4">
