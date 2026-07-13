@@ -132,7 +132,7 @@ export interface Accommodation {
   id: string;
   name: string;
   slug: string;
-  category: "hotel" | "pousada" | "hostel" | "casa" | "apartamento";
+  category: string;
   typeTag?: string; // e.g. "boutique", "pe-na-areia", "vista" - used for filtering
   destinationId: string;
   partnerId: string;

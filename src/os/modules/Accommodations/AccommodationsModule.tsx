@@ -167,6 +167,33 @@ export function AccommodationsModule({ accommodations, destinations }: Accommoda
     setActiveTab('create');
   };
 
+  const generateDescription = () => {
+    let desc = `${name || 'Esta acomodação'} é uma excelente opção de ${category} em ${location || 'nossa região'}. `;
+    if (typeTag) {
+      desc += `Com um perfil ${typeTag.replace('-', ' ')}, o ambiente é ideal para sua estadia. `;
+    }
+    if (highlight) {
+      desc += `O grande destaque fica por conta de: ${highlight}. `;
+    }
+    if (amenitiesStr) {
+      desc += `A estrutura conta com diversas facilidades para garantir seu conforto, como: ${amenitiesStr}. `;
+    }
+    if (roomTypes && roomTypes.length > 0) {
+      desc += `\n\nNossas opções de acomodação incluem:\n`;
+      roomTypes.forEach(rt => {
+        desc += `- ${rt.name} (até ${rt.maxGuests} hóspedes): ${rt.description || 'Quarto confortável e aconchegante'}.\n`;
+      });
+    }
+    if (courtesies && courtesies.length > 0) {
+      const activeCourtesies = courtesies.filter(c => c.active).map(c => c.name).join(', ');
+      if (activeCourtesies) {
+         desc += `\n\nAproveite também nossas cortesias exclusivas: ${activeCourtesies}. `;
+      }
+    }
+    
+    setDescription(desc.trim());
+  };
+
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -552,11 +579,52 @@ export function AccommodationsModule({ accommodations, destinations }: Accommoda
                   <div>
                     <label className="block text-xs font-medium text-zinc-400 mb-1">Categoria</label>
                     <select value={category} onChange={e => setCategory(e.target.value as any)} className="w-full bg-zinc-950 border border-zinc-800 text-zinc-100 px-4 py-2 rounded-lg focus:border-blue-500 focus:outline-none">
-                      <option value="pousada">🏡 Pousada</option>
-                      <option value="hotel">🏢 Hotel</option>
-                      <option value="hostel">🎒 Hostel</option>
-                      <option value="casa">🔑 Casa de Temporada</option>
-                      <option value="apartamento">🏢 Apartamento</option>
+                      <optgroup label="Hotéis e Similares">
+                        <option value="hotel">🏢 Hotel</option>
+                        <option value="resort">🌴 Resort</option>
+                        <option value="apart_hotel">🏨 Apart-hotel / Flat</option>
+                        <option value="hotel_fazenda">🐎 Hotel-fazenda</option>
+                        <option value="condo_hotel">🏢 Condo-hotel</option>
+                        <option value="motel">🚗 Motel (Hotel de Trânsito)</option>
+                        <option value="hotel_capsula">💊 Hotel Cápsula</option>
+                      </optgroup>
+                      
+                      <optgroup label="Pousadas e B&Bs">
+                        <option value="pousada">🏡 Pousada</option>
+                        <option value="guest_house">🏠 Guest House</option>
+                        <option value="cama_e_cafe">☕ Cama e Café (B&B)</option>
+                        <option value="estalagem">🏘️ Estalagem (Inn)</option>
+                        <option value="lodge">🛖 Lodge</option>
+                      </optgroup>
+                      
+                      <optgroup label="Hostels e Albergues">
+                        <option value="hostel">🎒 Hostel</option>
+                        <option value="albergue">🛏️ Albergue da Juventude</option>
+                      </optgroup>
+                      
+                      <optgroup label="Casas e Apartamentos">
+                        <option value="apartamento">🏢 Apartamento</option>
+                        <option value="casa_temporada">🔑 Casa de Temporada</option>
+                        <option value="vila">🏛️ Vila</option>
+                        <option value="casa_campo">🌳 Casa de Campo</option>
+                        <option value="chale">🏔️ Chalé / Cabana</option>
+                      </optgroup>
+                      
+                      <optgroup label="Acomodações Alternativas">
+                        <option value="glamping">✨ Glamping</option>
+                        <option value="acampamento">⛺ Acampamento / Tenda</option>
+                        <option value="fazenda">🚜 Sítio / Fazenda Agrícola</option>
+                        <option value="casa_arvore">🌲 Casa na Árvore</option>
+                        <option value="barco">⛵ Barco / Iate</option>
+                        <option value="barco_casa">🛶 Casa Flutuante</option>
+                        <option value="motorhome">🚐 Motorhome</option>
+                        <option value="aldeia_turistica">🎢 Aldeia Turística</option>
+                      </optgroup>
+                      
+                      <optgroup label="Acomodações Culturais Específicas">
+                        <option value="ryokan">🏯 Ryokan (Japão)</option>
+                        <option value="riad">🕌 Riad (Marrocos)</option>
+                      </optgroup>
                     </select>
                   </div>
                   <div>
@@ -586,8 +654,13 @@ export function AccommodationsModule({ accommodations, destinations }: Accommoda
                 <h4 className="text-zinc-200 font-semibold border-b border-zinc-800 pb-2">Conteúdo de Marketing & Detalhes</h4>
                 
                 <div>
-                  <label className="block text-xs font-medium text-zinc-400 mb-1">Descrição Comercial</label>
-                  <textarea rows={4} value={description} onChange={e => setDescription(e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 text-zinc-100 px-4 py-2 rounded-lg focus:border-blue-500 focus:outline-none text-sm font-sans" placeholder="Conteúdo envolvente detalhando os quartos, atrativos e diferenciais..." />
+                  <div className="flex justify-between items-end mb-1">
+                    <label className="block text-xs font-medium text-zinc-400">Descrição Comercial</label>
+                    <button type="button" onClick={generateDescription} className="text-xs bg-blue-600/20 text-blue-400 hover:bg-blue-600/30 px-2 py-1 rounded transition-colors flex items-center gap-1">
+                      <Sparkles size={12} /> Gerar Automática
+                    </button>
+                  </div>
+                  <textarea rows={6} value={description} onChange={e => setDescription(e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 text-zinc-100 px-4 py-2 rounded-lg focus:border-blue-500 focus:outline-none text-sm font-sans" placeholder="Conteúdo envolvente detalhando os quartos, atrativos e diferenciais... (Preencha os outros campos antes de gerar a automática)" />
                 </div>
 
                 <div>

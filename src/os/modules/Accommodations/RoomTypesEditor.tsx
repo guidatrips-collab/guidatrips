@@ -1,3 +1,4 @@
+import ImageUpload from '../../../components/ImageUpload';
 import React, { useState } from "react";
 import { Plus, Edit2, Trash2, X, Image as ImageIcon, Calendar } from "lucide-react";
 import { RoomType, RoomPricingPeriod, RoomCalendarData, MediaItem } from "../../../types";
@@ -272,9 +273,26 @@ function RoomEditorModal({ room, onSave, onClose }: { room: RoomType, onSave: (r
 
               <div className="border-t border-white/10 pt-6 mt-6">
                 <h4 className="text-sm font-bold text-white mb-4">Galeria de Fotos</h4>
-                <div className="flex gap-2 mb-4">
-                  <input type="url" value={photoUrl} onChange={e => setPhotoUrl(e.target.value)} placeholder="URL da foto..." className="flex-1 bg-black/50 border border-white/10 rounded-lg p-3 text-white focus:border-[#E8711A] outline-none" />
-                  <button type="button" onClick={handleAddPhoto} className="px-4 bg-white/10 text-white rounded-lg hover:bg-white/20 transition-colors">Adicionar</button>
+                <div className="mb-4">
+                  <ImageUpload
+                    onUploadComplete={(url, originalUrl, cropData) => {
+                      setFormData(prev => ({
+                        ...prev,
+                        mediaGallery: [
+                          ...(prev.mediaGallery || []),
+                          {
+                            id: Date.now().toString(),
+                            type: 'image',
+                            url: url,
+                            originalUrl: originalUrl || url,
+                            cropData: cropData
+                          }
+                        ]
+                      }));
+                    }}
+                    folder="room_types"
+                    label="Adicionar Foto"
+                  />
                 </div>
                 {formData.mediaGallery && formData.mediaGallery.length > 0 && (
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
