@@ -23,6 +23,7 @@ import {
   RefreshCw
 } from 'lucide-react';
 import { CalendarPricingView } from '../../../components/CalendarPricingView';
+import { RoomTypesEditor } from './RoomTypesEditor';
 import { Accommodation, Destination, Courtesy } from '../../../types';
 import { firestoreService } from '../../../firebase';
 import ImageUpload from '../../../components/ImageUpload';
@@ -206,6 +207,7 @@ export function AccommodationsModule({ accommodations, destinations }: Accommoda
       policies,
       restrictions,
       occupancyRules,
+      roomTypes,
       updatedAt: new Date().toISOString()
     };
 
@@ -735,6 +737,11 @@ export function AccommodationsModule({ accommodations, destinations }: Accommoda
                   />
                 </div>
               </div>
+            </div>
+
+            {/* ROOM TYPES (QUARTOS E TARIFÁRIOS) */}
+            <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 shadow-md mt-6">
+              <RoomTypesEditor roomTypes={roomTypes} onChange={setRoomTypes} />
             </div>
 
             {/* SIDEBAR COLUMNS */}
