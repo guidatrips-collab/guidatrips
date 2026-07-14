@@ -65,6 +65,7 @@ export function AccommodationsModule({ accommodations, destinations }: Accommoda
   const [partnerId, setPartnerId] = useState('');
   const [description, setDescription] = useState('');
   const [amenitiesStr, setAmenitiesStr] = useState('');
+  const [propertyAmenities, setPropertyAmenities] = useState<string[]>([]);
   const [courtesies, setCourtesies] = useState<Courtesy[]>([]);
   const [photos, setPhotos] = useState<string[]>([]);
   const [mediaGallery, setMediaGallery] = useState<MediaItem[]>([]);
@@ -108,6 +109,7 @@ export function AccommodationsModule({ accommodations, destinations }: Accommoda
     setPartnerId('');
     setDescription('');
     setAmenitiesStr('');
+    setPropertyAmenities([]);
     setCourtesies([]);
     setPhotos([]);
     setMediaGallery([]);
@@ -139,6 +141,7 @@ export function AccommodationsModule({ accommodations, destinations }: Accommoda
     setPartnerId(acc.partnerId || '');
     setDescription(acc.description || '');
     setAmenitiesStr('');
+    setPropertyAmenities([]);
     setPropertyAmenities(acc.amenities || []);
     setCourtesies(acc.courtesies || []);
     setPhotos(acc.photos || []);

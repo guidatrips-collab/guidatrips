@@ -524,6 +524,8 @@ export default function App() {
 
       const storedSettings = localStorage.getItem("guidatrips_settings");
       if (storedSettings) setSettings(JSON.parse(storedSettings));
+      const storedAcc = localStorage.getItem("guidatrips_accommodations");
+      if (storedAcc) setAccommodations(JSON.parse(storedAcc));
     } catch (e) {
       console.warn("Local Storage read error:", e);
     }
@@ -581,7 +583,10 @@ export default function App() {
       setDestinations(data as Destination[]);
     });
 
-    const unsubAcc = firestoreService.subscribe("accommodations", setAccommodations);
+    const unsubAcc = firestoreService.subscribe("accommodations", (data) => {
+      setAccommodations(data);
+      localStorage.setItem("guidatrips_accommodations", JSON.stringify(data));
+    });
     const unsubPartners = firestoreService.subscribe("partners", setPartners);
     const unsubRes = firestoreService.subscribe("reservations", setOsReservations);
     const unsubFin = firestoreService.subscribe("financial", setFinancial);
