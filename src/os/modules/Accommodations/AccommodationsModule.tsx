@@ -24,7 +24,7 @@ import {
 } from 'lucide-react';
 import { CalendarPricingView } from '../../../components/CalendarPricingView';
 import { RoomTypesEditor } from './RoomTypesEditor';
-import { Accommodation, Destination, Courtesy } from '../../../types';
+import { Accommodation, Destination, Courtesy, MediaItem, RoomType } from '../../../types';
 import { firestoreService } from '../../../firebase';
 import ImageUpload from '../../../components/ImageUpload';
 

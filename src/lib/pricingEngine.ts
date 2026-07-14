@@ -141,10 +141,11 @@ export const PricingEngine = {
     // Check if we have defined room categories
     let useCategoriesLogic = false;
     let bestCategoryRate = 0;
+    let targetRoom: any = undefined;
 
     if (acc.roomTypes && acc.roomTypes.length > 0) {
       useCategoriesLogic = true;
-      let targetRoom = undefined;
+      
       
       if (selectedRoomId) {
         targetRoom = acc.roomTypes.find(rc => rc.id === selectedRoomId);
