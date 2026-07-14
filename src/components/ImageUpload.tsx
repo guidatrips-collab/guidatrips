@@ -17,8 +17,8 @@ const compressAndConvertToBase64 = (file: File): Promise<string> => {
       img.src = event.target?.result as string;
       img.onload = () => {
         const canvas = document.createElement('canvas');
-        const MAX_WIDTH = 800; // Optimized dimension for fast loading and Firestore size safety
-        const MAX_HEIGHT = 800;
+        const MAX_WIDTH = 600; // Optimized dimension for fast loading and Firestore size safety
+        const MAX_HEIGHT = 600;
         let width = img.width;
         let height = img.height;
 
@@ -49,7 +49,7 @@ const compressAndConvertToBase64 = (file: File): Promise<string> => {
         ctx.drawImage(img, 0, 0, width, height);
         
         // Compress to JPEG with 0.65 quality to ensure tiny size (< 40kb) for flawless database performance
-        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.65);
+        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.60);
         resolve(compressedBase64);
       };
       img.onerror = (err) => reject(err);
@@ -178,10 +178,7 @@ export default function ImageUpload({
         console.warn("Firebase Storage upload failed or timed out (CORS/Permissions). Falling back to ultra-optimized Base64:", storageErr);
         
         const compressedUrl = await compressAndConvertToBase64(croppedFile);
-        let originalCompressedUrl = undefined;
-        if (originalFile) {
-          originalCompressedUrl = await compressAndConvertToBase64(originalFile);
-        }
+        let originalCompressedUrl = compressedUrl;
         setIsCompatibilityMode(true);
         onUploadComplete(compressedUrl, originalCompressedUrl, croppedAreaPixels);
       }

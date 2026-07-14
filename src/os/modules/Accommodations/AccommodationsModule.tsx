@@ -223,7 +223,7 @@ export function AccommodationsModule({ accommodations, destinations }: Accommoda
       amenities,
       courtesies,
       mediaGallery,
-      photos: mediaGallery.length > 0 ? mediaGallery.map(m => m.url) : photos.length > 0 ? photos : ["https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800"],
+      photos: mediaGallery.length > 0 ? [mediaGallery[0].url] : photos.length > 0 ? photos : ["https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800"],
       location,
       address,
       netRate,
