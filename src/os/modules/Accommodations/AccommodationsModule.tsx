@@ -1041,6 +1041,7 @@ export function AccommodationsModule({ accommodations, destinations }: Accommoda
                 await firestoreService.update("accommodations", updatedAcc.id, {
                   calendar: updatedAcc.calendar || {},
                   pricing: updatedAcc.pricing || {},
+                  roomTypes: updatedAcc.roomTypes || [],
                   updatedAt: new Date().toISOString()
                 });
               } catch (err) {

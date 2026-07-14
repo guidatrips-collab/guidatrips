@@ -13,10 +13,20 @@ interface CalendarPricingViewProps {
 
 export function CalendarPricingView({ items, onUpdateItem, title = "Tarifário e Disponibilidade", itemTypeLabel = "experiência" }: CalendarPricingViewProps) {
   const [selectedItemId, setSelectedItemId] = useState<string>("");
+  const [selectedRoomId, setSelectedRoomId] = useState<string>("");
   
   const selectedItem = useMemo(() => {
     return items.find(e => e.id === selectedItemId) || null;
   }, [items, selectedItemId]);
+
+  const selectedRoom = useMemo(() => {
+    if (selectedItem && 'roomTypes' in selectedItem && selectedItem.roomTypes) {
+      return selectedItem.roomTypes.find(r => r.id === selectedRoomId) || null;
+    }
+    return null;
+  }, [selectedItem, selectedRoomId]);
+
+  const activeCalendarSource = selectedRoom || selectedItem;
 
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDates, setSelectedDates] = useState<string[]>([]);
@@ -80,7 +90,7 @@ export function CalendarPricingView({ items, onUpdateItem, title = "Tarifário e
     if (!selectedItem || selectedDates.length === 0) return;
     
     // Ensure the calendar object exists
-    const currentCalendar = selectedItem.calendar || {};
+    const currentCalendar = activeCalendarSource?.calendar || {};
     
     const newCalendar = { ...currentCalendar };
     
@@ -125,6 +135,7 @@ export function CalendarPricingView({ items, onUpdateItem, title = "Tarifário e
           value={selectedItemId}
           onChange={(e) => {
             setSelectedItemId(e.target.value);
+            setSelectedRoomId("");
             clearSelection();
           }}
           className="w-full md:w-1/2 bg-[#0D1B2A] border border-white/10 p-3 text-sm text-white rounded-md outline-none focus:border-[#E8711A]"
@@ -134,6 +145,22 @@ export function CalendarPricingView({ items, onUpdateItem, title = "Tarifário e
             <option key={item.id} value={item.id}>{item.name}</option>
           ))}
         </select>
+
+        {selectedItem && 'roomTypes' in selectedItem && selectedItem.roomTypes && selectedItem.roomTypes.length > 0 && (
+          <select
+            value={selectedRoomId}
+            onChange={(e) => {
+              setSelectedRoomId(e.target.value);
+              clearSelection();
+            }}
+            className="w-full md:w-1/2 mt-2 md:mt-0 md:ml-2 bg-[#0D1B2A] border border-white/10 p-3 text-sm text-white rounded-md outline-none focus:border-[#E8711A]"
+          >
+            <option value="">-- Todos os Quartos (Geral) --</option>
+            {selectedItem.roomTypes.map(room => (
+              <option key={room.id} value={room.id}>{room.name}</option>
+            ))}
+          </select>
+        )}
       </div>
 
       {selectedItem && (
@@ -164,7 +191,7 @@ export function CalendarPricingView({ items, onUpdateItem, title = "Tarifário e
               {days.map(day => {
                 const dateStr = formatDate(new Date(year, month, day));
                 const isSelected = selectedDates.includes(dateStr);
-                const dayData = selectedItem.calendar?.[dateStr];
+                const dayData = activeCalendarSource?.calendar?.[dateStr];
                 
                 const isClosed = dayData?.status === 'closed';
                 
@@ -252,7 +279,12 @@ export function CalendarPricingView({ items, onUpdateItem, title = "Tarifário e
                       </label>
                       <input
                         type="number"
-                        placeholder={(selectedItem.pricing?.adultPrice || ('priceFrom' in selectedItem ? selectedItem.priceFrom : selectedItem.sellRate))?.toString()}
+                        placeholder={(
+                          (activeCalendarSource as any).pricing?.adultPrice || 
+                          ('basePrice' in activeCalendarSource ? (activeCalendarSource as any).basePrice : 
+                           ('priceFrom' in activeCalendarSource ? (activeCalendarSource as any).priceFrom : 
+                            ('sellRate' in activeCalendarSource ? (activeCalendarSource as any).sellRate : 0)))
+                        )?.toString()}
                         value={adultPrice}
                         onChange={(e) => setAdultPrice(e.target.value ? Number(e.target.value) : "")}
                         className="w-full bg-[#0D1B2A] border border-white/10 p-2 text-xs text-white rounded outline-none"
@@ -265,7 +297,7 @@ export function CalendarPricingView({ items, onUpdateItem, title = "Tarifário e
                       </label>
                       <input
                         type="number"
-                        placeholder={selectedItem.pricing?.childPrice?.toString() || "0"}
+                        placeholder={(activeCalendarSource as any).pricing?.childPrice?.toString() || "0"}
                         value={childPrice}
                         onChange={(e) => setChildPrice(e.target.value ? Number(e.target.value) : "")}
                         className="w-full bg-[#0D1B2A] border border-white/10 p-2 text-xs text-white rounded outline-none"
@@ -278,7 +310,7 @@ export function CalendarPricingView({ items, onUpdateItem, title = "Tarifário e
                       </label>
                       <input
                         type="number"
-                        placeholder={selectedItem.pricing?.babyPrice?.toString() || "0"}
+                        placeholder={(activeCalendarSource as any).pricing?.babyPrice?.toString() || "0"}
                         value={babyPrice}
                         onChange={(e) => setBabyPrice(e.target.value ? Number(e.target.value) : "")}
                         className="w-full bg-[#0D1B2A] border border-white/10 p-2 text-xs text-white rounded outline-none"
@@ -299,9 +331,16 @@ export function CalendarPricingView({ items, onUpdateItem, title = "Tarifário e
                   <button 
                     onClick={() => {
                       if (!selectedItem) return;
-                      const newCalendar = { ...selectedItem.calendar };
+                      const newCalendar = { ...activeCalendarSource?.calendar };
                       selectedDates.forEach(d => delete newCalendar[d]);
-                      onUpdateItem({ ...selectedItem, calendar: newCalendar } as any);
+                      if (selectedRoom && 'roomTypes' in selectedItem) {
+                        const updatedRooms = (selectedItem.roomTypes || []).map(r => 
+                          r.id === selectedRoom.id ? { ...r, calendar: newCalendar } : r
+                        );
+                        onUpdateItem({ ...selectedItem, roomTypes: updatedRooms } as any);
+                      } else {
+                        onUpdateItem({ ...selectedItem, calendar: newCalendar } as any);
+                      }
                       clearSelection();
                     }}
                     className="w-full py-3 bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs font-accent tracking-widest uppercase font-bold rounded-md transition-colors flex items-center justify-center gap-2"
