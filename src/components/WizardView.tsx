@@ -301,21 +301,35 @@ export default function WizardView({
   // Lodging Catalog recommended for Cabo Frio / Arraial (Dynamic from database)
   const hotels = accommodations
     .filter(acc => {
-      const hasValidTariff = acc.sellRate > 0 || (acc.pricing && acc.pricing.adultPrice > 0) || (acc.calendar && Object.keys(acc.calendar).length > 0);
+      const hasValidTariff = acc.sellRate > 0 || (acc.pricing && acc.pricing.adultPrice > 0) || (acc.calendar && Object.keys(acc.calendar).length > 0) || (acc.roomTypes && acc.roomTypes.length > 0);
       return acc.status === "active" && (!selectedDestinationId || acc.destinationId === selectedDestinationId) && hasValidTariff;
     })
     .slice(0, 6)
-    .map(acc => ({
-    id: acc.id,
-    name: acc.name,
-    location: acc.location,
-    rating: acc.rating || 5.0,
-    tag: acc.typeTag,
-    priceDisplay: acc.priceDisplay || `A partir de R$ ${acc.sellRate} / noite`,
-    description: acc.description?.slice(0, 80) + "...",
-    img: (acc.mediaGallery && acc.mediaGallery.length > 0 ? acc.mediaGallery.filter(m => m.type === 'image')[0]?.url : acc.photos?.[0]) || "https://images.unsplash.com/photo-1584132967334-10e028bd69f7",
-    whatsappMessage: `Olá, Guida Trips! Gostaria de consultar tarifas com benefícios na ${acc.name}.`
-  }));
+    .map(acc => {
+      let costDisplay = acc.priceDisplay || `A partir de R$ ${acc.sellRate} / noite`;
+      try {
+        const arrivalDateStr = arrivalDate;
+        const guestsObj = { adults, children, infants };
+        const calcResult = PricingEngine.calculateLodging(acc, arrivalDateStr, stayDays, guestsObj);
+        if (calcResult && calcResult.totalCost > 0) {
+          costDisplay = `Total: R$ ${calcResult.totalCost} (${stayDays} ${stayDays === 1 ? 'diária' : 'diárias'})`;
+        }
+      } catch (e) {
+        console.error("Error calculating lodging price", e);
+      }
+
+      return {
+        id: acc.id,
+        name: acc.name,
+        location: acc.location,
+        rating: acc.rating || 5.0,
+        tag: acc.typeTag,
+        priceDisplay: costDisplay,
+        description: acc.description?.slice(0, 80) + "...",
+        img: (acc.mediaGallery && acc.mediaGallery.length > 0 ? acc.mediaGallery.filter(m => m.type === 'image')[0]?.url : acc.photos?.[0]) || "https://images.unsplash.com/photo-1584132967334-10e028bd69f7",
+        whatsappMessage: `Olá, Guida Trips! Gostaria de consultar tarifas com benefícios na ${acc.name}.`
+      };
+    });
 
   // Dynamic filter of experiences sorted according to the profile
   const getFilteredExperiences = () => {

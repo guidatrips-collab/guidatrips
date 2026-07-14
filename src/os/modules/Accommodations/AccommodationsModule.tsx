@@ -209,7 +209,14 @@ export function AccommodationsModule({ accommodations, destinations }: Accommoda
     const policies = policiesStr.split('\n').map(s => s.trim()).filter(Boolean);
     const restrictions = restrictionsStr.split('\n').map(s => s.trim()).filter(Boolean);
     const generatedSlug = slug || name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-    const priceDisplay = `A partir de R$ ${sellRate} / noite`;
+    let minRate = sellRate;
+    if (roomTypes && roomTypes.length > 0) {
+      const validRoomPrices = roomTypes.map(rt => rt.basePrice).filter(p => p && p > 0);
+      if (validRoomPrices.length > 0) {
+        minRate = Math.min(...validRoomPrices);
+      }
+    }
+    const priceDisplay = `A partir de R$ ${minRate} / noite`;
 
     const fallbackDestId = destinations.some(d => d.id === 'arraial-do-cabo') ? 'arraial-do-cabo' : (destinations[0]?.id || '');
     const accData: Partial<Accommodation> = {
@@ -1046,7 +1053,7 @@ export function AccommodationsModule({ accommodations, destinations }: Accommoda
                 });
               } catch (err) {
                 console.error(err);
-                alert("Erro ao atualizar o tarifário da hospedagem no banco de dados.");
+                alert("Erro ao salvar. Se você tiver muitas fotos, pode ter atingido o limite de 1MB do banco de dados. Tente apagar algumas fotos da hospedagem ou dos quartos para liberar espaço para o calendário.");
               }
             }} 
             title="Tarifário e Disponibilidade (Hospedagens)"

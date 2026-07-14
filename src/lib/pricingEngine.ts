@@ -157,13 +157,15 @@ export const PricingEngine = {
       } else {
         const fittingRooms = acc.roomTypes.filter(rc => rc.maxGuests >= totalGuestsCount);
         if (fittingRooms.length > 0) {
-          const bestRoom = fittingRooms.sort((a, b) => a.basePrice - b.basePrice)[0];
+          const bestRoom = fittingRooms.sort((a, b) => (a.basePrice || 0) - (b.basePrice || 0))[0];
           roomsNeeded = 1;
-          bestCategoryRate = bestRoom.basePrice;
+          bestCategoryRate = (bestRoom.basePrice || 0);
+          targetRoom = bestRoom;
         } else {
           const bestRoom = [...acc.roomTypes].sort((a, b) => b.maxGuests - a.maxGuests)[0];
-          roomsNeeded = Math.ceil(totalGuestsCount / bestRoom.maxGuests) || 1;
-          bestCategoryRate = bestRoom.basePrice * roomsNeeded;
+          roomsNeeded = Math.ceil(totalGuestsCount / (bestRoom.maxGuests || 1)) || 1;
+          bestCategoryRate = (bestRoom.basePrice || 0) * roomsNeeded;
+          targetRoom = bestRoom;
         }
       }
     } else {

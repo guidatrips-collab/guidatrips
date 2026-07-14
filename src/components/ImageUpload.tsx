@@ -17,8 +17,8 @@ const compressAndConvertToBase64 = (file: File): Promise<string> => {
       img.src = event.target?.result as string;
       img.onload = () => {
         const canvas = document.createElement('canvas');
-        const MAX_WIDTH = 600; // Optimized dimension for fast loading and Firestore size safety
-        const MAX_HEIGHT = 600;
+        const MAX_WIDTH = 480; // Optimized dimension for fast loading and Firestore size safety
+        const MAX_HEIGHT = 480;
         let width = img.width;
         let height = img.height;
 
@@ -49,7 +49,7 @@ const compressAndConvertToBase64 = (file: File): Promise<string> => {
         ctx.drawImage(img, 0, 0, width, height);
         
         // Compress to JPEG with 0.65 quality to ensure tiny size (< 40kb) for flawless database performance
-        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.60);
+        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.50);
         resolve(compressedBase64);
       };
       img.onerror = (err) => reject(err);

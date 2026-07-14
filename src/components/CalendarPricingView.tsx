@@ -93,6 +93,10 @@ export function CalendarPricingView({ items, onUpdateItem, title = "Tarifário e
     const currentCalendar = activeCalendarSource?.calendar || {};
     
     const newCalendar = { ...currentCalendar };
+    const today = getBrazilLocalDate(new Date());
+    Object.keys(newCalendar).forEach(d => {
+      if (d < today) delete newCalendar[d];
+    });
     
     selectedDates.forEach(date => {
       const basePrice = 'basePrice' in activeCalendarSource 
@@ -103,12 +107,21 @@ export function CalendarPricingView({ items, onUpdateItem, title = "Tarifário e
                 ? activeCalendarSource.sellRate 
                 : 0));
 
-      newCalendar[date] = {
-        status,
-        adultPrice: Number(adultPrice) || (activeCalendarSource.pricing?.adultPrice ?? basePrice),
-        childPrice: Number(childPrice) || (activeCalendarSource.pricing?.childPrice ?? 0),
-        babyPrice: Number(babyPrice) || (activeCalendarSource.pricing?.babyPrice ?? 0),
-      };
+      const ap = Number(adultPrice) || (activeCalendarSource.pricing?.adultPrice ?? basePrice);
+      const cp = Number(childPrice) || (activeCalendarSource.pricing?.childPrice ?? 0);
+      const bp = Number(babyPrice) || (activeCalendarSource.pricing?.babyPrice ?? 0);
+      
+      const dayConfig: any = {};
+      if (status === 'closed') dayConfig.status = 'closed';
+      if (ap !== basePrice) dayConfig.adultPrice = ap;
+      if (cp > 0) dayConfig.childPrice = cp;
+      if (bp > 0) dayConfig.babyPrice = bp;
+      
+      if (Object.keys(dayConfig).length > 0) {
+        newCalendar[date] = dayConfig;
+      } else {
+        delete newCalendar[date];
+      }
     });
 
     if (selectedRoom && 'roomTypes' in selectedItem) {
@@ -241,10 +254,10 @@ export function CalendarPricingView({ items, onUpdateItem, title = "Tarifário e
                       )}
                     </div>
                     
-                    {dayData && !isClosed && (
+                    {!isClosed && (
                       <div className="text-[9px] font-sans text-right">
-                        <div className="text-zinc-400">Ad: <span className="text-white">R${dayData.adultPrice}</span></div>
-                        <div className="text-zinc-500 text-[8px]">Cr: R${dayData.childPrice}</div>
+                        <div className="text-zinc-400">Ad: <span className="text-white">R${dayData?.adultPrice || ('basePrice' in (activeCalendarSource || {}) ? (activeCalendarSource as any).basePrice : ('sellRate' in (activeCalendarSource || {}) ? (activeCalendarSource as any).sellRate : 0))}</span></div>
+                        <div className="text-zinc-500 text-[8px]">Cr: R${dayData?.childPrice || 0}</div>
                       </div>
                     )}
                     {isClosed && (
