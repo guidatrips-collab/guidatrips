@@ -146,7 +146,7 @@ export function CalendarPricingView({ items, onUpdateItem, title = "Tarifário e
           ))}
         </select>
 
-        {selectedItem && 'roomTypes' in selectedItem && selectedItem.roomTypes && selectedItem.roomTypes.length > 0 && (
+        {selectedItem && itemTypeLabel === 'hospedagem' && (
           <select
             value={selectedRoomId}
             onChange={(e) => {
@@ -155,15 +155,27 @@ export function CalendarPricingView({ items, onUpdateItem, title = "Tarifário e
             }}
             className="w-full md:w-1/2 mt-2 md:mt-0 md:ml-2 bg-[#0D1B2A] border border-white/10 p-3 text-sm text-white rounded-md outline-none focus:border-[#E8711A]"
           >
-            <option value="">-- Todos os Quartos (Geral) --</option>
-            {selectedItem.roomTypes.map(room => (
+            <option value="">-- Selecione um Quarto --</option>
+            {selectedItem && 'roomTypes' in selectedItem && selectedItem.roomTypes && selectedItem.roomTypes.map(room => (
               <option key={room.id} value={room.id}>{room.name}</option>
             ))}
           </select>
         )}
       </div>
 
-      {selectedItem && (
+      {selectedItem && itemTypeLabel === 'hospedagem' && (!('roomTypes' in selectedItem) || !selectedItem.roomTypes || selectedItem.roomTypes.length === 0) && (
+        <div className="mt-4 p-4 bg-amber-500/10 border border-amber-500/20 rounded-md text-amber-400 text-sm">
+          Esta hospedagem não possui quartos cadastrados. Para configurar o calendário, primeiro cadastre os quartos na edição da hospedagem.
+        </div>
+      )}
+
+      {selectedItem && itemTypeLabel === 'hospedagem' && 'roomTypes' in selectedItem && selectedItem.roomTypes && selectedItem.roomTypes.length > 0 && !selectedRoomId && (
+        <div className="mt-4 p-4 bg-blue-500/10 border border-blue-500/20 rounded-md text-blue-400 text-sm">
+          Selecione um quarto no menu acima para configurar o tarifário e disponibilidade.
+        </div>
+      )}
+
+      {selectedItem && (itemTypeLabel !== 'hospedagem' || (itemTypeLabel === 'hospedagem' && selectedRoomId)) && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           
           {/* CALENDAR */}
