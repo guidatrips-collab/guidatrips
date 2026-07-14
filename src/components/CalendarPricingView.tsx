@@ -95,19 +95,36 @@ export function CalendarPricingView({ items, onUpdateItem, title = "Tarifário e
     const newCalendar = { ...currentCalendar };
     
     selectedDates.forEach(date => {
-      const basePrice = 'priceFrom' in selectedItem ? selectedItem.priceFrom : ('sellRate' in selectedItem ? selectedItem.sellRate : 0);
+      const basePrice = 'basePrice' in activeCalendarSource 
+        ? activeCalendarSource.basePrice 
+        : ('priceFrom' in activeCalendarSource 
+            ? activeCalendarSource.priceFrom 
+            : ('sellRate' in activeCalendarSource 
+                ? activeCalendarSource.sellRate 
+                : 0));
+
       newCalendar[date] = {
-        status: status,
-        adultPrice: Number(adultPrice) || (selectedItem.pricing?.adultPrice ?? basePrice),
-        childPrice: Number(childPrice) || (selectedItem.pricing?.childPrice ?? 0),
-        babyPrice: Number(babyPrice) || (selectedItem.pricing?.babyPrice ?? 0),
+        status,
+        adultPrice: Number(adultPrice) || (activeCalendarSource.pricing?.adultPrice ?? basePrice),
+        childPrice: Number(childPrice) || (activeCalendarSource.pricing?.childPrice ?? 0),
+        babyPrice: Number(babyPrice) || (activeCalendarSource.pricing?.babyPrice ?? 0),
       };
     });
 
-    onUpdateItem({
-      ...selectedItem,
-      calendar: newCalendar
-    } as any);
+    if (selectedRoom && 'roomTypes' in selectedItem) {
+      const updatedRooms = (selectedItem.roomTypes || []).map(r => 
+        r.id === selectedRoom.id ? { ...r, calendar: newCalendar } : r
+      );
+      onUpdateItem({
+        ...selectedItem,
+        roomTypes: updatedRooms
+      } as any);
+    } else {
+      onUpdateItem({
+        ...selectedItem,
+        calendar: newCalendar
+      } as any);
+    }
     
     clearSelection();
     setIsEditing(false);
