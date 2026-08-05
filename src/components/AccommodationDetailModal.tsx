@@ -10,7 +10,7 @@ import {
   CheckCircle, HelpCircle, Gift, ArrowLeft, Maximize2
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
-import { Accommodation, Courtesy } from "../types";
+import { Accommodation, Courtesy, RoomType } from "../types";
 
 interface AccommodationDetailModalProps {
   accommodation: Accommodation;
@@ -19,11 +19,14 @@ interface AccommodationDetailModalProps {
   // If provided, we are in "Wizard / Itinerary Selection" context
   isSelectionContext?: boolean;
   isSelected?: boolean;
+  selectedRoomId?: string | null;
   onSelectToggle?: () => void;
+  onSelectRoom?: (accommodation: Accommodation, room: RoomType) => void;
   // External WhatsApp trigger
   onWhatsAppContact?: (message: string) => void;
   // Navigation for catalog context
-  onNavigateToWizard?: (hotelId: string) => void;
+  onNavigateToWizard?: (hotelId: string, roomId?: string) => void;
+  guestCount?: { adults: number; children: number; infants: number };
 }
 
 export default function AccommodationDetailModal({
@@ -32,12 +35,27 @@ export default function AccommodationDetailModal({
   onClose,
   isSelectionContext = false,
   isSelected = false,
+  selectedRoomId = null,
   onSelectToggle,
+  onSelectRoom,
   onWhatsAppContact,
-  onNavigateToWizard
+  onNavigateToWizard,
+  guestCount
 }: AccommodationDetailModalProps) {
   const [activePhotoIdx, setActivePhotoIdx] = useState(0);
   const [isFullScreenGallery, setIsFullScreenGallery] = useState(false);
+  const [selectedRoomIdInternal, setSelectedRoomIdInternal] = useState<string | null>(selectedRoomId || null);
+
+  // Sync internal selected room whenever modal opens or props change
+  useEffect(() => {
+    if (selectedRoomId) {
+      setSelectedRoomIdInternal(selectedRoomId);
+    } else if (isOpen) {
+      setSelectedRoomIdInternal(selectedRoomId || null);
+    }
+  }, [selectedRoomId, isOpen, accommodation]);
+
+  const totalGuests = (guestCount?.adults ?? 2) + (guestCount?.children ?? 0);
 
   // Esc key to close modal
   useEffect(() => {
@@ -412,62 +430,169 @@ export default function AccommodationDetailModal({
               </div>
             </div>
 
-            {/* Room Types */}
-            {accommodation.roomTypes && accommodation.roomTypes.length > 0 && (
-              <div className="border-t border-zinc-200 pt-8 pb-4 text-left">
-                <h4 className="font-serif text-lg font-bold text-zinc-800 mb-6 flex items-center gap-2">
-                  <span className="text-[#E8711A]">✦</span> Opções de Quartos
-                </h4>
-                <div className="grid grid-cols-1 gap-6">
-                  {accommodation.roomTypes.map(room => (
-                    <div key={room.id} className="bg-white border border-zinc-200 rounded-2xl overflow-hidden flex flex-col md:flex-row shadow-sm">
-                      {room.mediaGallery && room.mediaGallery.length > 0 && (
-                        <div className="w-full md:w-1/3 h-48 md:h-auto bg-zinc-100 relative">
-                          <img src={room.mediaGallery[0].url} alt={room.name} className="w-full h-full object-cover" />
-                        </div>
-                      )}
-                      <div className="p-6 flex-1 flex flex-col justify-between">
-                        <div>
-                          <div className="flex justify-between items-start mb-2">
-                            <h5 className="font-serif font-bold text-zinc-900 text-lg">{room.name}</h5>
-                            <span className="bg-zinc-100 text-zinc-600 text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider">
-                              Até {room.maxGuests} {room.maxGuests === 1 ? 'pessoa' : 'pessoas'}
-                            </span>
-                          </div>
-                          <p className="text-sm text-zinc-600 mb-4">{room.description}</p>
-                          <div className="flex flex-wrap gap-2 mb-4">
-                            {room.amenities.slice(0, 4).map(am => (
-                              <span key={am} className="text-[10px] bg-zinc-50 border border-zinc-200 px-2 py-1 rounded text-zinc-500">
-                                {am}
-                              </span>
-                            ))}
-                            {room.amenities.length > 4 && (
-                              <span className="text-[10px] bg-zinc-50 border border-zinc-200 px-2 py-1 rounded text-zinc-500">
-                                +{room.amenities.length - 4}
-                              </span>
-                            )}
-                          </div>
-                          
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs text-zinc-500 font-medium">
-                            {room.area && <div>• {room.area}m²</div>}
-                            {room.beds && <div className="truncate" title={room.beds}>• {room.beds}</div>}
-                            {room.hasAirConditioning && <div>• Ar Cond.</div>}
-                            {room.breakfastIncluded && <div>• Café Incluso</div>}
-                          </div>
-                        </div>
-                        <div className="mt-6 pt-4 border-t border-zinc-100 flex justify-between items-end">
-                          <div>
-                            <span className="text-[10px] text-zinc-400 uppercase tracking-wider block font-bold">A partir de</span>
-                            <span className="font-serif font-bold text-xl text-[#0D1B2A]">R$ {room.basePrice}</span>
-                            <span className="text-xs text-zinc-500">/noite</span>
-                          </div>
-                        </div>
-                      </div>
+            {/* Room Types Section */}
+            {(() => {
+              const roomsToRender: RoomType[] = accommodation.roomTypes && accommodation.roomTypes.length > 0
+                ? accommodation.roomTypes
+                : [
+                    {
+                      id: `room-${accommodation.id}-standard`,
+                      name: "Suíte Standard Classic",
+                      description: "Suíte equipada com ar-condicionado, TV, frigobar, banheiro privativo e café da manhã incluso.",
+                      minGuests: 1,
+                      maxGuests: 4,
+                      beds: "1 Cama de Casal + 1 Cama de Solteiro",
+                      amenities: accommodation.amenities || ["Ar-condicionado", "Wi-Fi Fibra", "Café da Manhã"],
+                      breakfastIncluded: true,
+                      basePrice: accommodation.sellRate || accommodation.netRate || 250
+                    }
+                  ];
+
+              return (
+                <div className="border-t border-zinc-200 pt-8 pb-4 text-left">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-6">
+                    <div>
+                      <h4 className="font-serif text-lg font-bold text-zinc-900 flex items-center gap-2">
+                        <span className="text-[#E8711A]">✦</span> Opções de Acomodação e Quartos
+                      </h4>
+                      <p className="text-xs text-zinc-500 font-sans mt-0.5">
+                        {isSelectionContext 
+                          ? "Selecione o quarto desejado para liberar a inclusão no seu Roteiro Inteligente:" 
+                          : "Escolha a acomodação ideal para sua estadia:"}
+                      </p>
                     </div>
-                  ))}
+
+                    {isSelectionContext && (
+                      <span className="text-[10px] bg-amber-50 text-amber-800 border border-amber-200 font-extrabold px-3 py-1 rounded-full uppercase tracking-wider shrink-0">
+                        Seleção Obrigatória de Quarto
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-6">
+                    {roomsToRender.map(room => {
+                      const isOverCapacity = totalGuests > room.maxGuests;
+                      const isThisRoomSelected = selectedRoomIdInternal === room.id;
+
+                      return (
+                        <div 
+                          key={room.id} 
+                          className={`bg-white border rounded-2xl overflow-hidden flex flex-col md:flex-row shadow-xs transition-all ${
+                            isThisRoomSelected 
+                              ? "border-emerald-500 ring-2 ring-emerald-500/20 bg-emerald-50/10" 
+                              : isOverCapacity 
+                              ? "border-amber-200 bg-amber-50/20 opacity-90"
+                              : "border-zinc-200 hover:border-zinc-300"
+                          }`}
+                        >
+                          {(room.photos && room.photos.length > 0) || (room.mediaGallery && room.mediaGallery.length > 0) || photos.length > 0 ? (
+                            <div className="w-full md:w-1/3 h-48 md:h-auto bg-zinc-100 relative shrink-0">
+                              <img 
+                                src={room.photos?.[0] || room.mediaGallery?.[0]?.url || photos[0]} 
+                                alt={room.name} 
+                                className="w-full h-full object-cover" 
+                                referrerPolicy="no-referrer"
+                              />
+                              {isThisRoomSelected && (
+                                <div className="absolute top-3 left-3 bg-emerald-600 text-white text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-md shadow-xs flex items-center gap-1">
+                                  <CheckCircle className="w-3.5 h-3.5" /> SELECIONADO
+                                </div>
+                              )}
+                            </div>
+                          ) : null}
+
+                          <div className="p-6 flex-1 flex flex-col justify-between">
+                            <div>
+                              <div className="flex flex-wrap justify-between items-start gap-2 mb-2">
+                                <div>
+                                  <h5 className="font-serif font-bold text-zinc-900 text-lg leading-snug">{room.name}</h5>
+                                </div>
+                                <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider shrink-0 ${
+                                  isOverCapacity ? 'bg-amber-100 text-amber-900 font-black' : 'bg-zinc-100 text-zinc-700'
+                                }`}>
+                                  Até {room.maxGuests} {room.maxGuests === 1 ? 'pessoa' : 'pessoas'}
+                                </span>
+                              </div>
+
+                              <p className="text-xs text-zinc-600 mb-4 leading-relaxed">{room.description}</p>
+
+                              <div className="flex flex-wrap gap-2 mb-4">
+                                {room.amenities.slice(0, 5).map(am => (
+                                  <span key={am} className="text-[10px] bg-zinc-50 border border-zinc-200 px-2 py-1 rounded text-zinc-600 font-medium">
+                                    {am}
+                                  </span>
+                                ))}
+                                {room.amenities.length > 5 && (
+                                  <span className="text-[10px] bg-zinc-50 border border-zinc-200 px-2 py-1 rounded text-zinc-500 font-medium">
+                                    +{room.amenities.length - 5}
+                                  </span>
+                                )}
+                              </div>
+                              
+                              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs text-zinc-500 font-medium">
+                                {room.area && <div>• {room.area}m²</div>}
+                                {room.beds && <div className="truncate" title={room.beds}>• {room.beds}</div>}
+                                {room.hasAirConditioning && <div>• Ar Condicionado</div>}
+                                {room.breakfastIncluded && <div className="text-emerald-700 font-bold">• Café da Manhã Incluso</div>}
+                              </div>
+
+                              {/* Capacity Alert Box when capacity is less than group size */}
+                              {isOverCapacity && (
+                                <div className="mt-4 p-3 bg-amber-50 border border-amber-200/80 rounded-xl text-xs text-amber-900 flex items-start gap-2.5 font-sans">
+                                  <span className="text-sm shrink-0">⚠️</span>
+                                  <div className="space-y-0.5 text-left">
+                                    <p className="font-bold text-[11px]">Capacidade insuficiente para seu grupo ({totalGuests} pessoas)</p>
+                                    <p className="text-[10.5px] text-amber-800 leading-tight">
+                                      Este quarto acomoda até {room.maxGuests} {room.maxGuests === 1 ? 'pessoa' : 'pessoas'}. Para seu grupo de {totalGuests} pessoas, escolha um quarto maior ou adicione mais acomodações.
+                                    </p>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+
+                            <div className="mt-6 pt-4 border-t border-zinc-100 flex flex-wrap justify-between items-center gap-4">
+                              <div>
+                                <span className="text-[10px] text-zinc-400 uppercase tracking-wider block font-bold">Valor da Diária</span>
+                                <span className="font-serif font-extrabold text-xl text-[#0D1B2A]">R$ {room.basePrice}</span>
+                                <span className="text-xs text-zinc-500"> /noite</span>
+                              </div>
+
+                              <div>
+                                {isOverCapacity ? (
+                                  <button
+                                    type="button"
+                                    disabled
+                                    className="px-4 py-2 bg-zinc-100 text-zinc-400 border border-zinc-200 rounded-xl text-xs font-bold uppercase cursor-not-allowed"
+                                  >
+                                    Capacidade Insuficiente
+                                  </button>
+                                ) : isThisRoomSelected ? (
+                                  <button
+                                    type="button"
+                                    onClick={() => setSelectedRoomIdInternal(null)}
+                                    className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-accent text-xs font-black tracking-wider uppercase flex items-center gap-1.5 shadow-xs transition-all cursor-pointer"
+                                  >
+                                    <CheckCircle className="w-4 h-4" /> QUARTO SELECIONADO
+                                  </button>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    onClick={() => setSelectedRoomIdInternal(room.id)}
+                                    className="px-5 py-2.5 bg-[#0D1B2A] hover:bg-[#E8711A] text-white hover:text-[#0D1B2A] rounded-xl font-accent text-xs font-extrabold tracking-wider uppercase transition-all shadow-xs cursor-pointer"
+                                  >
+                                    SELECIONAR QUARTO
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
-            )}
+              );
+            })()}
 
             {/* Full-width Section: Policies and Rules */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 border-t border-zinc-200 pt-8 text-left">
@@ -507,53 +632,117 @@ export default function AccommodationDetailModal({
           </div>
 
           {/* Modal Action Footer */}
-          <div className="border-t border-zinc-200 bg-zinc-50/70 p-6 flex flex-col sm:flex-row justify-between items-center gap-4 sticky bottom-0 z-10 shrink-0">
-            <div className="text-center sm:text-left">
-              <span className="text-[10px] font-accent uppercase text-zinc-400 tracking-widest font-black block">Reserva Garantida</span>
-              <span className="font-serif text-sm font-extrabold text-[#0D1B2A]">
-                {accommodation.name} • {accommodation.priceDisplay || `R$ ${accommodation.sellRate}/diária`}
-              </span>
-            </div>
+          <div className="border-t border-zinc-200 bg-white p-4 sm:p-6 flex flex-col sm:flex-row justify-between items-center gap-4 sticky bottom-0 z-20 shrink-0 shadow-lg">
+            {isSelectionContext ? (
+              /* Wizard selection view mode */
+              (() => {
+                const roomTypesList: RoomType[] = accommodation.roomTypes && accommodation.roomTypes.length > 0 
+                  ? accommodation.roomTypes 
+                  : [{
+                      id: `room-${accommodation.id}-standard`,
+                      name: "Suíte Standard Classic",
+                      description: "Suíte aconchegante com ar-condicionado, TV, frigobar e café da manhã incluso.",
+                      minGuests: 1,
+                      maxGuests: 4,
+                      basePrice: accommodation.sellRate || accommodation.netRate || 250,
+                      amenities: accommodation.amenities || ["Ar-condicionado", "Wi-Fi Fibra", "Café da Manhã"],
+                      breakfastIncluded: true
+                    }];
+                const activeSelectedRoom = roomTypesList.find(r => r.id === selectedRoomIdInternal);
 
-            <div className="flex items-center gap-3 w-full sm:w-auto">
-              {isSelectionContext ? (
-                /* Wizard selection view mode */
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (onSelectToggle) {
-                      onSelectToggle();
-                      onClose();
-                    }
-                  }}
-                  className={`flex-1 sm:flex-initial px-8 py-3.5 rounded-full font-accent text-xs font-black tracking-wider uppercase transition-all shadow-md cursor-pointer flex items-center justify-center gap-2 hover:scale-102 ${
-                    isSelected
-                      ? "bg-zinc-200 hover:bg-zinc-300 text-zinc-800"
-                      : "bg-[#E8711A] hover:bg-[#0D1B2A] text-[#0D1B2A] hover:text-white"
-                  }`}
-                >
-                  {isSelected ? "❌ REMOVER SELEÇÃO" : "🏨 SELECIONAR ESTA HOSPEDAGEM"}
-                </button>
-              ) : (
-                /* Public Catalog / Detail view mode */
-                <>
+                return (
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-4 w-full">
+                    <div className="text-center sm:text-left">
+                      {activeSelectedRoom ? (
+                        <>
+                          <span className="text-[10px] text-emerald-600 font-black uppercase tracking-widest flex items-center justify-center sm:justify-start gap-1">
+                            <CheckCircle className="w-3.5 h-3.5" /> Quarto Selecionado
+                          </span>
+                          <span className="font-serif text-sm font-extrabold text-[#0D1B2A] block">
+                            {activeSelectedRoom.name}
+                          </span>
+                          <span className="text-xs text-zinc-500 font-medium">
+                            R$ {activeSelectedRoom.basePrice} / diária • Até {activeSelectedRoom.maxGuests} pessoas
+                          </span>
+                        </>
+                      ) : (
+                        <>
+                          <span className="text-[10px] text-[#E8711A] font-black uppercase tracking-widest block">
+                            ⚠️ Seleção Obrigatória de Quarto
+                          </span>
+                          <span className="font-serif text-xs sm:text-sm font-bold text-zinc-700">
+                            Por favor, selecione um quarto acima para vincular esta hospedagem ao roteiro
+                          </span>
+                        </>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-3 w-full sm:w-auto">
+                      {activeSelectedRoom ? (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (onSelectRoom) {
+                              onSelectRoom(accommodation, activeSelectedRoom);
+                            } else if (onSelectToggle) {
+                              onSelectToggle();
+                            }
+                            onClose();
+                          }}
+                          className="w-full sm:w-auto px-8 py-3.5 bg-[#E8711A] hover:bg-[#0D1B2A] text-[#0D1B2A] hover:text-white rounded-full font-accent text-xs font-black tracking-wider uppercase transition-all shadow-md cursor-pointer flex items-center justify-center gap-2 hover:scale-102"
+                        >
+                          <span>ADICIONAR AO ROTEIRO COM ESTE QUARTO 🚀</span>
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          disabled
+                          className="w-full sm:w-auto px-8 py-3.5 bg-zinc-200 text-zinc-400 rounded-full font-accent text-xs font-black tracking-wider uppercase cursor-not-allowed flex items-center justify-center gap-2"
+                        >
+                          <span>SELECIONE UM QUARTO ABAIXO</span>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })()
+            ) : (
+              /* Public Catalog / Detail view mode */
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 w-full">
+                <div className="text-center sm:text-left">
+                  <span className="text-[10px] font-accent uppercase text-zinc-400 tracking-widest font-black block">Reserva Garantida</span>
+                  <span className="font-serif text-sm font-extrabold text-[#0D1B2A]">
+                    {accommodation.name} • {accommodation.priceDisplay || `R$ ${accommodation.sellRate}/diária`}
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-3 w-full sm:w-auto">
                   <button
                     type="button"
                     onClick={handleBookViaWhatsApp}
-                    className="flex-1 sm:flex-initial px-6 py-3.5 border border-[#0D1B2A] text-[#0D1B2A] hover:bg-zinc-100 rounded-full font-accent text-xs font-black tracking-wider uppercase transition-colors cursor-pointer flex items-center justify-center gap-1.5"
+                    className="flex-1 sm:flex-initial px-6 py-3.5 border border-[#0D1B2A] text-[#0D1B2A] hover:bg-zinc-100 rounded-full font-accent text-xs font-black tracking-wider uppercase transition-colors cursor-pointer flex items-center justify-center gap-1.5 text-center"
                   >
                     <Phone className="w-3.5 h-3.5" /> Fale Conosco
                   </button>
                   <button
                     type="button"
-                    onClick={handleSelectAndGo}
-                    className="flex-1 sm:flex-initial px-8 py-3.5 bg-[#0D1B2A] hover:bg-[#E8711A] text-white hover:text-[#0D1B2A] rounded-full font-accent text-xs font-black tracking-wider uppercase transition-all shadow-md cursor-pointer hover:scale-102 flex items-center justify-center gap-1.5"
+                    onClick={() => {
+                      const roomTypesList = accommodation.roomTypes && accommodation.roomTypes.length > 0 
+                        ? accommodation.roomTypes 
+                        : [{ id: `room-${accommodation.id}-standard` }];
+                      const targetRoomId = selectedRoomIdInternal || roomTypesList[0].id;
+                      if (onNavigateToWizard) {
+                        onNavigateToWizard(accommodation.id, targetRoomId);
+                        onClose();
+                      }
+                    }}
+                    className="flex-1 sm:flex-initial px-8 py-3.5 bg-[#0D1B2A] hover:bg-[#E8711A] text-white hover:text-[#0D1B2A] rounded-full font-accent text-xs font-black tracking-wider uppercase transition-all shadow-md cursor-pointer hover:scale-102 flex items-center justify-center gap-1.5 text-center"
                   >
                     <span>VINCULAR E MONTAR ROTEIRO 🚀</span>
                   </button>
-                </>
-              )}
-            </div>
+                </div>
+              </div>
+            )}
           </div>
         </motion.div>
       </div>

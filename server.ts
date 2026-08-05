@@ -34,6 +34,36 @@ async function startServer() {
     res.json({ status: "ok" });
   });
 
+  // AI Translation Endpoint for Database & Dynamic UI Content
+  app.post("/api/translate", async (req, res) => {
+    try {
+      const { text, targetLang } = req.body;
+      if (!text || typeof text !== "string") {
+        return res.status(400).json({ error: "Text parameter is required." });
+      }
+
+      const langMap: Record<string, string> = {
+        en: "English",
+        es: "Spanish (Español)",
+        pt: "Portuguese (Português)"
+      };
+
+      const targetLangName = langMap[targetLang] || "English";
+      const client = getGeminiClient();
+
+      const response = await client.models.generateContent({
+        model: "gemini-3.5-flash",
+        contents: `Translate the following tourism & travel text into natural, elegant ${targetLangName}. Preserve names of beaches/cities (e.g., Arraial do Cabo, Praia Grande, Pontal do Atalaia), price numbers, and emojis. Return ONLY the translated text without commentary.\n\n${text}`
+      });
+
+      const translatedText = response.text?.trim() || text;
+      return res.json({ success: true, translatedText });
+    } catch (err: any) {
+      console.warn("AI Translation error, returning original text fallback:", err.message);
+      return res.json({ success: false, translatedText: req.body.text });
+    }
+  });
+
   // AI Import and Structuring Endpoint for Accommodations (Fase 0 - POC)
   app.post("/api/accommodations/ai-import", async (req, res) => {
     try {

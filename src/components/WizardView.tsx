@@ -35,7 +35,8 @@ interface WizardViewProps {
   onSetClientName?: (name: string) => void;
   onSetClientCity?: (city: string) => void;
   selectedHotelId?: string | null;
-  onChangeHotelId?: (id: string | null) => void;
+  selectedRoomId?: string | null;
+  onChangeHotelId?: (id: string | null, roomId?: string | null) => void;
   whatsappNumber?: string;
   currentUser?: any;
   onSetCurrentUser?: (user: any) => void;
@@ -61,6 +62,7 @@ export default function WizardView({
   onSetClientName,
   onSetClientCity,
   selectedHotelId = null,
+  selectedRoomId = null,
   onChangeHotelId,
   whatsappNumber = "552299887766",
   currentUser,
@@ -439,7 +441,8 @@ export default function WizardView({
       selectedAccommodation,
       arrivalDate,
       stayDays,
-      guests: { adults, children, infants }
+      guests: { adults, children, infants },
+      selectedRoomId
     });
 
     return result.total;
@@ -516,6 +519,19 @@ export default function WizardView({
         budget: "Moderado",
         profile,
         selectedHotelId,
+        selectedRoomId,
+        selectedRoomName: (() => {
+          if (!selectedHotelId) return null;
+          const acc = accommodations.find(a => a.id === selectedHotelId);
+          const room = acc?.roomTypes?.find(r => r.id === selectedRoomId);
+          return room?.name || null;
+        })(),
+        selectedRoomPrice: (() => {
+          if (!selectedHotelId) return null;
+          const acc = accommodations.find(a => a.id === selectedHotelId);
+          const room = acc?.roomTypes?.find(r => r.id === selectedRoomId);
+          return room?.basePrice || acc?.sellRate || null;
+        })(),
         totalEstimate: calculateEstimatedTotal(),
         createdAt: new Date().toISOString(),
         items: cart,
@@ -633,6 +649,19 @@ export default function WizardView({
           budget: "Moderado",
           profile,
           selectedHotelId,
+          selectedRoomId,
+          selectedRoomName: (() => {
+            if (!selectedHotelId) return null;
+            const acc = accommodations.find(a => a.id === selectedHotelId);
+            const room = acc?.roomTypes?.find(r => r.id === selectedRoomId);
+            return room?.name || null;
+          })(),
+          selectedRoomPrice: (() => {
+            if (!selectedHotelId) return null;
+            const acc = accommodations.find(a => a.id === selectedHotelId);
+            const room = acc?.roomTypes?.find(r => r.id === selectedRoomId);
+            return room?.basePrice || acc?.sellRate || null;
+          })(),
           totalEstimate: calculateEstimatedTotal(),
           createdAt: new Date().toISOString(),
           items: cart,
@@ -703,7 +732,12 @@ export default function WizardView({
     
     if (selectedHotelId) {
       const hotel = hotels.find(h => h.id === selectedHotelId);
-      text += `🏨 *Hospedagem:* Sim, vinculado a ${hotel?.name}\n`;
+      const acc = accommodations.find(a => a.id === selectedHotelId);
+      const room = acc?.roomTypes?.find(r => r.id === selectedRoomId);
+      text += `🏨 *Hospedagem:* ${hotel?.name || acc?.name || "Sim"}\n`;
+      if (room) {
+        text += `🛏 *Quarto Escolhido:* ${room.name} (R$ ${room.basePrice}/diária • Até ${room.maxGuests} pessoas)\n`;
+      }
     } else {
       text += `🏨 *Hospedagem:* Não, já possui hospedagem própria\n`;
     }
@@ -1585,17 +1619,18 @@ export default function WizardView({
                         ) : (
                           hotels.map((pousada) => {
                             const isSelected = selectedHotelId === pousada.id;
+                            const originalAcc = accommodations.find(a => a.id === pousada.id);
+                            const selectedRoom = originalAcc?.roomTypes?.find(r => r.id === selectedRoomId);
 
                             return (
                               <div
                                 key={pousada.id}
                                 className={`bg-white border rounded-2xl overflow-hidden shadow-xs hover:shadow-sm transition-all flex flex-col justify-between group ${
-                                  isSelected ? "border-[#E8711A] ring-1 ring-[#E8711A]/20" : "border-zinc-200"
+                                  isSelected ? "border-emerald-500 ring-2 ring-emerald-500/20 bg-emerald-50/10" : "border-zinc-200"
                                 }`}
                               >
                                 <div 
                                   onClick={() => {
-                                    const originalAcc = accommodations.find(a => a.id === pousada.id);
                                     if (originalAcc) setSelectedHotelForDetail(originalAcc);
                                   }}
                                   className="aspect-square overflow-hidden relative select-none cursor-pointer"
@@ -1609,61 +1644,97 @@ export default function WizardView({
                                   <span className="absolute bottom-2 left-2 bg-[#0D1B2A]/90 text-white text-[8px] font-accent tracking-widest px-2.5 py-1 rounded-sm">
                                     {pousada.tag}
                                   </span>
+                                  {isSelected && (
+                                    <span className="absolute top-2 left-2 bg-emerald-600 text-white text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded shadow-xs">
+                                      ✓ VINCULADO AO ROTEIRO
+                                    </span>
+                                  )}
                                   <div className="absolute top-2 right-2 bg-white/95 text-[#0D1B2A] text-[9px] font-bold px-2 py-0.5 rounded shadow-xs flex items-center gap-0.5">
                                     <span className="text-yellow-500">★</span>
                                     <span>{pousada.rating}</span>
-                                    </div>
                                   </div>
+                                </div>
 
                                 <div className="p-4 space-y-4 flex-grow flex flex-col justify-between">
                                   <div className="space-y-1 text-left">
                                     <span className="text-[9px] uppercase tracking-wider font-extrabold text-zinc-400">{pousada.location}</span>
                                     <h6 
                                       onClick={() => {
-                                        const originalAcc = accommodations.find(a => a.id === pousada.id);
                                         if (originalAcc) setSelectedHotelForDetail(originalAcc);
                                       }}
                                       className="font-serif text-sm font-extrabold text-[#0D1B2A] leading-tight group-hover:text-[#E8711A] transition-colors line-clamp-1 cursor-pointer"
                                     >
                                       {pousada.name}
                                     </h6>
-                                    <p className="font-sans text-[11px] text-zinc-500 leading-relaxed line-clamp-2 mb-2">
-                                      {pousada.description}
-                                    </p>
-                                    <span className="font-sans text-xs font-bold text-[#E8711A] block">
-                                      {pousada.priceDisplay}
-                                    </span>
-                                    </div>
 
-                                  <div className="flex items-center gap-1.5 pt-2 border-t border-zinc-100">
-                                    <button
-                                      type="button"
-                                      onClick={() => setExpandedHotelId(expandedHotelId === pousada.id ? null : pousada.id)}
-                                      className="flex-1 py-2 bg-white border border-[#0D1B2A] hover:bg-zinc-50 text-[#0D1B2A] rounded-xl font-accent text-[9px] font-bold tracking-wider uppercase transition-all cursor-pointer text-center"
-                                    >
-                                      {expandedHotelId === pousada.id ? "MENOS" : "DETALHES"}
-                                    </button>
-                                    <button
-                                      type="button"
-                                      onClick={() => {
-                                        if (onChangeHotelId) {
-                                          onChangeHotelId(isSelected ? null : pousada.id);
-                                          if (!isSelected) {
-                                            showToast("Hospedagem vinculada", pousada.name, "🏨");
-                                          } else {
-                                            showToast("Hospedagem removida", pousada.name, "🗑️");
-                                          }
-                                        }
-                                      }}
-                                      className={`flex-1 py-2 rounded-xl font-accent text-[9px] font-extrabold tracking-wider uppercase transition-all flex items-center justify-center gap-1 cursor-pointer ${
-                                        isSelected
-                                          ? "bg-[#E8711A] text-[#0D1B2A] font-black"
-                                          : "bg-[#0D1B2A] hover:bg-[#E8711A] hover:text-[#0D1B2A] text-white"
-                                      }`}
-                                    >
-                                      {isSelected ? "VINCULADO" : "VINCULAR"}
-                                    </button>
-                                    </div>
+                                    {isSelected && selectedRoom ? (
+                                      <div className="bg-emerald-50 border border-emerald-200/80 rounded-xl p-2.5 my-2 space-y-0.5 text-left">
+                                        <div className="text-[10px] text-emerald-800 font-extrabold flex items-center gap-1 uppercase tracking-wider">
+                                          <span>🛏️ Quarto:</span> {selectedRoom.name}
+                                        </div>
+                                        <div className="text-[11px] font-serif font-bold text-emerald-950">
+                                          R$ {selectedRoom.basePrice} <span className="text-[10px] font-sans font-normal text-zinc-600">/diária • Até {selectedRoom.maxGuests} pessoas</span>
+                                        </div>
+                                      </div>
+                                    ) : (
+                                      <>
+                                        <p className="font-sans text-[11px] text-zinc-500 leading-relaxed line-clamp-2 mb-1">
+                                          {pousada.description}
+                                        </p>
+                                        <span className="font-sans text-xs font-bold text-[#E8711A] block">
+                                          {pousada.priceDisplay}
+                                        </span>
+                                      </>
+                                    )}
+                                  </div>
+
+                                  <div className="flex flex-col gap-1.5 pt-2 border-t border-zinc-100">
+                                    {isSelected ? (
+                                      <div className="flex items-center gap-1.5">
+                                        <button
+                                          type="button"
+                                          onClick={() => {
+                                            if (originalAcc) setSelectedHotelForDetail(originalAcc);
+                                          }}
+                                          className="flex-1 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-accent text-[9px] font-black tracking-wider uppercase transition-all cursor-pointer text-center"
+                                        >
+                                          ALTERAR QUARTO 🛏️
+                                        </button>
+                                        <button
+                                          type="button"
+                                          onClick={() => {
+                                            if (onChangeHotelId) {
+                                              onChangeHotelId(null, null);
+                                              showToast("Hospedagem removida", pousada.name, "🗑️");
+                                            }
+                                          }}
+                                          className="px-2.5 py-2 bg-zinc-100 hover:bg-red-50 text-zinc-600 hover:text-red-600 border border-zinc-200 rounded-xl font-accent text-[9px] font-bold tracking-wider uppercase transition-all cursor-pointer"
+                                          title="Remover hospedagem do roteiro"
+                                        >
+                                          ✕
+                                        </button>
+                                      </div>
+                                    ) : (
+                                      <div className="flex items-center gap-1.5">
+                                        <button
+                                          type="button"
+                                          onClick={() => setExpandedHotelId(expandedHotelId === pousada.id ? null : pousada.id)}
+                                          className="px-3 py-2 bg-white border border-[#0D1B2A] hover:bg-zinc-50 text-[#0D1B2A] rounded-xl font-accent text-[9px] font-bold tracking-wider uppercase transition-all cursor-pointer text-center"
+                                        >
+                                          {expandedHotelId === pousada.id ? "MENOS" : "INFO"}
+                                        </button>
+                                        <button
+                                          type="button"
+                                          onClick={() => {
+                                            if (originalAcc) setSelectedHotelForDetail(originalAcc);
+                                          }}
+                                          className="flex-1 py-2 rounded-xl font-accent text-[9px] font-extrabold tracking-wider uppercase transition-all flex items-center justify-center gap-1 cursor-pointer bg-[#0D1B2A] hover:bg-[#E8711A] hover:text-[#0D1B2A] text-white shadow-xs"
+                                        >
+                                          VINCULAR E ESCOLHER QUARTO 🏨
+                                        </button>
+                                      </div>
+                                    )}
+                                  </div>
                                   
                                   {/* Inline Expanded Hotel Details */}
                                   <AnimatePresence>
@@ -2641,6 +2712,15 @@ export default function WizardView({
           onClose={() => setSelectedHotelForDetail(null)}
           isSelectionContext={true}
           isSelected={selectedHotelId === selectedHotelForDetail.id}
+          selectedRoomId={selectedHotelId === selectedHotelForDetail.id ? selectedRoomId : null}
+          guestCount={{ adults, children, infants }}
+          onSelectRoom={(acc, room) => {
+            if (onChangeHotelId) {
+              onChangeHotelId(acc.id, room.id);
+            }
+            showToast("Hospedagem & Quarto Vinculados!", `${acc.name} — ${room.name}`, "🏨");
+            setSelectedHotelForDetail(null);
+          }}
           onSelectToggle={() => {
             if (onChangeHotelId) {
               onChangeHotelId(selectedHotelId === selectedHotelForDetail.id ? null : selectedHotelForDetail.id);

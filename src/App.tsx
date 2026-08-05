@@ -528,13 +528,18 @@ export default function App() {
       console.warn("Local Storage read error:", e);
     }
 
-    // 2. Database Seeding (if empty)
+    // 2. Database Seeding & Upserting
     const seed = async () => {
       await firestoreService.seedCollection("experiences", INITIAL_EXPERIENCES);
       await firestoreService.seedCollection("posts", INITIAL_BLOG_POSTS);
       await firestoreService.seedCollection("leads", INITIAL_LEADS);
       await firestoreService.seedCollection("destinations", INITIAL_DESTINATIONS);
       await firestoreService.seedCollection("accommodations", INITIAL_ACCOMMODATIONS);
+      
+      // Ensure all accommodations (including Hotel Orlanova Boutique) are updated in Firestore
+      for (const acc of INITIAL_ACCOMMODATIONS) {
+        await firestoreService.set("accommodations", acc.id, acc);
+      }
       
       // Special check for global settings
       const settingsData = await firestoreService.getAll("settings");
@@ -1372,6 +1377,7 @@ export default function App() {
             onSetClientName={setClientName}
             onSetClientCity={setClientCity}
             selectedHotelId={selectedHotelId}
+            selectedRoomId={selectedRoomId}
             onChangeHotelId={handleUpdateHotelId}
             whatsappNumber={settings.whatsappNumber}
             currentUser={currentUser}

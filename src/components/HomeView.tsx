@@ -5,6 +5,8 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { Experience, BookingCartItem, GlobalSettings, getBrazilLocalDate, addDaysToBrazilDate, Destination } from "../types";
+import { useLanguage } from "../context/LanguageContext";
+import { getTranslatedExperience, getTranslatedDestination } from "../utils/dataTranslator";
 
 interface HomeViewProps {
   onNavigate: (view: string) => void;
@@ -31,6 +33,7 @@ export default function HomeView({
   onUpdateSelectedDestinationId,
   onWhatsAppContact
 }: HomeViewProps) {
+  const { language, t } = useLanguage();
 
   // States of the micro-itinerary configurator drawer inside the homepage cards
   const [activeConfigId, setActiveConfigId] = useState<string | null>(null);

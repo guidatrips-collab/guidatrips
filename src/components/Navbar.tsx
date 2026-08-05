@@ -5,6 +5,8 @@
 
 import React, { useState, useEffect } from "react";
 import { Compass, Info, BookOpen, MessageSquare, Menu, X, ShoppingBag, ShieldCheck } from "lucide-react";
+import { useLanguage } from "../context/LanguageContext";
+import LanguageSelector from "./LanguageSelector";
 
 interface NavbarProps {
   currentView: string;
@@ -16,6 +18,7 @@ interface NavbarProps {
 }
 
 export default function Navbar({ currentView, onNavigate, cartCount, onOpenCart, currentUser, onWhatsAppContact }: NavbarProps) {
+  const { t } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
 
@@ -32,13 +35,13 @@ export default function Navbar({ currentView, onNavigate, cartCount, onOpenCart,
   }, []);
 
   const navItems = [
-    { id: "home", label: "Início", icon: Compass },
-    { id: "wizard", label: "Roteiro Inteligente 🧭", icon: Compass },
-    { id: "experiencias", label: "Experiências", icon: Compass },
-    { id: "hospedagens", label: "Hospedagens", icon: Compass },
-    { id: "sobre", label: "Sobre Nós", icon: Info },
-    { id: "blog", label: "Revista/Blog", icon: BookOpen },
-    { id: "contato", label: "Contato", icon: MessageSquare },
+    { id: "home", label: t("nav.home"), icon: Compass },
+    { id: "wizard", label: t("nav.wizard"), icon: Compass },
+    { id: "experiencias", label: t("nav.experiencias"), icon: Compass },
+    { id: "hospedagens", label: t("nav.hospedagens"), icon: Compass },
+    { id: "sobre", label: t("nav.sobre"), icon: Info },
+    { id: "blog", label: t("nav.blog"), icon: BookOpen },
+    { id: "contato", label: t("nav.contato"), icon: MessageSquare },
   ];
 
   const isThemeDarkHero = currentView === "home" && !isScrolled;
@@ -112,6 +115,9 @@ export default function Navbar({ currentView, onNavigate, cartCount, onOpenCart,
 
           {/* Desktop Action Buttons */}
           <div className="hidden md:flex items-center space-x-3">
+            {/* Language Switcher */}
+            <LanguageSelector isDarkHero={isThemeDarkHero} />
+
             {/* Botão Meu Roteiro (Centralizado conceitualmente nos Actions) */}
             <button
               onClick={onOpenCart}
@@ -122,7 +128,7 @@ export default function Navbar({ currentView, onNavigate, cartCount, onOpenCart,
               }`}
             >
               <ShoppingBag className="w-4 h-4" />
-              Meu Roteiro
+              {t("nav.cart")}
               {cartCount > 0 && (
                 <span className="bg-[#E8711A] text-white w-5 h-5 rounded-full flex items-center justify-center text-[10px] ml-1">
                   {cartCount}
@@ -139,7 +145,7 @@ export default function Navbar({ currentView, onNavigate, cartCount, onOpenCart,
                   : "border-transparent bg-[#0D1B2A]/5 text-[#0D1B2A] hover:bg-[#0D1B2A]/10"
               }`}
             >
-              {currentUser ? `Olá, ${currentUser.name.split(" ")[0]} 🌊` : "Área do Cliente"}
+              {currentUser ? `Olá, ${currentUser.name.split(" ")[0]} 🌊` : t("nav.profile")}
             </button>
 
             {/* CTA do Whatsapp */}
@@ -157,6 +163,8 @@ export default function Navbar({ currentView, onNavigate, cartCount, onOpenCart,
 
           {/* Hamburger Menu & Cart (Mobile) */}
           <div className="flex md:hidden items-center space-x-2">
+            <LanguageSelector isDarkHero={isThemeDarkHero} />
+
             {/* Mobile Meu Roteiro */}
             <button
               onClick={onOpenCart}

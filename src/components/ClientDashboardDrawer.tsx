@@ -8,6 +8,7 @@ import { BookingCartItem, Experience, Accommodation, getBrazilLocalDate, addDays
 import { PricingEngine } from "../lib/pricingEngine";
 import { RecommendationEngine } from "../services/recommendationEngine";
 import { ReservationService } from "../services/reservationService";
+import { useLanguage } from "../context/LanguageContext";
 
 interface ClientDashboardDrawerProps {
   isOpen: boolean;
@@ -37,7 +38,7 @@ export default function ClientDashboardDrawer({
   onRemoveFromCart, selectedHotelId, arrivalDate, adults, children, destName,
   onChangeItemDay, onNavigate
 }: ClientDashboardDrawerProps) {
-  
+  const { t } = useLanguage();
   const [activeDayTab, setActiveDayTab] = useState<number | 'all'>('all');
   const [showCheckout, setShowCheckout] = useState(false);
 

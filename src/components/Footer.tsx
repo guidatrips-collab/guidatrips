@@ -5,6 +5,7 @@
 
 import React from "react";
 import { Instagram, Youtube, Phone, Mail, MapPin} from "lucide-react";
+import { useLanguage } from "../context/LanguageContext";
 
 interface FooterProps {
   onNavigate: (view: string) => void;
@@ -13,6 +14,8 @@ interface FooterProps {
 }
 
 export default function Footer({ onNavigate, whatsappNumber, onWhatsAppContact }: FooterProps) {
+  const { t } = useLanguage();
+
   return (
     <footer id="main-footer" className="bg-[#0A131C] border-t border-white/5 pt-16 pb-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -30,11 +33,11 @@ export default function Footer({ onNavigate, whatsappNumber, onWhatsAppContact }
                 </span>
               </div>
               <span className="font-sans text-[7px] text-[#F4EFE6]/70 uppercase tracking-[0.25em] -mt-1 font-semibold">
-                Experiências que conectam
+                {t("brand.tagline")}
               </span>
             </div>
             <p className="font-sans text-xs text-[#8A96A3] leading-relaxed max-w-sm">
-              Não vendemos pacotes nem replicamos passeios de massa. Desenhamos roteiros e aventuras personalizadas sob medida para conectar de verdade você com a natureza e as histórias de cada destino.
+              {t("footer.slogan")}
             </p>
             <div className="flex space-x-3 pt-2">
               <a
@@ -61,7 +64,7 @@ export default function Footer({ onNavigate, whatsappNumber, onWhatsAppContact }
           {/* Coluna 2: Navegação Rápida */}
           <div className="space-y-4">
             <h4 className="font-accent text-xs font-bold text-[#F4EFE6] tracking-widest uppercase">
-              Roteiros Rápidos
+              {t("footer.quick_links")}
             </h4>
             <ul className="space-y-2.5 font-sans text-xs">
               <li>
@@ -69,7 +72,7 @@ export default function Footer({ onNavigate, whatsappNumber, onWhatsAppContact }
                   onClick={() => onNavigate("home")}
                   className="text-[#8A96A3] hover:text-[#E8711A] transition-colors"
                 >
-                  Início / Narrativa
+                  {t("nav.home")}
                 </button>
               </li>
               <li>
@@ -77,7 +80,7 @@ export default function Footer({ onNavigate, whatsappNumber, onWhatsAppContact }
                   onClick={() => onNavigate("experiencias")}
                   className="text-[#8A96A3] hover:text-[#E8711A] transition-colors"
                 >
-                  Ver Experiências
+                  {t("nav.experiencias")}
                 </button>
               </li>
               <li>
@@ -85,7 +88,7 @@ export default function Footer({ onNavigate, whatsappNumber, onWhatsAppContact }
                   onClick={() => onNavigate("sobre")}
                   className="text-[#8A96A3] hover:text-[#E8711A] transition-colors"
                 >
-                  Nosso Manifesto
+                  {t("nav.sobre")}
                 </button>
               </li>
               <li>
@@ -93,7 +96,7 @@ export default function Footer({ onNavigate, whatsappNumber, onWhatsAppContact }
                   onClick={() => onNavigate("blog")}
                   className="text-[#8A96A3] hover:text-[#E8711A] transition-colors"
                 >
-                  Revista de Viagem (Blog)
+                  {t("nav.blog")}
                 </button>
               </li>
               <li>
@@ -101,7 +104,7 @@ export default function Footer({ onNavigate, whatsappNumber, onWhatsAppContact }
                   onClick={() => onNavigate("contato")}
                   className="text-[#8A96A3] hover:text-[#E8711A] transition-colors"
                 >
-                  Contactar Concierge
+                  {t("nav.contato")}
                 </button>
               </li>
             </ul>
@@ -110,7 +113,7 @@ export default function Footer({ onNavigate, whatsappNumber, onWhatsAppContact }
           {/* Coluna 3: Sede & Contato */}
           <div className="space-y-4">
             <h4 className="font-accent text-xs font-bold text-[#F4EFE6] tracking-widest uppercase">
-              Contato & Sede
+              {t("footer.contact")}
             </h4>
             <ul className="space-y-3 font-sans text-xs text-[#8A96A3]">
               <li className="flex items-start gap-2">
@@ -130,9 +133,6 @@ export default function Footer({ onNavigate, whatsappNumber, onWhatsAppContact }
                 <Mail className="w-4 h-4 text-[#E8711A] shrink-0" />
                 <span>concierge@guidatrips.com.br</span>
               </li>
-              <li className="pt-2 font-accent text-[10px] text-[#E8711A] tracking-wider uppercase">
-                Atendimento 24h em trânsito
-              </li>
             </ul>
           </div>
 
@@ -141,12 +141,8 @@ export default function Footer({ onNavigate, whatsappNumber, onWhatsAppContact }
         {/* Linha Final */}
         <div className="border-t border-white/5 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="font-sans text-[10px] text-[#8A96A3] text-center sm:text-left">
-            &copy; 2026 Guida Trips. Todos os direitos reservados. Desenhado para Conectar Sentidos.
+            {t("footer.rights")}
           </p>
-          <div className="flex space-x-6 font-sans text-[10px] text-[#8A96A3]">
-            <a href="#" className="hover:text-[#E8711A]">Políticas de Privacidade</a>
-            <a href="#" className="hover:text-[#E8711A]">Termos de Curadoria</a>
-          </div>
         </div>
       </div>
     </footer>

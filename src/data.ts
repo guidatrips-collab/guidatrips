@@ -61,34 +61,179 @@ export const INITIAL_ACCOMMODATIONS: Accommodation[] = [
     typeTag: "boutique",
     destinationId: "arraial-do-cabo",
     partnerId: "timoneiro",
-    description: "Uma referência clássica de hospitalidade e elegância em Arraial. Famosa pela farta mesa de café da manhã colonial e o acolhimento caloroso da equipe de forma tátil.",
-    amenities: ["Piscina climatizada", "Café da manhã artesanal", "Wi-Fi Fibra", "Estacionamento", "Ar-condicionado Split", "Espaço Zen"],
-    photos: ["https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80"],
+    description: "Uma referência clássica de hospitalidade e elegância em Arraial do Cabo. Localizada a apenas 200 metros da famosa Praia Grande, a Pousada do Timoneiro oferece uma estrutura completa com piscina ao ar livre cercada por jardim tropical, Gastrobar, café da manhã colonial artesanal incluso e estacionamento privativo gratuito.",
+    amenities: [
+      "Piscina ao ar livre com solário",
+      "Café da manhã buffet colonial incluso",
+      "Gastrobar / Restaurante da pousada",
+      "Wi-Fi Fibra de alta velocidade",
+      "Estacionamento privativo gratuito",
+      "Ar-condicionado Split",
+      "Recepção 24 horas",
+      "Serviço de quarto e Concierge"
+    ],
+    photos: [
+      "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=800&q=80"
+    ],
     location: "Praia Grande, Arraial do Cabo",
-    address: "Rua das Flores, 123",
-    netRate: 300,
+    address: "Rua Recreio, 200 - Praia Grande, Arraial do Cabo - RJ",
+    netRate: 310,
     sellRate: 380,
-    markup: 26,
-    commission: 80,
+    markup: 22,
+    commission: 70,
     status: "active",
-    tag: "CONFORTO & TRADIÇÃO",
+    tag: "A 200M DA PRAIA GRANDE & PISCINA",
     rating: 4.9,
     reviews: 184,
-    highlight: "Próxima ao maior calçadão do pôr do sol na beira da Praia Grande.",
-    idealProfile: "Ideal para famílias e casais buscando serviço impecável, café da manhã premium e fácil acesso às praias sem depender de carro o tempo todo.",
+    highlight: "Excelente localização a 200m da Praia Grande com piscina tropical, café colonial e estacionamento privativo.",
+    idealProfile: "Ideal para famílias e casais buscando conforto, piscina para relaxar pós-praia e fácil acesso a pé ao espetacular pôr do sol da Praia Grande.",
     specialFeatures: [
-      "Café da manhã assinado por chef local",
-      "Piscina em formato de deck tropical",
-      "Quartos recém-renovados com design caiçara moderno"
+      "Apenas 200 metros (2 min de caminhada) da orla da Praia Grande",
+      "Piscina ao ar livre rodeada por deck de madeira e jardim",
+      "Buffet de café da manhã colonial com frutas, bolos e pratos quentes"
     ],
     distances: [
-      { label: "Praia Grande (Pôr do Sol)", distance: "100m • 2 min de caminhada" },
-      { label: "Cais da Praia dos Anjos (Barcos)", distance: "800m • 10 min de caminhada" }
+      { label: "Orla da Praia Grande (Pôr do Sol)", distance: "200m • 2 min de caminhada" },
+      { label: "Cais da Praia dos Anjos (Barcos)", distance: "800m • 10 min de caminhada" },
+      { label: "Centro Gastronômico", distance: "400m • 5 min de caminhada" }
     ],
-    whatsappMessage: "Olá, Guida Trips! Gostaria de consultar tarifas com benefícios exclusivos para a Pousada do Timoneiro.",
+    whatsappMessage: "Olá, Guida Trips! Gostaria de consultar tarifas com R$ 20 de bônus para a Pousada do Timoneiro.",
     priceDisplay: "A partir de R$ 380 / noite",
     createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
+    updatedAt: new Date().toISOString(),
+    roomTypes: [
+      {
+        id: "room-timoneiro-apto-a-casal",
+        name: "Apartamento Categoria A - Casal",
+        description: "Aconchegante e reservado no piso superior, perfeito para casais. Possui cama de casal Box, ar-condicionado Split, Smart TV 32\", frigobar, Wi-Fi Fibra, banheiro privativo com ducha quente por aquecimento solar e acabamentos de excelente padrão.",
+        minGuests: 1,
+        maxGuests: 2,
+        beds: "1 Cama de Casal Box",
+        amenities: ["Ar-condicionado Split", "Smart TV 32\"", "Frigobar", "Wi-Fi Fibra", "Café da Manhã Colonial Incluso", "Aquecimento Solar"],
+        breakfastIncluded: true,
+        photos: ["https://images.unsplash.com/photo-1618773928121-c32242e63f39?auto=format&fit=crop&w=800&q=80"],
+        basePrice: 380,
+        pricingPeriods: [
+          {
+            id: "period-tim-a-1",
+            name: "Baixa Temporada (Ago - Set)",
+            startDate: "2026-08-01",
+            endDate: "2026-09-30",
+            price: 380
+          },
+          {
+            id: "period-tim-a-2",
+            name: "Média Temporada (Out - Nov)",
+            startDate: "2026-10-01",
+            endDate: "2026-11-30",
+            price: 430
+          },
+          {
+            id: "period-tim-a-3",
+            name: "Dezembro (Alta Temporada)",
+            startDate: "2026-12-01",
+            endDate: "2026-12-23",
+            price: 510
+          },
+          {
+            id: "period-tim-a-4",
+            name: "Fim de Ano & Réveillon",
+            startDate: "2026-12-24",
+            endDate: "2026-12-31",
+            price: 730
+          }
+        ],
+        calendar: {}
+      },
+      {
+        id: "room-timoneiro-apto-b-piscina",
+        name: "Apartamento Categoria B - Térreo Vista Piscina",
+        description: "Acomodação no andar térreo com acesso direto ao jardim e piscina tropical. Conta com 1 cama de casal + 1 cama de solteiro (acomoda até 3 pessoas), ar-condicionado Split, Smart TV 43\", frigobar e ambiente super espaçoso.",
+        minGuests: 2,
+        maxGuests: 3,
+        beds: "1 Cama de Casal Box + 1 Cama de Solteiro",
+        view: "Vista para a Piscina & Jardim",
+        amenities: ["Acesso Térreo sem escadas", "Vista da Piscina", "Ar-condicionado Split", "Smart TV 43\"", "Frigobar", "Wi-Fi Fibra", "Café da Manhã Colonial"],
+        breakfastIncluded: true,
+        photos: ["https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80"],
+        basePrice: 450,
+        pricingPeriods: [
+          {
+            id: "period-tim-b-1",
+            name: "Baixa Temporada (Ago - Set)",
+            startDate: "2026-08-01",
+            endDate: "2026-09-30",
+            price: 450
+          },
+          {
+            id: "period-tim-b-2",
+            name: "Média Temporada (Out - Nov)",
+            startDate: "2026-10-01",
+            endDate: "2026-11-30",
+            price: 520
+          },
+          {
+            id: "period-tim-b-3",
+            name: "Dezembro (Alta Temporada)",
+            startDate: "2026-12-01",
+            endDate: "2026-12-23",
+            price: 610
+          },
+          {
+            id: "period-tim-b-4",
+            name: "Fim de Ano & Réveillon",
+            startDate: "2026-12-24",
+            endDate: "2026-12-31",
+            price: 850
+          }
+        ],
+        calendar: {}
+      },
+      {
+        id: "room-timoneiro-quadruplo-familia",
+        name: "Apartamento Quádruplo Família",
+        description: "Acomodação ampla criada especialmente para famílias e grupos de até 4 adultos. Possui 1 cama de casal + 2 camas de solteiro, ar-condicionado Split de alta capacidade, Smart TV 43\", frigobar familiar, iluminação relaxante e banheiro bem estruturado.",
+        minGuests: 2,
+        maxGuests: 4,
+        beds: "1 Cama de Casal Box + 2 Camas de Solteiro",
+        area: 42,
+        amenities: ["Espaço Família 42m²", "Ar-condicionado Split", "Smart TV 43\"", "Frigobar Espaçoso", "Wi-Fi Fibra", "Café da Manhã Colonial"],
+        breakfastIncluded: true,
+        photos: ["https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=800&q=80"],
+        basePrice: 550,
+        pricingPeriods: [
+          {
+            id: "period-tim-quad-1",
+            name: "Baixa Temporada (Ago - Set)",
+            startDate: "2026-08-01",
+            endDate: "2026-09-30",
+            price: 550
+          },
+          {
+            id: "period-tim-quad-2",
+            name: "Média Temporada (Out - Nov)",
+            startDate: "2026-10-01",
+            endDate: "2026-11-30",
+            price: 640
+          },
+          {
+            id: "period-tim-quad-3",
+            name: "Dezembro (Alta Temporada)",
+            startDate: "2026-12-01",
+            endDate: "2026-12-23",
+            price: 750
+          },
+          {
+            id: "period-tim-quad-4",
+            name: "Fim de Ano & Réveillon",
+            startDate: "2026-12-24",
+            endDate: "2026-12-31",
+            price: 990
+          }
+        ],
+        calendar: {}
+      }
+    ]
   },
   {
     id: "pousada-caminho-mar",
@@ -98,34 +243,182 @@ export const INITIAL_ACCOMMODATIONS: Accommodation[] = [
     typeTag: "pe-na-areia",
     destinationId: "arraial-do-cabo",
     partnerId: "caminho-mar",
-    description: "A poucos passos da Praia dos Anjos, é o refúgio perfeito para quem deseja dormir ao som suave da ressurgência marinha e ter acesso imediato às melhores expedições de barco e mergulho.",
-    amenities: ["Café da manhã regional", "Estacionamento privativo", "Wi-Fi ultraveloz", "Ar-condicionado", "Ducha de alta pressão", "Serviço de praia"],
-    photos: ["https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?auto=format&fit=crop&w=800&q=80"],
+    description: "A poucos passos da paradisíaca Praia dos Anjos (Rua do Porto), a Pousada Caminho do Mar é o refúgio perfeito para quem deseja acordar ao lado do mar e ter acesso imediato ao Cais de Embarque de passeios de barco e mergulho. Oferece suítes aconchegantes com ar-condicionado, Wi-Fi fibra de alta velocidade, delicioso café da manhã regional incluso, recepção 24h e estacionamento privativo.",
+    amenities: [
+      "Café da manhã buffet regional incluso",
+      "Wi-Fi Fibra de alta velocidade",
+      "Ar-condicionado Split",
+      "Smart TV 43\"",
+      "Frigobar",
+      "Estacionamento privativo",
+      "Ducha de alta pressão com aquecimento",
+      "Recepção 24 horas",
+      "Serviço de limpeza diário",
+      "Apenas 50m do Cais de Embarque"
+    ],
+    photos: [
+      "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?auto=format&fit=crop&w=800&q=80"
+    ],
     location: "Praia dos Anjos, Arraial do Cabo",
-    address: "Rua do Porto, 456",
-    netRate: 250,
-    sellRate: 320,
-    markup: 28,
-    commission: 70,
+    address: "Rua do Porto, 456 - Praia dos Anjos, Arraial do Cabo - RJ",
+    netRate: 230,
+    sellRate: 290,
+    markup: 26,
+    commission: 60,
     status: "active",
-    tag: "FÁCIL ACESSO A EMBARQUES",
+    tag: "A 50M DO CAIS DE EMBARQUE",
     rating: 4.8,
     reviews: 142,
-    highlight: "O melhor ponto de partida matinal com suítes recém-renovadas.",
-    idealProfile: "Recomendada para grupos de amigos e mergulhadores, graças à sua logística imbatível colada ao cais de embarque.",
+    highlight: "Acomodação charmosa colada no Cais da Praia dos Anjos, perfeita para passeios e mergulhos.",
+    idealProfile: "Recomendada para casais, famílias e grupos de mergulhadores que valorizam praticidade, localização estratégica e café da manhã acolhedor.",
     specialFeatures: [
-      "Frente mar com acesso direto à areia",
-      "Varanda panorâmica para a enseada",
-      "Check-in expresso para horários de barco"
+      "Localização imbatível a apenas 50m do Cais dos Passeios de Barco",
+      "Café da manhã colonial com frutas, sucos e pães artesanais",
+      "Check-in ágil e assistência para reservas de experiências"
     ],
     distances: [
-      { label: "Cais de Embarque (Passeios)", distance: "50m • 1 min de caminhada" },
+      { label: "Cais de Embarque (Passeios de Barco)", distance: "50m • 1 min de caminhada" },
+      { label: "Trilha da Praia do Forno", distance: "350m • 4 min de caminhada" },
       { label: "Centro Histórico e Restaurantes", distance: "300m • 5 min de caminhada" }
     ],
-    whatsappMessage: "Olá, Guida Trips! Gostaria de consultar tarifas com benefícios para a Pousada Caminho do Mar.",
-    priceDisplay: "A partir de R$ 320 / noite",
+    whatsappMessage: "Olá, Guida Trips! Gostaria de consultar tarifas com R$ 20 de bônus para a Pousada Caminho do Mar.",
+    priceDisplay: "A partir de R$ 290 / noite",
     createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
+    updatedAt: new Date().toISOString(),
+    roomTypes: [
+      {
+        id: "room-caminho-std-casal",
+        name: "Suíte Standard Casal",
+        description: "Achegada e funcional para 2 pessoas. Equipada com 1 Cama de Casal Box, ar-condicionado Split, Smart TV 43\", frigobar, Wi-Fi fibra e banheiro privativo com ducha quente.",
+        minGuests: 1,
+        maxGuests: 2,
+        beds: "1 Cama de Casal Box",
+        amenities: ["Ar-condicionado Split", "Smart TV 43\"", "Frigobar", "Wi-Fi Fibra", "Café da Manhã Incluso", "Ducha Quente"],
+        breakfastIncluded: true,
+        photos: ["https://images.unsplash.com/photo-1618773928121-c32242e63f39?auto=format&fit=crop&w=800&q=80"],
+        basePrice: 290,
+        pricingPeriods: [
+          {
+            id: "period-cam-std-1",
+            name: "Baixa Temporada (Ago - Set)",
+            startDate: "2026-08-01",
+            endDate: "2026-09-30",
+            price: 290
+          },
+          {
+            id: "period-cam-std-2",
+            name: "Média Temporada (Out - Nov)",
+            startDate: "2026-10-01",
+            endDate: "2026-11-30",
+            price: 340
+          },
+          {
+            id: "period-cam-std-3",
+            name: "Dezembro (Alta Temporada)",
+            startDate: "2026-12-01",
+            endDate: "2026-12-23",
+            price: 410
+          },
+          {
+            id: "period-cam-std-4",
+            name: "Fim de Ano & Réveillon",
+            startDate: "2026-12-24",
+            endDate: "2026-12-31",
+            price: 600
+          }
+        ],
+        calendar: {}
+      },
+      {
+        id: "room-caminho-sup-varanda",
+        name: "Suíte Superior com Varanda",
+        description: "Acomodação no andar superior com varanda privativa e ventilação natural abundante. Dispõe de cama de casal Queen Size, ar-condicionado Split, Smart TV 43\", frigobar e mesa de apoio.",
+        minGuests: 1,
+        maxGuests: 2,
+        beds: "1 Cama Queen Size",
+        view: "Varanda Privativa e Brisa do Mar",
+        hasBalcony: true,
+        amenities: ["Varanda Privativa", "Cama Queen Size", "Ar-condicionado Split", "Smart TV 43\"", "Frigobar", "Wi-Fi Fibra", "Café da Manhã Incluso"],
+        breakfastIncluded: true,
+        photos: ["https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=800&q=80"],
+        basePrice: 360,
+        pricingPeriods: [
+          {
+            id: "period-cam-sup-1",
+            name: "Baixa Temporada (Ago - Set)",
+            startDate: "2026-08-01",
+            endDate: "2026-09-30",
+            price: 360
+          },
+          {
+            id: "period-cam-sup-2",
+            name: "Média Temporada (Out - Nov)",
+            startDate: "2026-10-01",
+            endDate: "2026-11-30",
+            price: 420
+          },
+          {
+            id: "period-cam-sup-3",
+            name: "Dezembro (Alta Temporada)",
+            startDate: "2026-12-01",
+            endDate: "2026-12-23",
+            price: 510
+          },
+          {
+            id: "period-cam-sup-4",
+            name: "Fim de Ano & Réveillon",
+            startDate: "2026-12-24",
+            endDate: "2026-12-31",
+            price: 730
+          }
+        ],
+        calendar: {}
+      },
+      {
+        id: "room-caminho-familia",
+        name: "Suíte Família Tripla / Quádrupla",
+        description: "Espaço amplo planejado para até 4 hóspedes. Conta com 1 Cama de Casal + 2 Camas de Solteiro (ou Beliche de alto padrão), ar-condicionado Split, Smart TV, frigobar e café da manhã regional incluso.",
+        minGuests: 2,
+        maxGuests: 4,
+        beds: "1 Cama de Casal + 2 Camas de Solteiro",
+        area: 38,
+        amenities: ["Espaço Família 38m²", "Ar-condicionado Split", "Smart TV 43\"", "Frigobar", "Wi-Fi Fibra", "Café da Manhã Incluso"],
+        breakfastIncluded: true,
+        photos: ["https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=800&q=80"],
+        basePrice: 460,
+        pricingPeriods: [
+          {
+            id: "period-cam-fam-1",
+            name: "Baixa Temporada (Ago - Set)",
+            startDate: "2026-08-01",
+            endDate: "2026-09-30",
+            price: 460
+          },
+          {
+            id: "period-cam-fam-2",
+            name: "Média Temporada (Out - Nov)",
+            startDate: "2026-10-01",
+            endDate: "2026-11-30",
+            price: 540
+          },
+          {
+            id: "period-cam-fam-3",
+            name: "Dezembro (Alta Temporada)",
+            startDate: "2026-12-01",
+            endDate: "2026-12-23",
+            price: 650
+          },
+          {
+            id: "period-cam-fam-4",
+            name: "Fim de Ano & Réveillon",
+            startDate: "2026-12-24",
+            endDate: "2026-12-31",
+            price: 890
+          }
+        ],
+        calendar: {}
+      }
+    ]
   },
   {
     id: "ohana-pousada",
@@ -163,6 +456,192 @@ export const INITIAL_ACCOMMODATIONS: Accommodation[] = [
     priceDisplay: "A partir de R$ 510 / noite",
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
+  },
+  {
+    id: "hotel-orlanova-boutique",
+    name: "Hotel Orlanova Boutique",
+    slug: "hotel-orlanova-boutique",
+    category: "hotel",
+    typeTag: "boutique",
+    destinationId: "arraial-do-cabo",
+    partnerId: "orlanova",
+    description: "De frente para a paradisíaca Praia dos Anjos e a apenas 2 minutos a pé do Cais de Embarque, o Hotel Orlanova Boutique combina elegância contemporânea, acomodações aconchegantes e atendimento exclusivo. Oferece buffet de café da manhã completo incluso, recepção 24h, estacionamento privativo e opções de quartos com vista panorâmica para o mar turquesa de Arraial do Cabo.",
+    amenities: [
+      "Café da manhã buffet incluso",
+      "Wi-Fi Fibra de alta velocidade",
+      "Ar-condicionado Split",
+      "Smart TV 43\"",
+      "Frigobar Premium",
+      "Recepção 24 horas",
+      "Serviço de quarto",
+      "Vista para o mar (suítes)",
+      "Estacionamento privativo",
+      "Acesso direto à Praia dos Anjos"
+    ],
+    photos: [
+      "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80"
+    ],
+    location: "Praia dos Anjos, Arraial do Cabo",
+    address: "Av. Dom Pedro II, 10 - Praia dos Anjos, Arraial do Cabo - RJ",
+    netRate: 300,
+    sellRate: 370,
+    markup: 23,
+    commission: 70,
+    status: "active",
+    tag: "FRENTE MAR & EMBARQUE VIP",
+    rating: 4.9,
+    reviews: 128,
+    highlight: "Localização imbatível de frente para o mar na Praia dos Anjos, ao lado do Cais de Embarque.",
+    idealProfile: "Perfeito para casais e famílias que buscam conforto boutique, vista para o mar e a melhor logística de passeios de barco em Arraial do Cabo.",
+    specialFeatures: [
+      "Vista panorâmica para a enseada da Praia dos Anjos",
+      "A apenas 150m do Cais de Embarque dos Passeios de Barco",
+      "Buffet de café da manhã regional completo incluso"
+    ],
+    distances: [
+      { label: "Praia dos Anjos (Beira-mar)", distance: "10m • Passo na areia" },
+      { label: "Cais de Embarque de Barcos", distance: "150m • 2 min de caminhada" },
+      { label: "Praia do Forno (Trilha / Acesso)", distance: "400m • 5 min de caminhada" }
+    ],
+    whatsappMessage: "Olá, Guida Trips! Gostaria de consultar tarifas com R$ 20 de bônus para o Hotel Orlanova Boutique.",
+    priceDisplay: "A partir de R$ 320 / noite",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    roomTypes: [
+      {
+        id: "room-std-queen",
+        name: "Quarto Standard Queen",
+        description: "Achegado e funcional para até 2 pessoas. Equipado com cama Queen Size, ar-condicionado Split, Smart TV 43\", frigobar, Wi-Fi e banheiro privativo.",
+        minGuests: 1,
+        maxGuests: 2,
+        beds: "1 Cama Queen Size",
+        amenities: ["Ar-condicionado Split", "Smart TV 43\"", "Frigobar", "Wi-Fi Fibra", "Café da Manhã Incluso", "Ducha de Alta Pressão"],
+        breakfastIncluded: true,
+        photos: ["https://images.unsplash.com/photo-1618773928121-c32242e63f39?auto=format&fit=crop&w=800&q=80"],
+        basePrice: 320,
+        pricingPeriods: [
+          {
+            id: "period-std-1",
+            name: "Baixa Temporada (Ago - Set)",
+            startDate: "2026-08-01",
+            endDate: "2026-09-30",
+            price: 320
+          },
+          {
+            id: "period-std-2",
+            name: "Média Temporada (Out - Nov)",
+            startDate: "2026-10-01",
+            endDate: "2026-11-30",
+            price: 370
+          },
+          {
+            id: "period-std-3",
+            name: "Dezembro (Alta Temporada)",
+            startDate: "2026-12-01",
+            endDate: "2026-12-23",
+            price: 440
+          },
+          {
+            id: "period-std-4",
+            name: "Fim de Ano & Réveillon",
+            startDate: "2026-12-24",
+            endDate: "2026-12-31",
+            price: 620
+          }
+        ],
+        calendar: {}
+      },
+      {
+        id: "room-superior-vista-mar",
+        name: "Quarto Queen Superior Vista Mar",
+        description: "Acomodação ampla com janela panorâmica de frente para a enseada da Praia dos Anjos. Cama Queen Size, frigobar, ar-condicionado e área de trabalho.",
+        minGuests: 1,
+        maxGuests: 2,
+        beds: "1 Cama Queen Size",
+        view: "Vista para o Mar",
+        amenities: ["Vista Panorâmica do Mar", "Ar-condicionado Split", "Smart TV 43\"", "Frigobar Premium", "Wi-Fi Fibra", "Café da Manhã Incluso"],
+        breakfastIncluded: true,
+        photos: ["https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=800&q=80"],
+        basePrice: 400,
+        pricingPeriods: [
+          {
+            id: "period-sup-1",
+            name: "Baixa Temporada (Ago - Set)",
+            startDate: "2026-08-01",
+            endDate: "2026-09-30",
+            price: 400
+          },
+          {
+            id: "period-sup-2",
+            name: "Média Temporada (Out - Nov)",
+            startDate: "2026-10-01",
+            endDate: "2026-11-30",
+            price: 470
+          },
+          {
+            id: "period-sup-3",
+            name: "Dezembro (Alta Temporada)",
+            startDate: "2026-12-01",
+            endDate: "2026-12-23",
+            price: 560
+          },
+          {
+            id: "period-sup-4",
+            name: "Fim de Ano & Réveillon",
+            startDate: "2026-12-24",
+            endDate: "2026-12-31",
+            price: 770
+          }
+        ],
+        calendar: {}
+      },
+      {
+        id: "room-master-deluxe-vista-mar",
+        name: "Suíte Master Deluxe com Varanda Vista Mar",
+        description: "Suíte máster de 60m² com varanda privativa debruçada no mar. Cama King Size, área de estar com sofá cama, decoração sofisticada e vista inesquecível.",
+        minGuests: 2,
+        maxGuests: 4,
+        beds: "1 Cama King Size + 1 Sofá Cama Duplo",
+        area: 60,
+        view: "Vista Frontal Mar com Varanda",
+        hasBalcony: true,
+        amenities: ["Varanda Privativa Vista Mar", "Cama King Size", "Área de 60m²", "Ar-condicionado Split", "Smart TV 43\"", "Frigobar Premium", "Café da Manhã Incluso"],
+        breakfastIncluded: true,
+        photos: ["https://images.unsplash.com/photo-1631049307264-da0ec9d70304?auto=format&fit=crop&w=800&q=80"],
+        basePrice: 520,
+        pricingPeriods: [
+          {
+            id: "period-mst-1",
+            name: "Baixa Temporada (Ago - Set)",
+            startDate: "2026-08-01",
+            endDate: "2026-09-30",
+            price: 520
+          },
+          {
+            id: "period-mst-2",
+            name: "Média Temporada (Out - Nov)",
+            startDate: "2026-10-01",
+            endDate: "2026-11-30",
+            price: 620
+          },
+          {
+            id: "period-mst-3",
+            name: "Dezembro (Alta Temporada)",
+            startDate: "2026-12-01",
+            endDate: "2026-12-23",
+            price: 740
+          },
+          {
+            id: "period-mst-4",
+            name: "Fim de Ano & Réveillon",
+            startDate: "2026-12-24",
+            endDate: "2026-12-31",
+            price: 970
+          }
+        ],
+        calendar: {}
+      }
+    ]
   }
 ];
 

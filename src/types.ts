@@ -104,12 +104,12 @@ export interface RoomCalendarData {
 export interface RoomType {
   id: string;
   name: string;
-  description: string;
-  minGuests: number;
+  description?: string;
+  minGuests?: number;
   maxGuests: number;
-  photos: string[];
+  photos?: string[];
   mediaGallery?: MediaItem[];
-  amenities: string[];
+  amenities?: string[];
   area?: number;
   beds?: string;
   view?: string;
@@ -122,8 +122,8 @@ export interface RoomType {
   cancellationPolicy?: string;
   observations?: string;
 
-  pricingPeriods: RoomPricingPeriod[];
-  calendar: Record<string, RoomCalendarData>;
+  pricingPeriods?: RoomPricingPeriod[];
+  calendar?: Record<string, RoomCalendarData>;
   basePrice: number;
 }
 
@@ -678,6 +678,9 @@ export interface SavedItinerary {
   budget?: string;
   profile?: string;
   selectedHotelId?: string | null;
+  selectedRoomId?: string | null;
+  selectedRoomName?: string | null;
+  selectedRoomPrice?: number | null;
   totalEstimate: number;
   depositEstimate?: number;
   remainingEstimate?: number;
