@@ -22,6 +22,11 @@ export interface PricingEngineResult {
   discountTotal: number;
   total: number;
   
+  // Partial Payment Intelligence (Decision #6)
+  requiredDeposit: number; // Total de entrada (sinal) necessário para garantir a reserva
+  remainingBalance: number; // Saldo a pagar no local / check-in
+  averageDepositPercentage: number;
+  
   // Detailed lodging calculation summary
   lodgingDetail?: {
     roomsNeeded: number;
@@ -39,7 +44,7 @@ export interface PricingEngineResult {
     }[];
   };
 
-  // Detailed experiences breakdown
+  // Detailed experiences breakdown with deposit info
   experiencesDetail: {
     experienceId: string;
     name: string;
@@ -51,6 +56,9 @@ export interface PricingEngineResult {
     childPrice: number;
     babyPrice: number;
     total: number;
+    depositPercentage: number;
+    depositAmount: number;
+    remainingAmount: number;
     isClosed: boolean;
   }[];
 
@@ -310,6 +318,10 @@ export const PricingEngine = {
       const babiesTotal = tariff.babyPrice * infants;
       const totalItemCost = adultsTotal + kidsTotal + babiesTotal;
 
+      const depositPct = exp.depositPercentage ?? 30; // Default 30% deposit
+      const depositAmt = Math.round((totalItemCost * depositPct) / 100);
+      const remainingAmt = totalItemCost - depositAmt;
+
       experiencesDetail.push({
         experienceId: exp.id,
         name: exp.name,
@@ -321,6 +333,9 @@ export const PricingEngine = {
         childPrice: tariff.childPrice,
         babyPrice: tariff.babyPrice,
         total: totalItemCost,
+        depositPercentage: depositPct,
+        depositAmount: depositAmt,
+        remainingAmount: remainingAmt,
         isClosed: tariff.isClosed
       });
 
@@ -404,6 +419,14 @@ export const PricingEngine = {
     const discountTotal = 0; // Configurable hook for coupons or package discounts
     const total = subtotal - discountTotal;
 
+    // Calculate required deposit for experiences + lodging (50% default for lodging) + services
+    const expDepositTotal = experiencesDetail.reduce((sum, item) => sum + item.depositAmount, 0);
+    const lodgingDepositTotal = Math.round(lodgingCost * 0.5); // 50% deposit for lodging
+    const servicesDepositTotal = additionalServicesCost; // 100% for additional services
+    const requiredDeposit = expDepositTotal + lodgingDepositTotal + servicesDepositTotal;
+    const remainingBalance = Math.max(0, total - requiredDeposit);
+    const averageDepositPercentage = total > 0 ? Math.round((requiredDeposit / total) * 100) : 30;
+
     return {
       experiencesCost,
       lodgingCost,
@@ -411,6 +434,9 @@ export const PricingEngine = {
       subtotal,
       discountTotal,
       total,
+      requiredDeposit,
+      remainingBalance,
+      averageDepositPercentage,
       lodgingDetail,
       experiencesDetail,
       additionalServicesDetail,

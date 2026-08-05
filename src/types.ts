@@ -231,6 +231,21 @@ export interface Budget {
 
 export type OSUserRole = "admin" | "staff" | "partner" | "affiliate" | "client";
 
+export type CustomerJourneyStage =
+  | "discovery"             // Descobriu a Guida Trips
+  | "started_itinerary"     // Iniciou o roteiro
+  | "itinerary_built"       // Montou o roteiro
+  | "quote_requested"       // Solicitou orçamento
+  | "payment_pending"       // Pagamento pendente
+  | "payment_approved"      // Pagamento aprovado
+  | "reservation_confirmed" // Reserva confirmada
+  | "pre_trip"              // Preparando viagem
+  | "in_trip"               // Em viagem
+  | "post_trip"             // Passeios realizados
+  | "evaluated"             // Avaliação
+  | "community_active"      // Comunidade
+  | "repeat_booking";       // Nova viagem
+
 export interface Experience {
   id: string;
   name: string;
@@ -243,11 +258,12 @@ export interface Experience {
   duration: string;
   capacity: number;
   
-  // OS Financial Pricing Intelligence
+  // OS Financial Pricing Intelligence & Partial Payments
   netRate?: number; // Valor de custo com o parceiro
   priceFrom: number; // Valor final de venda (Base)
   promotionalPrice?: number;
   markup?: number; // Percentage
+  depositPercentage?: number; // % de entrada necessária (e.g. 30%, 50%, 100%)
   
   included: string[];
   notIncluded: string[];
@@ -624,12 +640,22 @@ export interface ClientReservation {
   id: string;
   userId: string;
   experienceId: string;
+  operationId?: string; // Linking reservation to a specific operation
   date: string;
   time: string;
   status: "confirmed" | "completed" | "cancelled" | "pending" | "new";
+  paymentStatus?: "pending" | "partial" | "paid" | "refunded";
+  paymentMethod?: "whatsapp" | "online" | "pix" | "credit_card";
   pax: number;
+  totalAmount?: number;
+  depositAmount?: number;
+  remainingBalance?: number;
+  depositPercentage?: number;
   voucherCode?: string;
+  qrCodeUrl?: string;
   meetingPoint?: string;
+  coordinates?: { lat: number; lng: number };
+  googleMapsUrl?: string;
   rules?: string[];
   bringItems?: string[];
   avoidItems?: string[];
@@ -637,6 +663,7 @@ export interface ClientReservation {
   children?: number;
   infants?: number;
   affiliateRef?: string;
+  journeyStage?: CustomerJourneyStage;
 }
 
 export interface SavedItinerary {
@@ -652,11 +679,15 @@ export interface SavedItinerary {
   profile?: string;
   selectedHotelId?: string | null;
   totalEstimate: number;
+  depositEstimate?: number;
+  remainingEstimate?: number;
   createdAt: string;
   items: BookingCartItem[];
   destinationName?: string;
-  status?: "Aguardando atendimento" | "Em negociação" | "Confirmado";
+  destinationId?: string;
+  status?: "Aguardando atendimento" | "Em negociação" | "Confirmado" | "Orçamento solicitado" | "Pagamento pendente" | "Pago";
   affiliateRef?: string;
+  journeyStage?: CustomerJourneyStage;
 }
 
 export interface ClientPartner {

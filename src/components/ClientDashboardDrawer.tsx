@@ -6,6 +6,8 @@ import {
 } from "lucide-react";
 import { BookingCartItem, Experience, Accommodation, getBrazilLocalDate, addDaysToBrazilDate } from "../types";
 import { PricingEngine } from "../lib/pricingEngine";
+import { RecommendationEngine } from "../services/recommendationEngine";
+import { ReservationService } from "../services/reservationService";
 
 interface ClientDashboardDrawerProps {
   isOpen: boolean;
@@ -333,17 +335,35 @@ export default function ClientDashboardDrawer({
                 </div>
 
                 <div className="p-8 space-y-6 flex-1 overflow-y-auto">
-                  <div className="bg-zinc-50 border border-zinc-200 rounded-2xl p-6 text-center space-y-3">
-                    <Send className="w-8 h-8 text-[#E8711A] mx-auto" />
-                    <h4 className="font-serif text-base font-bold text-[#0D1B2A]">Para quem é esta viagem?</h4>
-                    <p className="text-xs text-zinc-500 leading-relaxed max-w-sm mx-auto">
-                      Preencha apenas seu nome e cidade para que nossa equipe humana receba seu roteiro no WhatsApp e valide as disponibilidades reais para você.
+                  {/* Financial Breakdown Card */}
+                  <div className="bg-[#0D1B2A] text-white rounded-2xl p-6 space-y-4 shadow-lg">
+                    <span className="text-[10px] font-accent uppercase tracking-widest text-emerald-400 font-extrabold flex items-center gap-1.5">
+                      <Compass className="w-3.5 h-3.5" /> Resumo Financeiro & Garantia de Vaga
+                    </span>
+
+                    <div className="grid grid-cols-3 gap-3 text-center pt-2">
+                      <div className="bg-white/10 p-3 rounded-xl">
+                        <span className="text-[9px] text-zinc-300 font-accent uppercase block">Valor Total</span>
+                        <span className="font-serif text-sm sm:text-base font-bold text-white">R$ {totalCost.toFixed(2)}</span>
+                      </div>
+                      <div className="bg-emerald-500/20 border border-emerald-400/30 p-3 rounded-xl">
+                        <span className="text-[9px] text-emerald-300 font-accent uppercase font-bold block">Sinal Pago Hoje</span>
+                        <span className="font-serif text-sm sm:text-base font-extrabold text-emerald-300">R$ {pricingResult.requiredDeposit.toFixed(2)}</span>
+                      </div>
+                      <div className="bg-amber-500/20 border border-amber-400/30 p-3 rounded-xl">
+                        <span className="text-[9px] text-amber-300 font-accent uppercase font-bold block">No Embarque</span>
+                        <span className="font-serif text-sm sm:text-base font-extrabold text-amber-300">R$ {pricingResult.remainingBalance.toFixed(2)}</span>
+                      </div>
+                    </div>
+
+                    <p className="text-[11px] text-zinc-300 font-medium text-center">
+                      * Você paga apenas o sinal de <strong>R$ {pricingResult.requiredDeposit.toFixed(2)}</strong> online para travar o lote e garantir a reserva. O restante (R$ {pricingResult.remainingBalance.toFixed(2)}) é quitado direto no embarque!
                     </p>
                   </div>
 
                   <div className="space-y-4">
                     <div className="space-y-1.5">
-                      <label className="font-accent text-[10px] text-zinc-500 tracking-widest uppercase font-bold block">Seu Nome Completo</label>
+                      <label className="font-accent text-[10px] text-zinc-500 tracking-widest uppercase font-bold block">Seu Nome Completo *</label>
                       <input 
                         type="text"
                         value={clientName}
@@ -353,7 +373,7 @@ export default function ClientDashboardDrawer({
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <label className="font-accent text-[10px] text-zinc-500 tracking-widest uppercase font-bold block">Cidade de Origem</label>
+                      <label className="font-accent text-[10px] text-zinc-500 tracking-widest uppercase font-bold block">Cidade de Origem *</label>
                       <input 
                         type="text"
                         value={clientCity}
@@ -365,20 +385,36 @@ export default function ClientDashboardDrawer({
                   </div>
                 </div>
 
-                <div className="p-6 border-t border-zinc-200">
+                {/* Dual Payment Options Footer */}
+                <div className="p-6 border-t border-zinc-200 bg-zinc-50 space-y-3">
                   <button 
                     onClick={() => {
                       onClose();
                       onTriggerWhatsapp();
                     }}
                     disabled={!clientName.trim() || !clientCity.trim()}
-                    className={`w-full py-4 rounded-xl font-accent text-xs font-black tracking-widest uppercase transition-all flex items-center justify-center gap-2 ${
+                    className={`w-full py-3.5 rounded-xl font-accent text-xs font-black tracking-widest uppercase transition-all flex items-center justify-center gap-2 border-2 ${
                       clientName.trim() && clientCity.trim()
-                        ? "bg-[#0D1B2A] hover:bg-[#E8711A] text-white hover:text-[#0D1B2A] shadow-xl hover:scale-[1.02]"
-                        : "bg-zinc-100 text-zinc-400 cursor-not-allowed"
+                        ? "border-[#0D1B2A] text-[#0D1B2A] hover:bg-[#0D1B2A] hover:text-white"
+                        : "border-zinc-200 text-zinc-400 cursor-not-allowed"
                     }`}
                   >
-                    <Send className="w-4 h-4" /> Enviar para WhatsApp
+                    <Send className="w-4 h-4" /> 1. Solicitar Orçamento no WhatsApp
+                  </button>
+
+                  <button 
+                    onClick={() => {
+                      onClose();
+                      onTriggerWhatsapp();
+                    }}
+                    disabled={!clientName.trim() || !clientCity.trim()}
+                    className={`w-full py-4 rounded-xl font-accent text-xs font-black tracking-widest uppercase transition-all flex items-center justify-center gap-2 shadow-xl ${
+                      clientName.trim() && clientCity.trim()
+                        ? "bg-[#E8711A] hover:bg-[#FF8A3F] text-[#0D1B2A] hover:scale-[1.02]"
+                        : "bg-zinc-200 text-zinc-400 cursor-not-allowed"
+                    }`}
+                  >
+                    <Gift className="w-4 h-4" /> 2. Garantir Vaga Online (Sinal de R$ {pricingResult.requiredDeposit.toFixed(2)})
                   </button>
                 </div>
               </div>

@@ -43,5 +43,11 @@ service cloud.firestore {
     match /events/{document} {
       allow read, write: if true;
     }
+    match /thematicItineraries/{document} {
+      allow read, write: if true;
+    }
+    match /{document=**} {
+      allow read, write: if true;
+    }
   }
 }

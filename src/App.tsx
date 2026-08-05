@@ -13,7 +13,6 @@ import DestinoView from "./components/DestinoView";
 import AboutView from "./components/AboutView";
 import BlogView from "./components/BlogView";
 import ContactView from "./components/ContactView";
-import AdminView from "./components/AdminView";
 import HospedagensView from "./components/HospedagensView";
 import ClientDashboardDrawer from "./components/ClientDashboardDrawer";
 import WizardView from "./components/WizardView";
@@ -40,6 +39,26 @@ import {
 import { firestoreService } from "./firebase";
 
 export default function App() {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const getCurrentViewFromPath = (pathname: string): "home" | "wizard" | "experiencias" | "hospedagens" | "sobre" | "blog" | "contato" | "cliente" | "roteiro" | "os" | "admin" | "thematic-view" | "destino" | "confirmacao-roteiro" => {
+    if (pathname.startsWith('/guideos') || pathname === '/admin') return 'os';
+    if (pathname.startsWith('/lugares/') && pathname.split('/').filter(Boolean).length >= 3) return 'thematic-view';
+    if (pathname.startsWith('/lugares')) return 'destino';
+    if (pathname.startsWith('/passeios') || pathname.startsWith('/experiencias')) return 'experiencias';
+    if (pathname === '/roteiro-inteligente') return 'wizard';
+    if (pathname === '/meu-roteiro') return 'roteiro';
+    if (pathname === '/dashboard' || pathname === '/perfil') return 'cliente';
+    if (pathname.startsWith('/hospedagens')) return 'hospedagens';
+    if (pathname === '/sobre') return 'sobre';
+    if (pathname.startsWith('/blog')) return 'blog';
+    if (pathname === '/contato') return 'contato';
+    if (pathname === '/confirmacao-roteiro') return 'confirmacao-roteiro';
+    return 'home';
+  };
+  const currentView = getCurrentViewFromPath(location.pathname);
+
   // Client Authentication & Active Session State
   const [currentUser, setCurrentUser] = useState<ClientUser | null>(() => {
     try {
@@ -235,9 +254,6 @@ export default function App() {
     setIsAuthModalOpen(true);
   };
 
-  const navigate = useNavigate();
-  const location = useLocation();
-
   // Core CRM / Experiential Data loaded initially or from LocalStorage
   const [experiences, setExperiences] = useState<Experience[]>([]);
   const [posts, setPosts] = useState<BlogPost[]>([]);
@@ -253,24 +269,6 @@ export default function App() {
   const [affiliates, setAffiliates] = useState<any[]>([]);
   const [budgets, setBudgets] = useState<any[]>([]);
   const [thematicItineraries, setThematicItineraries] = useState<any[]>([]);
-
-  const getCurrentViewFromPath = (pathname: string) => {
-    if (pathname.startsWith('/guideos')) return 'os';
-    if (pathname.startsWith('/lugares/') && pathname.split('/').filter(Boolean).length >= 3) return 'thematic-view';
-    if (pathname.startsWith('/lugares')) return 'destino';
-    if (pathname.startsWith('/passeios') || pathname.startsWith('/experiencias')) return 'experiencias';
-    if (pathname === '/roteiro-inteligente') return 'wizard';
-    if (pathname === '/meu-roteiro') return 'roteiro';
-    if (pathname === '/dashboard' || pathname === '/perfil') return 'cliente';
-    if (pathname.startsWith('/hospedagens')) return 'hospedagens';
-    if (pathname === '/sobre') return 'sobre';
-    if (pathname.startsWith('/blog')) return 'blog';
-    if (pathname === '/contato') return 'contato';
-    if (pathname === '/admin') return 'admin';
-    if (pathname === '/confirmacao-roteiro') return 'confirmacao-roteiro';
-    return 'home';
-  };
-  const currentView = getCurrentViewFromPath(location.pathname);
 
   const [selectedPostSlug, setSelectedPostSlug] = useState<string | null>(null);
   const [selectedExperienceSlug, setSelectedExperienceSlug] = useState<string | null>(null);
@@ -1417,34 +1415,34 @@ export default function App() {
             onWhatsAppContact={openWhatsAppModal}
           />
         )}
-        {currentView === "admin" && (
-          currentUser?.roles?.includes("admin") ? (
-            <AdminView 
+        {((currentView as string) === "os" || (currentView as string) === "admin") && (
+          currentUser?.roles?.some(r => ["admin", "equipe", "afiliado", "parceiro_passeio", "parceiro_hospedagem"].includes(r)) ? (
+            <GuidaOS 
+              onNavigateHome={() => handleNavigate("home")}
               experiences={experiences}
               leads={leads}
-              posts={posts}
+              accommodations={accommodations}
+              partners={partners}
+              reservations={osReservations}
+              financial={financial}
+              affiliates={affiliates}
+              budgets={budgets}
+              thematicItineraries={thematicItineraries}
               settings={settings}
               destinations={destinations}
-              accommodations={accommodations}
-              reservations={osReservations}
-              onUpdateExperiences={updateExperiences}
-              onUpdatePosts={updatePosts}
-              onUpdateLeads={updateLeads}
               onUpdateSettings={updateSettings}
-              onUpdateDestinations={updateDestinations}
-              onUpdateAccommodations={updateAccommodations}
-              onUpdateReservations={updateReservations}
+              currentUser={currentUser}
             />
           ) : (
             <div className="pt-32 pb-20 text-center min-h-[60vh] flex flex-col items-center justify-center bg-[#FCFBF9]">
-              <h2 className="text-2xl font-bold font-serif mb-4 text-[#0D1B2A]">Acesso Restrito (GuideOS)</h2>
-              <p className="text-zinc-500 mb-6 max-w-md mx-auto">Você não tem permissão para acessar o painel administrativo. Esta área é restrita.</p>
+              <h2 className="text-2xl font-bold font-serif mb-4 text-[#0D1B2A]">Acesso Restrito (GuidaOS)</h2>
+              <p className="text-zinc-500 mb-6 max-w-md mx-auto">Você precisa estar logado com credenciais autorizadas para acessar o GuidaOS.</p>
               {!currentUser ? (
                 <button 
                   onClick={() => setIsAuthModalOpen(true)} 
                   className="px-6 py-3 bg-[#0D1B2A] text-white text-[10px] font-bold tracking-widest uppercase rounded-full cursor-pointer hover:bg-[#E8711A] transition-colors"
                 >
-                  Fazer Login como Administrador
+                  Fazer Login no GuidaOS
                 </button>
               ) : (
                 <button 
