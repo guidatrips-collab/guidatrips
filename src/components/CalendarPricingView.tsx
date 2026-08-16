@@ -11,9 +11,11 @@ import {
   Sparkles, 
   Info,
   CalendarDays,
-  X
+  X,
+  Layers,
+  Check
 } from 'lucide-react';
-import { Experience, Accommodation, getBrazilLocalDate } from '../types';
+import { Experience, Accommodation } from '../types';
 
 type PricingItem = Experience | Accommodation;
 
@@ -55,9 +57,19 @@ export function CalendarPricingView({
   const [babyPrice, setBabyPrice] = useState<number | "">("");
   const [status, setStatus] = useState<"open" | "closed">("open");
 
+  // Notification toast state
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => {
+      setToastMessage(null);
+    }, 4000);
+  };
+
   // Clear modal confirmation state
   const [showClearModal, setShowClearModal] = useState(false);
-  const [clearScope, setClearScope] = useState<'month' | 'all'>('month');
+  const [clearScope, setClearScope] = useState<'month' | 'all_room' | 'all_accommodation' | 'all_and_periods'>('all_room');
 
   // Format date to strictly deterministic YYYY-MM-DD
   const formatDateStr = (year: number, month: number, day: number) => {
@@ -77,12 +89,14 @@ export function CalendarPricingView({
 
   const prevMonth = () => {
     setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1));
-    setSelectedDates([]);
   };
 
   const nextMonth = () => {
     setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1));
-    setSelectedDates([]);
+  };
+
+  const jumpToMonth = (monthIndex: number) => {
+    setCurrentMonth(new Date(currentMonth.getFullYear(), monthIndex, 1));
   };
 
   const toggleDateSelection = (dateStr: string) => {
@@ -93,7 +107,7 @@ export function CalendarPricingView({
     }
   };
 
-  const selectAllMonth = () => {
+  const selectCurrentMonth = () => {
     const year = currentMonth.getFullYear();
     const month = currentMonth.getMonth();
     const daysInMonth = getDaysInMonth(year, month);
@@ -106,7 +120,28 @@ export function CalendarPricingView({
     setSelectedDates(newSelection);
   };
 
-  const selectWeekends = () => {
+  const selectNextNMonths = (monthCount: number) => {
+    const startYear = currentMonth.getFullYear();
+    const startMonth = currentMonth.getMonth();
+    const newSelection: string[] = [];
+
+    for (let m = 0; m < monthCount; m++) {
+      const targetDate = new Date(startYear, startMonth + m, 1);
+      const targetY = targetDate.getFullYear();
+      const targetM = targetDate.getMonth();
+      const days = getDaysInMonth(targetY, targetM);
+      for (let d = 1; d <= days; d++) {
+        newSelection.push(formatDateStr(targetY, targetM, d));
+      }
+    }
+    setSelectedDates(newSelection);
+  };
+
+  const selectFullYear = () => {
+    selectNextNMonths(12);
+  };
+
+  const selectWeekendsCurrentMonth = () => {
     const year = currentMonth.getFullYear();
     const month = currentMonth.getMonth();
     const daysInMonth = getDaysInMonth(year, month);
@@ -121,7 +156,27 @@ export function CalendarPricingView({
     setSelectedDates(newSelection);
   };
 
-  const selectWeekdays = () => {
+  const selectWeekendsFullYear = () => {
+    const startYear = currentMonth.getFullYear();
+    const startMonth = currentMonth.getMonth();
+    const newSelection: string[] = [];
+
+    for (let m = 0; m < 12; m++) {
+      const targetDate = new Date(startYear, startMonth + m, 1);
+      const targetY = targetDate.getFullYear();
+      const targetM = targetDate.getMonth();
+      const days = getDaysInMonth(targetY, targetM);
+      for (let d = 1; d <= days; d++) {
+        const dayOfWeek = new Date(targetY, targetM, d).getDay();
+        if (dayOfWeek === 5 || dayOfWeek === 6 || dayOfWeek === 0) { // Sex, Sáb, Dom
+          newSelection.push(formatDateStr(targetY, targetM, d));
+        }
+      }
+    }
+    setSelectedDates(newSelection);
+  };
+
+  const selectWeekdaysCurrentMonth = () => {
     const year = currentMonth.getFullYear();
     const month = currentMonth.getMonth();
     const daysInMonth = getDaysInMonth(year, month);
@@ -193,6 +248,7 @@ export function CalendarPricingView({
       } as any);
     }
     
+    showToast(`✓ Sucesso: ${selectedDates.length} data(s) salvas com sucesso no tarifário!`);
     clearSelection();
   };
 
@@ -210,42 +266,80 @@ export function CalendarPricingView({
     } else {
       onUpdateItem({ ...selectedItem, calendar: newCalendar } as any);
     }
+    showToast(`✓ ${selectedDates.length} data(s) restauradas para a diária padrão.`);
     clearSelection();
   };
 
   // Clear entire tariff (reset) for room or item
-  const handleExecuteClearTariff = (scope: 'month' | 'all') => {
+  const handleExecuteClearTariff = (scope: 'month' | 'all_room' | 'all_accommodation' | 'all_and_periods') => {
     if (!selectedItem) return;
 
-    let newCalendar = { ...(activeCalendarSource?.calendar || {}) };
-
-    if (scope === 'all') {
-      // Complete wipe of all dates
-      newCalendar = {};
+    if (scope === 'all_accommodation' && 'roomTypes' in selectedItem && selectedItem.roomTypes) {
+      // Complete wipe of all calendar dates across ALL rooms of this accommodation
+      const updatedRooms = (selectedItem.roomTypes || []).map(r => ({
+        ...r,
+        calendar: {}
+      }));
+      onUpdateItem({
+        ...selectedItem,
+        calendar: {},
+        roomTypes: updatedRooms
+      } as any);
+      showToast(`✓ Sucesso: Todos os quartos desta hospedagem foram completamente zerados para a diária base padrão!`);
+    } else if (scope === 'all_and_periods') {
+      // Wipe calendar AND pricing periods for current room or item
+      if (selectedRoom && 'roomTypes' in selectedItem) {
+        const updatedRooms = (selectedItem.roomTypes || []).map(r => 
+          r.id === selectedRoom.id ? { ...r, calendar: {}, pricingPeriods: [] } : r
+        );
+        onUpdateItem({ ...selectedItem, roomTypes: updatedRooms } as any);
+      } else {
+        onUpdateItem({ ...selectedItem, calendar: {}, pricingPeriods: [] } as any);
+      }
+      showToast(`✓ Sucesso: Tarifário do ano inteiro e períodos sazonais foram zerados com sucesso!`);
+    } else if (scope === 'all_room') {
+      // Complete wipe of all dates for this room/item
+      if (selectedRoom && 'roomTypes' in selectedItem) {
+        const updatedRooms = (selectedItem.roomTypes || []).map(r => 
+          r.id === selectedRoom.id ? { ...r, calendar: {} } : r
+        );
+        onUpdateItem({
+          ...selectedItem,
+          roomTypes: updatedRooms
+        } as any);
+      } else {
+        onUpdateItem({
+          ...selectedItem,
+          calendar: {}
+        } as any);
+      }
+      showToast(`✓ Sucesso: Todo o tarifário do ano (${selectedRoom ? selectedRoom.name : selectedItem.name}) foi zerado!`);
     } else {
       // Wipe only dates matching the currently displayed year-month (YYYY-MM)
       const year = currentMonth.getFullYear();
       const monthPrefix = `${year}-${String(currentMonth.getMonth() + 1).padStart(2, '0')}`;
+      let newCalendar = { ...(activeCalendarSource?.calendar || {}) };
       Object.keys(newCalendar).forEach(d => {
         if (d.startsWith(monthPrefix)) {
           delete newCalendar[d];
         }
       });
-    }
 
-    if (selectedRoom && 'roomTypes' in selectedItem) {
-      const updatedRooms = (selectedItem.roomTypes || []).map(r => 
-        r.id === selectedRoom.id ? { ...r, calendar: newCalendar } : r
-      );
-      onUpdateItem({
-        ...selectedItem,
-        roomTypes: updatedRooms
-      } as any);
-    } else {
-      onUpdateItem({
-        ...selectedItem,
-        calendar: newCalendar
-      } as any);
+      if (selectedRoom && 'roomTypes' in selectedItem) {
+        const updatedRooms = (selectedItem.roomTypes || []).map(r => 
+          r.id === selectedRoom.id ? { ...r, calendar: newCalendar } : r
+        );
+        onUpdateItem({
+          ...selectedItem,
+          roomTypes: updatedRooms
+        } as any);
+      } else {
+        onUpdateItem({
+          ...selectedItem,
+          calendar: newCalendar
+        } as any);
+      }
+      showToast(`✓ Tarifário do mês de ${currentMonth.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })} zerado!`);
     }
 
     clearSelection();
@@ -266,8 +360,23 @@ export function CalendarPricingView({
   const totalCustomDatesInMonth = Object.keys(activeCalendarSource?.calendar || {}).filter(d => d.startsWith(monthPrefix)).length;
   const totalCustomDatesOverall = Object.keys(activeCalendarSource?.calendar || {}).length;
 
+  const monthNamesShort = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+
   return (
     <div className="space-y-6">
+      {/* TOAST NOTIFICATION */}
+      {toastMessage && (
+        <div className="p-3 bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 rounded-xl text-xs font-semibold flex items-center justify-between shadow-lg animate-in fade-in slide-in-from-top-2">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+            <span>{toastMessage}</span>
+          </div>
+          <button onClick={() => setToastMessage(null)} className="text-emerald-400 hover:text-white p-1">
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
+
       {/* HEADER / SELECT ITEM */}
       <div className="bg-[#0D1B2A]/40 border border-white/5 p-6 rounded-lg space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -281,18 +390,18 @@ export function CalendarPricingView({
           </div>
 
           {activeCalendarSource && (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <button
                 type="button"
                 onClick={() => {
-                  setClearScope('month');
+                  setClearScope('all_room');
                   setShowClearModal(true);
                 }}
-                className="px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 text-xs font-semibold rounded-md transition-all flex items-center gap-1.5 cursor-pointer"
-                title="Limpar ou zerar tarifário deste item"
+                className="px-3.5 py-2 bg-red-600/20 hover:bg-red-600/30 text-red-300 border border-red-500/30 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
+                title="Zerar tarifário de todos os meses do ano ou deste mês"
               >
-                <Trash2 className="w-3.5 h-3.5" />
-                Zerar / Limpar Tarifário
+                <Trash2 className="w-4 h-4 text-red-400" />
+                Zerar Tarifário / Limpar Tudo
               </button>
             </div>
           )}
@@ -367,8 +476,47 @@ export function CalendarPricingView({
           {/* CALENDAR */}
           <div className="lg:col-span-2 bg-[#0D1B2A]/40 border border-white/5 p-6 rounded-lg">
             
+            {/* MONTH QUICK-JUMP TABS */}
+            <div className="mb-4 pb-3 border-b border-white/5">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[10px] uppercase font-bold tracking-widest text-zinc-400">
+                  Navegação Rápida pelos Meses ({year})
+                </span>
+                <span className="text-[11px] text-emerald-400 font-semibold">
+                  {totalCustomDatesOverall} datas personalizadas cadastradas no total
+                </span>
+              </div>
+              <div className="grid grid-cols-6 sm:grid-cols-12 gap-1">
+                {monthNamesShort.map((mName, idx) => {
+                  const mPrefix = `${year}-${String(idx + 1).padStart(2, '0')}`;
+                  const customInThisMonth = Object.keys(activeCalendarSource?.calendar || {}).filter(d => d.startsWith(mPrefix)).length;
+                  const isCurrentActive = currentMonth.getMonth() === idx;
+                  return (
+                    <button
+                      key={mName}
+                      onClick={() => jumpToMonth(idx)}
+                      className={`px-1.5 py-1.5 rounded text-[10px] font-bold uppercase transition flex flex-col items-center justify-center cursor-pointer ${
+                        isCurrentActive 
+                          ? 'bg-[#E8711A] text-white shadow-md' 
+                          : customInThisMonth > 0 
+                            ? 'bg-emerald-950/40 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-900/40' 
+                            : 'bg-white/5 text-zinc-400 hover:bg-white/10 hover:text-white'
+                      }`}
+                    >
+                      <span>{mName}</span>
+                      {customInThisMonth > 0 && (
+                        <span className={`text-[8px] px-1 rounded-full ${isCurrentActive ? 'bg-black/30 text-white' : 'bg-emerald-500/20 text-emerald-400 font-extrabold'}`}>
+                          {customInThisMonth}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
             {/* MONTH HEADER & STATS */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 border-b border-white/5 pb-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4 border-b border-white/5 pb-4">
               <div className="flex items-center gap-3">
                 <button onClick={prevMonth} className="p-2 bg-white/5 hover:bg-white/10 text-white rounded-md transition cursor-pointer">
                   <ChevronLeft className="w-4 h-4" />
@@ -391,13 +539,23 @@ export function CalendarPricingView({
                 <span className="px-2.5 py-1 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-medium">
                   {totalCustomDatesInMonth} dia(s) alterados neste mês
                 </span>
-                <span className="px-2.5 py-1 rounded bg-zinc-800 text-zinc-400">
-                  {totalCustomDatesOverall} alterados no total
-                </span>
+                {totalCustomDatesOverall > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setClearScope('all_room');
+                      setShowClearModal(true);
+                    }}
+                    className="px-2.5 py-1 rounded bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 font-bold transition flex items-center gap-1 cursor-pointer"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                    Zerar Tudo
+                  </button>
+                )}
               </div>
             </div>
 
-            {/* LEGEND EXPLANATION (PREVENTS USER CONFUSION OVER "MIRRORED" PRICING) */}
+            {/* LEGEND EXPLANATION */}
             <div className="bg-white/5 border border-white/10 rounded-lg p-3 mb-4 flex flex-wrap items-center justify-between gap-3 text-[11px]">
               <div className="flex items-center gap-4 flex-wrap">
                 <div className="flex items-center gap-1.5">
@@ -495,37 +653,80 @@ export function CalendarPricingView({
               })}
             </div>
 
-            {/* SELECTION SHORTCUTS */}
-            <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-white/5 pt-4">
-              <div className="flex flex-wrap gap-2">
+            {/* ADVANCED SELECTION SHORTCUTS (MONTH & ALL MONTHS) */}
+            <div className="mt-6 border-t border-white/5 pt-4 space-y-3">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <span className="text-[10px] uppercase font-bold tracking-widest text-[#E8711A] flex items-center gap-1.5">
+                  <Layers className="w-3.5 h-3.5" /> Seleção Rápida em Lote (Mês Atual ou Todos os Meses)
+                </span>
+                {selectedDates.length > 0 && (
+                  <button 
+                    onClick={clearSelection}
+                    className="px-2.5 py-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-[11px] font-bold rounded transition cursor-pointer"
+                  >
+                    Desmarcar Seleção ({selectedDates.length} dias)
+                  </button>
+                )}
+              </div>
+
+              {/* Selection buttons grid */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 <button 
-                  onClick={selectAllMonth}
-                  className="px-3 py-1.5 bg-white/5 hover:bg-white/10 text-white text-xs font-accent tracking-wider uppercase rounded-md transition"
+                  onClick={selectCurrentMonth}
+                  className="px-2.5 py-2 bg-white/5 hover:bg-white/10 text-white text-xs font-accent tracking-wider uppercase rounded-md transition text-center font-bold"
                 >
-                  Selecionar Mês Todo
+                  Mês Atual ({daysInMonth}d)
                 </button>
                 <button 
-                  onClick={selectWeekends}
-                  className="px-3 py-1.5 bg-white/5 hover:bg-white/10 text-zinc-300 text-xs font-accent tracking-wider uppercase rounded-md transition"
+                  onClick={() => selectNextNMonths(3)}
+                  className="px-2.5 py-2 bg-white/5 hover:bg-white/10 text-white text-xs font-accent tracking-wider uppercase rounded-md transition text-center font-bold"
                 >
-                  Finais de Semana
+                  Próximos 3 Meses
                 </button>
                 <button 
-                  onClick={selectWeekdays}
-                  className="px-3 py-1.5 bg-white/5 hover:bg-white/10 text-zinc-300 text-xs font-accent tracking-wider uppercase rounded-md transition"
+                  onClick={() => selectNextNMonths(6)}
+                  className="px-2.5 py-2 bg-white/5 hover:bg-white/10 text-white text-xs font-accent tracking-wider uppercase rounded-md transition text-center font-bold"
                 >
-                  Dias de Semana
+                  Próximos 6 Meses
+                </button>
+                <button 
+                  onClick={selectFullYear}
+                  className="px-2.5 py-2 bg-[#E8711A]/20 hover:bg-[#E8711A]/30 text-[#E8711A] border border-[#E8711A]/40 text-xs font-accent tracking-wider uppercase rounded-md transition text-center font-extrabold shadow-sm"
+                >
+                  🌟 Ano Todo (12 Meses)
                 </button>
               </div>
 
-              {selectedDates.length > 0 && (
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 <button 
-                  onClick={clearSelection}
-                  className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-accent tracking-wider uppercase rounded-md transition"
+                  onClick={selectWeekendsCurrentMonth}
+                  className="px-2.5 py-1.5 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 text-[11px] rounded-md transition text-center"
                 >
-                  Desmarcar Seleção ({selectedDates.length})
+                  Fins de Semana (Mês)
                 </button>
-              )}
+                <button 
+                  onClick={selectWeekendsFullYear}
+                  className="px-2.5 py-1.5 bg-zinc-900 hover:bg-zinc-800 text-[#E8711A] text-[11px] font-semibold rounded-md transition text-center"
+                >
+                  Fins de Semana (Ano Todo)
+                </button>
+                <button 
+                  onClick={selectWeekdaysCurrentMonth}
+                  className="px-2.5 py-1.5 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 text-[11px] rounded-md transition text-center"
+                >
+                  Dias de Semana (Mês)
+                </button>
+                <button 
+                  onClick={() => {
+                    setClearScope('all_room');
+                    setShowClearModal(true);
+                  }}
+                  className="px-2.5 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 text-[11px] font-bold rounded-md transition text-center flex items-center justify-center gap-1 cursor-pointer"
+                >
+                  <Trash2 className="w-3 h-3" />
+                  Zerar Tudo
+                </button>
+              </div>
             </div>
           </div>
 
@@ -536,30 +737,47 @@ export function CalendarPricingView({
                 <Sparkles className="w-4 h-4" /> Aplicar Tarifas
               </h4>
               {selectedDates.length > 0 && (
-                <span className="bg-[#E8711A]/20 text-[#E8711A] px-2 py-0.5 rounded text-[11px] font-bold">
-                  {selectedDates.length} dia(s)
+                <span className="bg-[#E8711A] text-white px-2 py-0.5 rounded text-[11px] font-extrabold shadow">
+                  {selectedDates.length} dia(s) selecionados
                 </span>
               )}
             </div>
             
             {selectedDates.length === 0 ? (
-              <div className="text-center py-8 opacity-60">
-                <CalendarDays className="w-10 h-10 mx-auto mb-2 text-zinc-400" />
-                <p className="text-xs text-zinc-300 font-sans">
-                  Clique nas datas do calendário que deseja precificar ou bloquear.
+              <div className="text-center py-8 opacity-75 space-y-3">
+                <CalendarDays className="w-10 h-10 mx-auto mb-2 text-[#E8711A]" />
+                <p className="text-xs text-zinc-200 font-sans font-medium">
+                  Selecione datas no calendário ou clique em <strong>"Mês Atual"</strong> ou <strong>"Ano Todo (12 Meses)"</strong> para aplicar valores em lote.
                 </p>
-                <p className="text-[11px] text-zinc-500 mt-2">
-                  Você pode selecionar múltiplos dias avulsos ou usar os atalhos de seleção rápida.
-                </p>
+                <div className="pt-2 border-t border-white/5 flex flex-col gap-2">
+                  <button
+                    type="button"
+                    onClick={selectFullYear}
+                    className="w-full py-2 bg-white/5 hover:bg-white/10 text-zinc-300 text-xs font-accent tracking-wider uppercase rounded-md transition cursor-pointer"
+                  >
+                    Selecionar Ano Inteiro (12 Meses)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setClearScope('all_room');
+                      setShowClearModal(true);
+                    }}
+                    className="w-full py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 text-xs font-bold rounded-md transition flex items-center justify-center gap-1.5 cursor-pointer"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    Zerar Todo o Tarifário
+                  </button>
+                </div>
               </div>
             ) : (
               <div className="space-y-4">
                 <div className="bg-[#E8711A]/10 border border-[#E8711A]/20 text-[#E8711A] p-2.5 rounded-md text-xs font-medium">
-                  Configurando {selectedDates.length} data(s) no mês de {currentMonth.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
+                  Configurando <strong>{selectedDates.length} data(s)</strong> no total
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="font-accent text-[9px] text-[#ffefe6]/90 tracking-widest uppercase">Disponibilidade do Dia</label>
+                  <label className="font-accent text-[9px] text-[#ffefe6]/90 tracking-widest uppercase">Disponibilidade dos Dias Selecionados</label>
                   <select
                     value={status}
                     onChange={(e) => setStatus(e.target.value as "open" | "closed")}
@@ -629,6 +847,18 @@ export function CalendarPricingView({
                     <RefreshCw className="w-3.5 h-3.5" />
                     Restaurar Padrão dos Selecionados
                   </button>
+
+                  <button 
+                    type="button"
+                    onClick={() => {
+                      setClearScope('all_room');
+                      setShowClearModal(true);
+                    }}
+                    className="w-full py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 text-xs font-bold rounded-md transition flex items-center justify-center gap-1.5 cursor-pointer mt-1"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    Zerar Tudo (Todos os Meses)
+                  </button>
                 </div>
               </div>
             )}
@@ -637,14 +867,14 @@ export function CalendarPricingView({
         </div>
       )}
 
-      {/* CLEAR TARIFF CONFIRMATION MODAL */}
+      {/* CLEAR TARIFF CONFIRMATION MODAL WITH ALL SCOPE CHOICES */}
       {showClearModal && (
         <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm">
-          <div className="bg-[#121214] border border-red-500/30 rounded-xl p-6 max-w-md w-full shadow-2xl space-y-5 animate-in fade-in zoom-in-95">
+          <div className="bg-[#121214] border border-red-500/40 rounded-xl p-6 max-w-lg w-full shadow-2xl space-y-5 animate-in fade-in zoom-in-95">
             <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
               <div className="flex items-center gap-2 text-red-400 font-bold text-base">
                 <Trash2 className="w-5 h-5" />
-                Zerar Tarifário
+                Zerar Tarifário / Limpar Tudo
               </div>
               <button 
                 onClick={() => setShowClearModal(false)}
@@ -656,19 +886,48 @@ export function CalendarPricingView({
 
             <div className="text-sm text-zinc-300 space-y-3">
               <p>
-                Escolha como deseja limpar as tarifas personalizadas de:
+                Escolha exatamente o que deseja zerar para:
                 <br />
-                <strong className="text-white">
+                <strong className="text-white text-base">
                   {selectedRoom ? `${selectedItem?.name} — ${selectedRoom.name}` : selectedItem?.name}
                 </strong>
               </p>
 
-              <div className="space-y-2 pt-2">
+              <div className="space-y-2.5 pt-2">
+                
+                {/* 1. Zerar Todo o Ano (Deste Quarto/Item) */}
+                <label 
+                  onClick={() => setClearScope('all_room')}
+                  className={`flex items-start gap-3 p-3.5 rounded-lg border cursor-pointer transition ${
+                    clearScope === 'all_room' 
+                      ? 'bg-red-500/15 border-red-500/50 text-white shadow' 
+                      : 'bg-zinc-900 border-zinc-800 text-zinc-400'
+                  }`}
+                >
+                  <input 
+                    type="radio" 
+                    name="clearScope" 
+                    checked={clearScope === 'all_room'} 
+                    onChange={() => setClearScope('all_room')}
+                    className="mt-1 text-red-500 focus:ring-red-500"
+                  />
+                  <div>
+                    <div className="font-bold text-xs text-red-400 flex items-center gap-1.5">
+                      <span>🗑️ Zerar TODO o ano (Todos os 12 meses)</span>
+                      <span className="bg-red-500/20 text-red-300 px-1.5 py-0.2 rounded text-[10px]">Recomendado</span>
+                    </div>
+                    <div className="text-[11px] text-zinc-300 mt-0.5">
+                      Apaga todas as tarifas e bloqueios de todos os meses do ano deste {selectedRoom ? 'quarto' : 'item'}, retornando 100% dos dias para o valor base padrão (R$ {basePrice}).
+                    </div>
+                  </div>
+                </label>
+
+                {/* 2. Zerar apenas o mês atual */}
                 <label 
                   onClick={() => setClearScope('month')}
                   className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition ${
                     clearScope === 'month' 
-                      ? 'bg-red-500/10 border-red-500/40 text-white' 
+                      ? 'bg-red-500/15 border-red-500/50 text-white' 
                       : 'bg-zinc-900 border-zinc-800 text-zinc-400'
                   }`}
                 >
@@ -681,38 +940,68 @@ export function CalendarPricingView({
                   />
                   <div>
                     <div className="font-bold text-xs text-white">
-                      Limpar apenas o mês atual ({currentMonth.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })})
+                      Limpar apenas este mês ({currentMonth.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })})
                     </div>
                     <div className="text-[11px] text-zinc-400 mt-0.5">
-                      Remove apenas as tarifas e bloqueios deste mês específico. Outros meses permanecem inalterados.
+                      Remove apenas as {totalCustomDatesInMonth} tarifas personalizadas deste mês específico. Os demais meses do ano permanecem intocados.
                     </div>
                   </div>
                 </label>
 
+                {/* 3. Se for hospedagem com múltiplos quartos: Zerar TODOS OS QUARTOS */}
+                {selectedItem && 'roomTypes' in selectedItem && selectedItem.roomTypes && selectedItem.roomTypes.length > 1 && (
+                  <label 
+                    onClick={() => setClearScope('all_accommodation')}
+                    className={`flex items-start gap-3 p-3.5 rounded-lg border cursor-pointer transition ${
+                      clearScope === 'all_accommodation' 
+                        ? 'bg-red-500/20 border-red-500 text-white shadow-lg ring-1 ring-red-500' 
+                        : 'bg-zinc-900 border-zinc-800 text-zinc-400'
+                    }`}
+                  >
+                    <input 
+                      type="radio" 
+                      name="clearScope" 
+                      checked={clearScope === 'all_accommodation'} 
+                      onChange={() => setClearScope('all_accommodation')}
+                      className="mt-1 text-red-500 focus:ring-red-500"
+                    />
+                    <div>
+                      <div className="font-bold text-xs text-amber-300">
+                        ⚡ Zerar TODOS OS QUARTOS desta Pousada ({selectedItem.name})
+                      </div>
+                      <div className="text-[11px] text-zinc-300 mt-0.5">
+                        Zera de uma só vez o calendário do ano inteiro de todas as {selectedItem.roomTypes.length} categorias de quartos desta hospedagem.
+                      </div>
+                    </div>
+                  </label>
+                )}
+
+                {/* 4. Zerar tudo incluindo períodos sazonais */}
                 <label 
-                  onClick={() => setClearScope('all')}
+                  onClick={() => setClearScope('all_and_periods')}
                   className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition ${
-                    clearScope === 'all' 
-                      ? 'bg-red-500/10 border-red-500/40 text-white' 
+                    clearScope === 'all_and_periods' 
+                      ? 'bg-red-500/15 border-red-500/50 text-white' 
                       : 'bg-zinc-900 border-zinc-800 text-zinc-400'
                   }`}
                 >
                   <input 
                     type="radio" 
                     name="clearScope" 
-                    checked={clearScope === 'all'} 
-                    onChange={() => setClearScope('all')}
+                    checked={clearScope === 'all_and_periods'} 
+                    onChange={() => setClearScope('all_and_periods')}
                     className="mt-1 text-red-500 focus:ring-red-500"
                   />
                   <div>
-                    <div className="font-bold text-xs text-red-400">
-                      Zerar TODO o tarifário (Todos os meses do ano)
+                    <div className="font-bold text-xs text-white">
+                      Zerar Tarifário + Períodos Sazonais
                     </div>
                     <div className="text-[11px] text-zinc-400 mt-0.5">
-                      Restaura o quarto/item completamente para a diária base padrão em todas as datas.
+                      Apaga as personalizações do calendário e também exclui os períodos de alta/baixa temporada cadastrados no quarto.
                     </div>
                   </div>
                 </label>
+
               </div>
             </div>
 
@@ -720,17 +1009,17 @@ export function CalendarPricingView({
               <button
                 type="button"
                 onClick={() => setShowClearModal(false)}
-                className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg text-xs font-semibold"
+                className="px-4 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg text-xs font-semibold"
               >
                 Cancelar
               </button>
               <button
                 type="button"
                 onClick={() => handleExecuteClearTariff(clearScope)}
-                className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-lg"
+                className="px-5 py-2.5 bg-red-600 hover:bg-red-500 text-white rounded-lg text-xs font-bold flex items-center gap-2 shadow-xl cursor-pointer"
               >
-                <Trash2 className="w-3.5 h-3.5" />
-                Confirmar e Limpar
+                <Trash2 className="w-4 h-4" />
+                Confirmar e Zerar Agora
               </button>
             </div>
           </div>
