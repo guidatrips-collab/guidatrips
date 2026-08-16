@@ -33,7 +33,7 @@ const dictionaries: Record<SupportedLanguage, Record<string, string>> = {
     // Hero
     "hero.badge": "Curadoria Oficial de Turismo",
     "hero.title": "Experiências Inesquecíveis na Região dos Lagos",
-    "hero.subtitle": "Reserve paseios de barco, lanchas VIP, quadriciclos e hospedagens boutique com garantia de vagas e atendimento humano.",
+    "hero.subtitle": "Reserve passeios de barco, lanchas VIP, quadriciclos e hospedagens boutique com garantia de vagas e atendimento humano.",
     "hero.btn.wizard": "Montar Roteiro Personalizado",
     "hero.btn.explore": "Explorar Passeios",
     
@@ -62,6 +62,41 @@ const dictionaries: Record<SupportedLanguage, Record<string, string>> = {
     "card.book_now": "Garantir Vaga",
     "card.add_to_itinerary": "Adicionar ao Roteiro",
     "card.view_details": "Ver Detalhes",
+    
+    // Experiences View
+    "exp.header_title": "Passeios e Experiências Exclusivas",
+    "exp.header_sub": "Curadoria VIP na Região dos Lagos com reservas garantidas",
+    "exp.search_placeholder": "Buscar passeio, local ou estilo...",
+    "exp.category_all": "Todos",
+    "exp.category_nautico": "Náutico",
+    "exp.category_offroad": "Quadriciclo",
+    "exp.category_mergulho": "Mergulho",
+    "exp.category_gastronomia": "Gastronomia",
+    "exp.category_helitour": "Helicóptero",
+
+    // Accommodations View
+    "acc.header_title": "Hospedagens Selecionadas",
+    "acc.header_sub": "Casas de praia, pousadas boutique e hotéis com vista para o mar.",
+    "acc.category_all": "Todas as Hospedagens",
+    "acc.category_pousada": "Pousadas Boutique",
+    "acc.category_hotel": "Hotéis Pé na Areia",
+    "acc.select_room": "Escolher Quarto",
+    "acc.change_room": "Alterar Quarto",
+    "acc.linked": "VINCULADO AO ROTEIRO",
+    "acc.view_options": "Ver Opções de Quartos",
+
+    // Modal & Room Selection
+    "modal.room_options": "Opções de Quartos e Tarifário",
+    "modal.breakfast_included": "Café da Manhã Incluso",
+    "modal.daily_rate": "Diária",
+    "modal.capacity": "Capacidade",
+    "modal.select_this_room": "Selecionar Este Quarto",
+    "modal.selected": "Selecionado",
+    "modal.add_hotel_to_itinerary": "Adicionar Hospedagem ao Roteiro",
+    "modal.select_room_first": "Selecione um quarto acima para liberar",
+    "modal.pricing_calendar": "Tabela de Tarifas por Período",
+    "modal.location": "Localização",
+    "modal.facilities": "Comodidades & Estrutura",
     
     // Cart & Drawer
     "cart.title": "Resumo do Seu Roteiro",
@@ -98,9 +133,34 @@ const dictionaries: Record<SupportedLanguage, Record<string, string>> = {
     "wizard.step3.title": "Quantas pessoas vão?",
     "wizard.step4.title": "Qual seu estilo de viagem?",
     "wizard.step5.title": "Escolha seus passeios",
+    "wizard.step6.title": "Escolha sua hospedagem e quarto",
     "wizard.btn_next": "Avançar",
     "wizard.btn_back": "Voltar",
     "wizard.btn_finish": "Finalizar Roteiro",
+    "wizard.hotel_required": "Escolha Obrigatória da Acomodação",
+    "wizard.select_room_to_continue": "Selecione um quarto específico da hospedagem para adicionar",
+    "wizard.guests": "Passageiros",
+    "wizard.adults": "Adultos",
+    "wizard.children": "Crianças (4 a 10 anos)",
+    "wizard.infants": "Bebês (0 a 3 anos)",
+    "wizard.duration": "Duração da Estadia",
+    "wizard.days": "dias",
+    "wizard.profile_couple": "Casal",
+    "wizard.profile_family": "Família",
+    "wizard.profile_friends": "Amigos",
+    "wizard.profile_solo": "Viajante Solo",
+
+    // Blog view
+    "blog.title": "Revista Guida Trips",
+    "blog.subtitle": "Dicas locais, segredos da Região dos Lagos e roteiros exclusivos.",
+    "blog.read_more": "Ler Matéria Completa",
+    "blog.search": "Buscar artigo ou destino...",
+
+    // About & Contact view
+    "about.title": "Sobre a Guida Trips",
+    "about.subtitle": "Reinventando a forma de vivenciar a Região dos Lagos",
+    "contact.title": "Fale com Nosso Concierge VIP",
+    "contact.send": "Enviar Mensagem no WhatsApp",
     
     // GuidaOS / Admin
     "os.restricted_title": "Acesso Restrito (GuidaOS)",
@@ -163,6 +223,41 @@ const dictionaries: Record<SupportedLanguage, Record<string, string>> = {
     "card.book_now": "Book Slot Now",
     "card.add_to_itinerary": "Add to Itinerary",
     "card.view_details": "View Details",
+
+    // Experiences View
+    "exp.header_title": "Exclusive Tours & Experiences",
+    "exp.header_sub": "VIP Curation in the Lakes Region with guaranteed booking",
+    "exp.search_placeholder": "Search tour, location or style...",
+    "exp.category_all": "All",
+    "exp.category_nautico": "Nautical",
+    "exp.category_offroad": "ATV Quad",
+    "exp.category_mergulho": "Diving",
+    "exp.category_gastronomia": "Gastronomic",
+    "exp.category_helitour": "Helicopter",
+
+    // Accommodations View
+    "acc.header_title": "Curated Accommodations",
+    "acc.header_sub": "Beach houses, boutique inns, and ocean-view hotels.",
+    "acc.category_all": "All Accommodations",
+    "acc.category_pousada": "Boutique Inns",
+    "acc.category_hotel": "Beachfront Hotels",
+    "acc.select_room": "Choose Room",
+    "acc.change_room": "Change Room",
+    "acc.linked": "LINKED TO ITINERARY",
+    "acc.view_options": "View Room Options",
+
+    // Modal & Room Selection
+    "modal.room_options": "Room Options & Pricing",
+    "modal.breakfast_included": "Breakfast Included",
+    "modal.daily_rate": "Nightly Rate",
+    "modal.capacity": "Capacity",
+    "modal.select_this_room": "Select This Room",
+    "modal.selected": "Selected",
+    "modal.add_hotel_to_itinerary": "Add Lodging to Itinerary",
+    "modal.select_room_first": "Select a room above to proceed",
+    "modal.pricing_calendar": "Pricing Table by Period",
+    "modal.location": "Location",
+    "modal.facilities": "Amenities & Facilities",
     
     // Cart & Drawer
     "cart.title": "Your Itinerary Summary",
@@ -199,9 +294,34 @@ const dictionaries: Record<SupportedLanguage, Record<string, string>> = {
     "wizard.step3.title": "How many travelers?",
     "wizard.step4.title": "What's your travel style?",
     "wizard.step5.title": "Choose your experiences",
+    "wizard.step6.title": "Choose your accommodation and room",
     "wizard.btn_next": "Next",
     "wizard.btn_back": "Back",
     "wizard.btn_finish": "Finish Itinerary",
+    "wizard.hotel_required": "Required Lodging Selection",
+    "wizard.select_room_to_continue": "Select a specific room from the lodging to add",
+    "wizard.guests": "Travelers",
+    "wizard.adults": "Adults",
+    "wizard.children": "Children (4 to 10 yrs)",
+    "wizard.infants": "Infants (0 to 3 yrs)",
+    "wizard.duration": "Length of Stay",
+    "wizard.days": "days",
+    "wizard.profile_couple": "Couple",
+    "wizard.profile_family": "Family",
+    "wizard.profile_friends": "Friends",
+    "wizard.profile_solo": "Solo Traveler",
+
+    // Blog view
+    "blog.title": "Guida Trips Magazine",
+    "blog.subtitle": "Local tips, Lakes Region secrets, and exclusive itineraries.",
+    "blog.read_more": "Read Full Article",
+    "blog.search": "Search article or destination...",
+
+    // About & Contact view
+    "about.title": "About Guida Trips",
+    "about.subtitle": "Reinventing how to experience the Lakes Region",
+    "contact.title": "Talk to Our VIP Concierge",
+    "contact.send": "Send WhatsApp Message",
     
     // GuidaOS / Admin
     "os.restricted_title": "Restricted Access (GuidaOS)",
@@ -264,6 +384,41 @@ const dictionaries: Record<SupportedLanguage, Record<string, string>> = {
     "card.book_now": "Reservar Cupo",
     "card.add_to_itinerary": "Agregar al Itinerario",
     "card.view_details": "Ver Detalles",
+
+    // Experiences View
+    "exp.header_title": "Tours y Experiencias Exclusivas",
+    "exp.header_sub": "Curaduría VIP en la Región de los Lagos con reservas garantizadas",
+    "exp.search_placeholder": "Buscar paseo, lugar o estilo...",
+    "exp.category_all": "Todos",
+    "exp.category_nautico": "Náutico",
+    "exp.category_offroad": "Cuatrimoto",
+    "exp.category_mergulho": "Buceo",
+    "exp.category_gastronomia": "Gastronomía",
+    "exp.category_helitour": "Helicóptero",
+
+    // Accommodations View
+    "acc.header_title": "Alojamientos Seleccionados",
+    "acc.header_sub": "Casas de playa, posadas boutique y hoteles con vista al mar.",
+    "acc.category_all": "Todos los Alojamientos",
+    "acc.category_pousada": "Posadas Boutique",
+    "acc.category_hotel": "Hoteles Frente al Mar",
+    "acc.select_room": "Elegir Habitación",
+    "acc.change_room": "Cambiar Habitación",
+    "acc.linked": "VINCULADO AL ITINERARIO",
+    "acc.view_options": "Ver Opciones de Habitaciones",
+
+    // Modal & Room Selection
+    "modal.room_options": "Opciones de Habitaciones y Tarifario",
+    "modal.breakfast_included": "Desayuno Incluido",
+    "modal.daily_rate": "Tarifa por Noche",
+    "modal.capacity": "Capacidad",
+    "modal.select_this_room": "Seleccionar Esta Habitación",
+    "modal.selected": "Seleccionado",
+    "modal.add_hotel_to_itinerary": "Agregar Alojamiento al Itinerario",
+    "modal.select_room_first": "Selecciona una habitación arriba para continuar",
+    "modal.pricing_calendar": "Tabla de Tarifas por Período",
+    "modal.location": "Ubicación",
+    "modal.facilities": "Comodidades e Instalaciones",
     
     // Cart & Drawer
     "cart.title": "Resumen de tu Itinerario",
@@ -300,9 +455,34 @@ const dictionaries: Record<SupportedLanguage, Record<string, string>> = {
     "wizard.step3.title": "¿Cuántas personas viajan?",
     "wizard.step4.title": "¿Cuál es tu estilo de viaje?",
     "wizard.step5.title": "Elige tus experiencias",
+    "wizard.step6.title": "Elige tu alojamiento y habitación",
     "wizard.btn_next": "Siguiente",
     "wizard.btn_back": "Atrás",
     "wizard.btn_finish": "Finalizar Itinerario",
+    "wizard.hotel_required": "Selección Obligatoria de Alojamiento",
+    "wizard.select_room_to_continue": "Selecciona una habitación específica del alojamiento para agregar",
+    "wizard.guests": "Pasajeros",
+    "wizard.adults": "Adultos",
+    "wizard.children": "Niños (4 a 10 años)",
+    "wizard.infants": "Bebés (0 a 3 años)",
+    "wizard.duration": "Duración de la Estancia",
+    "wizard.days": "días",
+    "wizard.profile_couple": "Pareja",
+    "wizard.profile_family": "Familia",
+    "wizard.profile_friends": "Amigos",
+    "wizard.profile_solo": "Viajero Solo",
+
+    // Blog view
+    "blog.title": "Revista Guida Trips",
+    "blog.subtitle": "Consejos locales, secretos de la Región de los Lagos e itinerarios exclusivos.",
+    "blog.read_more": "Leer Artículo Completo",
+    "blog.search": "Buscar artículo o destino...",
+
+    // About & Contact view
+    "about.title": "Sobre Guida Trips",
+    "about.subtitle": "Reinventando la forma de experimentar la Región de los Lagos",
+    "contact.title": "Habla con Nuestro Concierge VIP",
+    "contact.send": "Enviar Mensaje por WhatsApp",
     
     // GuidaOS / Admin
     "os.restricted_title": "Acceso Restringido (GuidaOS)",

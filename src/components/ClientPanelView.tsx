@@ -535,7 +535,17 @@ export default function ClientPanelView({
                         "Hospedagem Própria"
                       )}
                     </span>
-                    <span className="text-zinc-500 text-xs font-sans block">Ponto de partida dos passeios</span>
+                    {resolvedItinerary.selectedRooms && resolvedItinerary.selectedRooms.length > 0 ? (
+                      <span className="text-emerald-700 text-xs font-sans font-medium block">
+                        {resolvedItinerary.selectedRooms.map(r => `${r.quantity}x ${r.roomName}`).join(", ")}
+                      </span>
+                    ) : resolvedItinerary.selectedRoomName ? (
+                      <span className="text-emerald-700 text-xs font-sans font-medium block">
+                        Quarto: {resolvedItinerary.selectedRoomName}
+                      </span>
+                    ) : (
+                      <span className="text-zinc-500 text-xs font-sans block">Ponto de partida dos passeios</span>
+                    )}
                   </div>
 
                   <div className="space-y-1">

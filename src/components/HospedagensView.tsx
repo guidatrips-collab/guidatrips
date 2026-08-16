@@ -11,6 +11,8 @@ import { motion } from "motion/react";
 
 import { Accommodation } from "../types";
 import AccommodationDetailModal from "./AccommodationDetailModal";
+import { useLanguage } from "../context/LanguageContext";
+import { getTranslatedAccommodation } from "../utils/dataTranslator";
 
 interface HospedagensViewProps {
   whatsappNumber: string;
@@ -31,6 +33,7 @@ export default function HospedagensView({
   selectedAccommodationSlug,
   onSelectAccommodation
 }: HospedagensViewProps) {
+  const { language, t } = useLanguage();
   const [activeFilter, setActiveFilter] = useState<"todas" | "boutique" | "vista" | "pe-na-areia">("todas");
   const [selectedPousadaForDetail, setSelectedPousadaForDetail] = useState<Accommodation | null>(null);
 
@@ -61,23 +64,26 @@ export default function HospedagensView({
     }
   };
 
-  // Map database accommodations to the local format if needed, or just use them directly
-  const pousadas = accommodations.map(acc => ({
-    id: acc.id,
-    name: acc.name,
-    category: acc.typeTag || "todas",
-    location: acc.location,
-    rating: acc.rating || 5.0,
-    reviews: acc.reviews || 0,
-    tag: acc.tag || "CURADORIA EXCLUSIVA",
-    price: acc.priceDisplay || `A partir de R$ ${acc.sellRate} / noite`,
-    description: acc.description,
-    highlight: acc.highlight || "",
-    amenities: acc.amenities,
-    courtesies: acc.courtesies || [],
-    img: acc.mediaGallery && acc.mediaGallery.length > 0 ? acc.mediaGallery.filter(m => m.type === 'image')[0]?.url : acc.photos?.[0] || "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80",
-    whatsappMessage: acc.whatsappMessage || `Olá, Guida Trips! Gostaria de consultar tarifas com benefícios exclusivos para a ${acc.name}.`
-  }));
+  // Map database accommodations to translated format
+  const pousadas = accommodations.map(originalAcc => {
+    const acc = getTranslatedAccommodation(originalAcc, language);
+    return {
+      id: acc.id,
+      name: acc.name,
+      category: acc.typeTag || "todas",
+      location: acc.location,
+      rating: acc.rating || 5.0,
+      reviews: acc.reviews || 0,
+      tag: acc.tag || "CURADORIA EXCLUSIVA",
+      price: acc.priceDisplay || `${t("card.from")} R$ ${acc.sellRate} ${t("card.per_night")}`,
+      description: acc.description,
+      highlight: acc.highlight || "",
+      amenities: acc.amenities || [],
+      courtesies: acc.courtesies || [],
+      img: acc.mediaGallery && acc.mediaGallery.length > 0 ? acc.mediaGallery.filter(m => m.type === 'image')[0]?.url : acc.photos?.[0] || "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80",
+      whatsappMessage: acc.whatsappMessage || `Olá, Guida Trips! Gostaria de consultar tarifas com benefícios exclusivos para a ${acc.name}.`
+    };
+  });
 
   const filteredPousadas = pousadas.filter(
     (p) => activeFilter === "todas" || p.category === activeFilter

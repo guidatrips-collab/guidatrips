@@ -28,7 +28,7 @@ import { updatePageSEO } from "./lib/seo";
 
 import { 
   Experience, BlogPost, Lead, GlobalSettings, BookingCartItem, ClientUser, ClientReservation, SavedItinerary,
-  getBrazilLocalDate, addDaysToBrazilDate, Destination, Accommodation, LeadHistoryItem, Courtesy
+  getBrazilLocalDate, addDaysToBrazilDate, Destination, Accommodation, LeadHistoryItem, Courtesy, SelectedRoomBooking
 } from "./types";
 import { 
   INITIAL_EXPERIENCES, INITIAL_BLOG_POSTS, INITIAL_LEADS, INITIAL_SETTINGS, INITIAL_DESTINATIONS, INITIAL_ACCOMMODATIONS
@@ -442,7 +442,16 @@ export default function App() {
     }
   });
 
-  const handleUpdateHotelId = (id: string | null, roomId?: string | null) => {
+  const [selectedRooms, setSelectedRooms] = useState<SelectedRoomBooking[]>(() => {
+    try {
+      const stored = localStorage.getItem("guidatrips_selected_rooms");
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const handleUpdateHotelId = (id: string | null, roomId?: string | null, rooms?: SelectedRoomBooking[]) => {
     setSelectedHotelId(id);
     if (id) {
       localStorage.setItem("guidatrips_selected_hotel_id", id);
@@ -457,6 +466,18 @@ export default function App() {
       } else {
         localStorage.removeItem("guidatrips_selected_room_id");
       }
+    }
+
+    if (rooms !== undefined) {
+      setSelectedRooms(rooms);
+      if (rooms && rooms.length > 0) {
+        localStorage.setItem("guidatrips_selected_rooms", JSON.stringify(rooms));
+      } else {
+        localStorage.removeItem("guidatrips_selected_rooms");
+      }
+    } else if (!id) {
+      setSelectedRooms([]);
+      localStorage.removeItem("guidatrips_selected_rooms");
     }
   };
 
@@ -1378,6 +1399,7 @@ export default function App() {
             onSetClientCity={setClientCity}
             selectedHotelId={selectedHotelId}
             selectedRoomId={selectedRoomId}
+            selectedRooms={selectedRooms}
             onChangeHotelId={handleUpdateHotelId}
             whatsappNumber={settings.whatsappNumber}
             currentUser={currentUser}

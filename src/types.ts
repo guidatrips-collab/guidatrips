@@ -101,6 +101,14 @@ export interface RoomCalendarData {
   checkOutAllowed?: boolean;
 }
 
+export interface SelectedRoomBooking {
+  roomId: string;
+  roomName: string;
+  basePrice: number;
+  quantity: number;
+  maxGuests: number;
+}
+
 export interface RoomType {
   id: string;
   name: string;
@@ -304,6 +312,7 @@ export interface Experience {
   status: "active" | "paused" | "draft";
   featured: boolean;
   badge?: "mais-vendido" | "novidade" | "temporada" | "";
+  tagText?: string;
   location?: string; // e.g. "Arraial do Cabo", "Cabo Frio", "Búzios"
   departureCity?: string; // e.g. "Arraial do Cabo RJ", "Cabo Frio RJ"
   minAge?: string; // e.g. "2 anos"
@@ -681,6 +690,7 @@ export interface SavedItinerary {
   selectedRoomId?: string | null;
   selectedRoomName?: string | null;
   selectedRoomPrice?: number | null;
+  selectedRooms?: SelectedRoomBooking[];
   totalEstimate: number;
   depositEstimate?: number;
   remainingEstimate?: number;

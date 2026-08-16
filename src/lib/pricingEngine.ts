@@ -1,4 +1,4 @@
-import { Experience, Accommodation, BookingCartItem, getBrazilLocalDate, addDaysToBrazilDate } from "../types";
+import { Experience, Accommodation, BookingCartItem, SelectedRoomBooking, getBrazilLocalDate, addDaysToBrazilDate } from "../types";
 export interface AdditionalService {
   id: string;
   type: "transfer" | "restaurante" | "seguro" | "aluguel_veiculo" | "outro";
@@ -132,11 +132,64 @@ export const PricingEngine = {
     arrivalDate: string,
     stayDays: number,
     guests: GuestCount,
-    selectedRoomId?: string | null
+    selectedRoomId?: string | null,
+    selectedRooms?: SelectedRoomBooking[]
   ): NonNullable<PricingEngineResult["lodgingDetail"]> & { totalCost: number } {
     const totalGuestsCount = guests.adults + guests.children;
     const startDateStr = arrivalDate || getBrazilLocalDate();
     
+    // Multi-room direct calculation if selectedRooms array is provided and not empty
+    if (selectedRooms && selectedRooms.length > 0) {
+      const totalRoomsCount = selectedRooms.reduce((sum, r) => sum + (r.quantity || 1), 0);
+      const totalCapacity = selectedRooms.reduce((sum, r) => sum + (r.maxGuests * (r.quantity || 1)), 0);
+      
+      const dailyBreakdown: {
+        date: string;
+        basePrice: number;
+        extraGuestTotal: number;
+        totalDayPrice: number;
+      }[] = [];
+      let totalCost = 0;
+
+      for (let i = 0; i < stayDays; i++) {
+        const currentDateStr = addDaysToBrazilDate(startDateStr, i);
+        let dayRoomsTotal = 0;
+
+        selectedRooms.forEach(selRoom => {
+          const roomObj = acc.roomTypes?.find(r => r.id === selRoom.roomId);
+          let unitPrice = selRoom.basePrice || roomObj?.basePrice || acc.sellRate || 0;
+
+          if (roomObj && roomObj.pricingPeriods && roomObj.pricingPeriods.length > 0) {
+            const matchingPeriod = roomObj.pricingPeriods.find(p => p.startDate <= currentDateStr && p.endDate >= currentDateStr);
+            if (matchingPeriod) {
+              unitPrice = matchingPeriod.price;
+            }
+          }
+          dayRoomsTotal += unitPrice * (selRoom.quantity || 1);
+        });
+
+        dailyBreakdown.push({
+          date: currentDateStr,
+          basePrice: dayRoomsTotal,
+          extraGuestTotal: 0,
+          totalDayPrice: dayRoomsTotal
+        });
+        totalCost += dayRoomsTotal;
+      }
+
+      return {
+        totalCost,
+        roomsNeeded: totalRoomsCount,
+        baseGuestsPerRoom: Math.round(totalCapacity / (totalRoomsCount || 1)),
+        maxCapacityPerRoom: totalCapacity,
+        extraGuestsCount: 0,
+        extraGuestPriceApplied: 0,
+        chargeType: "per_room",
+        daysCount: stayDays,
+        dailyBreakdown
+      };
+    }
+
     // Heuristic for charge type
     const chargeType: "per_person" | "per_room" = 
       acc.category === "hostel" ? "per_person" : "per_room";
@@ -289,6 +342,7 @@ export const PricingEngine = {
     stayDays,
     guests,
     selectedRoomId,
+    selectedRooms,
     additionalServices = []
   }: {
     cart: BookingCartItem[];
@@ -298,6 +352,7 @@ export const PricingEngine = {
     stayDays: number;
     guests: GuestCount;
     selectedRoomId?: string | null;
+    selectedRooms?: SelectedRoomBooking[];
     additionalServices?: AdditionalService[];
   }): PricingEngineResult {
     // 1. Calculate Experiences Cost
@@ -352,7 +407,8 @@ export const PricingEngine = {
         arrivalDate,
         stayDays,
         guests,
-        selectedRoomId
+        selectedRoomId,
+        selectedRooms
       );
       lodgingCost = lodgingCalc.totalCost;
       lodgingDetail = {

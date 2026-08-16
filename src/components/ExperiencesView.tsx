@@ -8,6 +8,8 @@ import { Experience, ExperienceCategory, BookingCartItem, GlobalSettings, Client
 import { motion, AnimatePresence } from "motion/react";
 import { firestoreService } from "../firebase";
 import MediaGallery, { getMediaPhotos } from "./MediaGallery";
+import { useLanguage } from "../context/LanguageContext";
+import { getTranslatedExperience } from "../utils/dataTranslator";
 
 interface ExperiencesViewProps {
   experiences: Experience[];
@@ -58,6 +60,12 @@ export default function ExperiencesView({
   onChangeHotelId,
   selectedHotelId
 }: ExperiencesViewProps) {
+  const { language, t } = useLanguage();
+
+  const translatedExperiences = useMemo(() => {
+    return experiences.map(exp => getTranslatedExperience(exp, language));
+  }, [experiences, language]);
+
   const [selectedCategory, setSelectedCategory] = useState<string>("todos");
   const [selectedLocation, setSelectedLocation] = useState<string>("todos");
   const [searchQuery, setSearchQuery] = useState("");
@@ -139,7 +147,7 @@ export default function ExperiencesView({
     }))
   ];
 
-  const filteredExperiences = experiences.filter((exp) => {
+  const filteredExperiences = translatedExperiences.filter((exp) => {
     const matchesCategory = selectedCategory === "todos" || exp.category === selectedCategory;
     const expDestId = exp.destinationId || "arraial-do-cabo";
     const matchesLocation = selectedLocation === "todos" || expDestId === selectedLocation || (exp.location && exp.location === selectedLocation);
@@ -212,7 +220,7 @@ export default function ExperiencesView({
   // Sync with URL experience slug
   useEffect(() => {
     if (selectedExperienceSlug) {
-      const exp = experiences.find(e => e.slug === selectedExperienceSlug);
+      const exp = translatedExperiences.find(e => e.slug === selectedExperienceSlug);
       if (exp && (!activeExperience || activeExperience.id !== exp.id)) {
         handleOpenDetails(exp);
       }

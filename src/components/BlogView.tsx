@@ -7,6 +7,8 @@ import React, { useState, useEffect } from "react";
 import { BookOpen, Search, Calendar, Clock, ArrowLeft, ArrowUpRight, Share2, MessageCircle } from "lucide-react";
 import { BlogPost, ThematicItinerary, Destination } from "../types";
 import { motion } from "motion/react";
+import { useLanguage } from "../context/LanguageContext";
+import { getTranslatedBlogPost } from "../utils/dataTranslator";
 
 interface BlogViewProps {
   posts: BlogPost[];
@@ -19,9 +21,11 @@ interface BlogViewProps {
 }
 
 export default function BlogView({ posts, thematicItineraries = [], destinations = [], onNavigateToContact, selectedSlug, onSelectPost, onNavigateToThematic }: BlogViewProps) {
+  const { language, t } = useLanguage();
   const [searchQuery, setSearchQuery] = useState("");
 
-  const activePost = posts.find((p) => p.slug === selectedSlug && p.status === "published");
+  const translatedPosts = posts.map(p => getTranslatedBlogPost(p, language));
+  const activePost = translatedPosts.find((p) => p.slug === selectedSlug && p.status === "published");
 
   // Increment view count simulated when post opens
   useEffect(() => {

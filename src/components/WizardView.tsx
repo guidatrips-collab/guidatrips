@@ -11,7 +11,7 @@ import {
   Compass, X, ArrowRight, Home, MessageSquare, Hotel, Trash2, 
   CheckCircle2, Bed, Baby, User, ShieldCheck, Map
 } from "lucide-react";
-import { Experience, BookingCartItem, checkSchedulingConflict, getTourScheduleDetails, getBrazilLocalDate, addDaysToBrazilDate, Destination, Accommodation, Lead, ClientReservation, SavedItinerary } from "../types";
+import { Experience, BookingCartItem, checkSchedulingConflict, getTourScheduleDetails, getBrazilLocalDate, addDaysToBrazilDate, Destination, Accommodation, Lead, ClientReservation, SavedItinerary, SelectedRoomBooking } from "../types";
 import { PricingEngine } from "../lib/pricingEngine";
 import { firestoreService } from "../firebase";
 import { analytics } from "../lib/analytics";
@@ -36,7 +36,8 @@ interface WizardViewProps {
   onSetClientCity?: (city: string) => void;
   selectedHotelId?: string | null;
   selectedRoomId?: string | null;
-  onChangeHotelId?: (id: string | null, roomId?: string | null) => void;
+  selectedRooms?: SelectedRoomBooking[];
+  onChangeHotelId?: (id: string | null, roomId?: string | null, selectedRooms?: SelectedRoomBooking[]) => void;
   whatsappNumber?: string;
   currentUser?: any;
   onSetCurrentUser?: (user: any) => void;
@@ -63,6 +64,7 @@ export default function WizardView({
   onSetClientCity,
   selectedHotelId = null,
   selectedRoomId = null,
+  selectedRooms = [],
   onChangeHotelId,
   whatsappNumber = "552299887766",
   currentUser,
@@ -118,6 +120,30 @@ export default function WizardView({
   const [hasHotelAnswer, setHasHotelAnswer] = useState<"no" | "yes" | null>(
     savedItineraryData ? (savedItineraryData.selectedHotelId ? "yes" : "no") : null
   );
+
+  // Selected rooms state for multi-room bookings
+  const [selectedRoomsState, setSelectedRoomsState] = useState<SelectedRoomBooking[]>(() => {
+    if (selectedRooms && selectedRooms.length > 0) return selectedRooms;
+    if (savedItineraryData?.selectedRooms && savedItineraryData.selectedRooms.length > 0) return savedItineraryData.selectedRooms;
+    if (selectedRoomId) {
+      const acc = accommodations.find(a => a.id === selectedHotelId);
+      const room = acc?.roomTypes?.find(r => r.id === selectedRoomId);
+      return [{
+        roomId: selectedRoomId,
+        roomName: room?.name || "Quarto",
+        basePrice: room?.basePrice || 0,
+        quantity: 1,
+        maxGuests: room?.maxGuests || 2
+      }];
+    }
+    return [];
+  });
+
+  useEffect(() => {
+    if (selectedRooms && selectedRooms.length > 0) {
+      setSelectedRoomsState(selectedRooms);
+    }
+  }, [selectedRooms]);
 
   // Step 5 progress day state (Day-by-Day Construction)
   const [currentPlanningDay, setCurrentPlanningDay] = useState<number>(1);
@@ -442,7 +468,8 @@ export default function WizardView({
       arrivalDate,
       stayDays,
       guests: { adults, children, infants },
-      selectedRoomId
+      selectedRoomId,
+      selectedRooms: selectedRoomsState
     });
 
     return result.total;
@@ -520,14 +547,21 @@ export default function WizardView({
         profile,
         selectedHotelId,
         selectedRoomId,
+        selectedRooms: selectedRoomsState,
         selectedRoomName: (() => {
           if (!selectedHotelId) return null;
+          if (selectedRoomsState.length > 0) {
+            return selectedRoomsState.map(r => `${r.quantity}x ${r.roomName}`).join(" + ");
+          }
           const acc = accommodations.find(a => a.id === selectedHotelId);
           const room = acc?.roomTypes?.find(r => r.id === selectedRoomId);
           return room?.name || null;
         })(),
         selectedRoomPrice: (() => {
           if (!selectedHotelId) return null;
+          if (selectedRoomsState.length > 0) {
+            return selectedRoomsState.reduce((sum, r) => sum + (r.basePrice * r.quantity), 0);
+          }
           const acc = accommodations.find(a => a.id === selectedHotelId);
           const room = acc?.roomTypes?.find(r => r.id === selectedRoomId);
           return room?.basePrice || acc?.sellRate || null;
@@ -650,14 +684,21 @@ export default function WizardView({
           profile,
           selectedHotelId,
           selectedRoomId,
+          selectedRooms: selectedRoomsState,
           selectedRoomName: (() => {
             if (!selectedHotelId) return null;
+            if (selectedRoomsState.length > 0) {
+              return selectedRoomsState.map(r => `${r.quantity}x ${r.roomName}`).join(" + ");
+            }
             const acc = accommodations.find(a => a.id === selectedHotelId);
             const room = acc?.roomTypes?.find(r => r.id === selectedRoomId);
             return room?.name || null;
           })(),
           selectedRoomPrice: (() => {
             if (!selectedHotelId) return null;
+            if (selectedRoomsState.length > 0) {
+              return selectedRoomsState.reduce((sum, r) => sum + (r.basePrice * r.quantity), 0);
+            }
             const acc = accommodations.find(a => a.id === selectedHotelId);
             const room = acc?.roomTypes?.find(r => r.id === selectedRoomId);
             return room?.basePrice || acc?.sellRate || null;
@@ -708,6 +749,7 @@ export default function WizardView({
         `Grupo: ${adults} Adultos, ${children} Crianças, ${infants} Bebês`,
         `Perfil de Preferências: ${profile.toUpperCase()}`,
         `Hospedagem vinculada: ${selectedHotelId ? (hotels.find(h => h.id === selectedHotelId)?.name || "Sim") : "Não (possui própria)"}`,
+        `Quartos vinculados: ${selectedRoomsState.length > 0 ? selectedRoomsState.map(r => `${r.quantity}x ${r.roomName}`).join(" + ") : (selectedRoomId || "Nenhum")}`,
         `Total estimado: ${formatBRL(calculateEstimatedTotal())}`,
         `Atividades diárias:\n` + cart.map(item => {
           const exp = experiences.find(e => e.id === item.experienceId);
@@ -733,10 +775,19 @@ export default function WizardView({
     if (selectedHotelId) {
       const hotel = hotels.find(h => h.id === selectedHotelId);
       const acc = accommodations.find(a => a.id === selectedHotelId);
-      const room = acc?.roomTypes?.find(r => r.id === selectedRoomId);
       text += `🏨 *Hospedagem:* ${hotel?.name || acc?.name || "Sim"}\n`;
-      if (room) {
-        text += `🛏 *Quarto Escolhido:* ${room.name} (R$ ${room.basePrice}/diária • Até ${room.maxGuests} pessoas)\n`;
+      if (selectedRoomsState.length > 0) {
+        text += `🛏 *Quartos Escolhidos:*\n`;
+        selectedRoomsState.forEach(r => {
+          text += `   • ${r.quantity}x ${r.roomName} (R$ ${r.basePrice}/diária • Até ${r.maxGuests} pessoas/quarto)\n`;
+        });
+        const totalCap = selectedRoomsState.reduce((sum, r) => sum + (r.maxGuests * r.quantity), 0);
+        text += `   ↳ Capacidade Total dos Quartos: ${totalCap} pessoas\n`;
+      } else {
+        const room = acc?.roomTypes?.find(r => r.id === selectedRoomId);
+        if (room) {
+          text += `🛏 *Quarto Escolhido:* ${room.name} (R$ ${room.basePrice}/diária • Até ${room.maxGuests} pessoas)\n`;
+        }
       }
     } else {
       text += `🏨 *Hospedagem:* Não, já possui hospedagem própria\n`;
@@ -1621,6 +1672,7 @@ export default function WizardView({
                             const isSelected = selectedHotelId === pousada.id;
                             const originalAcc = accommodations.find(a => a.id === pousada.id);
                             const selectedRoom = originalAcc?.roomTypes?.find(r => r.id === selectedRoomId);
+                            const hotelRooms = isSelected && selectedRoomsState.length > 0 ? selectedRoomsState : (isSelected && selectedRoom ? [{ roomId: selectedRoom.id, roomName: selectedRoom.name, basePrice: selectedRoom.basePrice, quantity: 1, maxGuests: selectedRoom.maxGuests }] : []);
 
                             return (
                               <div
@@ -1667,14 +1719,28 @@ export default function WizardView({
                                       {pousada.name}
                                     </h6>
 
-                                    {isSelected && selectedRoom ? (
-                                      <div className="bg-emerald-50 border border-emerald-200/80 rounded-xl p-2.5 my-2 space-y-0.5 text-left">
+                                    {isSelected && (hotelRooms.length > 0 || selectedRoom) ? (
+                                      <div className="bg-emerald-50 border border-emerald-200/80 rounded-xl p-2.5 my-2 space-y-1 text-left">
                                         <div className="text-[10px] text-emerald-800 font-extrabold flex items-center gap-1 uppercase tracking-wider">
-                                          <span>🛏️ Quarto:</span> {selectedRoom.name}
+                                          <span>🛏️ {hotelRooms.length > 1 ? "Quartos Selecionados:" : "Quarto Selecionado:"}</span>
                                         </div>
-                                        <div className="text-[11px] font-serif font-bold text-emerald-950">
-                                          R$ {selectedRoom.basePrice} <span className="text-[10px] font-sans font-normal text-zinc-600">/diária • Até {selectedRoom.maxGuests} pessoas</span>
-                                        </div>
+                                        {hotelRooms.length > 0 ? (
+                                          <div className="space-y-0.5">
+                                            {hotelRooms.map((r, i) => (
+                                              <div key={i} className="text-[11px] font-serif font-bold text-emerald-950 flex justify-between items-center">
+                                                <span>{r.quantity}x {r.roomName}</span>
+                                                <span className="text-[10px] font-sans font-normal text-zinc-600">R$ {r.basePrice}/d (até {r.maxGuests} pax)</span>
+                                              </div>
+                                            ))}
+                                            <div className="text-[10px] text-emerald-700 font-semibold pt-1 border-t border-emerald-200/60">
+                                              Capacidade total: {hotelRooms.reduce((sum, r) => sum + (r.maxGuests * r.quantity), 0)} pessoas
+                                            </div>
+                                          </div>
+                                        ) : (
+                                          <div className="text-[11px] font-serif font-bold text-emerald-950">
+                                            R$ {selectedRoom?.basePrice} <span className="text-[10px] font-sans font-normal text-zinc-600">/diária • Até {selectedRoom?.maxGuests} pessoas</span>
+                                          </div>
+                                        )}
                                       </div>
                                     ) : (
                                       <>
@@ -1698,13 +1764,14 @@ export default function WizardView({
                                           }}
                                           className="flex-1 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-accent text-[9px] font-black tracking-wider uppercase transition-all cursor-pointer text-center"
                                         >
-                                          ALTERAR QUARTO 🛏️
+                                          ALTERAR QUARTOS 🛏️
                                         </button>
                                         <button
                                           type="button"
                                           onClick={() => {
                                             if (onChangeHotelId) {
-                                              onChangeHotelId(null, null);
+                                              onChangeHotelId(null, null, []);
+                                              setSelectedRoomsState([]);
                                               showToast("Hospedagem removida", pousada.name, "🗑️");
                                             }
                                           }}
@@ -1730,7 +1797,7 @@ export default function WizardView({
                                           }}
                                           className="flex-1 py-2 rounded-xl font-accent text-[9px] font-extrabold tracking-wider uppercase transition-all flex items-center justify-center gap-1 cursor-pointer bg-[#0D1B2A] hover:bg-[#E8711A] hover:text-[#0D1B2A] text-white shadow-xs"
                                         >
-                                          VINCULAR E ESCOLHER QUARTO 🏨
+                                          VINCULAR E ESCOLHER QUARTOS 🏨
                                         </button>
                                       </div>
                                     )}
@@ -2713,17 +2780,38 @@ export default function WizardView({
           isSelectionContext={true}
           isSelected={selectedHotelId === selectedHotelForDetail.id}
           selectedRoomId={selectedHotelId === selectedHotelForDetail.id ? selectedRoomId : null}
+          selectedRooms={selectedHotelId === selectedHotelForDetail.id ? selectedRoomsState : []}
           guestCount={{ adults, children, infants }}
-          onSelectRoom={(acc, room) => {
+          onSelectRooms={(acc, rooms) => {
+            setSelectedRoomsState(rooms);
+            const primaryRoomId = rooms[0]?.roomId || null;
             if (onChangeHotelId) {
-              onChangeHotelId(acc.id, room.id);
+              onChangeHotelId(acc.id, primaryRoomId, rooms);
+            }
+            const roomDesc = rooms.map(r => `${r.quantity}x ${r.roomName}`).join(" + ");
+            showToast("Hospedagem & Quartos Vinculados!", `${acc.name} — ${roomDesc}`, "🏨");
+            setSelectedHotelForDetail(null);
+          }}
+          onSelectRoom={(acc, room) => {
+            const singleRoomBooking: SelectedRoomBooking = {
+              roomId: room.id,
+              roomName: room.name,
+              basePrice: room.basePrice,
+              quantity: 1,
+              maxGuests: room.maxGuests
+            };
+            setSelectedRoomsState([singleRoomBooking]);
+            if (onChangeHotelId) {
+              onChangeHotelId(acc.id, room.id, [singleRoomBooking]);
             }
             showToast("Hospedagem & Quarto Vinculados!", `${acc.name} — ${room.name}`, "🏨");
             setSelectedHotelForDetail(null);
           }}
           onSelectToggle={() => {
             if (onChangeHotelId) {
-              onChangeHotelId(selectedHotelId === selectedHotelForDetail.id ? null : selectedHotelForDetail.id);
+              const willSelect = selectedHotelId !== selectedHotelForDetail.id;
+              onChangeHotelId(willSelect ? selectedHotelForDetail.id : null, null, []);
+              if (!willSelect) setSelectedRoomsState([]);
             }
           }}
           onWhatsAppContact={(msg) => {
