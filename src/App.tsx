@@ -557,11 +557,6 @@ export default function App() {
       await firestoreService.seedCollection("destinations", INITIAL_DESTINATIONS);
       await firestoreService.seedCollection("accommodations", INITIAL_ACCOMMODATIONS);
       
-      // Ensure all accommodations (including Hotel Orlanova Boutique) are updated in Firestore
-      for (const acc of INITIAL_ACCOMMODATIONS) {
-        await firestoreService.set("accommodations", acc.id, acc);
-      }
-      
       // Special check for global settings
       const settingsData = await firestoreService.getAll("settings");
       if (!settingsData.find((s: any) => s.id === "global")) {

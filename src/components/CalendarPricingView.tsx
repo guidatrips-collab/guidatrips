@@ -35,13 +35,17 @@ export function CalendarPricingView({
   const [selectedItemId, setSelectedItemId] = useState<string>("");
   const [selectedRoomId, setSelectedRoomId] = useState<string>("");
   
+  // Local synchronous state cache to ensure zero latency and immediate visual feedback when clearing
+  const [localItemMap, setLocalItemMap] = useState<Record<string, PricingItem>>({});
+
   const selectedItem = useMemo(() => {
-    return items.find(e => e.id === selectedItemId) || null;
-  }, [items, selectedItemId]);
+    if (!selectedItemId) return null;
+    return localItemMap[selectedItemId] || items.find(e => e.id === selectedItemId) || null;
+  }, [items, selectedItemId, localItemMap]);
 
   const selectedRoom = useMemo(() => {
     if (selectedItem && 'roomTypes' in selectedItem && selectedItem.roomTypes) {
-      return selectedItem.roomTypes.find(r => r.id === selectedRoomId) || null;
+      return selectedItem.roomTypes.find(r => r.id === selectedRoomId) || selectedItem.roomTypes[0] || null;
     }
     return null;
   }, [selectedItem, selectedRoomId]);
@@ -64,12 +68,12 @@ export function CalendarPricingView({
     setToastMessage(msg);
     setTimeout(() => {
       setToastMessage(null);
-    }, 4000);
+    }, 4500);
   };
 
   // Clear modal confirmation state
   const [showClearModal, setShowClearModal] = useState(false);
-  const [clearScope, setClearScope] = useState<'month' | 'all_room' | 'all_accommodation' | 'all_and_periods'>('all_room');
+  const [clearScope, setClearScope] = useState<'all_room' | 'all_accommodation' | 'month' | 'all_and_periods'>('all_room');
 
   // Format date to strictly deterministic YYYY-MM-DD
   const formatDateStr = (year: number, month: number, day: number) => {
@@ -233,20 +237,24 @@ export function CalendarPricingView({
       };
     });
 
+    let updatedItem: any;
     if (selectedRoom && 'roomTypes' in selectedItem) {
       const updatedRooms = (selectedItem.roomTypes || []).map(r => 
         r.id === selectedRoom.id ? { ...r, calendar: currentCalendar } : r
       );
-      onUpdateItem({
+      updatedItem = {
         ...selectedItem,
         roomTypes: updatedRooms
-      } as any);
+      };
     } else {
-      onUpdateItem({
+      updatedItem = {
         ...selectedItem,
         calendar: currentCalendar
-      } as any);
+      };
     }
+
+    setLocalItemMap(prev => ({ ...prev, [updatedItem.id]: updatedItem }));
+    onUpdateItem(updatedItem);
     
     showToast(`✓ Sucesso: ${selectedDates.length} data(s) salvas com sucesso no tarifário!`);
     clearSelection();
@@ -258,14 +266,18 @@ export function CalendarPricingView({
     const newCalendar = { ...(activeCalendarSource?.calendar || {}) };
     selectedDates.forEach(d => delete newCalendar[d]);
     
+    let updatedItem: any;
     if (selectedRoom && 'roomTypes' in selectedItem) {
       const updatedRooms = (selectedItem.roomTypes || []).map(r => 
         r.id === selectedRoom.id ? { ...r, calendar: newCalendar } : r
       );
-      onUpdateItem({ ...selectedItem, roomTypes: updatedRooms } as any);
+      updatedItem = { ...selectedItem, roomTypes: updatedRooms };
     } else {
-      onUpdateItem({ ...selectedItem, calendar: newCalendar } as any);
+      updatedItem = { ...selectedItem, calendar: newCalendar };
     }
+
+    setLocalItemMap(prev => ({ ...prev, [updatedItem.id]: updatedItem }));
+    onUpdateItem(updatedItem);
     showToast(`✓ ${selectedDates.length} data(s) restauradas para a diária padrão.`);
     clearSelection();
   };
@@ -274,46 +286,44 @@ export function CalendarPricingView({
   const handleExecuteClearTariff = (scope: 'month' | 'all_room' | 'all_accommodation' | 'all_and_periods') => {
     if (!selectedItem) return;
 
+    let updatedItem: any;
+
     if (scope === 'all_accommodation' && 'roomTypes' in selectedItem && selectedItem.roomTypes) {
-      // Complete wipe of all calendar dates across ALL rooms of this accommodation
+      // Complete wipe of all calendar dates AND seasonal periods across ALL rooms of this accommodation
       const updatedRooms = (selectedItem.roomTypes || []).map(r => ({
         ...r,
-        calendar: {}
+        calendar: {},
+        pricingPeriods: []
       }));
-      onUpdateItem({
+      updatedItem = {
         ...selectedItem,
         calendar: {},
+        pricingPeriods: [],
         roomTypes: updatedRooms
-      } as any);
-      showToast(`✓ Sucesso: Todos os quartos desta hospedagem foram completamente zerados para a diária base padrão!`);
-    } else if (scope === 'all_and_periods') {
+      };
+      setLocalItemMap(prev => ({ ...prev, [updatedItem.id]: updatedItem }));
+      onUpdateItem(updatedItem);
+      showToast(`✓ Zerado com Sucesso: Todos os quartos de "${selectedItem.name}" tiveram o tarifário 100% resetado para a diária base!`);
+    } else if (scope === 'all_and_periods' || scope === 'all_room') {
       // Wipe calendar AND pricing periods for current room or item
       if (selectedRoom && 'roomTypes' in selectedItem) {
         const updatedRooms = (selectedItem.roomTypes || []).map(r => 
           r.id === selectedRoom.id ? { ...r, calendar: {}, pricingPeriods: [] } : r
         );
-        onUpdateItem({ ...selectedItem, roomTypes: updatedRooms } as any);
-      } else {
-        onUpdateItem({ ...selectedItem, calendar: {}, pricingPeriods: [] } as any);
-      }
-      showToast(`✓ Sucesso: Tarifário do ano inteiro e períodos sazonais foram zerados com sucesso!`);
-    } else if (scope === 'all_room') {
-      // Complete wipe of all dates for this room/item
-      if (selectedRoom && 'roomTypes' in selectedItem) {
-        const updatedRooms = (selectedItem.roomTypes || []).map(r => 
-          r.id === selectedRoom.id ? { ...r, calendar: {} } : r
-        );
-        onUpdateItem({
+        updatedItem = {
           ...selectedItem,
           roomTypes: updatedRooms
-        } as any);
+        };
       } else {
-        onUpdateItem({
+        updatedItem = {
           ...selectedItem,
-          calendar: {}
-        } as any);
+          calendar: {},
+          pricingPeriods: []
+        };
       }
-      showToast(`✓ Sucesso: Todo o tarifário do ano (${selectedRoom ? selectedRoom.name : selectedItem.name}) foi zerado!`);
+      setLocalItemMap(prev => ({ ...prev, [updatedItem.id]: updatedItem }));
+      onUpdateItem(updatedItem);
+      showToast(`✓ Zerado com Sucesso: Todo o tarifário (${selectedRoom ? selectedRoom.name : selectedItem.name}) voltou para a diária base padrão!`);
     } else {
       // Wipe only dates matching the currently displayed year-month (YYYY-MM)
       const year = currentMonth.getFullYear();
@@ -329,16 +339,18 @@ export function CalendarPricingView({
         const updatedRooms = (selectedItem.roomTypes || []).map(r => 
           r.id === selectedRoom.id ? { ...r, calendar: newCalendar } : r
         );
-        onUpdateItem({
+        updatedItem = {
           ...selectedItem,
           roomTypes: updatedRooms
-        } as any);
+        };
       } else {
-        onUpdateItem({
+        updatedItem = {
           ...selectedItem,
           calendar: newCalendar
-        } as any);
+        };
       }
+      setLocalItemMap(prev => ({ ...prev, [updatedItem.id]: updatedItem }));
+      onUpdateItem(updatedItem);
       showToast(`✓ Tarifário do mês de ${currentMonth.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })} zerado!`);
     }
 
@@ -539,19 +551,18 @@ export function CalendarPricingView({
                 <span className="px-2.5 py-1 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-medium">
                   {totalCustomDatesInMonth} dia(s) alterados neste mês
                 </span>
-                {totalCustomDatesOverall > 0 && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setClearScope('all_room');
-                      setShowClearModal(true);
-                    }}
-                    className="px-2.5 py-1 rounded bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 font-bold transition flex items-center gap-1 cursor-pointer"
-                  >
-                    <Trash2 className="w-3 h-3" />
-                    Zerar Tudo
-                  </button>
-                )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setClearScope('all_room');
+                    setShowClearModal(true);
+                  }}
+                  className="px-2.5 py-1 rounded bg-red-500/15 hover:bg-red-500/25 border border-red-500/30 text-red-400 font-bold transition flex items-center gap-1 cursor-pointer"
+                  title="Limpar ou zerar tarifário"
+                >
+                  <Trash2 className="w-3 h-3" />
+                  Zerar Tarifário ({totalCustomDatesOverall})
+                </button>
               </div>
             </div>
 
