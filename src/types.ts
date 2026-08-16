@@ -95,6 +95,9 @@ export interface RoomPricingPeriod {
 export interface RoomCalendarData {
   status: "available" | "unavailable" | "blocked" | "promo";
   priceOverride?: number;
+  adultPrice?: number;
+  price?: number;
+  basePrice?: number;
   minNights?: number;
   maxNights?: number;
   checkInAllowed?: boolean;

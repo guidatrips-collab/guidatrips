@@ -598,14 +598,30 @@ function RoomEditorModal({ room, onSave, onClose }: { room: RoomType, onSave: (r
 
           {activeTab === 'pricing' && (
             <div className="space-y-6">
-              <div className="flex justify-between items-center">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
                   <h3 className="text-white font-bold">Tarifário Base: R$ {formData.basePrice}/noite</h3>
                   <p className="text-sm text-white/60">Defina períodos com preços diferenciados (alta temporada, feriados, etc).</p>
                 </div>
-                <button type="button" onClick={addPricingPeriod} className="px-4 py-2 bg-white/10 text-white rounded-lg hover:bg-white/20 transition-colors text-sm">
-                  + Novo Período
-                </button>
+                <div className="flex items-center gap-2">
+                  {formData.pricingPeriods && formData.pricingPeriods.length > 0 && (
+                    <button 
+                      type="button" 
+                      onClick={() => {
+                        if (confirm("Deseja zerar e excluir todos os períodos de tarifário deste quarto?")) {
+                          setFormData(prev => ({ ...prev, pricingPeriods: [] }));
+                        }
+                      }} 
+                      className="px-3 py-2 bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/20 rounded-lg transition-colors text-xs font-semibold flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      Zerar Períodos ({formData.pricingPeriods.length})
+                    </button>
+                  )}
+                  <button type="button" onClick={addPricingPeriod} className="px-4 py-2 bg-[#E8711A] text-white font-bold rounded-lg hover:bg-[#E8711A]/90 transition-colors text-sm cursor-pointer flex items-center gap-1.5">
+                    + Novo Período
+                  </button>
+                </div>
               </div>
 
               <div className="space-y-4">
@@ -636,7 +652,7 @@ function RoomEditorModal({ room, onSave, onClose }: { room: RoomType, onSave: (r
                 ))}
                 {(!formData.pricingPeriods || formData.pricingPeriods.length === 0) && (
                    <div className="text-center p-8 border border-white/10 rounded-xl text-white/40">
-                     Nenhum período especial. A diária base será aplicada para todos os dias.
+                     Nenhum período especial cadastrado. A diária base (R$ {formData.basePrice}) será aplicada como padrão.
                    </div>
                 )}
               </div>
@@ -645,16 +661,31 @@ function RoomEditorModal({ room, onSave, onClose }: { room: RoomType, onSave: (r
 
           {activeTab === 'calendar' && (
             <div className="space-y-6">
-              <div className="p-8 border border-dashed border-white/10 rounded-xl text-center">
-                <Calendar className="w-12 h-12 text-white/20 mx-auto mb-4" />
-                <h3 className="text-white font-bold mb-2">Gerenciamento de Calendário</h3>
-                <p className="text-white/60 text-sm max-w-md mx-auto">
-                  A visualização de mapa interativo de calendário permite fechar dias e definir número mínimo de noites de forma visual.
-                  (Funcionalidade visual em breve).
+              <div className="p-8 border border-dashed border-white/10 rounded-xl text-center space-y-4">
+                <Calendar className="w-12 h-12 text-[#E8711A] mx-auto" />
+                <h3 className="text-white font-bold text-lg">Tarifário & Calendário do Quarto</h3>
+                <p className="text-white/70 text-sm max-w-md mx-auto">
+                  Para gerenciar as tarifas diárias e bloqueios de datas específicas deste quarto no calendário mensal, utilize a aba principal <strong>Tarifário</strong> no menu superior de Hospedagens.
                 </p>
-                <p className="text-[#E8711A] text-sm mt-4 font-bold">
-                  Por enquanto, a disponibilidade será baseada nos períodos criados no Tarifário.
-                </p>
+                {formData.calendar && Object.keys(formData.calendar).length > 0 && (
+                  <div className="pt-2">
+                    <p className="text-emerald-400 text-xs font-semibold mb-3">
+                      Este quarto possui {Object.keys(formData.calendar).length} data(s) com tarifas/bloqueios personalizados salvos no calendário.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (confirm("Tem certeza que deseja zerar todas as tarifas e bloqueios personalizados do calendário deste quarto?")) {
+                          setFormData(prev => ({ ...prev, calendar: {} }));
+                        }
+                      }}
+                      className="px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 rounded-lg text-xs font-bold transition-all inline-flex items-center gap-2 cursor-pointer"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      Zerar Calendário deste Quarto
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           )}

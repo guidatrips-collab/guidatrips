@@ -227,9 +227,27 @@ export default function HospedagensView({
                   </div>
                 </div>
 
+                {/* Rooms & Capacity Summary */}
+                {(() => {
+                  const originalAcc = accommodations.find(a => a.id === pousada.id);
+                  const roomTypes = originalAcc?.roomTypes || [];
+                  const roomCaps = roomTypes.map(r => r.maxGuests || 2);
+                  const maxCap = roomCaps.length > 0 ? Math.max(...roomCaps) : 2;
+                  return (
+                    <div className="pt-2 border-t border-zinc-100 flex items-center justify-between text-[11px] text-zinc-500">
+                      <span className="font-semibold text-[#0D1B2A] flex items-center gap-1">
+                        🛏️ {roomTypes.length > 0 ? `${roomTypes.length} ${roomTypes.length === 1 ? 'tipo de quarto' : 'opções de quartos'}` : 'Suítes individuais e para grupos'}
+                      </span>
+                      <span className="bg-zinc-100 px-2 py-0.5 rounded text-[10px] font-bold text-zinc-700">
+                        Até {maxCap} pax/quarto
+                      </span>
+                    </div>
+                  );
+                })()}
+
                 {/* Cortesias */}
                 {pousada.courtesies && pousada.courtesies.length > 0 && (
-                  <div className="pt-3 border-t border-zinc-100">
+                  <div className="pt-2 border-t border-zinc-100">
                     <span className="font-accent text-[8px] text-[#E8711A] tracking-wider uppercase font-bold block mb-2">🎁 Cortesias Guida Trips:</span>
                     <div className="flex flex-wrap gap-1.5">
                       {pousada.courtesies.map((item, idx) => (

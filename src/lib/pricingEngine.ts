@@ -159,7 +159,12 @@ export const PricingEngine = {
           const roomObj = acc.roomTypes?.find(r => r.id === selRoom.roomId);
           let unitPrice = selRoom.basePrice || roomObj?.basePrice || acc.sellRate || 0;
 
-          if (roomObj && roomObj.pricingPeriods && roomObj.pricingPeriods.length > 0) {
+          // Priority 1: Exact date override in room's calendar
+          if (roomObj?.calendar?.[currentDateStr]?.adultPrice && roomObj.calendar[currentDateStr].adultPrice > 0) {
+            unitPrice = roomObj.calendar[currentDateStr].adultPrice;
+          }
+          // Priority 2: Pricing period
+          else if (roomObj && roomObj.pricingPeriods && roomObj.pricingPeriods.length > 0) {
             const matchingPeriod = roomObj.pricingPeriods.find(p => p.startDate <= currentDateStr && p.endDate >= currentDateStr);
             if (matchingPeriod) {
               unitPrice = matchingPeriod.price;
@@ -273,12 +278,16 @@ export const PricingEngine = {
         // Find best period for this day if target room or best room exists
         let currentDayRate = bestCategoryRate;
         const activeRoom = targetRoom;
-        if (activeRoom && activeRoom.pricingPeriods && activeRoom.pricingPeriods.length > 0) {
-          const matchingPeriod = activeRoom.pricingPeriods.find(p => p.startDate <= currentDateStr && p.endDate >= currentDateStr);
-          if (matchingPeriod) {
-            currentDayRate = matchingPeriod.price * roomsNeeded;
-          } else {
-             currentDayRate = activeRoom.basePrice * roomsNeeded;
+        if (activeRoom) {
+          if (activeRoom.calendar?.[currentDateStr]?.adultPrice && activeRoom.calendar[currentDateStr].adultPrice > 0) {
+            currentDayRate = activeRoom.calendar[currentDateStr].adultPrice * roomsNeeded;
+          } else if (activeRoom.pricingPeriods && activeRoom.pricingPeriods.length > 0) {
+            const matchingPeriod = activeRoom.pricingPeriods.find(p => p.startDate <= currentDateStr && p.endDate >= currentDateStr);
+            if (matchingPeriod) {
+              currentDayRate = matchingPeriod.price * roomsNeeded;
+            } else {
+              currentDayRate = activeRoom.basePrice * roomsNeeded;
+            }
           }
         }
         totalDayPrice = currentDayRate;

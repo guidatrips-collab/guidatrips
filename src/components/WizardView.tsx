@@ -1747,6 +1747,32 @@ export default function WizardView({
                                         <p className="font-sans text-[11px] text-zinc-500 leading-relaxed line-clamp-2 mb-1">
                                           {pousada.description}
                                         </p>
+                                        
+                                        {/* Group Capacity Indicator */}
+                                        {(() => {
+                                          const groupCount = adults + children;
+                                          const roomCaps = (originalAcc?.roomTypes || []).map(r => r.maxGuests || 2);
+                                          const maxSingleCap = roomCaps.length > 0 ? Math.max(...roomCaps) : 2;
+                                          if (groupCount > 1) {
+                                            if (maxSingleCap < groupCount) {
+                                              return (
+                                                <div className="my-1.5 p-1.5 bg-amber-50 border border-amber-200/80 rounded-lg text-[10px] text-amber-900 font-semibold flex items-center gap-1">
+                                                  <span>⚠️</span>
+                                                  <span>Acomoda até {maxSingleCap} por quarto • Escolha 2 ou mais quartos para seu grupo ({groupCount} pax)</span>
+                                                </div>
+                                              );
+                                            } else {
+                                              return (
+                                                <div className="my-1.5 p-1 bg-emerald-50 border border-emerald-200/80 rounded-lg text-[10px] text-emerald-800 font-semibold flex items-center gap-1">
+                                                  <span>✓</span>
+                                                  <span>Possui quartos com capacidade para até {maxSingleCap} pessoas</span>
+                                                </div>
+                                              );
+                                            }
+                                          }
+                                          return null;
+                                        })()}
+
                                         <span className="font-sans text-xs font-bold text-[#E8711A] block">
                                           {pousada.priceDisplay}
                                         </span>
