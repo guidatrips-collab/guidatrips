@@ -207,7 +207,7 @@ export function CalendarPricingView({
 
   // Base fallback price
   const getBaseFallbackPrice = () => {
-    if (!activeCalendarSource) return 0;
+    if (!activeCalendarSource) return undefined;
     if ('basePrice' in activeCalendarSource && typeof activeCalendarSource.basePrice === 'number') {
       return activeCalendarSource.basePrice;
     }
@@ -217,13 +217,18 @@ export function CalendarPricingView({
     if ('priceFrom' in activeCalendarSource && typeof activeCalendarSource.priceFrom === 'number') {
       return activeCalendarSource.priceFrom;
     }
-    if (activeCalendarSource.pricing?.adultPrice) {
+    if (activeCalendarSource.pricing?.adultPrice !== undefined && activeCalendarSource.pricing?.adultPrice !== null) {
       return activeCalendarSource.pricing.adultPrice;
     }
-    return 0;
+    return undefined;
   };
 
   const basePrice = getBaseFallbackPrice();
+
+  const formatBasePrice = (price: number | undefined) => {
+    if (price === undefined || price === null) return "Sem Tarifa";
+    return `R$ ${price.toFixed(2)}`;
+  };
 
   const handleApplyToSelection = async () => {
     if (!selectedItem || selectedDates.length === 0) return;
@@ -231,7 +236,7 @@ export function CalendarPricingView({
     const currentCalendar = { ...(activeCalendarSource?.calendar || {}) };
     
     selectedDates.forEach(date => {
-      const ap = adultPrice !== "" ? Number(adultPrice) : basePrice;
+      const ap = adultPrice !== "" ? Number(adultPrice) : (basePrice ?? 0);
       const cp = childPrice !== "" ? Number(childPrice) : 0;
       const bp = babyPrice !== "" ? Number(babyPrice) : 0;
       
@@ -302,26 +307,25 @@ export function CalendarPricingView({
     let updatedItem: any;
 
     if (scope === 'all_accommodation_zero_base' && 'roomTypes' in selectedItem && selectedItem.roomTypes) {
-      // 100% Wipe of calendar + periods + set sellRate: 0 on all rooms and root
-      const updatedRooms = (selectedItem.roomTypes || []).map(r => ({
-        ...r,
-        calendar: {},
-        pricingPeriods: [],
-        basePrice: 0,
-        priceFrom: 0,
-        sellRate: 0,
-        netRate: 0
-      }));
+      // 100% Wipe of calendar + periods + remove basePrice on all rooms and root
+      const updatedRooms = (selectedItem.roomTypes || []).map(r => {
+        const newR = { ...r, calendar: {}, pricingPeriods: [] };
+        delete newR.basePrice;
+        delete newR.sellRate;
+        delete newR.netRate;
+        return newR;
+      });
       updatedItem = {
         ...selectedItem,
         calendar: {},
-        pricingPeriods: [],
-        basePrice: 0,
-        priceFrom: 0,
-        sellRate: 0,
-        netRate: 0,
+        pricingPeriods: {},
         roomTypes: updatedRooms
       };
+      delete updatedItem.basePrice;
+      delete updatedItem.priceFrom;
+      delete updatedItem.sellRate;
+      delete updatedItem.netRate;
+      
       try {
         setLocalItemMap(prev => ({ ...prev, [updatedItem.id]: updatedItem }));
         await onUpdateItem(updatedItem);
@@ -350,11 +354,18 @@ export function CalendarPricingView({
         showToast(`❌ Erro ao zerar: ${err.message || 'Falha no servidor'}`);
       }
     } else if (scope === 'all_zero_base') {
-      // Wipe calendar AND pricing periods + set base rate to 0
+      // Wipe calendar AND pricing periods + remove base rate
       if (selectedRoom && 'roomTypes' in selectedItem) {
-        const updatedRooms = (selectedItem.roomTypes || []).map(r => 
-          r.id === selectedRoom.id ? { ...r, calendar: {}, pricingPeriods: [], basePrice: 0, priceFrom: 0, sellRate: 0, netRate: 0 } : r
-        );
+        const updatedRooms = (selectedItem.roomTypes || []).map(r => {
+          if (r.id === selectedRoom.id) {
+            const newR = { ...r, calendar: {}, pricingPeriods: [] };
+            delete newR.basePrice;
+            delete newR.sellRate;
+            delete newR.netRate;
+            return newR;
+          }
+          return r;
+        });
         updatedItem = {
           ...selectedItem,
           roomTypes: updatedRooms
@@ -363,13 +374,17 @@ export function CalendarPricingView({
         updatedItem = {
           ...selectedItem,
           calendar: {},
-          pricingPeriods: [],
-          basePrice: 0,
-          priceFrom: 0,
-          sellRate: 0,
-          netRate: 0,
-          pricing: { ...(selectedItem.pricing || {}), defaultSellRate: 0, defaultNetRate: 0, adultPrice: 0 }
+          pricingPeriods: []
         };
+        delete updatedItem.basePrice;
+        delete updatedItem.priceFrom;
+        delete updatedItem.sellRate;
+        delete updatedItem.netRate;
+        if (updatedItem.pricing) {
+          delete updatedItem.pricing.defaultSellRate;
+          delete updatedItem.pricing.defaultNetRate;
+          delete updatedItem.pricing.adultPrice;
+        }
       }
       try {
         setLocalItemMap(prev => ({ ...prev, [updatedItem.id]: updatedItem }));
@@ -441,28 +456,54 @@ export function CalendarPricingView({
   };
 
   // Direct update of the Base Daily Price
-  const handleUpdateBasePrice = async (newRate: number) => {
+  const handleUpdateBasePrice = async (newRate: number | "") => {
     if (!selectedItem) return;
     let updatedItem: any;
+    
+    // If the input is empty string, we want to REMOVE the base price
+    const shouldRemove = newRate === "";
+
     if (selectedRoom && 'roomTypes' in selectedItem) {
-      const updatedRooms = (selectedItem.roomTypes || []).map(r => 
-        r.id === selectedRoom.id ? { ...r, sellRate: newRate } : r
-      );
-      updatedItem = {
-        ...selectedItem,
-        roomTypes: updatedRooms
-      };
+      const updatedRooms = (selectedItem.roomTypes || []).map(r => {
+        if (r.id === selectedRoom.id) {
+          const newR = { ...r };
+          if (shouldRemove) {
+            delete newR.basePrice;
+            delete newR.sellRate;
+            delete newR.netRate;
+          } else {
+            newR.basePrice = Number(newRate);
+            newR.sellRate = Number(newRate);
+          }
+          return newR;
+        }
+        return r;
+      });
+      updatedItem = { ...selectedItem, roomTypes: updatedRooms };
     } else {
-      updatedItem = {
-        ...selectedItem,
-        sellRate: newRate,
-        pricing: { ...(selectedItem.pricing || {}), defaultSellRate: newRate, adultPrice: newRate }
-      };
+      updatedItem = { ...selectedItem };
+      if (shouldRemove) {
+        delete updatedItem.basePrice;
+        delete updatedItem.priceFrom;
+        delete updatedItem.sellRate;
+        delete updatedItem.netRate;
+        if (updatedItem.pricing) {
+          delete updatedItem.pricing.defaultSellRate;
+          delete updatedItem.pricing.defaultNetRate;
+          delete updatedItem.pricing.adultPrice;
+        }
+      } else {
+        updatedItem.basePrice = Number(newRate);
+        updatedItem.priceFrom = Number(newRate);
+        updatedItem.sellRate = Number(newRate);
+        updatedItem.pricing = { ...(selectedItem.pricing || {}), defaultSellRate: Number(newRate), adultPrice: Number(newRate) };
+      }
     }
+    
     try {
       setLocalItemMap(prev => ({ ...prev, [updatedItem.id]: updatedItem }));
       await onUpdateItem(updatedItem);
-      showToast(`✓ Diária Base Padrão atualizada para R$ ${newRate.toFixed(2)} com sucesso!`);
+      showToast(`✓ Diária Base Padrão ${shouldRemove ? 'removida' : `atualizada para R$ ${Number(newRate).toFixed(2)}`} com sucesso!`);
     } catch (err: any) {
       showToast(`❌ Erro ao atualizar diária base: ${err.message || 'Falha no servidor'}`);
     }
@@ -645,23 +686,23 @@ export function CalendarPricingView({
                   <CheckCircle className="w-5 h-5 text-emerald-400 flex-shrink-0" />
                   <div>
                     <div className="font-bold text-emerald-400 text-xs">
-                      ✓ Tarifário Zerado no Banco de Dados (0 dias personalizados)
+                      ✓ Tarifário Limpo (0 dias personalizados)
                     </div>
                     <div className="text-[11px] text-zinc-300 mt-0.5">
-                      Nenhuma tarifa avulsa gravada. Todos os 365 dias do ano estão utilizando a Diária Base Padrão de <strong>R$ {basePrice.toFixed(2)}</strong>.
+                      Nenhuma tarifa avulsa gravada. Todos os 365 dias do ano estão utilizando a Diária Base Padrão: <strong>{formatBasePrice(basePrice)}</strong>.
                     </div>
                   </div>
                 </div>
                 <button
                   type="button"
                   onClick={() => {
-                    setNewBasePriceInput(basePrice);
+                    setNewBasePriceInput(basePrice ?? "");
                     setShowBasePriceModal(true);
                   }}
                   className="px-3 py-1.5 bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/40 text-emerald-300 rounded font-bold text-[11px] whitespace-nowrap transition cursor-pointer flex items-center gap-1"
                 >
                   <Edit className="w-3 h-3" />
-                  {basePrice === 0 ? 'Definir Diária Base' : 'Alterar / Zerar Diária Base'}
+                  {basePrice === undefined ? 'Definir Diária Base' : 'Alterar / Remover Diária Base'}
                 </button>
               </div>
             ) : (
@@ -697,16 +738,16 @@ export function CalendarPricingView({
                     {currentMonth.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
                   </h4>
                   <div className="text-[11px] text-zinc-400 flex items-center gap-2">
-                    <span>Diária Base Padrão: <strong className="text-emerald-400">R$ {basePrice.toFixed(2)}</strong></span>
+                    <span>Diária Base Padrão: <strong className="text-emerald-400">{formatBasePrice(basePrice)}</strong></span>
                     <button
                       type="button"
                       onClick={() => {
-                        setNewBasePriceInput(basePrice);
+                        setNewBasePriceInput(basePrice ?? "");
                         setShowBasePriceModal(true);
                       }}
                       className="text-[10px] text-[#E8711A] hover:underline font-bold"
                     >
-                      (Editar / Zerar)
+                      (Editar / Remover)
                     </button>
                   </div>
                 </div>
@@ -817,7 +858,7 @@ export function CalendarPricingView({
                     {!isClosed ? (
                       <div className="text-[9px] font-sans text-right">
                         <div className={`font-semibold ${hasCustomTariff ? "text-emerald-400 font-bold" : "text-zinc-400"}`}>
-                          R$ {displayedPrice}
+                          {displayedPrice !== undefined ? `R$ ${displayedPrice}` : "Sem Tarifa"}
                         </div>
                         <div className="text-[8px] text-zinc-500">
                           {hasCustomTariff ? "Personalizado" : "Padrão Base"}
@@ -976,7 +1017,7 @@ export function CalendarPricingView({
                       </label>
                       <input
                         type="number"
-                        placeholder={`Padrão: R$ ${basePrice}`}
+                        placeholder={`Padrão: ${formatBasePrice(basePrice)}`}
                         value={adultPrice}
                         onChange={(e) => setAdultPrice(e.target.value ? Number(e.target.value) : "")}
                         className="w-full bg-[#0D1B2A] border border-white/10 p-2.5 text-xs text-white rounded outline-none focus:border-[#E8711A] font-mono"
@@ -1093,11 +1134,11 @@ export function CalendarPricingView({
                   />
                   <div>
                     <div className="font-bold text-xs text-red-400 flex items-center gap-1.5">
-                      <span>🗑️ Zerar TODO o ano (Manter Diária Base R$ {basePrice.toFixed(2)})</span>
+                      <span>🗑️ Zerar TODO o ano (Manter Diária Base {formatBasePrice(basePrice)})</span>
                       <span className="bg-red-500/20 text-red-300 px-1.5 py-0.2 rounded text-[10px]">Recomendado</span>
                     </div>
                     <div className="text-[11px] text-zinc-300 mt-0.5">
-                      Apaga todas as tarifas personalizadas e bloqueios de todos os meses do ano deste {selectedRoom ? 'quarto' : 'item'}, retornando 100% dos dias para o valor padrão base (R$ {basePrice.toFixed(2)}).
+                      Apaga todas as tarifas personalizadas e bloqueios de todos os meses do ano deste {selectedRoom ? 'quarto' : 'item'}, retornando 100% dos dias para o valor padrão base ({formatBasePrice(basePrice)}).
                     </div>
                   </div>
                 </label>
@@ -1120,11 +1161,11 @@ export function CalendarPricingView({
                   />
                   <div>
                     <div className="font-bold text-xs text-red-300 flex items-center gap-1.5">
-                      <span>⚡ Zerar TUDO + Resetar Diária Base para R$ 0,00</span>
+                      <span>⚡ Zerar TUDO + Remover Diária Base</span>
                       <span className="bg-red-600/30 text-white px-1.5 py-0.2 rounded text-[10px] font-extrabold">Zerar Geral</span>
                     </div>
                     <div className="text-[11px] text-zinc-300 mt-0.5">
-                      Apaga o calendário completo, limpa os períodos e zera o preço base do quarto para <strong>R$ 0,00</strong> no banco de dados.
+                      Apaga o calendário completo, limpa os períodos e remove a tarifa base (Sem Tarifa) no banco de dados.
                     </div>
                   </div>
                 </label>
@@ -1311,10 +1352,18 @@ export function CalendarPricingView({
                 <div className="grid grid-cols-4 gap-2">
                   <button
                     type="button"
-                    onClick={() => setNewBasePriceInput(0)}
+                    onClick={() => setNewBasePriceInput("")}
                     className="py-1.5 bg-red-500/20 hover:bg-red-500/30 border border-red-500/40 text-red-300 rounded text-xs font-bold transition"
                   >
-                    R$ 0,00 (Zerar)
+                    Remover
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setNewBasePriceInput(0)}
+                    className="py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded text-xs font-bold transition flex flex-col items-center leading-none"
+                  >
+                    <span className="font-bold text-[11px]">Grátis</span>
+                    <span className="font-medium text-[9px] text-emerald-400">R$ 0,00</span>
                   </button>
                   <button
                     type="button"
@@ -1322,13 +1371,6 @@ export function CalendarPricingView({
                     className="py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded text-xs font-bold transition"
                   >
                     R$ 100
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setNewBasePriceInput(150)}
-                    className="py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded text-xs font-bold transition"
-                  >
-                    R$ 150
                   </button>
                   <button
                     type="button"
@@ -1351,7 +1393,7 @@ export function CalendarPricingView({
               </button>
               <button
                 type="button"
-                onClick={() => handleUpdateBasePrice(Number(newBasePriceInput) || 0)}
+                onClick={() => handleUpdateBasePrice(newBasePriceInput)}
                 className="px-5 py-2.5 bg-[#E8711A] hover:bg-[#C45E12] text-white rounded-lg text-xs font-bold flex items-center gap-2 shadow-xl cursor-pointer"
               >
                 <Save className="w-4 h-4" />

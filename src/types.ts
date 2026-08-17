@@ -135,7 +135,7 @@ export interface RoomType {
 
   pricingPeriods?: RoomPricingPeriod[];
   calendar?: Record<string, RoomCalendarData>;
-  basePrice: number;
+  basePrice?: number;
 }
 
 
@@ -155,8 +155,8 @@ export interface Accommodation {
   location: string;
   address: string;
   coordinates?: { lat: number; lng: number };
-  netRate: number; // Tarifa custo base
-  sellRate: number; // Tarifa venda base (Valor por diária)
+  netRate?: number; // Tarifa custo base
+  sellRate?: number; // Tarifa venda base (Valor por diária)
   roomTypes?: RoomType[];
   markup: number;
   commission: number;
@@ -271,7 +271,7 @@ export interface Experience {
   
   // OS Financial Pricing Intelligence & Partial Payments
   netRate?: number; // Valor de custo com o parceiro
-  priceFrom: number; // Valor final de venda (Base)
+  priceFrom?: number; // Valor final de venda (Base)
   promotionalPrice?: number;
   markup?: number; // Percentage
   depositPercentage?: number; // % de entrada necessária (e.g. 30%, 50%, 100%)
