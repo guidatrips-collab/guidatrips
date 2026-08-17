@@ -75,7 +75,7 @@ export function CalendarPricingView({
 
   // Clear modal confirmation state
   const [showClearModal, setShowClearModal] = useState(false);
-  const [clearScope, setClearScope] = useState<'all_room' | 'all_zero_base' | 'all_accommodation' | 'all_accommodation_zero_base' | 'month' | 'all_and_periods'>('all_room');
+  const [clearScope, setClearScope] = useState<'all_room' | 'all_zero_base' | 'all_accommodation' | 'all_accommodation_zero_base' | 'month' | 'all_and_periods'>('all_zero_base');
 
   // Base price editor modal state
   const [showBasePriceModal, setShowBasePriceModal] = useState(false);
@@ -511,7 +511,7 @@ export function CalendarPricingView({
               <button
                 type="button"
                 onClick={() => {
-                  setClearScope('all_room');
+                  setClearScope('all_zero_base');
                   setShowClearModal(true);
                 }}
                 className="px-3.5 py-2 bg-red-600/20 hover:bg-red-600/30 text-red-300 border border-red-500/30 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
@@ -669,7 +669,7 @@ export function CalendarPricingView({
                 <button
                   type="button"
                   onClick={() => {
-                    setClearScope('all_room');
+                    setClearScope('all_zero_base');
                     setShowClearModal(true);
                   }}
                   className="px-3 py-1 bg-red-500/20 hover:bg-red-500/30 border border-red-500/40 text-red-300 rounded font-bold text-[11px] whitespace-nowrap transition cursor-pointer flex items-center gap-1"
@@ -717,7 +717,7 @@ export function CalendarPricingView({
                 <button
                   type="button"
                   onClick={() => {
-                    setClearScope('all_room');
+                    setClearScope('all_zero_base');
                     setShowClearModal(true);
                   }}
                   className="px-2.5 py-1 rounded bg-red-500/15 hover:bg-red-500/25 border border-red-500/30 text-red-400 font-bold transition flex items-center gap-1 cursor-pointer"
@@ -892,7 +892,7 @@ export function CalendarPricingView({
                 </button>
                 <button 
                   onClick={() => {
-                    setClearScope('all_room');
+                    setClearScope('all_zero_base');
                     setShowClearModal(true);
                   }}
                   className="px-2.5 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 text-[11px] font-bold rounded-md transition text-center flex items-center justify-center gap-1 cursor-pointer"
@@ -934,7 +934,7 @@ export function CalendarPricingView({
                   <button
                     type="button"
                     onClick={() => {
-                      setClearScope('all_room');
+                      setClearScope('all_zero_base');
                       setShowClearModal(true);
                     }}
                     className="w-full py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 text-xs font-bold rounded-md transition flex items-center justify-center gap-1.5 cursor-pointer"
@@ -1025,7 +1025,7 @@ export function CalendarPricingView({
                   <button 
                     type="button"
                     onClick={() => {
-                      setClearScope('all_room');
+                      setClearScope('all_zero_base');
                       setShowClearModal(true);
                     }}
                     className="w-full py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 text-xs font-bold rounded-md transition flex items-center justify-center gap-1.5 cursor-pointer mt-1"
