@@ -166,11 +166,18 @@ export const firestoreService = {
       try {
         await updateDoc(docRef, sanitized);
       } catch (err: any) {
-        // Fallback to setDoc if doc doesn't exist yet or update fails
-        await setDoc(docRef, sanitized, { merge: true });
+        // If the document doesn't exist, we can fallback to setDoc.
+        // But if it's another error, we MUST throw it, because setDoc with merge: true
+        // breaks field deletion (e.g. removing calendar dates).
+        if (err.code === 'not-found') {
+          await setDoc(docRef, sanitized, { merge: true });
+        } else {
+          console.error(`Error updating document ${collectionName}/${id}:`, err);
+          throw err;
+        }
       }
     } catch (error) {
-      console.error(`Error updating document ${collectionName}/${id}:`, error);
+      console.error(`Error in update operation for ${collectionName}/${id}:`, error);
       handleFirestoreError(error, OperationType.WRITE, `${collectionName}/${id}`);
     }
   },

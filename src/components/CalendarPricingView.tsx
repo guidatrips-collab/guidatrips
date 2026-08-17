@@ -225,7 +225,7 @@ export function CalendarPricingView({
 
   const basePrice = getBaseFallbackPrice();
 
-  const handleApplyToSelection = () => {
+  const handleApplyToSelection = async () => {
     if (!selectedItem || selectedDates.length === 0) return;
     
     const currentCalendar = { ...(activeCalendarSource?.calendar || {}) };
@@ -259,15 +259,18 @@ export function CalendarPricingView({
       };
     }
 
-    setLocalItemMap(prev => ({ ...prev, [updatedItem.id]: updatedItem }));
-    onUpdateItem(updatedItem);
-    
-    showToast(`✓ Sucesso: ${selectedDates.length} data(s) salvas com sucesso no tarifário!`);
+    try {
+      setLocalItemMap(prev => ({ ...prev, [updatedItem.id]: updatedItem }));
+      await onUpdateItem(updatedItem);
+      showToast(`✓ Sucesso: ${selectedDates.length} data(s) salvas com sucesso no tarifário!`);
+    } catch (err: any) {
+      showToast(`❌ Erro: ${err.message || 'Falha no servidor'}`);
+    }
     clearSelection();
   };
 
   // Clear specific selected dates from calendar
-  const handleRemoveCustomizationFromSelection = () => {
+  const handleRemoveCustomizationFromSelection = async () => {
     if (!selectedItem || selectedDates.length === 0) return;
     const newCalendar = { ...(activeCalendarSource?.calendar || {}) };
     selectedDates.forEach(d => delete newCalendar[d]);
@@ -282,14 +285,18 @@ export function CalendarPricingView({
       updatedItem = { ...selectedItem, calendar: newCalendar };
     }
 
-    setLocalItemMap(prev => ({ ...prev, [updatedItem.id]: updatedItem }));
-    onUpdateItem(updatedItem);
-    showToast(`✓ ${selectedDates.length} data(s) restauradas para a diária padrão.`);
+    try {
+      setLocalItemMap(prev => ({ ...prev, [updatedItem.id]: updatedItem }));
+      await onUpdateItem(updatedItem);
+      showToast(`✓ ${selectedDates.length} data(s) restauradas para a diária padrão.`);
+    } catch (err: any) {
+      showToast(`❌ Erro: ${err.message || 'Falha no servidor'}`);
+    }
     clearSelection();
   };
 
   // Clear entire tariff (reset) for room or item
-  const handleExecuteClearTariff = (scope: 'month' | 'all_room' | 'all_zero_base' | 'all_accommodation' | 'all_accommodation_zero_base' | 'all_and_periods') => {
+  const handleExecuteClearTariff = async (scope: 'month' | 'all_room' | 'all_zero_base' | 'all_accommodation' | 'all_accommodation_zero_base' | 'all_and_periods') => {
     if (!selectedItem) return;
 
     let updatedItem: any;
@@ -311,9 +318,13 @@ export function CalendarPricingView({
         netRate: 0,
         roomTypes: updatedRooms
       };
-      setLocalItemMap(prev => ({ ...prev, [updatedItem.id]: updatedItem }));
-      onUpdateItem(updatedItem);
-      showToast(`✓ Zerado Completo: Todos os quartos de "${selectedItem.name}" foram limpos e a diária base foi resetada para R$ 0,00!`);
+      try {
+        setLocalItemMap(prev => ({ ...prev, [updatedItem.id]: updatedItem }));
+        await onUpdateItem(updatedItem);
+        showToast(`✓ Zerado Completo: Todos os quartos de "${selectedItem.name}" foram limpos e a diária base foi resetada para R$ 0,00!`);
+      } catch (err: any) {
+        showToast(`❌ Erro ao zerar: ${err.message || 'Falha no servidor'}`);
+      }
     } else if (scope === 'all_accommodation' && 'roomTypes' in selectedItem && selectedItem.roomTypes) {
       // Complete wipe of all calendar dates AND seasonal periods across ALL rooms of this accommodation
       const updatedRooms = (selectedItem.roomTypes || []).map(r => ({
@@ -327,9 +338,13 @@ export function CalendarPricingView({
         pricingPeriods: [],
         roomTypes: updatedRooms
       };
-      setLocalItemMap(prev => ({ ...prev, [updatedItem.id]: updatedItem }));
-      onUpdateItem(updatedItem);
-      showToast(`✓ Zerado com Sucesso: Todos os quartos de "${selectedItem.name}" tiveram o tarifário 100% resetado para a diária base!`);
+      try {
+        setLocalItemMap(prev => ({ ...prev, [updatedItem.id]: updatedItem }));
+        await onUpdateItem(updatedItem);
+        showToast(`✓ Zerado com Sucesso: Todos os quartos de "${selectedItem.name}" tiveram o tarifário 100% resetado para a diária base!`);
+      } catch (err: any) {
+        showToast(`❌ Erro ao zerar: ${err.message || 'Falha no servidor'}`);
+      }
     } else if (scope === 'all_zero_base') {
       // Wipe calendar AND pricing periods + set base rate to 0
       if (selectedRoom && 'roomTypes' in selectedItem) {
@@ -350,9 +365,13 @@ export function CalendarPricingView({
           pricing: { ...(selectedItem.pricing || {}), defaultSellRate: 0, defaultNetRate: 0, adultPrice: 0 }
         };
       }
-      setLocalItemMap(prev => ({ ...prev, [updatedItem.id]: updatedItem }));
-      onUpdateItem(updatedItem);
-      showToast(`✓ Zerado Completo: Calendário limpo e Diária Base resetada para R$ 0,00!`);
+      try {
+        setLocalItemMap(prev => ({ ...prev, [updatedItem.id]: updatedItem }));
+        await onUpdateItem(updatedItem);
+        showToast(`✓ Zerado Completo: Calendário limpo e Diária Base resetada para R$ 0,00!`);
+      } catch (err: any) {
+        showToast(`❌ Erro ao zerar: ${err.message || 'Falha no servidor'}`);
+      }
     } else if (scope === 'all_and_periods' || scope === 'all_room') {
       // Wipe calendar AND pricing periods for current room or item
       if (selectedRoom && 'roomTypes' in selectedItem) {
@@ -370,9 +389,13 @@ export function CalendarPricingView({
           pricingPeriods: []
         };
       }
-      setLocalItemMap(prev => ({ ...prev, [updatedItem.id]: updatedItem }));
-      onUpdateItem(updatedItem);
-      showToast(`✓ Zerado com Sucesso: Todo o tarifário (${selectedRoom ? selectedRoom.name : selectedItem.name}) voltou para a diária base padrão!`);
+      try {
+        setLocalItemMap(prev => ({ ...prev, [updatedItem.id]: updatedItem }));
+        await onUpdateItem(updatedItem);
+        showToast(`✓ Zerado com Sucesso: Todo o tarifário (${selectedRoom ? selectedRoom.name : selectedItem.name}) voltou para a diária base padrão!`);
+      } catch (err: any) {
+        showToast(`❌ Erro ao zerar: ${err.message || 'Falha no servidor'}`);
+      }
     } else {
       // Wipe only dates matching the currently displayed year-month (YYYY-MM)
       const year = currentMonth.getFullYear();
@@ -398,9 +421,13 @@ export function CalendarPricingView({
           calendar: newCalendar
         };
       }
-      setLocalItemMap(prev => ({ ...prev, [updatedItem.id]: updatedItem }));
-      onUpdateItem(updatedItem);
-      showToast(`✓ Tarifário do mês de ${currentMonth.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })} zerado!`);
+      try {
+        setLocalItemMap(prev => ({ ...prev, [updatedItem.id]: updatedItem }));
+        await onUpdateItem(updatedItem);
+        showToast(`✓ Tarifário do mês de ${currentMonth.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })} zerado!`);
+      } catch (err: any) {
+        showToast(`❌ Erro ao zerar o mês: ${err.message || 'Falha no servidor'}`);
+      }
     }
 
     clearSelection();
@@ -408,7 +435,7 @@ export function CalendarPricingView({
   };
 
   // Direct update of the Base Daily Price
-  const handleUpdateBasePrice = (newRate: number) => {
+  const handleUpdateBasePrice = async (newRate: number) => {
     if (!selectedItem) return;
     let updatedItem: any;
     if (selectedRoom && 'roomTypes' in selectedItem) {
@@ -426,9 +453,13 @@ export function CalendarPricingView({
         pricing: { ...(selectedItem.pricing || {}), defaultSellRate: newRate, adultPrice: newRate }
       };
     }
-    setLocalItemMap(prev => ({ ...prev, [updatedItem.id]: updatedItem }));
-    onUpdateItem(updatedItem);
-    showToast(`✓ Diária Base Padrão atualizada para R$ ${newRate.toFixed(2)} com sucesso!`);
+    try {
+      setLocalItemMap(prev => ({ ...prev, [updatedItem.id]: updatedItem }));
+      await onUpdateItem(updatedItem);
+      showToast(`✓ Diária Base Padrão atualizada para R$ ${newRate.toFixed(2)} com sucesso!`);
+    } catch (err: any) {
+      showToast(`❌ Erro ao atualizar diária base: ${err.message || 'Falha no servidor'}`);
+    }
     setShowBasePriceModal(false);
   };
 
