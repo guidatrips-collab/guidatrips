@@ -468,7 +468,7 @@ export default function AccommodationDetailModal({
               
               const totalSelectedCapacity = roomsToRender.reduce((sum, r) => sum + (r.maxGuests * (selectedRoomsMap[r.id] || 0)), 0);
               const totalRoomsCount = (Object.values(selectedRoomsMap) as number[]).reduce((a, b) => a + b, 0);
-              const totalNightlyRate = roomsToRender.reduce((sum, r) => sum + (r.basePrice * (selectedRoomsMap[r.id] || 0)), 0);
+              const totalNightlyRate = roomsToRender.reduce((sum, r) => sum + ((r.basePrice ?? 0) * (selectedRoomsMap[r.id] || 0)), 0);
               const isCapacitySatisfied = totalSelectedCapacity >= totalGuests && totalRoomsCount > 0;
 
               const handleQuantityChange = (roomId: string, change: number) => {
@@ -586,7 +586,7 @@ export default function AccommodationDetailModal({
                         <div className="text-left sm:text-right">
                           <span className="text-[10px] text-zinc-400 uppercase tracking-wider block font-bold">Diária Total</span>
                           <span className="font-serif font-extrabold text-lg sm:text-xl text-[#0D1B2A]">
-                            R$ {totalNightlyRate}
+                            R$ {totalNightlyRate.toFixed(2)}
                             <span className="text-xs text-zinc-500 font-sans font-normal"> /noite</span>
                           </span>
                         </div>
@@ -680,53 +680,67 @@ export default function AccommodationDetailModal({
                             <div className="pt-4 border-t border-zinc-150 flex flex-wrap justify-between items-center gap-4">
                               <div>
                                 <span className="text-[10px] text-zinc-400 uppercase tracking-wider block font-bold">Valor da Diária</span>
-                                <span className="font-serif font-extrabold text-xl text-[#0D1B2A]">R$ {room.basePrice}</span>
-                                <span className="text-xs text-zinc-500"> /noite por quarto</span>
+                                {room.basePrice !== undefined && room.basePrice !== null ? (
+                                  <>
+                                    <span className="font-serif font-extrabold text-xl text-[#0D1B2A]">R$ {room.basePrice.toFixed(2)}</span>
+                                    <span className="text-xs text-zinc-500"> /noite por quarto</span>
+                                  </>
+                                ) : (
+                                  <span className="font-serif font-extrabold text-lg text-zinc-400">Sem Tarifa</span>
+                                )}
                               </div>
 
                               {isSelectionContext ? (
                                 <div className="flex items-center gap-3">
-                                  {/* Quantity Controls */}
-                                  <div className="flex items-center bg-zinc-100 border border-zinc-300 rounded-xl p-1 shadow-xs">
-                                    <button
-                                      type="button"
-                                      onClick={() => handleQuantityChange(room.id, -1)}
-                                      disabled={qty <= 0}
-                                      className="w-8 h-8 rounded-lg bg-white hover:bg-zinc-200 text-zinc-700 font-bold flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-colors shadow-xs"
-                                      title="Diminuir quantidade de quartos"
-                                    >
-                                      -
-                                    </button>
-                                    <span className="w-16 text-center text-xs font-black text-zinc-900">
-                                      {qty} {qty === 1 ? 'quarto' : 'quartos'}
-                                    </span>
-                                    <button
-                                      type="button"
-                                      onClick={() => handleQuantityChange(room.id, 1)}
-                                      className="w-8 h-8 rounded-lg bg-[#0D1B2A] hover:bg-[#E8711A] text-white hover:text-[#0D1B2A] font-bold flex items-center justify-center cursor-pointer transition-colors shadow-xs"
-                                      title="Adicionar mais um quarto desta categoria"
-                                    >
-                                      +
-                                    </button>
-                                  </div>
+                                  {room.basePrice !== undefined && room.basePrice !== null ? (
+                                    <>
+                                      {/* Quantity Controls */}
+                                      <div className="flex items-center bg-zinc-100 border border-zinc-300 rounded-xl p-1 shadow-xs">
+                                        <button
+                                          type="button"
+                                          onClick={() => handleQuantityChange(room.id, -1)}
+                                          disabled={qty <= 0}
+                                          className="w-8 h-8 rounded-lg bg-white hover:bg-zinc-200 text-zinc-700 font-bold flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-colors shadow-xs"
+                                          title="Diminuir quantidade de quartos"
+                                        >
+                                          -
+                                        </button>
+                                        <span className="w-16 text-center text-xs font-black text-zinc-900">
+                                          {qty} {qty === 1 ? 'quarto' : 'quartos'}
+                                        </span>
+                                        <button
+                                          type="button"
+                                          onClick={() => handleQuantityChange(room.id, 1)}
+                                          className="w-8 h-8 rounded-lg bg-[#0D1B2A] hover:bg-[#E8711A] text-white hover:text-[#0D1B2A] font-bold flex items-center justify-center cursor-pointer transition-colors shadow-xs"
+                                          title="Adicionar mais um quarto desta categoria"
+                                        >
+                                          +
+                                        </button>
+                                      </div>
 
-                                  {qty === 0 ? (
-                                    <button
-                                      type="button"
-                                      onClick={() => handleQuantityChange(room.id, 1)}
-                                      className="px-4 py-2.5 bg-[#0D1B2A] hover:bg-[#E8711A] text-white hover:text-[#0D1B2A] rounded-xl font-accent text-xs font-bold tracking-wider uppercase transition-all shadow-xs cursor-pointer"
-                                    >
-                                      Selecionar
-                                    </button>
+                                      {qty === 0 ? (
+                                        <button
+                                          type="button"
+                                          onClick={() => handleQuantityChange(room.id, 1)}
+                                          className="px-4 py-2.5 bg-[#0D1B2A] hover:bg-[#E8711A] text-white hover:text-[#0D1B2A] rounded-xl font-accent text-xs font-bold tracking-wider uppercase transition-all shadow-xs cursor-pointer"
+                                        >
+                                          Selecionar
+                                        </button>
+                                      ) : (
+                                        <button
+                                          type="button"
+                                          onClick={() => handleQuickToggleRoom(room.id)}
+                                          className="px-3 py-2.5 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-xl font-accent text-xs font-bold tracking-wider uppercase transition-all cursor-pointer"
+                                          title="Remover este quarto da seleção"
+                                        >
+                                          ✕
+                                        </button>
+                                      )}
+                                    </>
                                   ) : (
-                                    <button
-                                      type="button"
-                                      onClick={() => handleQuickToggleRoom(room.id)}
-                                      className="px-3 py-2.5 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-xl font-accent text-xs font-bold tracking-wider uppercase transition-all cursor-pointer"
-                                      title="Remover este quarto da seleção"
-                                    >
-                                      ✕
-                                    </button>
+                                    <div className="px-4 py-2 bg-zinc-100 border border-zinc-200 text-zinc-400 rounded-xl font-accent text-[10px] font-bold tracking-wider uppercase">
+                                      Indisponível
+                                    </div>
                                   )}
                                 </div>
                               ) : (
@@ -808,7 +822,7 @@ export default function AccommodationDetailModal({
                   .map(r => ({
                     roomId: r.id,
                     roomName: r.name,
-                    basePrice: r.basePrice,
+                    basePrice: r.basePrice ?? 0,
                     quantity: selectedRoomsMap[r.id] || 1,
                     maxGuests: r.maxGuests
                   }));
@@ -839,7 +853,7 @@ export default function AccommodationDetailModal({
                             {selectedRoomsArray.map(r => `${r.quantity}x ${r.roomName}`).join(" + ")}
                           </span>
                           <span className="text-xs text-zinc-500 font-medium">
-                            Diária Total: R$ {selectedRoomsArray.reduce((sum, r) => sum + (r.basePrice * r.quantity), 0)} / noite
+                            Diária Total: R$ {selectedRoomsArray.reduce((sum, r) => sum + (r.basePrice * r.quantity), 0).toFixed(2)} / noite
                           </span>
                         </>
                       ) : (
