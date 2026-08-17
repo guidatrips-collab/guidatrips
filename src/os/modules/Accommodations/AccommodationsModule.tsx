@@ -1048,12 +1048,15 @@ export function AccommodationsModule({ accommodations, destinations }: Accommoda
                 await firestoreService.update("accommodations", updatedAcc.id, {
                   calendar: updatedAcc.calendar || {},
                   pricing: updatedAcc.pricing || {},
+                  pricingPeriods: updatedAcc.pricingPeriods || [],
                   roomTypes: updatedAcc.roomTypes || [],
+                  sellRate: updatedAcc.sellRate !== undefined ? updatedAcc.sellRate : 0,
+                  netRate: updatedAcc.netRate !== undefined ? updatedAcc.netRate : 0,
                   updatedAt: new Date().toISOString()
                 });
               } catch (err) {
                 console.error(err);
-                alert("Erro ao salvar. Se você tiver muitas fotos, pode ter atingido o limite de 1MB do banco de dados. Tente apagar algumas fotos da hospedagem ou dos quartos para liberar espaço para o calendário.");
+                alert("Erro ao salvar no banco de dados.");
               }
             }} 
             title="Tarifário e Disponibilidade (Hospedagens)"

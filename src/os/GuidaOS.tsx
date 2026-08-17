@@ -204,6 +204,9 @@ export function GuidaOS({
                   try {
                     await firestoreService.update("experiences", updatedExp.id, {
                       calendar: updatedExp.calendar || {},
+                      pricingPeriods: updatedExp.pricingPeriods || [],
+                      sellRate: updatedExp.sellRate !== undefined ? updatedExp.sellRate : (updatedExp.pricing?.defaultSellRate || 0),
+                      netRate: updatedExp.netRate !== undefined ? updatedExp.netRate : (updatedExp.pricing?.defaultNetRate || 0),
                       updatedAt: new Date().toISOString()
                     });
                   } catch (err) {

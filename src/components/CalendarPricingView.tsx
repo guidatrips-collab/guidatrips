@@ -6,6 +6,7 @@ import {
   Save, 
   Trash2, 
   AlertTriangle, 
+  CheckCircle,
   CheckCircle2, 
   RefreshCw, 
   Sparkles, 
@@ -13,7 +14,8 @@ import {
   CalendarDays,
   X,
   Layers,
-  Check
+  Check,
+  Edit
 } from 'lucide-react';
 import { Experience, Accommodation } from '../types';
 
@@ -73,7 +75,11 @@ export function CalendarPricingView({
 
   // Clear modal confirmation state
   const [showClearModal, setShowClearModal] = useState(false);
-  const [clearScope, setClearScope] = useState<'all_room' | 'all_accommodation' | 'month' | 'all_and_periods'>('all_room');
+  const [clearScope, setClearScope] = useState<'all_room' | 'all_zero_base' | 'all_accommodation' | 'all_accommodation_zero_base' | 'month' | 'all_and_periods'>('all_room');
+
+  // Base price editor modal state
+  const [showBasePriceModal, setShowBasePriceModal] = useState(false);
+  const [newBasePriceInput, setNewBasePriceInput] = useState<number | "">("");
 
   // Format date to strictly deterministic YYYY-MM-DD
   const formatDateStr = (year: number, month: number, day: number) => {
@@ -283,12 +289,32 @@ export function CalendarPricingView({
   };
 
   // Clear entire tariff (reset) for room or item
-  const handleExecuteClearTariff = (scope: 'month' | 'all_room' | 'all_accommodation' | 'all_and_periods') => {
+  const handleExecuteClearTariff = (scope: 'month' | 'all_room' | 'all_zero_base' | 'all_accommodation' | 'all_accommodation_zero_base' | 'all_and_periods') => {
     if (!selectedItem) return;
 
     let updatedItem: any;
 
-    if (scope === 'all_accommodation' && 'roomTypes' in selectedItem && selectedItem.roomTypes) {
+    if (scope === 'all_accommodation_zero_base' && 'roomTypes' in selectedItem && selectedItem.roomTypes) {
+      // 100% Wipe of calendar + periods + set sellRate: 0 on all rooms and root
+      const updatedRooms = (selectedItem.roomTypes || []).map(r => ({
+        ...r,
+        calendar: {},
+        pricingPeriods: [],
+        sellRate: 0,
+        netRate: 0
+      }));
+      updatedItem = {
+        ...selectedItem,
+        calendar: {},
+        pricingPeriods: [],
+        sellRate: 0,
+        netRate: 0,
+        roomTypes: updatedRooms
+      };
+      setLocalItemMap(prev => ({ ...prev, [updatedItem.id]: updatedItem }));
+      onUpdateItem(updatedItem);
+      showToast(`✓ Zerado Completo: Todos os quartos de "${selectedItem.name}" foram limpos e a diária base foi resetada para R$ 0,00!`);
+    } else if (scope === 'all_accommodation' && 'roomTypes' in selectedItem && selectedItem.roomTypes) {
       // Complete wipe of all calendar dates AND seasonal periods across ALL rooms of this accommodation
       const updatedRooms = (selectedItem.roomTypes || []).map(r => ({
         ...r,
@@ -304,6 +330,29 @@ export function CalendarPricingView({
       setLocalItemMap(prev => ({ ...prev, [updatedItem.id]: updatedItem }));
       onUpdateItem(updatedItem);
       showToast(`✓ Zerado com Sucesso: Todos os quartos de "${selectedItem.name}" tiveram o tarifário 100% resetado para a diária base!`);
+    } else if (scope === 'all_zero_base') {
+      // Wipe calendar AND pricing periods + set base rate to 0
+      if (selectedRoom && 'roomTypes' in selectedItem) {
+        const updatedRooms = (selectedItem.roomTypes || []).map(r => 
+          r.id === selectedRoom.id ? { ...r, calendar: {}, pricingPeriods: [], sellRate: 0, netRate: 0 } : r
+        );
+        updatedItem = {
+          ...selectedItem,
+          roomTypes: updatedRooms
+        };
+      } else {
+        updatedItem = {
+          ...selectedItem,
+          calendar: {},
+          pricingPeriods: [],
+          sellRate: 0,
+          netRate: 0,
+          pricing: { ...(selectedItem.pricing || {}), defaultSellRate: 0, defaultNetRate: 0, adultPrice: 0 }
+        };
+      }
+      setLocalItemMap(prev => ({ ...prev, [updatedItem.id]: updatedItem }));
+      onUpdateItem(updatedItem);
+      showToast(`✓ Zerado Completo: Calendário limpo e Diária Base resetada para R$ 0,00!`);
     } else if (scope === 'all_and_periods' || scope === 'all_room') {
       // Wipe calendar AND pricing periods for current room or item
       if (selectedRoom && 'roomTypes' in selectedItem) {
@@ -356,6 +405,31 @@ export function CalendarPricingView({
 
     clearSelection();
     setShowClearModal(false);
+  };
+
+  // Direct update of the Base Daily Price
+  const handleUpdateBasePrice = (newRate: number) => {
+    if (!selectedItem) return;
+    let updatedItem: any;
+    if (selectedRoom && 'roomTypes' in selectedItem) {
+      const updatedRooms = (selectedItem.roomTypes || []).map(r => 
+        r.id === selectedRoom.id ? { ...r, sellRate: newRate } : r
+      );
+      updatedItem = {
+        ...selectedItem,
+        roomTypes: updatedRooms
+      };
+    } else {
+      updatedItem = {
+        ...selectedItem,
+        sellRate: newRate,
+        pricing: { ...(selectedItem.pricing || {}), defaultSellRate: newRate, adultPrice: newRate }
+      };
+    }
+    setLocalItemMap(prev => ({ ...prev, [updatedItem.id]: updatedItem }));
+    onUpdateItem(updatedItem);
+    showToast(`✓ Diária Base Padrão atualizada para R$ ${newRate.toFixed(2)} com sucesso!`);
+    setShowBasePriceModal(false);
   };
 
   // Generate calendar grid
@@ -527,6 +601,54 @@ export function CalendarPricingView({
               </div>
             </div>
 
+            {/* ZERO-STATE STATUS BANNER */}
+            {totalCustomDatesOverall === 0 ? (
+              <div className="mb-4 p-3.5 bg-emerald-500/10 border border-emerald-500/30 rounded-lg text-xs text-emerald-300 flex items-center justify-between gap-3 shadow-sm">
+                <div className="flex items-center gap-2.5">
+                  <CheckCircle className="w-5 h-5 text-emerald-400 flex-shrink-0" />
+                  <div>
+                    <div className="font-bold text-emerald-400 text-xs">
+                      ✓ Tarifário Zerado no Banco de Dados (0 dias personalizados)
+                    </div>
+                    <div className="text-[11px] text-zinc-300 mt-0.5">
+                      Nenhuma tarifa avulsa gravada. Todos os 365 dias do ano estão utilizando a Diária Base Padrão de <strong>R$ {basePrice.toFixed(2)}</strong>.
+                    </div>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setNewBasePriceInput(basePrice);
+                    setShowBasePriceModal(true);
+                  }}
+                  className="px-3 py-1.5 bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/40 text-emerald-300 rounded font-bold text-[11px] whitespace-nowrap transition cursor-pointer flex items-center gap-1"
+                >
+                  <Edit className="w-3 h-3" />
+                  {basePrice === 0 ? 'Definir Diária Base' : 'Alterar / Zerar Diária Base'}
+                </button>
+              </div>
+            ) : (
+              <div className="mb-4 p-3 bg-[#E8711A]/10 border border-[#E8711A]/30 rounded-lg text-xs text-zinc-300 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-[#E8711A] flex-shrink-0" />
+                  <span>
+                    Existem <strong>{totalCustomDatesOverall} diária(s) personalizadas</strong> salvas no banco de dados para este quarto.
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setClearScope('all_room');
+                    setShowClearModal(true);
+                  }}
+                  className="px-3 py-1 bg-red-500/20 hover:bg-red-500/30 border border-red-500/40 text-red-300 rounded font-bold text-[11px] whitespace-nowrap transition cursor-pointer flex items-center gap-1"
+                >
+                  <Trash2 className="w-3 h-3" />
+                  Zerar Todas ({totalCustomDatesOverall})
+                </button>
+              </div>
+            )}
+
             {/* MONTH HEADER & STATS */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4 border-b border-white/5 pb-4">
               <div className="flex items-center gap-3">
@@ -537,8 +659,18 @@ export function CalendarPricingView({
                   <h4 className="font-serif text-lg font-bold uppercase tracking-wider text-white">
                     {currentMonth.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
                   </h4>
-                  <div className="text-[11px] text-zinc-400">
-                    Diária Base Padrão: <span className="text-emerald-400 font-bold">R$ {basePrice.toFixed(2)}</span>
+                  <div className="text-[11px] text-zinc-400 flex items-center gap-2">
+                    <span>Diária Base Padrão: <strong className="text-emerald-400">R$ {basePrice.toFixed(2)}</strong></span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setNewBasePriceInput(basePrice);
+                        setShowBasePriceModal(true);
+                      }}
+                      className="text-[10px] text-[#E8711A] hover:underline font-bold"
+                    >
+                      (Editar / Zerar)
+                    </button>
                   </div>
                 </div>
                 <button onClick={nextMonth} className="p-2 bg-white/5 hover:bg-white/10 text-white rounded-md transition cursor-pointer">
@@ -924,16 +1056,43 @@ export function CalendarPricingView({
                   />
                   <div>
                     <div className="font-bold text-xs text-red-400 flex items-center gap-1.5">
-                      <span>🗑️ Zerar TODO o ano (Todos os 12 meses)</span>
+                      <span>🗑️ Zerar TODO o ano (Manter Diária Base R$ {basePrice.toFixed(2)})</span>
                       <span className="bg-red-500/20 text-red-300 px-1.5 py-0.2 rounded text-[10px]">Recomendado</span>
                     </div>
                     <div className="text-[11px] text-zinc-300 mt-0.5">
-                      Apaga todas as tarifas e bloqueios de todos os meses do ano deste {selectedRoom ? 'quarto' : 'item'}, retornando 100% dos dias para o valor base padrão (R$ {basePrice}).
+                      Apaga todas as tarifas personalizadas e bloqueios de todos os meses do ano deste {selectedRoom ? 'quarto' : 'item'}, retornando 100% dos dias para o valor padrão base (R$ {basePrice.toFixed(2)}).
                     </div>
                   </div>
                 </label>
 
-                {/* 2. Zerar apenas o mês atual */}
+                {/* 2. Zerar Tudo + Zerar Diária Base para R$ 0 */}
+                <label 
+                  onClick={() => setClearScope('all_zero_base')}
+                  className={`flex items-start gap-3 p-3.5 rounded-lg border cursor-pointer transition ${
+                    clearScope === 'all_zero_base' 
+                      ? 'bg-red-500/25 border-red-500 text-white shadow-lg ring-1 ring-red-500' 
+                      : 'bg-zinc-900 border-zinc-800 text-zinc-400'
+                  }`}
+                >
+                  <input 
+                    type="radio" 
+                    name="clearScope" 
+                    checked={clearScope === 'all_zero_base'} 
+                    onChange={() => setClearScope('all_zero_base')}
+                    className="mt-1 text-red-500 focus:ring-red-500"
+                  />
+                  <div>
+                    <div className="font-bold text-xs text-red-300 flex items-center gap-1.5">
+                      <span>⚡ Zerar TUDO + Resetar Diária Base para R$ 0,00</span>
+                      <span className="bg-red-600/30 text-white px-1.5 py-0.2 rounded text-[10px] font-extrabold">Zerar Geral</span>
+                    </div>
+                    <div className="text-[11px] text-zinc-300 mt-0.5">
+                      Apaga o calendário completo, limpa os períodos e zera o preço base do quarto para <strong>R$ 0,00</strong> no banco de dados.
+                    </div>
+                  </div>
+                </label>
+
+                {/* 3. Zerar apenas o mês atual */}
                 <label 
                   onClick={() => setClearScope('month')}
                   className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition ${
@@ -959,35 +1118,62 @@ export function CalendarPricingView({
                   </div>
                 </label>
 
-                {/* 3. Se for hospedagem com múltiplos quartos: Zerar TODOS OS QUARTOS */}
+                {/* 4. Se for hospedagem com múltiplos quartos: Zerar TODOS OS QUARTOS */}
                 {selectedItem && 'roomTypes' in selectedItem && selectedItem.roomTypes && selectedItem.roomTypes.length > 1 && (
-                  <label 
-                    onClick={() => setClearScope('all_accommodation')}
-                    className={`flex items-start gap-3 p-3.5 rounded-lg border cursor-pointer transition ${
-                      clearScope === 'all_accommodation' 
-                        ? 'bg-red-500/20 border-red-500 text-white shadow-lg ring-1 ring-red-500' 
-                        : 'bg-zinc-900 border-zinc-800 text-zinc-400'
-                    }`}
-                  >
-                    <input 
-                      type="radio" 
-                      name="clearScope" 
-                      checked={clearScope === 'all_accommodation'} 
-                      onChange={() => setClearScope('all_accommodation')}
-                      className="mt-1 text-red-500 focus:ring-red-500"
-                    />
-                    <div>
-                      <div className="font-bold text-xs text-amber-300">
-                        ⚡ Zerar TODOS OS QUARTOS desta Pousada ({selectedItem.name})
+                  <>
+                    <label 
+                      onClick={() => setClearScope('all_accommodation')}
+                      className={`flex items-start gap-3 p-3.5 rounded-lg border cursor-pointer transition ${
+                        clearScope === 'all_accommodation' 
+                          ? 'bg-amber-500/20 border-amber-500 text-white shadow-lg ring-1 ring-amber-500' 
+                          : 'bg-zinc-900 border-zinc-800 text-zinc-400'
+                      }`}
+                    >
+                      <input 
+                        type="radio" 
+                        name="clearScope" 
+                        checked={clearScope === 'all_accommodation'} 
+                        onChange={() => setClearScope('all_accommodation')}
+                        className="mt-1 text-amber-500 focus:ring-amber-500"
+                      />
+                      <div>
+                        <div className="font-bold text-xs text-amber-300">
+                          🏢 Zerar TODOS OS QUARTOS desta Pousada ({selectedItem.name})
+                        </div>
+                        <div className="text-[11px] text-zinc-300 mt-0.5">
+                          Zera o calendário do ano inteiro de todas as {selectedItem.roomTypes.length} categorias de quartos desta hospedagem mantendo a diária base.
+                        </div>
                       </div>
-                      <div className="text-[11px] text-zinc-300 mt-0.5">
-                        Zera de uma só vez o calendário do ano inteiro de todas as {selectedItem.roomTypes.length} categorias de quartos desta hospedagem.
+                    </label>
+
+                    <label 
+                      onClick={() => setClearScope('all_accommodation_zero_base')}
+                      className={`flex items-start gap-3 p-3.5 rounded-lg border cursor-pointer transition ${
+                        clearScope === 'all_accommodation_zero_base' 
+                          ? 'bg-red-600/30 border-red-500 text-white shadow-lg ring-1 ring-red-500' 
+                          : 'bg-zinc-900 border-zinc-800 text-zinc-400'
+                      }`}
+                    >
+                      <input 
+                        type="radio" 
+                        name="clearScope" 
+                        checked={clearScope === 'all_accommodation_zero_base'} 
+                        onChange={() => setClearScope('all_accommodation_zero_base')}
+                        className="mt-1 text-red-500 focus:ring-red-500"
+                      />
+                      <div>
+                        <div className="font-bold text-xs text-red-400">
+                          💥 Zerar TODOS OS QUARTOS + Diárias Base para R$ 0,00 (Reset Total)
+                        </div>
+                        <div className="text-[11px] text-zinc-300 mt-0.5">
+                          Wipe completo: zera todos os quartos, todos os períodos sazonais e coloca as diárias padrão de todos os quartos em R$ 0,00.
+                        </div>
                       </div>
-                    </div>
-                  </label>
+                    </label>
+                  </>
                 )}
 
-                {/* 4. Zerar tudo incluindo períodos sazonais */}
+                {/* 5. Zerar tudo incluindo períodos sazonais */}
                 <label 
                   onClick={() => setClearScope('all_and_periods')}
                   className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition ${
@@ -1031,6 +1217,108 @@ export function CalendarPricingView({
               >
                 <Trash2 className="w-4 h-4" />
                 Confirmar e Zerar Agora
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* BASE DAILY PRICE EDITOR MODAL */}
+      {showBasePriceModal && (
+        <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm">
+          <div className="bg-[#121214] border border-[#E8711A]/40 rounded-xl p-6 max-w-md w-full shadow-2xl space-y-5 animate-in fade-in zoom-in-95">
+            <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
+              <div className="flex items-center gap-2 text-[#E8711A] font-bold text-base">
+                <Edit className="w-5 h-5" />
+                Configurar Diária Base Padrão
+              </div>
+              <button 
+                onClick={() => setShowBasePriceModal(false)}
+                className="text-zinc-500 hover:text-zinc-300 p-1"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="text-sm text-zinc-300 space-y-4">
+              <p>
+                Defina o valor base padrão que será utilizado em todos os dias do ano que <strong>não possuem tarifa diária avulsa personalizada</strong> para:
+                <br />
+                <strong className="text-white text-base">
+                  {selectedRoom ? `${selectedItem?.name} — ${selectedRoom.name}` : selectedItem?.name}
+                </strong>
+              </p>
+
+              <div className="space-y-2">
+                <label className="font-accent text-[10px] text-white tracking-widest uppercase font-bold">
+                  Novo Valor da Diária Base (R$)
+                </label>
+                <div className="relative">
+                  <span className="absolute left-3 top-3 text-zinc-400 font-bold text-sm">R$</span>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    placeholder="0.00"
+                    value={newBasePriceInput}
+                    onChange={(e) => setNewBasePriceInput(e.target.value === "" ? "" : Number(e.target.value))}
+                    className="w-full bg-[#0D1B2A] border border-white/15 pl-10 pr-4 py-3 text-lg font-bold text-white rounded-lg outline-none focus:border-[#E8711A] font-mono"
+                    autoFocus
+                  />
+                </div>
+              </div>
+
+              {/* Quick shortcut presets */}
+              <div className="space-y-1.5 pt-1">
+                <div className="text-[10px] uppercase font-bold text-zinc-400 tracking-wider">Atalhos Rápidos:</div>
+                <div className="grid grid-cols-4 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setNewBasePriceInput(0)}
+                    className="py-1.5 bg-red-500/20 hover:bg-red-500/30 border border-red-500/40 text-red-300 rounded text-xs font-bold transition"
+                  >
+                    R$ 0,00 (Zerar)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setNewBasePriceInput(100)}
+                    className="py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded text-xs font-bold transition"
+                  >
+                    R$ 100
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setNewBasePriceInput(150)}
+                    className="py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded text-xs font-bold transition"
+                  >
+                    R$ 150
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setNewBasePriceInput(200)}
+                    className="py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded text-xs font-bold transition"
+                  >
+                    R$ 200
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-3 justify-end pt-3 border-t border-zinc-800">
+              <button
+                type="button"
+                onClick={() => setShowBasePriceModal(false)}
+                className="px-4 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg text-xs font-semibold"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={() => handleUpdateBasePrice(Number(newBasePriceInput) || 0)}
+                className="px-5 py-2.5 bg-[#E8711A] hover:bg-[#C45E12] text-white rounded-lg text-xs font-bold flex items-center gap-2 shadow-xl cursor-pointer"
+              >
+                <Save className="w-4 h-4" />
+                Salvar Diária Base no Banco
               </button>
             </div>
           </div>
