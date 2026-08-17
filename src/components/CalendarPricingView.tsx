@@ -307,6 +307,8 @@ export function CalendarPricingView({
         ...r,
         calendar: {},
         pricingPeriods: [],
+        basePrice: 0,
+        priceFrom: 0,
         sellRate: 0,
         netRate: 0
       }));
@@ -314,6 +316,8 @@ export function CalendarPricingView({
         ...selectedItem,
         calendar: {},
         pricingPeriods: [],
+        basePrice: 0,
+        priceFrom: 0,
         sellRate: 0,
         netRate: 0,
         roomTypes: updatedRooms
@@ -349,7 +353,7 @@ export function CalendarPricingView({
       // Wipe calendar AND pricing periods + set base rate to 0
       if (selectedRoom && 'roomTypes' in selectedItem) {
         const updatedRooms = (selectedItem.roomTypes || []).map(r => 
-          r.id === selectedRoom.id ? { ...r, calendar: {}, pricingPeriods: [], sellRate: 0, netRate: 0 } : r
+          r.id === selectedRoom.id ? { ...r, calendar: {}, pricingPeriods: [], basePrice: 0, priceFrom: 0, sellRate: 0, netRate: 0 } : r
         );
         updatedItem = {
           ...selectedItem,
@@ -360,6 +364,8 @@ export function CalendarPricingView({
           ...selectedItem,
           calendar: {},
           pricingPeriods: [],
+          basePrice: 0,
+          priceFrom: 0,
           sellRate: 0,
           netRate: 0,
           pricing: { ...(selectedItem.pricing || {}), defaultSellRate: 0, defaultNetRate: 0, adultPrice: 0 }
